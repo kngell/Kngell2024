@@ -1,5 +1,37 @@
 {
-    "require-dev": {
-        "friendsofphp/php-cs-fixer": "^3.64"
+  "name": "kngell/kngell-ecom",
+  "description": "Kngell Framework",
+  "type": "project",
+  "license": "MIT",
+  "minimum-stability": "dev",
+  "require": {
+    "php": ">=8.3",
+    "ext-fileinfo": "*",
+    "nette/php-generator": "v4.1.5",
+    "guzzlehttp/guzzle": "^7.0",
+    "ext-simplexml": "*",
+    "psr/container": "^2.0",
+    "symfony/yaml": "^7.1"
+  },
+  "require-dev": {
+    "friendsofphp/php-cs-fixer": "^3.64",
+    "symfony/var-dumper": "^7.1"
+  },
+  "autoload": {
+    "classmap": [
+      "Framework/",
+      "App/",
+      "Scripts/src/",
+      "Examples/src/"
+    ]
+  },
+  "repositories": [
+    {
+      "type": "path",
+      "url": "/home/kngell/projects/kngell-ecom/Framework/Core",
+      "options": {
+        "useSymlink": true
+      }
     }
+  ]
 }
