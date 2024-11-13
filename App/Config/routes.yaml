@@ -1,0 +1,117 @@
+get: # Http Get ===========================================
+  "/":
+    controller: home
+    method: index
+    namespace: Client/brand
+  home:
+    controller: home
+    method: index
+    namespace: Client/brand
+  clothes:
+    controller: home
+    method: vetements
+    namespace: Client/brand
+  shop:
+    controller: home
+    method: boutique_vetements
+    namespace: Client/brand
+  account:
+    controller: user_account
+    method: my_account_show
+    namespace: Client/components
+  error:
+    controller: errors
+    method: index
+    namespace: Client
+  card:
+    controller: learning
+    method: index
+    namespace: Client/components/checkout
+  todo:
+    controller: home
+    method: todo
+    namespace: Client/components
+  checkout:
+    controller: home
+    method: index
+    namespace: Client
+  lib:
+    controller: home
+    method: lib
+    namespace: Client/brand/clothes
+  learn:
+    controller: learning
+    method: index
+    namespace: Client
+  cart:
+    controller: shopping_cart
+    method: index
+    namespace: Client/components
+  proceed_to_checkout:
+    controller: checkout
+    method: index
+  admin/{controller}/{method}:
+    namespace: Admin
+  admin/{controller}/{method}/{id:[\da-f]+}:
+    namespace: Admin
+  client/{controller}/{method}:
+    namespace: Client
+  /{controller}/{method}:
+    namespace: Client/brand
+  /{controller}/{method}/{id:[\da-f]+}:
+    namespace: Client
+  client/{controller}/{method}/{id:[\da-f]+}:
+    namespace: Client
+  #Admin Route
+  admin:
+    controller: admin_home
+    method: index
+    namespace: Admin
+post: # Http Post method =========================================================
+  visitors:
+    controller: visitors
+    method: track
+  ajaxLogin:
+    controller: login_user_with_ajax
+    method: index
+  ajaxlogout:
+    controller: logout_user_with_ajax
+    method: index
+  ajaxRegister:
+    controller: register_user_with_ajax
+    method: index
+  forgotPassword:
+    controller: forgot_password_ajax
+    method: index
+  verify:
+    controller: user_account
+    method: verify
+  remember_me:
+    controller: login_user_with_ajax
+    method: rememberMeCheck
+  comments:
+    controller: comments
+    method: newComment
+  get_countries:
+    controller: country
+    method: getCountries
+  add_item_into_cart:
+    controller: user_cart
+    method: add
+  proceed_to_checkout:
+    controller: checkout
+    method: index
+    namespace: Client/components
+  cart:
+    controller: shopping_cart
+    method: index
+    namespace: Client/components
+  activation/activate/{token:[\da-f]+}:
+    controller: activate_user_with_ajax
+    method: activate
+  /{controller}/{method}/{id:[\da-f]+}:
+    namespace: Ajax
+  /{controller}/{method}:
+    namespace: Ajax
+  client/{controller}/{method}:
+    namespace: Client

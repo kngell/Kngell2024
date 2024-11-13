@@ -1,6 +1,6 @@
 {
   "name": "kngell/kngell-ecom",
-  "description": "Kngell Framework",
+  "description": "Kngell Framework for building web application",
   "type": "project",
   "license": "MIT",
   "minimum-stability": "dev",
@@ -11,7 +11,13 @@
     "guzzlehttp/guzzle": "^7.0",
     "ext-simplexml": "*",
     "psr/container": "^2.0",
-    "symfony/yaml": "^7.1"
+    "symfony/yaml": "^7.1",
+    "jms/serializer": "^3.30",
+    "ramsey/uuid": "^4.7",
+    "doctrine/orm": "^3.3",
+    "doctrine/dbal": "^4.2",
+    "symfony/cache": "^7.2",
+    "twig/twig": "^3.14"
   },
   "require-dev": {
     "friendsofphp/php-cs-fixer": "^3.64",
@@ -25,10 +31,18 @@
       "Examples/src/"
     ]
   },
+  "scripts": {
+    "post-install-cmd": [
+      "DoctrineORMPostInstaller::execute"
+    ],
+    "post-update-cmd": [
+      "DoctrineORMPostInstaller::execute"
+    ]
+  },
   "repositories": [
     {
       "type": "path",
-      "url": "/home/kngell/projects/kngell-ecom/Framework/Core",
+      "url": "/home/kngell/projects/kngell-ecom/Framework/Components",
       "options": {
         "useSymlink": true
       }

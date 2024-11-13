@@ -1,0 +1,10 @@
+
+
+RewriteEngine on
+RewriteRule ^ /public/index.php
+
+
+
+
+
+

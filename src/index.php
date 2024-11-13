@@ -1,17 +1,14 @@
-<!DOCTYPE html>
-<html lang="en">
+<?php
 
-<head>
-   <meta charset="UTF-8" />
-   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-   <title>Hello World</title>
-   <link rel="stylesheet" href="style.scss">
-</head>
+declare(strict_types=1);
 
-<body>
-   <?= 'Hello Horld'?>
-   <img src="DA.png" />
-   <script type="application/javascript" src="script.js"></script>
-</body>
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+ini_set('xdebug.var_display_max_depth', 10);
+ini_set('xdebug.var_display_children', 256);
+ini_set('xdebug.var_display_max_data', 1024);
 
-</html>
+require dirname(__DIR__) . '/vendor/autoload.php';
+$request = RequestFactory::createFromGlobals();
+$kernel = new AppKernel;
+$kernel->handleRequest($request);
