@@ -1,0 +1,11 @@
+session: SessionInterface
+cache: CacheInterface
+cookie: CookieInterface
+request: RequestHandler
+response: ResponseHandler
+token: Token
+helper: ControllerHelper
+factory: ControllerFactory
+modelFactory: modelFactory
+# dispatcher: DispatcherFactory
+# comment: CommentsFactory

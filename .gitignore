@@ -5,3 +5,4 @@ vendor/
 public/
 App/Views/
 webpack/
+session_dir/

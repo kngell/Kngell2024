@@ -1,15 +1,43 @@
 <?php
 
 declare(strict_types=1);
-final class ViewEnvironment
+
+class ViewEnvironment
 {
-    public function getLayout() : string
+    private const string VIEW_DIRECTORY = '/home/kngell/projects/kngell-ecom/App/Views';
+    private string $layout;
+    private string $appPath;
+
+    private Assets $assets;
+
+    public function __construct(string $appPath, Assets $assets)
     {
-        return '';
+        $this->layout = dirname(getcwd()) . '/App/Views/Frontend/layout';
+        $this->appPath = $appPath;
+        $this->assets = $assets;
     }
 
-    public function validate(string $templatePath) : string|bool
+    public function getLayout(string $layout) : string
     {
-        return '';
+        return $this->layout . DS . $layout . '.php';
+    }
+
+    public function getFile(string $fileName) : string|bool
+    {
+        $directory = self::VIEW_DIRECTORY;
+        if (! str_contains($fileName, $this->appPath)) {
+            $directory = $directory . DS . $this->appPath;
+        }
+        return FileManager::searchFile($directory, $fileName);
+    }
+
+    public function getCss(string $path) : string
+    {
+        return $this->assets->getCss($path);
+    }
+
+    public function getJs(string $path) : string
+    {
+        return $this->assets->getJs($path);
     }
 }

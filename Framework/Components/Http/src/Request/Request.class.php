@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-readonly class Request
+class Request extends SuperGlobals
 {
     protected HeaderMap $headers;
     protected Map $query;
@@ -16,18 +16,19 @@ readonly class Request
     protected float $requestStartTime;
     protected string|null $rawContent;
 
-    public function __construct(array $server, array $get, array $post, array $files, array $cookies)
+    public function __construct()
     {
-        $this->server = new Map($server);
-        $this->query = new Map($get);
-        $this->post = new Map($post);
-        $this->cookies = CookiesMap::createFromCookieGlobals($cookies);
-        $this->headers = HeaderMap::createFromServerGlobals($server);
-        $this->files = new FileMap($files);
-        $this->requestStartTime = $this->server->get('REQUEST_TIME_FLOAT') ?? 0;
+        parent::__construct();
+        $this->server = new Map($this->_Server());
+        $this->query = new Map($this->_Get());
+        $this->post = new Map($this->_Post());
+        $this->cookies = CookiesMap::createFromCookieGlobals($this->_Cookies());
+        $this->headers = HeaderMap::createFromServerGlobals($this->_Server());
+        $this->files = new FileMap($this->_Files());
+        $this->requestStartTime = (float) $this->server->get('REQUEST_TIME_FLOAT') ?? 0;
         $this->method = HttpMethod::fromString($this->server->get('REQUEST_METHOD'));
         $this->protocol = strtolower($this->server->get('SERVER_PROTOCOL'));
-        $this->requestedUri = parse_url($this->server->get('REQUEST_URI'), PHP_URL_PATH);
+        $this->requestedUri = $this->url();
 
         $rawContent = file_get_contents('php://input');
         $this->rawContent = $rawContent !== false && ! StringUtils::isBlanc($rawContent) ? $rawContent : null;
@@ -134,12 +135,8 @@ readonly class Request
         return $this->rawContent;
     }
 
-    private function emptyGlobals() : void
+    private function url() : string
     {
-        $_GET = [];
-        $_POST = [];
-        $_REQUEST = [];
-        $_COOKIE = [];
-        $_FILES = [];
+        return $this->_server('request_uri');
     }
 }

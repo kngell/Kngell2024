@@ -63,7 +63,10 @@ class Map implements IteratorAggregate, Countable
      */
     public function get(string|int $key) : mixed
     {
-        return $this->items[$key] ?? null;
+        if (isset($this->items[$key])) {
+            return $this->items[$key];
+        }
+        return null;
     }
 
     public function remove(string|int $key) : void

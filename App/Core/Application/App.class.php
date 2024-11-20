@@ -1,25 +1,40 @@
 <?php
 
 declare(strict_types=1);
-class App extends WebKernel
+class App extends AbstracApp
 {
-    protected function getNamespacesToScan(): array
+    private RooterInterface $rooter;
+    private Request $request;
+
+    public function __construct()
     {
+        AppConstants::enable();
+        $this->appConfig = AppConfigSetup::getInstance()->create();
+        ContainerClassRegistrator::register($this);
+        $this->rooter = $this->get(RooterInterface::class);
+        $this->request = $this->get(Request::class);
     }
 
-    protected function getPropertiesFilePath(): string
+    public function boot() : self
     {
+        $this->loadErrorHandlers();
+        $this->phpVersion();
+        $this->loadEnvironment();
+        $this->loadCache();
+        $this->loadSession();
+        $this->loadCookies();
+        return $this;
     }
 
-    protected function getRootDirectory(): string
+    public function run(string $url = '', array $params = []) : void
     {
+        $response = $this->rooter->handle($this->request, $this, $url, $params);
+        $response->prepare($this->request);
+        $response->send();
     }
 
-    protected function getCacheDirectory(): string
+    public function runError(string $url, array $params) : void
     {
-    }
-
-    protected function autoloadMethod(): string
-    {
+        $this->run($url, $params);
     }
 }

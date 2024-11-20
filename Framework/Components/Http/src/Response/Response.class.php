@@ -88,7 +88,7 @@ class Response
         $this->statusCode === HttpStatusCode::HTTP_NOT_MODIFIED;
     }
 
-    public function setCookie(Cookie $cookie) : void
+    public function setCookie(CookieData $cookie) : void
     {
         $this->cookies->add($cookie);
     }
@@ -97,10 +97,102 @@ class Response
     {
         $this->headers->add($name, $value);
     }
+
     public function setContentType(string $contentType) : void
     {
         $this->headers->add(HeaderMap::CONTENT_TYPE_HEADER, $contentType);
     }
+
+    /**
+     * @return HeaderMap
+     */
+    public function getHeaders(): HeaderMap
+    {
+        return $this->headers;
+    }
+
+    /**
+     * @param HeaderMap $headers
+     * @return Response
+     */
+    public function setHeaders(HeaderMap $headers): self
+    {
+        $this->headers = $headers;
+        return $this;
+    }
+
+    /**
+     * @return CookiesMap
+     */
+    public function getCookies(): CookiesMap
+    {
+        return $this->cookies;
+    }
+
+    /**
+     * @param CookiesMap $cookies
+     * @return Response
+     */
+    public function setCookies(CookiesMap $cookies): self
+    {
+        $this->cookies = $cookies;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getContent(): string
+    {
+        return $this->content;
+    }
+
+    /**
+     * @param string $content
+     * @return Response
+     */
+    public function setContent(string $content): self
+    {
+        $this->content = $content;
+        return $this;
+    }
+
+    /**
+     * @return HttpStatusCode
+     */
+    public function getStatusCode(): HttpStatusCode
+    {
+        return $this->statusCode;
+    }
+
+    /**
+     * @param HttpStatusCode $statusCode
+     * @return Response
+     */
+    public function setStatusCode(HttpStatusCode $statusCode): self
+    {
+        $this->statusCode = $statusCode;
+        return $this;
+    }
+
+    /**
+     * @return HttpProtocolVersion
+     */
+    public function getProtocolVersion(): HttpProtocolVersion
+    {
+        return $this->protocolVersion;
+    }
+
+    /**
+     * @param HttpProtocolVersion $protocolVersion
+     * @return Response
+     */
+    public function setProtocolVersion(HttpProtocolVersion $protocolVersion): self
+    {
+        $this->protocolVersion = $protocolVersion;
+        return $this;
+    }
+
     protected function sendContent() : void
     {
         echo $this->content;
@@ -121,7 +213,7 @@ class Response
     protected function sendCookies() : void
     {
         /**
-         * @var Cookie $cookie
+         * @var CookieData $cookie
          */
         foreach ($this->cookies as $cookie) {
             setcookie(
@@ -135,94 +227,4 @@ class Response
             );
         }
     }
-        /**
-     * @return HeaderMap
-     */
-    public function getHeaders(): HeaderMap
-    {
-        return $this->headers;
-    }
-
-    /**
-     * @param HeaderMap $headers
-     * @return Response
-     */
-    public function setHeaders(HeaderMap $headers): Response
-    {
-        $this->headers = $headers;
-        return $this;
-    }
-
-    /**
-     * @return CookiesMap
-     */
-    public function getCookies(): CookiesMap
-    {
-        return $this->cookies;
-    }
-
-    /**
-     * @param CookiesMap $cookies
-     * @return Response
-     */
-    public function setCookies(CookiesMap $cookies): Response
-    {
-        $this->cookies = $cookies;
-        return $this;
-    }
-
-    /**
-     * @return string
-     */
-    public function getContent(): string
-    {
-        return $this->content;
-    }
-
-    /**
-     * @param string $content
-     * @return Response
-     */
-    public function setContent(string $content): Response
-    {
-        $this->content = $content;
-        return $this;
-    }
-
-    /**
-     * @return HttpStatusCode
-     */
-    public function getStatusCode(): HttpStatusCode
-    {
-        return $this->statusCode;
-    }
-
-    /**
-     * @param HttpStatusCode $statusCode
-     * @return Response
-     */
-    public function setStatusCode(HttpStatusCode $statusCode): Response
-    {
-        $this->statusCode = $statusCode;
-        return $this;
-    }
-
-    /**
-     * @return HttpProtocolVersion
-     */
-    public function getProtocolVersion(): HttpProtocolVersion
-    {
-        return $this->protocolVersion;
-    }
-
-    /**
-     * @param HttpProtocolVersion $protocolVersion
-     * @return Response
-     */
-    public function setProtocolVersion(HttpProtocolVersion $protocolVersion): Response
-    {
-        $this->protocolVersion = $protocolVersion;
-        return $this;
-    }
-
 }

@@ -28,4 +28,14 @@ final readonly class StringUtils
     {
         return $str === null || empty(trim($str));
     }
+
+    public static function studlyCaps(string $str) : string
+    {
+        return str_replace('-', '', ucwords(strtolower($str), '-'));
+    }
+
+    public static function camelCase(string $str) : string
+    {
+        return lcfirst(str_replace('-', '', ucwords(strtolower($str), '-')));
+    }
 }
