@@ -87,4 +87,19 @@ class PDOConnexion implements DatabaseConnexionInterface
 
         return $this;
     }
+
+    public function beginTransaction() : bool
+    {
+        return $this->con->beginTransaction();
+    }
+
+    public function commit() :  bool
+    {
+        return $this->con->commit();
+    }
+
+    public function rollback() : bool
+    {
+        return $this->con->rollback();
+    }
 }

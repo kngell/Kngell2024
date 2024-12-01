@@ -8,7 +8,7 @@ final readonly class ContainerClassRegistrator
     {
     }
 
-    public static function register(App $app) : void
+    public static function register(App &$app) : void
     {
         foreach (self::bindClasses() as $abstract => $concrete) {
             self::registerClass($abstract, $concrete, 'bind', $app);
@@ -37,7 +37,6 @@ final readonly class ContainerClassRegistrator
             CacheStorageInterface::class => NativeCacheStorage::class,
             CacheInterface::class => Cache::class,
             FilesSystemInterface::class => FileSystem::class,
-            SessionInterface::class => Session::class,
             SuperGlobalsInterface::class => SuperGlobals::class,
             CookieStoreInterface::class => NativeCookieStore::class,
             CookieInterface::class => Cookie::class,
@@ -47,6 +46,11 @@ final readonly class ContainerClassRegistrator
     private static function singletonClasses() : array
     {
         return [
+            CollectionInterface::class => Collection::class,
+            EntityManagerInterface::class => EntityManager::class,
+            SessionEnvironment::class => SessionEnvironment::class,
+            SessionStorageInterface::class => NativeSessionStorage::class,
+            SessionInterface::class => Session::class,
             DatabaseConnexionInterface::class => [
                 PDOConnexion::class => function () {
                     $file = dirname(getcwd()) . '/App/Config/database.yaml';

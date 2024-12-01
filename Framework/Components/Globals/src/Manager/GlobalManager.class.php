@@ -44,7 +44,7 @@ class GlobalManager_old implements GlobalManagerInterface
      */
     private static function isglobalsValid(string $key) :void
     {
-        if (!isset($GLOBALS[$key])) {
+        if (! isset($GLOBALS[$key])) {
             throw new GlobalManagerInvalidException('Invalid Globals Key! ' . $key);
         }
         if (empty($key)) {

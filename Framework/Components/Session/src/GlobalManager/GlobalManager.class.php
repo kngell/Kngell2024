@@ -4,25 +4,25 @@ declare(strict_types=1);
 
 final class GlobalManager implements GlobalManagerInterface
 {
-    // /** @var GlobalManagerInterface */
-    // protected static $instance;
+    /** @var GlobalManagerInterface */
+    protected static $instance;
 
-    // private function __construct()
-    // {
-    // }
+    private function __construct()
+    {
+    }
 
-    // /**
-    //  * Get container instance
-    //  * ===============================================.
-    //  * @return mixed
-    //  */
-    // public static function getInstance() : mixed
-    // {
-    //     if (!isset(static::$instance)) {
-    //         static::$instance = new static();
-    //     }
-    //     return static::$instance;
-    // }
+    /**
+     * Get container instance
+     * ===============================================.
+     * @return mixed
+     */
+    public static function getInstance() : mixed
+    {
+        if (! isset(static::$instance)) {
+            static::$instance = new static();
+        }
+        return static::$instance;
+    }
 
     /**
      * @inheritdoc
@@ -60,7 +60,7 @@ final class GlobalManager implements GlobalManagerInterface
      */
     protected static function isGlobalValid(string $name): void
     {
-        if (!isset($GLOBALS[$name]) || empty($name)) {
+        if (! isset($GLOBALS[$name]) || empty($name)) {
             throw new GlobalManagerException("Invalid global. Please ensure you've set the global state for " . $name . ' And the feature is set to true from your pubic/index.php file.');
         }
     }

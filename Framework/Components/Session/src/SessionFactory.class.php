@@ -16,8 +16,11 @@ class SessionFactory
      *
      * @param string $sessionIdentifier
      * @param string $storage
-     * @param SessionEnvironment $sessionEnvironment
      * @return SessionInterface
+     * @throws SessionUnexpectedValueException
+     * @throws BindingResolutionException
+     * @throws ReflectionException
+     * @throws DependencyHasNoDefaultValueException
      */
     public function create(
         string $sessionIdentifier,
@@ -30,7 +33,7 @@ class SessionFactory
             );
         }
         //return new Session($sessionIdentifier, $storageObject);
-        return App::diget(SessionInterface::class, [
+        return App::getInstance()->get(SessionInterface::class, [
             'storage' => $storageObject,
             'sessionIdentifier' => $sessionIdentifier,
         ]);

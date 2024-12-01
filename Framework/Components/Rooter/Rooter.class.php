@@ -22,12 +22,7 @@ class Rooter implements RooterInterface
 
     public function handle(Request $request, ?App $app = null, string|null $url = null, array $params = []) : Response
     {
-        $url = ! empty($url) ? $url : $request->getRequestedUri();
-        $url = parse_url($url, PHP_URL_PATH);
-        if ($url === false) {
-            throw new UnexpectedValueException("Malformed url '{$request->getServer()('request_uri')}'", HttpStatusCode::HTTP_REQUEST_ENTITY_TOO_LARGE->value);
-        }
-        $route = $this->routeMatcher->match($url);
+        $route = $this->routeMatcher->match($request, $url);
         if ($route === null) {
             throw new PageNotFoundException('Page not Found');
         }
@@ -38,7 +33,6 @@ class Rooter implements RooterInterface
         if ($results instanceof Response) {
             return $results;
         }
-
         return $this->routeResponseGenerator->generate(
             isset($responseStatus) ? $responseStatus : $route->getResponseStatus(),
             $results

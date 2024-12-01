@@ -40,6 +40,16 @@ abstract class AbstracApp extends Container
     }
 
     /**
+     * Get the value of appConfig.
+     *
+     * @return AppConfigSetup
+     */
+    public function getAppConfig(): AppConfigSetup
+    {
+        return $this->appConfig;
+    }
+
+    /**
      * Compare PHP version with the core version ensuring the correct version of
      * PHP and MagmaCore framework is being used at all time in sync.
      *

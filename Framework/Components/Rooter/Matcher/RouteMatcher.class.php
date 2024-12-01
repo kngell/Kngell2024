@@ -18,10 +18,9 @@ class RouteMatcher
         $this->routes = $routeCollector->getRoutes();
     }
 
-    public function match(string $routePath) : RouteInfo|null
+    public function match(Request $request, string $internalUrl = '') : RouteInfo|null
     {
-        $routePath = urldecode($routePath);
-        $routePath = trim($routePath, DS);
+        $routePath = $this->getRoutePath($request, $internalUrl);
         foreach ($this->routes as $route => $params) {
             $pattern = $this->getPatternFromroutePath($route);
             if (preg_match($pattern, $routePath, $matches)) {
@@ -30,6 +29,16 @@ class RouteMatcher
             }
         }
         return null;
+    }
+
+    private function getRoutePath(Request $request, string $url) : string
+    {
+        $url = ! empty($url) ? $url : $request->getRequestedUri();
+        $url = parse_url($url, PHP_URL_PATH);
+        if ($url === false) {
+            throw new UnexpectedValueException("Malformed url '{$request->_Server('request_uri')}'");
+        }
+        return trim(urldecode($url), DS);
     }
 
     private function route(string $path, string $pattern, array $matches) : RouteInfo
@@ -67,8 +76,8 @@ class RouteMatcher
     private function controller(array $matches) : string
     {
         $controller = StringUtils::studlyCaps($matches['controller']);
-        if (class_exists($controller)) {
-            return $controller;
+        if (class_exists($controller . $this->controllerSuffix)) {
+            return $controller . $this->controllerSuffix;
         }
         throw new PageNotFoundException("Page $controller not Found");
     }

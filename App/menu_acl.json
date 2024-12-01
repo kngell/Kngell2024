@@ -1,0 +1,13 @@
+{
+  "Boutique": "/home/shop",
+  "Blog": "/home/blog",
+  "Contact": "/home/contacts",
+  "Qui Sommes nous?": "/home/apropos",
+  "menu_admin_user": {
+    "Mon compte": "/user_account/my_account_show",
+    "Espace admin": "/admin",
+    "separator": "",
+    "Confirmez votre compte": "/verify_email",
+    "Logout": "/logout"
+  }
+}

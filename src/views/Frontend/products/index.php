@@ -8,9 +8,10 @@ $this->start('head'); ?>
    <!-- Content -->
    <h1>Products</h1>
    <?php foreach ($products as $product) :?>
-   <h2> <?=htmlspecialchars($product['name']) ?></h2>
-   <p> <?=htmlspecialchars($product['description']) ?></p>
+   <h2><a href="/products/show/<?= $product['id'] ?>"> <?=htmlspecialchars($product['name']) ?></a></h2>
    <?php endforeach; ?>
+
+   <?= dd($query, $update, $delete); ?>
 
    <!-- Fin Content -->
 

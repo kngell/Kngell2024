@@ -18,20 +18,20 @@
     "@babel/plugin-transform-class-properties": "^7.25.9",
     "@babel/preset-env": "^7.26.0",
     "@eslint/eslintrc": "^3.2.0",
-    "@eslint/js": "^9.15.0",
+    "@eslint/js": "^9.16.0",
     "assets-webpack-plugin": "^7.1.1",
     "babel-loader": "^9.2.1",
     "clean-webpack-plugin": "^4.0.0",
     "copy-webpack-plugin": "^12.0.2",
     "cross-env": "^7.0.3",
     "css-loader": "^7.1.2",
-    "eslint": "^9.15.0",
+    "eslint": "^9.16.0",
     "extract-loader-5": "^1.0.0",
     "file-loader": "^6.2.0",
     "globals": "^15.12.0",
     "html-loader": "^5.1.0",
     "mini-css-extract-plugin": "^2.9.2",
-    "sass": "~1.77.6",
+    "sass": "~1.81.0",
     "sass-loader": "^16.0.3",
     "style-loader": "^4.0.0",
     "webpack": "^5.96.1",
@@ -41,8 +41,8 @@
     "webpack-remove-empty-scripts": "^1.0.4"
   },
   "dependencies": {
-    "@fortawesome/fontawesome-free": "^6.7.0",
+    "@fortawesome/fontawesome-free": "^6.7.1",
     "bootstrap": "^5.3.3",
-    "reset-zone": "^2.1.1"
+    "sass-reset": "^1.0.4"
   }
 }

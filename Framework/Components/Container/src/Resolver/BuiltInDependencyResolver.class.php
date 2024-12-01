@@ -11,6 +11,7 @@ class BuiltInDependencyResolver implements DependenciesResolverInterface
     public function resolve(int $key): mixed
     {
         $type = $this->parameter->getType();
+
         $namedType = $type->getName();
         $optional = $this->parameter->isOptional();
         $promoted = $this->parameter->isPromoted();
@@ -25,7 +26,8 @@ class BuiltInDependencyResolver implements DependenciesResolverInterface
         if (empty($this->args)) {
             return match (true) {
                 $this->parameter->allowsNull() => null,
-                $default || $optional => $this->parameter->getDefaultValue(),
+                ($default || $optional) && ! array_key_exists($name, $this->args) => $this->parameter->getDefaultValue(),
+                default => ''
             };
         }
         if ($this->args instanceof Closure) {

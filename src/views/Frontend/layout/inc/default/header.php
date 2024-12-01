@@ -12,7 +12,7 @@
    <meta name="robots" content="index,follow">
    <meta name="csrftoken" content="<?=''?>" />
    <meta name="frm_name" content="<?=$this->getPageTitle()?>" />
-   <!-- Favincon todo -->
+   <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon">
 
    <title>
       <?= $this->getPageTitle()?>

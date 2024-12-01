@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 interface EntityManagerInterface
 {
-    /**
-     * --------------------------------------------------------------------------------------------------
-     * Insert query.
-     * @return CrudInterface
-     */
-    public function getCrud(): CrudInterface;
+    public function createQueryBuilder() : QueryBuilder;
+
+    public function setEntity(Entity $entity): self;
+
+    public function table() : string;
+
+    public function getConnection() : DatabaseConnexionInterface;
+
+    public function getTableAliasHelper(): TablesAliasHelper;
 }

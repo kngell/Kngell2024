@@ -7,7 +7,8 @@ $this->start('head'); ?>
 <main id="main-site">
    <!-- Content -->
    <h1>Products Show</h1>
-   <h2> <?='Id is :' . $id ?></h2>
+   <h2> <?='Prodcut Name :' . $product['name'] ?></h2>
+   <p><?= 'Description :' . $product['description']?></p>
 
    <!-- Fin Content -->
 

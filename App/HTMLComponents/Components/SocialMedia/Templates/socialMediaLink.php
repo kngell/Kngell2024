@@ -1,0 +1,1 @@
+<a target="_new" href="{{link}}"><i class="{{class}}"></i></a>
