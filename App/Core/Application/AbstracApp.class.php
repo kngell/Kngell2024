@@ -3,7 +3,10 @@
 declare(strict_types=1);
 abstract class AbstracApp extends Container
 {
+    use AppGettersAndSetter;
+
     protected AppConfigSetup $appConfig;
+    protected Request $request;
 
     public function app(): App
     {

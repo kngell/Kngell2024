@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 class AuthFilePath implements TemplatePathsInterface
 {
-    private string $templatePath = APP . 'HTMLComponents' . DS . 'Components' . DS . 'Authentication' . DS . 'Templates' . DS;
+    private string $modalPath = VIEW . 'Frontend' . DS . 'components' . DS . 'Authentication' . DS;
+    private string $templatePath = APP . 'HTMLComponents' . DS . 'Components' . DS . 'AuthSystem' . DS . 'Templates' . DS;
 
     public function Paths() : CollectionInterface
     {
@@ -24,11 +25,10 @@ class AuthFilePath implements TemplatePathsInterface
 
     private function authModals() : array
     {
-        $modalPath = $this->templatePath . 'Web' . DS;
         return [
-            'loginboxPath' => $modalPath . 'loginModal.php',
-            'registerboxPath' => $modalPath . 'registerModal.php',
-            'forgotboxPath' => $modalPath . 'forgorPwModal.php',
+            'loginboxPath' => $this->modalPath . 'loginModal.php',
+            'registerboxPath' => $this->modalPath . 'registerModal.php',
+            'forgotboxPath' => $this->modalPath . 'forgorPwModal.php',
         ];
     }
 }

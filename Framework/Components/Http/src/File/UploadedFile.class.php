@@ -58,7 +58,6 @@ class UploadedFile extends File
     public function guessExtensionFromMimeType() : string|null
     {
         $extension = MimeTypeGuessDelegator::getInstance()->guessExtensionByMimeType($this->mimeType);
-
         return ArrayUtils::first($extension);
     }
 
@@ -75,5 +74,10 @@ class UploadedFile extends File
         }
         @chmod($targetFile->getPathname(), 0666 & ~umask());
         return $targetFile;
+    }
+
+    private function getUploadedErrorMessage() : string
+    {
+        return '';
     }
 }

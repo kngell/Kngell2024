@@ -4,35 +4,38 @@ declare(strict_types=1);
 
 class EntityManager implements EntityManagerInterface
 {
-    private DatabaseConnexionInterface $conn;
+    private DataMapperInterface $mapper;
     private TablesAliasHelper $tableAliasHelper;
     private Entity $entity;
+    private ReflectionObject $reflector;
     private $repositories = [];
+    private MainQuery $queryExpr;
+    private string $entityFieldId;
 
-    public function __construct(DatabaseConnexionInterface $conn, TablesAliasHelper $tableAliasHelper)
+    public function __construct(DataMapperInterface $mapper, TablesAliasHelper $tableAliasHelper)
     {
-        $this->conn = $conn;
+        $this->mapper = $mapper;
         $this->tableAliasHelper = $tableAliasHelper;
     }
 
     public function beginTransaction()
     {
-        $this->conn->beginTransaction();
+        $this->mapper->beginTransaction();
     }
 
     public function commit()
     {
-        $this->conn->commit();
+        $this->mapper->commit();
     }
 
     public function rollback()
     {
-        $this->conn->rollback();
+        $this->mapper->rollback();
     }
 
     public function getConnection() : DatabaseConnexionInterface
     {
-        return $this->conn;
+        return $this->mapper->getConnexion();
     }
 
     public function createQueryBuilder() : QueryBuilder
@@ -40,41 +43,124 @@ class EntityManager implements EntityManagerInterface
         return new QueryBuilder($this);
     }
 
-    public function getRepository($entityName)
+    public function getRepository(Entity|string|null $entityName = null) : array|RepositoryInterface
     {
-        $entityName = ltrim($entityName, '\\');
+        if (null !== $entityName) {
+            if ($entityName instanceof Entity) {
+                $entityName = $entityName::class;
+                $this->entity = $entityName;
+            }
 
-        if (isset($this->repositories[$entityName])) {
-            return $this->repositories[$entityName];
+            if (isset($this->repositories[$entityName])) {
+                return $this->repositories[$entityName];
+            }
+            $repositoryClassName = $entityName . 'Repository';
+            if (class_exists($repositoryClassName)) {
+                $this->repositories[$entityName] = new $repositoryClassName($this);
+                return  $this->repositories[$entityName];
+            }
         }
-
-        // $metadata = $this->getClassMetadata($entityName);
-        // $repositoryClassName = $metadata->customRepositoryClassName;
-
-        // if ($repositoryClassName === null) {
-        //     $repositoryClassName = $this->config->getDefaultRepositoryClassName();
-        // }
-
-        // $repository = new $repositoryClassName($this, $metadata);
-
-        // $this->repositories[$entityName] = $repository;
-
-        // return $repository;
+        return new Repository($this);
     }
 
-    /**
-     * @param mixed $entityName
-     * @param mixed $identifier
-     * @return object
-     */
-    public function find($entityName, $identifier) : object
+    public function persist() : self
     {
-        return $this->getRepository($entityName)->find($identifier);
+        $sql = $this->queryExpr->getQuery();
+        $parameters = $this->queryExpr->getParameters();
+        $bindArray = $this->queryExpr->getBindArr();
+        $mapper = $this->mapper->persist($sql, $parameters, false);
+        return $this;
     }
 
-    public static function create(DatabaseConnexionInterface $conn, TablesAliasHelper $tblh)
+    public function getResults(array $options = [], string|null $repositoryMethod = null) : QueryResult
     {
-        return new self($conn, $tblh);
+        return new QueryResult($this->mapper, $options, $repositoryMethod);
+    }
+
+    public function assign(array $data) : self
+    {
+        /** @var ReflectionProperty[] */
+        $attrs = $this->reflector->getProperties(ReflectionProperty::IS_PRIVATE);
+
+        foreach ($data as $key => $prop) {
+            $ok = array_filter($attrs, function ($attr) use ($key) {
+                return $key === $attr->getName();
+            });
+            if ($ok) {
+                /** @var ReflectionProperty */
+                $property = ArrayUtils::first($ok);
+                $property->setAccessible(true);
+                $property->setValue($this->entity, $prop);
+            }
+        }
+        return $this;
+    }
+
+    public function getEntityKeyField(): string|bool
+    {
+        if (isset($this->entityFieldId)) {
+            return $this->entityFieldId;
+        }
+        $properties = $this->reflector->getProperties(ReflectionProperty::IS_PRIVATE);
+        foreach ($properties as $property) {
+            $identifier = $property->getAttributes();
+            if (! empty($identifier)) {
+                /** @var ReflectionAttribute */
+                $attribute = ArrayUtils::first($identifier);
+                $attrArguments = $attribute->getArguments();
+                if ($attrArguments['name'] === 'id') {
+                    $this->entityFieldId = $property->getName();
+                    return $this->entityFieldId;
+                }
+            }
+        }
+        return false;
+    }
+
+    public function getEntityKeyValue() : mixed
+    {
+        $keyField = $this->getEntityKeyField();
+        $method = 'get' . ucfirst($keyField);
+        return $this->reflector->getMethod($method)->invoke($this->entity, $method);
+    }
+
+    public function isEntityKeyInitialized() : bool
+    {
+        $fieldId = $this->entityFieldId ?? $this->getEntityKeyField();
+        $properties = $this->reflector->getProperties(ReflectionProperty::IS_PRIVATE);
+        foreach ($properties as $property) {
+            if ($property->getName() === $fieldId && $property->isInitialized($this->entity)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public function getEntityProperties() : array
+    {
+        $properties = [];
+        $all = $this->reflector->getProperties(ReflectionProperty::IS_PUBLIC | ReflectionProperty::IS_PRIVATE);
+        foreach ($all as $property) {
+            if ($property->isInitialized($this->entity)) {
+                $field = $property->getName();
+                if ($property->getType()->getName() === 'DateTimeInterface') {
+                    $properties[$field] = $property->getValue($this->entity)->format('Y-m-d H:i:s');
+                } else {
+                    $properties[$field] = $property->getValue($this->entity);
+                }
+            }
+        }
+        return $properties;
+    }
+
+    // public function find($entityName, $identifier) : object
+    // {
+    //     return $this->getRepository($entityName)->find($identifier);
+    // }
+
+    public static function create(DataMapperInterface $mapper, TablesAliasHelper $tblh)
+    {
+        return new self($mapper, $tblh);
     }
 
     /**
@@ -87,7 +173,7 @@ class EntityManager implements EntityManagerInterface
     public function setEntity(Entity $entity): self
     {
         $this->entity = $entity;
-
+        $this->reflector = new ReflectionObject($this->entity);
         return $this;
     }
 
@@ -104,5 +190,39 @@ class EntityManager implements EntityManagerInterface
     public function getTableAliasHelper(): TablesAliasHelper
     {
         return $this->tableAliasHelper;
+    }
+
+    /**
+     * Get the value of entity.
+     *
+     * @return Entity
+     */
+    public function getEntity(): Entity
+    {
+        return $this->entity;
+    }
+
+    /**
+     * Get the value of queryExpr.
+     *
+     * @return MainQuery
+     */
+    public function getQueryExpr(): MainQuery
+    {
+        return $this->queryExpr;
+    }
+
+    /**
+     * Set the value of queryExpr.
+     *
+     * @param MainQuery $queryExpr
+     *
+     * @return self
+     */
+    public function setQueryExpr(MainQuery $queryExpr): self
+    {
+        $this->queryExpr = $queryExpr;
+
+        return $this;
     }
 }

@@ -5,7 +5,7 @@ declare(strict_types=1);
 class InNotInRules extends AbstractConditionRules
 {
     /**
-     * @param TablesAliasHelper $tblh
+     * @param EntityManagerInterface $em
      * @param QueryBuilder $builder
      * @param array $bind_arr
      * @param array $tableAlias
@@ -14,7 +14,7 @@ class InNotInRules extends AbstractConditionRules
      * @param array $tables
      */
     public function __construct(
-        TablesAliasHelper $tblh,
+        EntityManagerInterface $em,
         QueryBuilder $builder,
         array $bind_arr,
         array $tableAlias,
@@ -23,7 +23,7 @@ class InNotInRules extends AbstractConditionRules
         array $tables,
         string $method
     ) {
-        $this->tblh = $tblh->setTables($tables);
+        $this->em = $em;
         $this->builder = $builder;
         $this->bind_arr = $bind_arr;
         $this->tableAlias = $tableAlias;
@@ -35,12 +35,13 @@ class InNotInRules extends AbstractConditionRules
 
     public function getRule(array $conditions) : string
     {
+        $tblh = $this->em->getTableAliasHelper()->setTables($this->tables);
         $conditions = $this->normalize($conditions);
         $conditions = arrayUtils::first($conditions);
         $op = $this->getOperation($conditions);
         $arrPrx = $this->arrayPrefixer($conditions['list'], null, $conditions['column']);
-        list($table, $column) = $this->tblh->mapTableColumn($conditions['column']);
-        list($table, $alias) = $this->tblh->get($table, $this->tableAlias, $this->aliasCheck);
+        list($table, $column) = $tblh->mapTableColumn($conditions['column']);
+        list($table, $alias) = $tblh->get($table, $this->tableAlias, $this->aliasCheck);
         return $alias . '.' . $column . ' ' . $op . ' (' . $arrPrx . ')';
     }
 

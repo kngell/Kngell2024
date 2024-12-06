@@ -8,12 +8,14 @@ enum ConditionRuleType : string
     case IN = 'in';
     case ON = 'on';
     case SET = 'set';
+    case VALUES = 'values';
 
     private const array RULE_TYPES = [
         'where' => ['where', 'orWhere', 'having', 'and', 'or', 'whereNotEqualTo'],
         'in' => ['whereIn', 'whereNotIn'],
         'on' => ['on', 'onNotIn', 'onLessThan', 'onGreaterThen'],
         'set' => ['set'],
+        'values' => ['values'],
     ];
 
     public static function getRuleType(string $method) : self

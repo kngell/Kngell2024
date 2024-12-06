@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-class Request extends SuperGlobals
+readonly class Request
 {
     protected HeaderMap $headers;
-    protected Map $query;
-    protected Map $post;
-    protected Map $server;
+    protected CustomHttpMap $query;
+    protected CustomHttpMap $post;
+    protected CustomHttpMap $server;
     protected CookiesMap $cookies;
     protected FileMap $files;
     protected HttpMethod $method;
@@ -16,24 +16,22 @@ class Request extends SuperGlobals
     protected float $requestStartTime;
     protected string|null $rawContent;
 
-    public function __construct()
+    public function __construct(SuperGlobalsInterface $superGlobals)
     {
-        parent::__construct();
-        $this->server = new Map($this->_Server());
-        $this->query = new Map($this->_Get());
-        $this->post = new Map($this->_Post());
-        $this->cookies = CookiesMap::createFromCookieGlobals($this->_Cookies());
-        $this->headers = HeaderMap::createFromServerGlobals($this->_Server());
-        $this->files = new FileMap($this->_Files());
-        $this->requestStartTime = (float) $this->server->get('REQUEST_TIME_FLOAT') ?? 0;
-        $this->method = HttpMethod::fromString($this->server->get('REQUEST_METHOD'));
-        $this->protocol = strtolower($this->server->get('SERVER_PROTOCOL'));
-        $this->requestedUri = $this->url();
-
+        $this->server = new CustomHttpMap($superGlobals->server());
+        $this->query = new CustomHttpMap($superGlobals->get());
+        $this->post = new CustomHttpMap($superGlobals->post());
+        $this->cookies = CookiesMap::createFromCookieGlobals($superGlobals->cookies());
+        $this->headers = HeaderMap::createFromServerGlobals($superGlobals->server());
+        $this->files = new FileMap($superGlobals->files());
+        $this->requestStartTime = (float) $this->server->get('request_time_float') ?? 0;
+        $this->method = HttpMethod::fromString($this->server->get('request_method'));
+        $this->protocol = strtolower($this->server->get('server_protocol'));
+        $this->requestedUri = $superGlobals->server('request_uri');
         $rawContent = file_get_contents('php://input');
         $this->rawContent = $rawContent !== false && ! StringUtils::isBlanc($rawContent) ? $rawContent : null;
 
-        $this->emptyGlobals();
+        $superGlobals->emptyGlobals();
     }
 
     public function hasBody() : bool
@@ -85,17 +83,17 @@ class Request extends SuperGlobals
         return $this->headers;
     }
 
-    public function getQuery(): Map
+    public function getQuery(): CustomHttpMap
     {
         return $this->query;
     }
 
-    public function getPost(): Map
+    public function getPost(): CustomHttpMap
     {
         return $this->post;
     }
 
-    public function getServer(): Map
+    public function getServer(): CustomHttpMap
     {
         return $this->server;
     }
@@ -133,10 +131,5 @@ class Request extends SuperGlobals
     public function getRawContent(): ?string
     {
         return $this->rawContent;
-    }
-
-    private function url() : string
-    {
-        return $this->_server('request_uri');
     }
 }

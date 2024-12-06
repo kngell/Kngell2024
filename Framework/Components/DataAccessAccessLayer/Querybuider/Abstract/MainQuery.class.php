@@ -23,7 +23,7 @@ abstract class MainQuery
     protected string $query = '';
     protected string|null $table;
     protected Token $token;
-    protected TablesAliasHelper $tblh;
+    protected EntityManagerInterface $em;
     protected ?QueryType $queryType;
 
     /**

@@ -4,72 +4,27 @@ declare(strict_types=1);
 
 interface DataMapperInterface
 {
-    // public function setCredentials(array $credentials) : self;
-
-    /**
-     * --------------------------------------------------------------------------------------------------
-     * Prepare the query string.
-     * @param string $sql
-     * @return self
-     */
     public function prepare(string $sql) : self;
 
-    /**
-     * Bind params.
-     * -------------------------------------------------------------------------------------------------.
-     * @param mixed $param
-     * @param mixed $value
-     * @param [type] $type
-     * @return void
-     * @throws DataMapperExceptions
-     */
-    public function bind(mixed $param, mixed $value, $type = null);
+    public function bindValues(string $param, mixed $value, int|null $type = null) : self;
 
-    /**
-     * --------------------------------------------------------------------------------------------------
-     * combinaition method wich combines bind type and values.
-     *@param array $fields
-     *@param bool $isSearch
-     *@return bool|self
-     */
-    public function bindParameters(array $fields = [], bool $isSearch = false) : bool|self;
+    public function biendSearchValues(array $fields = []) : self;
 
-    /**
-     * --------------------------------------------------------------------------------------------------
-     * Return number of rows.
-     * @return int
-     */
-    public function numrow(): int;
+    public function execute(): self;
 
-    /**
-     * --------------------------------------------------------------------------------------------------
-     * Execute prepare statement.
-     * @return void
-     */
-    public function execute(): mixed;
+    public function getQueryStatement(): PDOStatement;
 
-    /**
-     * --------------------------------------------------------------------------------------------------
-     * Return sigle object result.
-     *@return object
-     */
-    public function result(): Object;
+    public function getQueryResult(): bool;
 
-    /**
-     * --------------------------------------------------------------------------------------------------
-     * Return all.
-     * @param array $options
-     * @return self
-     */
-    public function results(array $options) : self;
+    public function persist(string $sql = '', array $parameters = [], bool $isSearch = false) : self;
 
-    /**
-     * --------------------------------------------------------------------------------------------------
-     * Get las insert ID.
-     * @return int
-     * @throws throwable
-     */
-    public function getLasID(): int;
+    public function hasResults() : bool;
 
-    public function count() : int;
+    public function beginTransaction() : bool;
+
+    public function commit() :  bool;
+
+    public function rollback() : bool;
+
+    public function getConnexion() : DatabaseConnexionInterface;
 }

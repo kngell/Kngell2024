@@ -12,7 +12,7 @@ class NativeCookieStore extends AbstractCookieStore
     public function getCookie(string $name) : mixed
     {
         if ($this->exists($name)) {
-            return $this->gv->_Cookies($name);
+            return $this->gv->cookies($name);
         }
     }
 
@@ -26,7 +26,7 @@ class NativeCookieStore extends AbstractCookieStore
     public function exists(string $name = ''): bool
     {
         $CookieName = $name == '' ? $this->cookieEnvironment->getCookieName() : $name;
-        return array_key_exists($CookieName, $this->gv->_Cookies());
+        return array_key_exists($CookieName, $this->gv->cookies());
     }
 
     /**

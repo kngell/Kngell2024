@@ -6,10 +6,13 @@ $this->start('head'); ?>
 <?php $this->start('body'); ?>
 <main id="main-site">
    <!-- Content -->
-   <h1>Products Show</h1>
-   <h2> <?='Prodcut Name :' . $product['name'] ?></h2>
-   <p><?= 'Description :' . $product['description']?></p>
-
+   <div class='container mb-3 w-50'>
+      <h1>Products Show</h1>
+      <h2> <?='Prodcut Name :' . $product['name'] ?></h2>
+      <h3><?= 'Description :' . $product['description']?></h3>
+      <p><a href="/products/<?=$product['id']?>/edit">Edit</a></p>
+      <p><a href="/products/<?=$product['id']?>/delete">Delete</a></p>
+   </div>
    <!-- Fin Content -->
 
 </main>

@@ -4,22 +4,25 @@ declare(strict_types=1);
 class OrderBy extends MainQuery
 {
     private array|string $orderBy;
+    private array $tables;
 
-    public function __construct(TablesAliasHelper $tblh, array $tables, array|string|null ...$orderBy)
+    public function __construct(EntityManagerInterface $em, array $tables, array|string|null ...$orderBy)
     {
         $this->orderBy = $orderBy;
-        $this->tblh = $tblh->setTables($tables);
+        $this->em = $em;
+        $this->tables = $tables;
     }
 
     public function getSql(): array
     {
         $orderBy = $this->getOrderByComlumns();
         $newColumns = '';
+        $tblh = $this->em->getTableAliasHelper()->setTables($this->tables);
         foreach ($orderBy as $key => $column) {
             $end = $key !== array_key_last($orderBy) ? ', ' : '';
             list($column, $sort) = $this->ascDescColumnparser($column);
-            list($table, $column) = $this->tblh->mapTableColumn($column);
-            list($table, $alias) = $this->tblh->get($table, $this->tableAlias, $this->aliasCheck);
+            list($table, $column) = $tblh->mapTableColumn($column);
+            list($table, $alias) = $tblh->get($table, $this->tableAlias, $this->aliasCheck);
             $alias = ! empty($alias) ? $alias . '.' : '';
             $newColumns .= $alias . $column . ' ' . $sort . $end;
         }

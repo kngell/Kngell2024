@@ -23,14 +23,12 @@ class QueryBuilder
     private string $joinMethod;
     private string $whereMethod;
     private array $tables = [];
-    private ?TablesAliasHelper $tblh;
     private ?QueryType $queryType;
     private EntityManagerInterface $entityManager;
 
     public function __construct(EntityManagerInterface $entityManager)
     {
         $this->currentTableName = $entityManager->table();
-        $this->tblh = $entityManager->getTableAliasHelper();
         $this->entityManager = $entityManager;
     }
 
@@ -38,7 +36,7 @@ class QueryBuilder
     {
         ! isset($this->queryType) ? $this->queryType = QueryType::get(__FUNCTION__) : '';
         ! isset($this->select) ? $this->select = new QueryStatement : '';
-        $this->select->add((new Select($this->tblh, $columns))->setTable($this->currentTableName));
+        $this->select->add((new Select($this->entityManager, $columns))->setTable($this->currentTableName));
         $this->tables[$this->currentTableName] = $columns;
         $this->select->getChildren()->last()->setMethod(__FUNCTION__);
         return $this;
@@ -57,20 +55,20 @@ class QueryBuilder
             $this->tables[$table] = $columns;
             $this->currentTableName = $table;
         }
-        $this->from->add(new From($this->tblh, $this->queryType, $table));
+        $this->from->add(new From($this->entityManager, $this->queryType, $table));
         $this->from->getChildren()->last()->setMethod(__FUNCTION__);
         return $this;
     }
 
     public function where(mixed ...$conditions): self
     {
-        ! isset($this->where) ? $this->where = new QueryStatement : '';
-        // if (! isset($this->from)) {
-        //     $this->from($this->currentTableName);
-        // }
-        $method = isset($this->whereMethod) ? $this->whereMethod : __FUNCTION__;
-        $this->where->add(new Conditions($this->tblh, new self($this->entityManager, $this->tblh), $this->tables, $conditions));
-        $this->where->getChildren()->last()->setMethod($method);
+        $arrCheck = ArrayUtils::flattenArrayRecursive($conditions);
+        if (! empty($arrCheck)) {
+            ! isset($this->where) ? $this->where = new QueryStatement : '';
+            $method = isset($this->whereMethod) ? $this->whereMethod : __FUNCTION__;
+            $this->where->add(new Conditions($this->entityManager, new self($this->entityManager), $this->tables, $conditions));
+            $this->where->getChildren()->last()->setMethod($method);
+        }
         return $this;
     }
 
@@ -118,8 +116,8 @@ class QueryBuilder
             throw new BadQueryRequestException("$table already exist in this request. Please join another table");
         }
         $joinMethod = isset($this->joinMethod) ? $this->joinMethod : __FUNCTION__;
-        $this->select->add((new Select($this->tblh, $columns))->setTable($table));
-        $this->join->add(new Join($this->tblh, $table));
+        $this->select->add((new Select($this->entityManager, $columns))->setTable($table));
+        $this->join->add(new Join($this->entityManager, $table));
         $this->tables[$table] = $columns;
         $this->join->getChildren()->last()->setMethod($joinMethod);
         $this->select->getChildren()->last()->setMethod($joinMethod);
@@ -151,7 +149,7 @@ class QueryBuilder
             throw new BadQueryRequestException('No joined table defined for On conditions');
         }
         $method = __FUNCTION__;
-        $this->on->add(new Conditions($this->tblh, new self($this->entityManager, $this->tblh), $this->tables, $conditions));
+        $this->on->add(new Conditions($this->entityManager, new self($this->entityManager), $this->tables, $conditions));
         $this->on->getChildren()->last()->setMethod($method);
         return $this;
     }
@@ -159,7 +157,7 @@ class QueryBuilder
     public function groupBy(string|array ...$columns): self
     {
         ! isset($this->groupBy) ? $this->groupBy = new QueryStatement : '';
-        $this->groupBy->add((new GroupBy($this->tblh, $this->tables, $columns)));
+        $this->groupBy->add((new GroupBy($this->entityManager, $this->tables, $columns)));
         $this->groupBy->getChildren()->last()->setMethod(__FUNCTION__);
         return $this;
     }
@@ -167,7 +165,7 @@ class QueryBuilder
     public function having(mixed ...$conditions): self
     {
         ! isset($this->having) ? $this->having = new QueryStatement : '';
-        $this->having->add(new Conditions($this->tblh, new self($this->entityManager, $this->tblh), $this->tables, $conditions));
+        $this->having->add(new Conditions($this->entityManager, new self($this->entityManager), $this->tables, $conditions));
         $this->having->getChildren()->last()->setMethod(__FUNCTION__);
         return $this;
     }
@@ -175,7 +173,7 @@ class QueryBuilder
     public function orderBy(string|array ...$orderBy): self
     {
         ! isset($this->orderBy) ? $this->orderBy = new QueryStatement : '';
-        $this->orderBy->add(new OrderBy($this->tblh, $this->tables, $orderBy));
+        $this->orderBy->add(new OrderBy($this->entityManager, $this->tables, $orderBy));
         $this->orderBy->getChildren()->last()->setMethod(__FUNCTION__);
         return $this;
     }
@@ -183,7 +181,7 @@ class QueryBuilder
     public function limit(int $limit): self
     {
         ! isset($this->limit) ? $this->limit = new QueryStatement : '';
-        $this->limit->add(new LimitOffset($this->tblh, $limit));
+        $this->limit->add(new LimitOffset($this->entityManager, $limit));
         $this->limit->getChildren()->last()->setMethod(__FUNCTION__);
         return $this;
     }
@@ -191,7 +189,7 @@ class QueryBuilder
     public function offset(int $offset): self
     {
         ! isset($this->offset) ? $this->offset = new QueryStatement : '';
-        $this->offset->add(new LimitOffset($this->tblh, $offset));
+        $this->offset->add(new LimitOffset($this->entityManager, $offset));
         $this->offset->getChildren()->last()->setMethod(__FUNCTION__);
         return $this;
     }
@@ -203,7 +201,7 @@ class QueryBuilder
         }
         ! isset($this->queryType) ? $this->queryType = QueryType::get(__FUNCTION__) : '';
         ! isset($this->update) ? $this->update = new QueryStatement : '';
-        $this->update->add(new Update($this->tblh, $this->currentTableName));
+        $this->update->add(new Update($this->entityManager, $this->currentTableName));
         $this->update->getChildren()->last()->setMethod(__FUNCTION__);
         return $this;
     }
@@ -211,19 +209,17 @@ class QueryBuilder
     public function set(mixed ...$keyValues) : self
     {
         ! isset($this->set) ? $this->set = new QueryStatement : '';
-        $this->set->add(new Conditions($this->tblh, new self($this->entityManager, $this->tblh), [], $keyValues));
+        $this->set->add(new Conditions($this->entityManager, new self($this->entityManager), [], $keyValues));
         $this->set->getChildren()->last()->setMethod(__FUNCTION__);
         return $this;
     }
 
-    public function insert(string|null $table = null) : self
+    public function insert(string|Entity|null $table = null) : self
     {
-        if ($table !== null) {
-            $this->currentTableName = $table;
-        }
+        $this->checkTable($table);
         ! isset($this->queryType) ? $this->queryType = QueryType::get(__FUNCTION__) : '';
         ! isset($this->insert) ? $this->insert = new QueryStatement : '';
-        $this->insert->add(new Insert($this->currentTableName));
+        $this->insert->add(new Insert($this->entityManager, $this->currentTableName));
         $this->insert->getChildren()->last()->setMethod(__FUNCTION__);
         return $this;
     }
@@ -243,7 +239,7 @@ class QueryBuilder
     public function fields(array|string|null ...$columns) : self
     {
         ! isset($this->fields) ? $this->fields = new QueryStatement : '';
-        $this->fields->add(new Fields($columns));
+        $this->fields->add(new Fields($this->entityManager, $columns));
         $this->fields->getChildren()->last()->setMethod(__FUNCTION__);
         return $this;
     }
@@ -251,7 +247,7 @@ class QueryBuilder
     public function values(array|string|null|int ...$values) : self
     {
         ! isset($this->values) ? $this->values = new QueryStatement : '';
-        $this->values->add(new Fields($values));
+        $this->values->add(new Conditions($this->entityManager, new self($this->entityManager), $values));
         $this->values->getChildren()->last()->setMethod(__FUNCTION__);
         return $this;
     }
@@ -303,9 +299,14 @@ class QueryBuilder
                 $query->add($this->{$statement});
             }
         }
-        $results = $query->getSql();
+        $query->getSql();
+        $this->entityManager->setQueryExpr($query);
         return $query;
     }
+
+    // public function getSql(): array
+    // {
+    // }
 
     /**
      * Get the value of currentTableName.
@@ -325,5 +326,15 @@ class QueryBuilder
     public function getEntityManager(): EntityManagerInterface
     {
         return $this->entityManager;
+    }
+
+    private function checkTable(string|Entity|null $table) : void
+    {
+        if (is_string($table)) {
+            $this->currentTableName = $table;
+        } elseif ($table instanceof Entity) {
+            $this->entityManager->setEntity($table);
+            $this->currentTableName = $this->entityManager->table();
+        }
     }
 }

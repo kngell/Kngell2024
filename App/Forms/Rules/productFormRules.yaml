@@ -1,0 +1,10 @@
+name:
+  display: Product title
+  required: true
+  min: 2
+  max: 150
+description:
+  display: Product short description
+  required: true
+  min: 2
+  max: 255

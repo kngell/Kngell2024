@@ -19,7 +19,7 @@ class File extends SplFileInfo
             throw new FileException("Unable to write into directory {$directory}.");
         }
         $fileName = StringUtils::isBlanc($name) ? $this->getBasename() : $name;
-        $targetPath = $directory . DIRECTORY_SEPARATOR . $fileName;
+        $targetPath = $directory . DS . $fileName;
         return new self($targetPath);
     }
 }

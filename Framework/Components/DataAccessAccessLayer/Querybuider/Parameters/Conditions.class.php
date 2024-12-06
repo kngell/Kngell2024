@@ -5,12 +5,12 @@ declare(strict_types=1);
 class Conditions extends MainQuery
 {
     protected array $tables = [];
-    protected array|string $conditions;
+    protected mixed $conditions;
     protected ?QueryBuilder $builder;
 
-    public function __construct(TablesAliasHelper $tblh, ?QueryBuilder $builder = null, array $tables = [], mixed ...$conditions)
+    public function __construct(EntityManagerInterface $em, ?QueryBuilder $builder = null, array $tables = [], mixed ...$conditions)
     {
-        $this->tblh = $tblh;
+        $this->em = $em;
         $this->builder = $builder;
         $this->tables = $tables;
         $this->conditions = $conditions;
@@ -48,7 +48,7 @@ class Conditions extends MainQuery
     private function conditionRuleFactory() : ConditionRulesFactory
     {
         return new ConditionRulesFactory(
-            $this->tblh,
+            $this->em,
             $this->builder,
             $this->bind_arr,
             $this->tableAlias,
@@ -60,11 +60,17 @@ class Conditions extends MainQuery
 
     private function braceOpen() : string
     {
+        if ($this->method === 'set') {
+            return '';
+        }
         return '(';
     }
 
     private function braceClose(): string
     {
+        if ($this->method === 'set') {
+            return '';
+        }
         return ')';
     }
 }

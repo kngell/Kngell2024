@@ -18,13 +18,19 @@ class RouteMatcher
         $this->routes = $routeCollector->getRoutes();
     }
 
-    public function match(Request $request, string $internalUrl = '') : RouteInfo|null
+    public function match(Request $request, string $internalUrl) : RouteInfo|null
     {
         $routePath = $this->getRoutePath($request, $internalUrl);
+        $httpMethod = $request->getServer()->get('request_method');
         foreach ($this->routes as $route => $params) {
             $pattern = $this->getPatternFromroutePath($route);
             if (preg_match($pattern, $routePath, $matches)) {
                 $matches = array_merge(array_filter($matches, 'is_string', ARRAY_FILTER_USE_KEY), $params ?? []);
+                if (array_key_exists('httpMethod', $matches)) {
+                    if (strtolower($httpMethod) !== strtolower($params['httpMethod'])) {
+                        continue;
+                    }
+                }
                 return $this->route($route, $pattern, $matches);
             }
         }
@@ -36,7 +42,7 @@ class RouteMatcher
         $url = ! empty($url) ? $url : $request->getRequestedUri();
         $url = parse_url($url, PHP_URL_PATH);
         if ($url === false) {
-            throw new UnexpectedValueException("Malformed url '{$request->_Server('request_uri')}'");
+            throw new UnexpectedValueException("Malformed url '{$request->getServer()->get('request_uri')}'");
         }
         return trim(urldecode($url), DS);
     }

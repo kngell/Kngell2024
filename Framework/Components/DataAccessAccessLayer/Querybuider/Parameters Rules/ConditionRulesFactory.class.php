@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 final class ConditionRulesFactory
 {
-    protected TablesAliasHelper $tblAliasHelper;
+    protected EntityManagerInterface $em;
     protected ?QueryBuilder $builder;
     protected array $bind_arr = [];
     protected array $tableAlias = [];
@@ -14,7 +14,7 @@ final class ConditionRulesFactory
     protected array $tables;
 
     /**
-     * @param TablesAliasHelper $tblAliasHelper
+     * @param EntityManagerInterface $em
      * @param QueryBuilder $builder
      * @param array $bind_arr
      * @param array $tableAlias
@@ -23,7 +23,7 @@ final class ConditionRulesFactory
      * @param array $tables
      */
     public function __construct(
-        TablesAliasHelper $tblAliasHelper,
+        EntityManagerInterface $em,
         ?QueryBuilder $builder,
         array $bind_arr,
         array $tableAlias,
@@ -31,7 +31,7 @@ final class ConditionRulesFactory
         array $parameters,
         array $tables
     ) {
-        $this->tblAliasHelper = $tblAliasHelper;
+        $this->em = $em;
         $this->builder = $builder;
         $this->bind_arr = $bind_arr;
         $this->tableAlias = $tableAlias;
@@ -40,12 +40,12 @@ final class ConditionRulesFactory
         $this->tables = $tables;
     }
 
-    public function create(string $method, array $conditions) : AbstractConditionRules
+    public function create(string $method, array|null $conditions) : AbstractConditionRules
     {
         $rule = ConditionRuleType::getRuleType($method);
         return match (true) {
-            $rule->value === 'in' || (isset($conditions[1]) && is_string($conditions[1]) && in_array(strtolower($conditions[1]), ['in', 'notin'])) => new InNotInRules(
-                $this->tblAliasHelper,
+            $rule->value === 'in' || (null !== $conditions && isset($conditions[1]) && is_string($conditions[1]) && in_array(strtolower($conditions[1]), ['in', 'notin'])) => new InNotInRules(
+                $this->em,
                 $this->builder,
                 $this->bind_arr,
                 $this->tableAlias,
@@ -55,7 +55,7 @@ final class ConditionRulesFactory
                 $method
             ),
             in_array($rule->value, ['where', 'on']) => new whereConditionRule(
-                $this->tblAliasHelper,
+                $this->em,
                 $this->builder,
                 $this->bind_arr,
                 $this->tableAlias,
@@ -64,8 +64,8 @@ final class ConditionRulesFactory
                 $this->tables,
                 $method
             ),
-            $rule->value === 'set' => new UpdateKeyValuesRules(
-                $this->tblAliasHelper,
+            $rule->value === 'set' => new SetKeyValuesRules(
+                $this->em,
                 $this->builder,
                 $this->bind_arr,
                 $this->tableAlias,
@@ -73,7 +73,17 @@ final class ConditionRulesFactory
                 $this->parameters,
                 $this->tables,
                 $method
-            )
+            ),
+            $rule->value === 'values' => new InsertRuleValues(
+                $this->em,
+                $this->builder,
+                $this->bind_arr,
+                $this->tableAlias,
+                $this->aliasCheck,
+                $this->parameters,
+                $this->tables,
+                $method
+            ),
         };
     }
 }

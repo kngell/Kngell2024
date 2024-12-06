@@ -2,71 +2,35 @@
 
 declare(strict_types=1);
 
-use Throwable;
-
-class DataMapper extends AbstractDataMapper implements DataMapperInterface
+class DataMapper extends AbstractDataMapper
 {
+    private bool $queryResult;
+
     /**
-     * Set Database connection
-     * ===================================================================.
+     * @param DataMapperEnvironmentConfig $env
+     * @return void
+     * @throws DataMapperInvalidArgumentException
+     * @throws BindingResolutionException
+     * @throws ReflectionException
+     * @throws DependencyHasNoDefaultValueException
      */
-    public function __construct(DatabaseConnexionInterface $_con)
+    public function __construct(DataMapperEnvironmentConfig $env)
     {
-        $this->_con = $_con;
+        parent::__construct($env);
     }
 
-    /**
-     *@inheritDoc
-     */
-    public function prepare(string $sql):self
-    {
-        $this->_query = $this->_con->open()->prepare($sql);
-
-        return $this;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function bind($param, $value, $type = null)
+    public function persist(string $sql = '', array $parameters = [], bool $isSearch = false) : self
     {
         try {
-            $this->_query->bindValue($param, $value, $type === null ? match (true) {
-                is_int($value) => PDO::PARAM_INT,
-                is_bool($value) => PDO::PARAM_BOOL,
-                $value === null => PDO::PARAM_NULL,
-                default => PDO::PARAM_STR
-            } : $type);
-        } catch (\Throwable $ex) {
-            throw new DataMapperExceptions($ex->getMessage(), $ex->getCode());
+            return isset($parameters[0]) && $parameters[0] == 'all' ? $this->prepare($sql)->execute() : $this->prepare($sql)->bindParameters($parameters, $isSearch)->execute();
+        } catch (Throwable $th) {
+            throw $th;
         }
     }
 
-    /**
-     * Bind an Array of Values.
-     * ==============================================================.
-     * @param array $fields
-     * @return void
-     */
-    public function bindArrayValues(array $fields) : PDOStatement
+    public function bindParameters(array $parameters = [], bool $isSearch = false) : bool|self
     {
-        if ($this->isArray($fields)) {
-            foreach ($fields as $key => $value) {
-                $this->_query->bindValue(':' . $key, $value, $this->valueType($value));
-            }
-        }
-
-        return $this->_query;
-    }
-
-    /**
-     * Bind Parameters
-     * ==============================================================.
-     * @inheritDoc
-     */
-    public function bindParameters(array $fields = [], bool $isSearch = false) : bool|self
-    {
-        $type = ($isSearch === false) ? $this->bindValues($fields) : $this->biendSearchValues($fields);
+        $type = ($isSearch === false) ? $this->bindArrayValues($parameters) : $this->biendSearchValues($parameters);
         if ($type) {
             return $this;
         }
@@ -75,162 +39,113 @@ class DataMapper extends AbstractDataMapper implements DataMapperInterface
     }
 
     /**
-     * Biend Values
-     * ===============================================================.
+     * @param string $sql
+     * @return DataMapper
+     */
+    public function prepare(string $sql) : self
+    {
+        $this->_query = $this->_con->open()->prepare($sql);
+        return $this;
+    }
+
+    /**
+     * @param string $param
+     * @param mixed $value
+     * @param int|null $type
+     * @return DataMapper
+     * @throws DataMapperExceptions
+     */
+    public function bindValues(string $param, mixed $value, int|null $type = null) : self
+    {
+        try {
+            $this->_query->bindValue($param, $value, $type === null ? $this->valueType($value) : $type);
+            return $this;
+        } catch (Throwable $ex) {
+            throw new DataMapperExceptions($ex->getMessage(), $ex->getCode());
+        }
+    }
+
+    /**
      * @param array $fields
      * @return PDOStatement
+     * @throws DataMapperExceptions
      */
-    public function bindValues(array $fields = []) : PDOStatement
+    public function bindArrayValues(array $fields) : PDOStatement
     {
-        if (!empty($fields)) {
-            if (isset($fields['bind_array'])) {
-                unset($fields['bind_array']);
-            }
-            foreach ($fields as $key => $val) {
-                if (in_array($key, ['and', 'or'])) {
-                    $val = current($val);
-                }
-                if (is_array($val)) {
-                    $this->bindVal($key, $val);
-                } else {
-                    $val != 'IS NULL' ? $this->bind(":$key", $val) : '';
-                }
+        if ($this->isArray($fields)) {
+            foreach ($fields as $key => $value) {
+                $this->_query->bindValue(':' . $key, $value, $this->valueType($value));
             }
         }
-
         return $this->_query;
     }
 
     /**
-     * Bind search values
-     * =================================================================.
      * @param array $fields
+     * @return DataMapper
+     * @throws DataMapperExceptions
      */
-    public function biendSearchValues(array $fields = [])
+    public function biendSearchValues(array $fields = []) : self
     {
         $this->isArray($fields);
         foreach ($fields as $key => $value) {
             $this->_query->bindValue(':' . $key, '%' . $value . '%', $this->valueType($value));
         }
-
-        return $this->_query;
+        return $this;
     }
 
     /**
-     * Execute
-     * =============================================================.
-     *@inheritDoc
+     * @return DataMapper
+     * @throws PDOException
+     * @throws DataMapperExceptions
      */
-    public function execute(): mixed
+    public function execute(): self
     {
         if ($this->_query) {
-            return $this->_query->execute();
+            $this->queryResult = $this->_query->execute();
+        } else {
+            throw new DataMapperExceptions('An error occures during query execution');
         }
+        return $this;
     }
 
     /**
-     *@inheritDoc
+     * Get the value of queryResult.
+     *
+     * @return bool
      */
-    public function result(): Object
+    public function getQueryResult(): bool
     {
-        if ($this->_query) {
-            return $this->_query->fetch(PDO::FETCH_OBJ);
-        }
+        return $this->queryResult;
     }
 
-    /**
-     * Results
-     * =======================================================================.
-     *@inheritDoc
-     */
-    public function results(array $options = [], string $method = '') : self
+    public function hasResults() : bool
     {
-        if ($this->_query) {
-            $this->_results = match ($method) {
-                'read','showColumns' => $this->select_result($options),
-                'create','update','delete' => $this->c_u_d_result(),
-            };
-
-            return $this;
+        if ($this->queryResult === true) {
+            return true;
         }
+        return false;
     }
 
-    /**
-     * persist Method
-     * =======================================================================.
-     * @param string $sql
-     * @param array $parameters
-     */
-    public function persist(string $sql = '', array $parameters = [])
+    private function valueType(mixed $value) : int
     {
         try {
-            $sql = $this->cleanSql($sql);
-
-            return isset($parameters[0]) && $parameters[0] == 'all' ? $this->prepare($sql)->execute() : $this->prepare($sql)->bindParameters($parameters)->execute();
-        } catch (Throwable $th) {
-            throw $th;
+            return match (true) {
+                is_int($value) => PDO::PARAM_INT,
+                is_bool($value) => PDO::PARAM_BOOL,
+                $value === null => PDO::PARAM_NULL,
+                default => PDO::PARAM_STR
+            };
+        } catch (DataMapperExceptions $ex) {
+            throw $ex;
         }
     }
 
-    /**
-     * Build Query parametters
-     * =======================================================================.
-     * @param array $conditions
-     * @param array $parameters
-     * @return array
-     */
-    public function buildQueryParameters(array $conditions = [], array $parameters = []): array
+    private function isArray(array $value) : bool
     {
-        return (!empty($parameters) || !empty($conditions)) ? array_merge($conditions, $parameters) : $parameters;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function column()
-    {
-        if ($this->_query) {
-            return $this->_query->fetchColumn();
+        if (! is_array($value)) {
+            throw new DataMapperExceptions('Your argument need to be an array!');
         }
-    }
-
-    public function cleanSql(string $sql)
-    {
-        $sqlArr = explode('&', $sql);
-        if (isset($sqlArr) & count($sqlArr) > 1) {
-            $this->bind_arr = unserialize($sqlArr[1]);
-        }
-
-        return $sqlArr[0];
-    }
-
-    /**
-     * Bind usual values.
-     * ================================================.
-     * @param string $key
-     * @param array $val
-     * @return void
-     */
-    private function bindVal(string $key, array $val) : void
-    {
-        switch (true) {
-            case isset($val['operator']) && in_array($val['operator'], ['=', '!=', '>', '<', '>=', '<=']):
-                if (isset($val['value']) && is_array($val['value'])) {
-                    $this->bind(":$key", $val['value'][1] . '.' . $val['value'][0]);
-                } else {
-                    $this->bind(":$key", $val['value']);
-                }
-                break;
-            case isset($val['operator']) && in_array($val['operator'], ['NOT IN', 'IN']):
-                if (!empty($this->bind_arr)) {
-                    foreach ($this->bind_arr as $k => $v) {
-                        $this->bind(":$k", $v);
-                    }
-                }
-                break;
-            default:
-                $this->bind(":$key", $val['value']);
-                break;
-        }
+        return true;
     }
 }

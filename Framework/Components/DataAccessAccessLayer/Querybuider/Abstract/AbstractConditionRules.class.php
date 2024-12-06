@@ -3,7 +3,7 @@
 declare(strict_types=1);
 abstract class AbstractConditionRules
 {
-    protected TablesAliasHelper $tblh;
+    protected EntityManagerInterface $em;
     protected ?QueryBuilder $builder;
     protected array $bind_arr = [];
     protected array $tableAlias = [];
@@ -73,6 +73,16 @@ abstract class AbstractConditionRules
             throw new BadQueryArgumentException("The query '{$this->method}' does not have any specified operator");
         }
         return strtoupper(Operator::getOp($method)->value);
+    }
+
+    protected function paramPrefix(string $field) : string
+    {
+        $tblh = $this->em->getTableAliasHelper()->setTables($this->tables);
+        $paramPrefix = $tblh->getToken()->generate(2, $field);
+        while (in_array($paramPrefix, array_keys($this->parameters))) {
+            $paramPrefix = $tblh->getToken()->generate(2, $field);
+        }
+        return $paramPrefix;
     }
 
     private function strMethod(string $method) : string

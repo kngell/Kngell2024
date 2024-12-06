@@ -4,11 +4,13 @@ declare(strict_types=1);
 class GroupBy extends MainQuery
 {
     private array|string|null  $columns;
+    private array $tables;
 
-    public function __construct(TablesAliasHelper $tblh, array $tables, array|string|null ...$columns)
+    public function __construct(EntityManagerInterface $em, array $tables, array|string|null ...$columns)
     {
         $this->columns = $columns;
-        $this->tblh = $tblh->setTables($tables);
+        $this->em = $em;
+        $this->tables = $tables;
     }
 
     public function getSql(): array
@@ -18,10 +20,11 @@ class GroupBy extends MainQuery
             $columns = ArrayUtils::flattenArrayRecursive($this->columns);
         }
         $newColumns = '';
+        $tblh = $this->em->getTableAliasHelper()->setTables($this->tables);
         foreach ($columns as $key => $column) {
             $end = $key !== array_key_last($columns) ? ', ' : '';
-            list($table, $column) = $this->tblh->mapTableColumn($column);
-            list($table, $alias) = $this->tblh->get($table, $this->tableAlias, $this->aliasCheck);
+            list($table, $column) = $tblh->mapTableColumn($column);
+            list($table, $alias) = $tblh->get($table, $this->tableAlias, $this->aliasCheck);
             $alias = ! empty($alias) ? $alias . '.' : '';
             $newColumns .= $alias . $column . $end;
         }

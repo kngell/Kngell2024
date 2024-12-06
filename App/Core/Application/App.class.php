@@ -4,7 +4,6 @@ declare(strict_types=1);
 class App extends AbstracApp
 {
     private RooterInterface $rooter;
-    private Request $request;
 
     public function __construct()
     {

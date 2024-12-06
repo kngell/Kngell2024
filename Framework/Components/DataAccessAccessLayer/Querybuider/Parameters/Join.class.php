@@ -3,16 +3,17 @@
 declare(strict_types=1);
 class Join extends MainQuery
 {
-    public function __construct(TablesAliasHelper $tblh, string $table)
+    public function __construct(EntityManagerInterface $em, string $table)
     {
-        $this->tblh = $tblh;
+        $this->em = $em;
         $this->table = $table;
     }
 
     public function getSql(): array
     {
+        $tblh = $this->em->getTableAliasHelper();
         $statement = strtoupper(Statement::from($this->method)->value);
-        list($table, $alias) = $this->tblh->get($this->table, $this->tableAlias, $this->aliasCheck);
+        list($table, $alias) = $tblh->get($this->table, $this->tableAlias, $this->aliasCheck);
         return [
             $statement . ' ' . $table . ' AS ' . $alias,
             $this->tableAlias,

@@ -3,37 +3,25 @@
 declare(strict_types=1);
 class DataMapperEnvironmentConfig
 {
-    /**
-     * --------------------------------------------------------------------------------------------------
-     * Cedentials.
-     * @var array
-     */
-    private array $credentials = [];
+    private array|Closure $credentials = [];
+    private string $driver;
 
-    public function __construct(array $credentials)
+    public function __construct(array|Closure $credentials, string $driver)
     {
         $this->credentials = $credentials;
+        $this->driver = $driver;
     }
 
-    // public function setCredentials(array $credentials) : self
-    // {
-    //     $this->credentials = $credentials;
-    //     return $this;
-    // }
-
-    /**
-     * --------------------------------------------------------------------------------------------------
-     * Get user data base credentials.
-     *@param string $driver
-     * @return array
-     */
-    public function getCredentials(string $driver) : array
+    public function getCredentials() : array
     {
-        $this->isCredentialsValid($driver);
+        if ($this->credentials instanceof Closure) {
+            $this->credentials = $this->credentials->__invoke();
+        }
+        $this->isCredentialsValid($this->driver);
         $connexionArray = [];
         foreach ($this->credentials as $credentials) {
-            if (array_key_exists($driver, $credentials)) {
-                $connexionArray = $credentials[$driver];
+            if (array_key_exists($this->driver, $credentials)) {
+                $connexionArray = $credentials[$this->driver];
             }
         }
 
@@ -41,20 +29,30 @@ class DataMapperEnvironmentConfig
     }
 
     /**
-     * --------------------------------------------------------------------------------------------------
+     * Get the value of driver.
+     *
+     * @return string
+     */
+    public function getDriver(): string
+    {
+        return $this->driver;
+    }
+
+    /**
+     * --------------------------------------------
      * Check for Valid credentials.
      *@param string driver
      * @return array
      */
     private function isCredentialsValid(string $driver)
     {
-        if (empty($driver) && !is_string($driver)) {
+        if (empty($driver) && ! is_string($driver)) {
             throw new DataMapperInvalidArgumentException('Invalid Argument! This is missing or invalid Data type');
         }
-        if (!is_array($this->credentials)) {
+        if (! is_array($this->credentials)) {
             throw new DataMapperInvalidArgumentException('Invalid Credentials!');
         }
-        if (!in_array('driver', array_keys($this->credentials))) {
+        if (! in_array('driver', array_keys($this->credentials))) {
             throw new DataMapperInvalidArgumentException('Invalid or unsupported driver');
         }
     }

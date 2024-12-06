@@ -88,7 +88,7 @@ class Response
         $this->statusCode === HttpStatusCode::HTTP_NOT_MODIFIED;
     }
 
-    public function setCookie(CookieData $cookie) : void
+    public function setCookie(CookieObject $cookie) : void
     {
         $this->cookies->add($cookie);
     }
@@ -101,6 +101,11 @@ class Response
     public function setContentType(string $contentType) : void
     {
         $this->headers->add(HeaderMap::CONTENT_TYPE_HEADER, $contentType);
+    }
+
+    public function redirect(string $url) :void
+    {
+        $this->setHeader('Location', $url);
     }
 
     /**

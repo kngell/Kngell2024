@@ -3,13 +3,13 @@
 declare(strict_types=1);
 class ParameterDependecyResolver implements DependenciesResolverInterface
 {
-    public function __construct(private ReflectionParameter $parameter, private mixed $args)
+    public function __construct(private ReflectionNamedType $type, private ReflectionParameter $parameter, private mixed $args)
     {
     }
 
     public function resolve(int $key): mixed
     {
-        $type = $this->parameter->getType();
+        $type = $this->type;
         $namedType = $type->getName();
         $optional = $this->parameter->isOptional();
         $promoted = $this->parameter->isPromoted();

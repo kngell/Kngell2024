@@ -11,7 +11,7 @@ class PDOConnexion implements DatabaseConnexionInterface
     /**
      * @var PDO
      */
-    private PDO $con;
+    private ?PDO $con = null;
 
     public function __construct(array $credentials)
     {
@@ -36,7 +36,7 @@ class PDOConnexion implements DatabaseConnexionInterface
             PDO::ATTR_CASE => PDO::CASE_NATURAL,
             PDO::ATTR_ORACLE_NULLS => PDO::NULL_EMPTY_STRING,
         ];
-        if (! isset($this->con)) {
+        if (! isset($this->con) || null === $this->con) {
             try {
                 $this->con = new PDO($this->credentials['dsn'], $this->credentials['dbUser'], $this->credentials['dbPass'], $options);
             } catch (PDOException $e) {
@@ -72,20 +72,6 @@ class PDOConnexion implements DatabaseConnexionInterface
     public function getConnexion() : PDO
     {
         return $this->con;
-    }
-
-    /**
-     * Set the value of credentials.
-     *
-     * @param  array  $credentials
-     *
-     * @return  self
-     */
-    public function setCredentials(array $credentials)
-    {
-        $this->credentials = $credentials;
-
-        return $this;
     }
 
     public function beginTransaction() : bool

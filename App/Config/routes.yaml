@@ -25,6 +25,17 @@ home:
 admin:
   controller: admin_home
   method: index
+# /{controller}/show/{id:\d+}:
+#   method: show
+# /{controller}/edit/{id:\d+}:
+#   method: edit
+# /{controller}/update/{id:\d+}:
+#   method: update
+# /{controller}/delete/{id:\d+}:
+#   method: delete
+# /{controller}/destroy/{id:\d+}:
+#   method: destroy
+#   httpMethod: post
 /admin/{controller}/{method}:
 /{controller}/{id:\d+}/{method}:
 /{controller}/{method}/{id:\d+}:

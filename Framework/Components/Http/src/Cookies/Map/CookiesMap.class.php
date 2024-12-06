@@ -4,12 +4,12 @@ declare(strict_types=1);
 class CookiesMap implements Countable, IteratorAggregate
 {
     /**
-     * @var array<string,CookieData>
+     * @var array<string,CookieObject>
      */
     private array $cookies = [];
 
     /**
-     * @param CookieData[] $cookies
+     * @param CookieObject[] $cookies
      */
     public function __construct(array $cookies = [])
     {
@@ -20,13 +20,13 @@ class CookiesMap implements Countable, IteratorAggregate
     {
         $cookies = [];
         foreach ($cookieGlobals as $name => $value) {
-            $cookies[] = new CookieData($name, $value);
+            $cookies[] = new CookieObject($name, $value);
         }
         return new self($cookies);
     }
 
     /**
-     * @param CookieData[] $cookies
+     * @param CookieObject[] $cookies
      * @return void
      */
     public function addAll(array $cookies) : void
@@ -36,7 +36,7 @@ class CookiesMap implements Countable, IteratorAggregate
         }
     }
 
-    public function add(CookieData $cookie) : void
+    public function add(CookieObject $cookie) : void
     {
         $this->cookies[$cookie->getId()] = $cookie;
     }
@@ -56,7 +56,6 @@ class CookiesMap implements Countable, IteratorAggregate
             if ($checkPath && $path !== $cookie->getPath()) {
                 continue;
             }
-
             return $cookie;
         }
         return null;

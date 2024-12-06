@@ -5,7 +5,7 @@ declare(strict_types=1);
 class whereConditionRule extends AbstractConditionRules
 {
     /**
-     * @param TablesAliasHelper $tblh
+     * @param EntityManagerInterface $em
      * @param QueryBuilder $builder
      * @param array $bind_arr
      * @param array $tableAlias
@@ -16,7 +16,7 @@ class whereConditionRule extends AbstractConditionRules
      * @return void
      */
     public function __construct(
-        TablesAliasHelper $tblh,
+        EntityManagerInterface $em,
         QueryBuilder $builder,
         array $bind_arr,
         array $tableAlias,
@@ -25,7 +25,7 @@ class whereConditionRule extends AbstractConditionRules
         array $tables,
         string $method
     ) {
-        $this->tblh = $tblh->setTables($tables);
+        $this->em = $em;
         $this->builder = $builder;
         $this->bind_arr = $bind_arr;
         $this->tableAlias = $tableAlias;
@@ -62,7 +62,6 @@ class whereConditionRule extends AbstractConditionRules
         unset($conditions[0]);
         unset($conditions[1]);
         $conditions = array_values($conditions);
-
         if (! empty($conditions)) {
             if ($conditions[0] instanceof Closure) {
                 return array_merge($newConditions, $conditions);
@@ -91,19 +90,20 @@ class whereConditionRule extends AbstractConditionRules
 
     private function condition(array $condition) : string
     {
-        list($table1, $column1) = $this->tblh->mapTableColumn($condition['left']);
-        list($table1, $alias1) = $this->tblh->get($table1, $this->tableAlias, $this->aliasCheck);
+        $tblh = $this->em->getTableAliasHelper()->setTables($this->tables);
+        list($table1, $column1) = $tblh->mapTableColumn($condition['left']);
+        list($table1, $alias1) = $tblh->get($table1, $this->tableAlias, $this->aliasCheck);
         $alias1 = ! empty($alias1) ? $alias1 . '.' : '';
         if (Statement::exists($this->method) && in_array($this->method, array_merge(Statement::getFamily('where'), Statement::getFamily('having')))) {
-            $stmt = $this->tblh->getToken()->generate(2, $condition['left']);
+            $stmt = $tblh->getToken()->generate(2, $condition['left']);
             while (in_array($stmt, array_keys($this->parameters))) {
-                $stmt = $this->tblh->getToken()->generate(2, $condition['left']);
+                $stmt = $tblh->getToken()->generate(2, $condition['left']);
             }
             $right = ':' . $stmt . '_' . $condition['left'];
             $this->parameters[$stmt . '_' . $condition['left']] = $condition['right'];
         } else {
-            list($table2, $column2) = $this->tblh->mapTableColumn($condition['right']);
-            list($table2, $alias2) = $this->tblh->get($table2, $this->tableAlias, $this->aliasCheck);
+            list($table2, $column2) = $tblh->mapTableColumn($condition['right']);
+            list($table2, $alias2) = $tblh->get($table2, $this->tableAlias, $this->aliasCheck);
             $alias2 = ! empty($alias2) ? $alias2 . '.' : '';
             $right = $alias2 . $column2;
         }

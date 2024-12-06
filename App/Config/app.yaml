@@ -43,7 +43,7 @@ theme_builder:
 #=============================================================================
 #=============================================================================
 session:
-  session_name: "kngell_enterprise"
+  session_name: "kngell_xsf_session"
   idle_time: 600 # 10min idle
   lifetime: 3600 #session expires in 10min if left idle
   path: /

@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 class BuiltInDependencyResolver implements DependenciesResolverInterface
 {
-    public function __construct(private ReflectionParameter $parameter, private mixed $args)
+    public function __construct(private ReflectionNamedType $type, private ReflectionParameter $parameter, private mixed $args)
     {
     }
 
     public function resolve(int $key): mixed
     {
-        $type = $this->parameter->getType();
+        $type = $this->type;
 
         $namedType = $type->getName();
         $optional = $this->parameter->isOptional();
@@ -27,7 +27,7 @@ class BuiltInDependencyResolver implements DependenciesResolverInterface
             return match (true) {
                 $this->parameter->allowsNull() => null,
                 ($default || $optional) && ! array_key_exists($name, $this->args) => $this->parameter->getDefaultValue(),
-                default => ''
+                default => throw new DependencyHasNoValueException('Could not resolve class dependency ' . $this->parameter->name)
             };
         }
         if ($this->args instanceof Closure) {
@@ -65,7 +65,7 @@ class BuiltInDependencyResolver implements DependenciesResolverInterface
         $parameters = $this->parameter->getDeclaringClass()->getConstructor()->getParameters();
         $names = [];
         foreach ($parameters as $parameter) {
-            $names[$parameter->getName()] = $parameter->getType()->getName();
+            $names[$parameter->getName()] = $this->type->getName();
         }
         return $names;
     }

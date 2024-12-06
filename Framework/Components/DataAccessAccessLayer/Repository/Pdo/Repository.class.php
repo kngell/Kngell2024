@@ -2,239 +2,106 @@
 
 declare(strict_types=1);
 
-class Repository extends AbstractRepository implements RepositoryInterface
+class Repository implements RepositoryInterface
 {
-    protected EntityManagerInterface $em;
-
-    /**
-     * Main constructor
-     * ====================================================================.
-     * @param EntityManagerInterface $em
-     */
-    public function __construct(EntityManagerInterface $em)
+    public function __construct(private EntityManagerInterface $em)
     {
-        $this->em = $em;
     }
 
-    public function entity(Entity $entity) : self
-    {
-        $this->entity = $entity;
-
-        return $this;
-    }
-
-    /**
-     * Create new entrie
-     * ====================================================================.
-     * @param array $fields
-     * @return DataMapperInterface
-     */
-    public function create(array $fields = []) : DataMapperInterface
+    public function create() : void
     {
         try {
-            return $this->em->getCrud()->create($this->fields());
-        } catch (\Throwable $th) {
+            $this->em->createQueryBuilder()->insert()->build();
+        } catch (Throwable $th) {
             throw $th;
         }
     }
 
-    /**
-     * Delete from data base
-     * ====================================================================.
-     * @param array $conditions
-     * @return DataMapperInterface|null
-     */
-    public function delete(array $conditions = []) : DataMapperInterface
+    public function delete(array $conditions = []) : void
     {
         try {
-            return $this->em->getCrud()->delete($conditions);
-        } catch (\Throwable $th) {
+            $conditions = $this->conditions($conditions);
+            $this->em->createQueryBuilder()->delete()->where($conditions)->build();
+        } catch (Throwable $th) {
             throw $th;
         }
     }
 
-    public function update(array $conditions) : ?DataMapperInterface
+    public function update(array $conditions = []) : void
     {
         try {
-            return $this->em->getCrud()->update($this->fields($conditions), $conditions);
-        } catch (\Throwable $th) {
+            $conditions = $this->conditions($conditions);
+            $this->em->createQueryBuilder()->update()->where($conditions)->build();
+        } catch (Throwable $th) {
             throw $th;
         }
     }
 
-    /**
-     * Find by ID
-     * ====================================================================.
-     * @param int $id
-     * @return DataMapperInterface
-     */
-    public function findByID(int $id): DataMapperInterface
+    public function findByID(int|string $id): void
     {
         if ($this->isEmpty($id)) {
             try {
-                return $this->findOneBy([$this->em->getCrud()->getSchemaID() => $id], []);
-            } catch (\Throwable $th) {
+                $fieldId = $this->em->getEntityKeyField();
+                $this->em->createQueryBuilder()->select()->where([$fieldId => $id])->build();
+            } catch (Throwable $th) {
                 throw $th;
             }
         }
     }
 
-    /**
-     * Find One element by
-     *====================================================================.
-     * @param array $conditions
-     * @param array $options
-     * @return mixed
-     */
-    public function findOneBy(array $conditions = [], array $options = []) : mixed
+    public function findOneBy(array $conditions = []) : void
     {
         if ($this->isArray($conditions)) {
             try {
-                return $this->em->getCrud()->read([], $conditions, [], $options);
-            } catch (\Throwable $th) {
-                throw $th;
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * Get All
-     * ====================================================================.
-     * @return array
-     */
-    public function findAll(): mixed
-    {
-        try {
-            return $this->findBy();
-        } catch (\Throwable $th) {
-            throw $th;
-        }
-    }
-
-    /**
-     * Get All By
-     * ====================================================================.
-     * @param array $selectors
-     * @param array $conditions
-     * @param array $parameters
-     * @param array $options
-     * @return mixed
-     */
-    public function findBy(array $selectors = [], array $conditions = [], array $parameters = [], array $options = []) : mixed
-    {
-        try {
-            return $this->em->getCrud()->read($selectors, $conditions, $parameters, $options);
-        } catch (\Throwable $th) {
-            throw $th;
-        }
-    }
-
-    public function findObjectBy(array $conditions = [], array $selectors = []): object
-    {
-        $this->isArray($conditions);
-        try {
-            return $this->em->getCrud()->get($selectors, $conditions);
-        } catch (\Throwable $th) {
-            throw $th;
-        }
-    }
-
-    /**
-     * Search Data
-     *====================================================================.
-     * @param array $selectors
-     * @param array $conditions
-     * @param array $parameters
-     * @param array $options
-     * @return array
-     */
-    public function findBySearch(array $selectors = [], array $conditions = [], array $parameters = [], array $options = []): array
-    {
-        $this->isArray($conditions);
-        try {
-            return $this->em->getCrud()->search($selectors, $conditions, $parameters, $options);
-        } catch (\Throwable $th) {
-            throw $th;
-        }
-    }
-
-    /**
-     * Find data and delete it
-     * ====================================================================.
-     * @param array $conditions
-     * @return bool
-     */
-    public function findByIDAndDelete(array $conditions): bool
-    {
-        if ($this->isArray($conditions)) {
-            try {
-                $result = $this->findOneBy($conditions, []);
-                if ($result != null && $result > 0) {
-                    $delete = $this->em->getCrud()->delete($conditions);
-                    if ($delete) {
-                        return true;
-                    }
-                }
-            } catch (\Throwable $th) {
+                $this->em->createQueryBuilder()->select()->where($conditions)->build();
+            } catch (Throwable $th) {
                 throw $th;
             }
         }
     }
 
-    /**
-     * Find and Update
-     * ====================================================================.
-     * @param array $fields
-     * @param int $id
-     * @return bool
-     */
-    public function findByIdAndUpdate(array $fields = [], int $id = 0): bool
+    public function findAll(): void
     {
-        $this->isArray($fields);
         try {
-            $result = $id > 0 ? $this->findOneBy([$this->em->getCrud()->getSchemaID() => $id], []) : null;
-            if ($result != null && count($result) > 0) {
-                $params = (!empty($fields)) ? array_merge([$this->im->getCrud()->getSchemaID() => $id], $fields) : $fields;
-                $update = $this->em->getCrud()->update($params, $this->im->getCrud()->getSchemaID());
-                if ($update) {
-                    return true;
-                }
-            }
-        } catch (\Throwable $th) {
+            $this->findBy();
+        } catch (Throwable $th) {
             throw $th;
         }
     }
 
-    /**
-     * Find and retur self
-     *====================================================================.
-     * @param int $id
-     * @param array $selectors
-     * @return RepositoryInterface
-     */
-    public function findAndReturn(int $id, array $selectors = []): RepositoryInterface
-    {
-        return $this;
-    }
-
-    public function get_tableColumn(array $options): object
+    public function findBy(array $conditions = []) : void
     {
         try {
-            return $this->em->getCrud()->showColumns($options);
-        } catch (\Throwable $th) {
+            $this->em->createQueryBuilder()->select()->where($conditions)->build();
+        } catch (Throwable $th) {
             throw $th;
         }
     }
 
-    public function countRecords(array $conditions = [], ?string $fields = ''): int
+    private function conditions(array|string $conditions) : array
     {
-        $this->isArray($conditions);
-        try {
-            return $this->em->getCrud()->countRecords($conditions);
-        } catch (\Throwable $th) {
-            throw $th;
+        if (empty($conditions)) {
+            $fieldId = $this->em->getEntityKeyField();
+            $value = $this->em->getEntityKeyValue();
+            $conditions = [$fieldId => $value];
         }
+        return $conditions;
+    }
+
+    private function isArray(array $conditions) : bool
+    {
+        if (! is_array($conditions)) {
+            throw new RepositoryInvalidArgumentException('Argument Supplied is not an array');
+        }
+
+        return true;
+    }
+
+    private function isEmpty(int|string $id) : bool
+    {
+        if (empty($id)) {
+            throw new RepositoryInvalidArgumentException('Argument shuold not be empty');
+        }
+        return true;
     }
 }

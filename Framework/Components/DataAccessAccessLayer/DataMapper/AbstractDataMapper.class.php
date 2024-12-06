@@ -2,118 +2,51 @@
 
 declare(strict_types=1);
 
-abstract class AbstractDataMapper
+abstract class AbstractDataMapper implements DataMapperInterface
 {
-    use DataMapperGetSetTrait;
-
     protected DatabaseConnexionInterface $_con;
     protected PDOStatement $_query;
-    protected $bind_arr = [];
-    protected int $_lastID;
-    protected int $_count = 0;
-    protected $_results;
 
-    public function isEmpty(mixed $value, ?string $errorMsg = null) : bool
+    public function __construct(DataMapperEnvironmentConfig $env)
     {
-        if (empty($value)) {
-            throw new DataMapperExceptions($errorMsg);
-        }
-
-        return true;
+        $this->_con = $this->connection($env);
     }
 
-    public function isArray(array $value) : bool
+    public function beginTransaction() : bool
     {
-        if (!is_array($value)) {
-            throw new DataMapperExceptions('Your argument need to be an array!');
-        }
-
-        return true;
+        return $this->_con->beginTransaction();
     }
 
-    protected function valueType(mixed $value) : int
+    public function commit() :  bool
     {
-        try {
-            switch ($value) {
-                case is_bool($value):
-                case intval($value):
-                    $type = PDO::PARAM_INT;
-                    break;
-                case is_null($value):
-                    $type = PDO::PARAM_NULL;
-                    break;
-                default:
-                    $type = PDO::PARAM_STR;
-                    break;
-            }
+        return $this->_con->commit();
+    }
 
-            return $type;
-        } catch (\DataMapperExceptions $ex) {
-            throw $ex;
-        }
+    public function rollback() : bool
+    {
+        return $this->_con->rollback();
+    }
+
+    public function getConnexion() : DatabaseConnexionInterface
+    {
+        return $this->_con;
     }
 
     /**
-     * Select Results
-     * ===============================================================.
-     * @param array $data
-     * @return mixed
+     * Get the value of _query.
+     *
+     * @return PDOStatement
      */
-    protected function select_result(array $data = []) : mixed
+    public function getQueryStatement(): PDOStatement
     {
-        $type = $this->returnMode($data);
-        $q = $this->fetchMode($type, $this->_query, $data);
-        $check = array_key_exists('return_type', $data) ? $data['return_type'] : 'all';
-
-        return match ($check) {
-            'count' => $q->rowCount(),
-            'single' => $q->fetch(),
-            'first' => current($q->fetchAll()),
-            default => $q->fetchAll()
-        };
+        return $this->_query;
     }
 
-    protected function c_u_d_result() : mixed
+    private function connection(DataMapperEnvironmentConfig $env) : DatabaseConnexionInterface
     {
-        $this->setLastID();
-
-        return $this->numrow();
-    }
-
-    private function fetchMode(int $type, PDOStatement $q, array $data) : PDOStatement
-    {
-        $className = isset($data['class']) ? $data['class'] : null;
-        $contructorArgs = isset($data['constructorArgs']) ? $data['constructorArgs'] : null;
-        if ($className != null) {
-            if ($contructorArgs != null) {
-                $q->setFetchMode($type, $className, $contructorArgs);
-            } else {
-                $q->setFetchMode($type, $className);
-            }
-        } else {
-            $q->setFetchMode($type);
-        }
-
-        return $q;
-    }
-
-    /**
-     * Get Result type
-     * ================================================.
-     * @param array $data
-     * @return int
-     */
-    private function returnMode(array $data) : int
-    {
-        $returnMode = PDO::FETCH_ASSOC;
-        if (array_key_exists('return_mode', $data)) {
-            $returnMode = match ($data['return_mode']) {
-                'object' => PDO::FETCH_OBJ,
-                'class' => PDO::FETCH_CLASS,
-                default => PDO::FETCH_ASSOC
-            };
-        }
-
-        return $returnMode;
+        $credentials = $env->getCredentials();
+        $app = App::getInstance();
+        $app->singleton(DatabaseConnexionInterface::class, PDOConnexion::class, $credentials);
+        return $app->get(DatabaseConnexionInterface::class);
     }
 }
