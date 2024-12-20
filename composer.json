@@ -5,7 +5,7 @@
   "license": "MIT",
   "minimum-stability": "dev",
   "require": {
-    "php": ">=8.4",
+    "php": ">=8.3",
     "ext-fileinfo": "*",
     "guzzlehttp/guzzle": "^7.0",
     "ext-simplexml": "*",
@@ -17,7 +17,8 @@
     "brick/money": "dev-master"
   },
   "require-dev": {
-    "symfony/var-dumper": "^7.1"
+    "symfony/var-dumper": "^7.1",
+    "nette/php-generator": "^4.1"
   },
   "autoload": {
     "classmap": [

@@ -21,10 +21,10 @@ class SessionEnvironment
      * @param array $sessionConfig
      * @return void
      */
-    public function __construct(array $sessionConfig)
+    public function __construct(array $sessionConfig = [])
     {
-        if (count($sessionConfig) < 0 || !is_array($sessionConfig)) {
-            throw new \LogicException('Session environment has failed to load. Ensure your are passing the correct yaml configuration file to the session facade class object');
+        if (count($sessionConfig) < 0 || ! is_array($sessionConfig)) {
+            throw new LogicException('Session environment has failed to load. Ensure your are passing the correct yaml configuration file to the session facade class object');
         }
         $this->sessionConfig = $sessionConfig;
     }
@@ -44,7 +44,7 @@ class SessionEnvironment
      *
      * @return int
      */
-    public function getLifetime(): int
+    public function getLifetime(): int|bool
     {
         return filter_var($this->getSessionParam('cookie_lifetime'), FILTER_VALIDATE_INT) ?? 120;
         // $lifetime = (isset($this->getConfig()['cookie_lifetime']) ? filter_var($this->getConfig()['cookie_lifetime'], FILTER_VALIDATE_INT) : 120);
@@ -59,7 +59,7 @@ class SessionEnvironment
      *
      * @return string
      */
-    public function getPath(): string
+    public function getPath(): string|bool
     {
         return $this->getSessionParam('path') ?? '/';
     }
@@ -68,9 +68,9 @@ class SessionEnvironment
      * Cookie domain, for example 'www.php.net'. To make cookies visible on all
      * subdomains then the domain must be prefixed with a dot like '.php.net'.
      *
-     * @return string|null
+     * @return string|bool
      */
-    public function getDomain(): ?string
+    public function getDomain(): bool|string
     {
         return $this->getSessionParam('domain') ?? $_SERVER['SERVER_NAME'];
     }
@@ -83,7 +83,6 @@ class SessionEnvironment
     public function isSecure(): bool
     {
         return (bool) $this->getSessionParam('cookie_secure') ?? isset($_SERVER['HTTPS']);
-        // return $this->getConfig()['cookie_secure'] ?? isset($_SERVER['HTTPS']);
     }
 
     /**
@@ -104,12 +103,12 @@ class SessionEnvironment
      */
     public function getSessionName(): string
     {
-        return $this->getSessionParam('session_name');
+        return strval($this->getSessionParam('session_name'));
     }
 
     public function storagePath() : string
     {
-        return $this->getSessionParam('storage_path');
+        return strval($this->getSessionParam('save_path'));
     }
 
     /**
@@ -121,14 +120,17 @@ class SessionEnvironment
     {
         return [
             'session.gc_maxlifetime',
-            'session.cookie_lifetime',
-            'session.use_trans_sid',
             'session.gc_divisor',
             'session.gc_probability',
+            'session.cookie_lifetime',
             'session.use_cookies',
-            'session.cookie_httponly',
             'session.cookie_secure',
-            'session.use_strict_mode',
+            'session.gc_divisor',
+            'session.cookie_httponly',
+            'session.cookie_samesite',
+            'session.save_handler',
+            'session.use_only_cookies',
+            'session.save_path',
         ];
     }
 
@@ -144,17 +146,16 @@ class SessionEnvironment
      */
     public function getSessionIniValues(string $sessionKey): mixed
     {
+        if ($sessionKey === 'save_path') {
+            return strval(ROOT_DIR . DS . $this->getConfig()[$sessionKey]);
+        }
         return $this->getConfig()[$sessionKey];
     }
 
     private function getSessionParam(?string $key = null): mixed
     {
-        if ($key !== null) {
-            $sessionKey = ($this->getConfig()[$key] ?? '');
-            if ($sessionKey) {
-                return $sessionKey;
-            }
-            return null;
+        if ($key !== null && array_key_exists($key, $this->getConfig())) {
+            return $this->getConfig()[$key];
         }
         return false;
     }

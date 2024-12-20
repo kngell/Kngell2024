@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 class BuiltInDependencyResolver implements DependenciesResolverInterface
 {
-    public function __construct(private ReflectionNamedType $type, private ReflectionParameter $parameter, private mixed $args)
+    public function __construct(private ReflectionNamedType $type, private ReflectionParameter $parameter)
     {
     }
 
-    public function resolve(int $key): mixed
+    public function resolve(int $key, mixed $args): mixed
     {
         $type = $this->type;
 
@@ -23,41 +23,32 @@ class BuiltInDependencyResolver implements DependenciesResolverInterface
         $position = $this->parameter->getPosition();
         $variatic = $this->parameter->isVariadic();
         $attr = $this->parameter->getAttributes();
-        if (empty($this->args)) {
+        if (empty($args)) {
             return match (true) {
                 $this->parameter->allowsNull() => null,
-                ($default || $optional) && ! array_key_exists($name, $this->args) => $this->parameter->getDefaultValue(),
+                ($default || $optional) && ! array_key_exists($name, $args) => $this->parameter->getDefaultValue(),
                 default => throw new DependencyHasNoValueException('Could not resolve class dependency ' . $this->parameter->name)
             };
         }
-        if ($this->args instanceof Closure) {
-            return $this->args->__invoke();
+        if (isset($args[$position]) && $args[$position] instanceof Closure) {
+            return $args[$position]->__invoke();
         }
-        if (is_array($this->args)) {
+        if (is_array($args)) {
             $parametersTypes = $this->getClassConstructorParametersTypes();
-            if (array_key_exists($name, $this->args)) {
-                if (gettype($this->args[$name]) === $parametersTypes[$name]) {
-                    return $this->args[$name];
+            if (array_key_exists($name, $args)) {
+                if (gettype($args[$name]) === $parametersTypes[$name]) {
+                    return $args[$name];
                 }
             } else {
                 if (count($parametersTypes) === 1 && $position === 0) {
-                    return $this->args;
+                    return $args;
                 } else {
-                    return isset($this->args[$position]) ? $this->args[$position] : false;
+                    return isset($args[$position]) ? $args[$position] : false;
                 }
             }
         } else {
-            return $this->args;
+            return $args;
         }
-
-        // return match (true) {
-        //     $this->parameter->isDefaultValueAvailable() && empty($this->args) => $this->parameter->getDefaultValue(),
-        //     is_array($this->args) && array_key_exists($this->parameter->name, $this->args) => $this->args[$this->parameter->name],
-        //     ! ArrayUtils::isAssoc($this->args) && array_key_exists($key, $this->args) => $this->args[$key],
-        //     $this->args instanceof Closure => $this->args->__invoke(),
-        //     ! empty($this->args) => $this->args,
-        //     default => false
-        // };
     }
 
     private function getClassConstructorParametersTypes() : array

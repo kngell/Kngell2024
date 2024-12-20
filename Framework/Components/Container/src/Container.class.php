@@ -24,17 +24,6 @@ class Container implements ContainerInterface
     {
     }
 
-    /**
-     * @return App
-     */
-    public static function getInstance() : App
-    {
-        if (! isset(static::$instance)) {
-            static::$instance = new static();
-        }
-        return static::$instance;
-    }
-
     public function bind(string $abstract, Closure | string | null $concrete = null, bool $shared = false, mixed $parameters = []): self
     {
         $this->bindings[$abstract] = [
@@ -45,7 +34,7 @@ class Container implements ContainerInterface
         return $this;
     }
 
-    public function bindParameters(string $abstract, array $args, ?string $argName = null) : self
+    public function bindParams(string $abstract, mixed $args, ?string $argName = null) : self
     {
         if ($this->isBound($abstract)) {
             $this->bindings[$abstract]['parameters'] = $args;
@@ -170,9 +159,6 @@ class Container implements ContainerInterface
      */
     private function make(string|array $abstract, mixed $args = []) : mixed
     {
-        // if ($this->has($abstract)) {
-        //     return $this->services[$abstract];
-        // }
         if (! empty($this->bindings[$abstract]['parameters'])) {
             $args = $this->bindings[$abstract]['parameters'];
         }
@@ -212,7 +198,7 @@ class Container implements ContainerInterface
         } catch (ReflectionException $e) {
             throw new BindingResolutionException("Target class [$concrete] does not exist.", 0, $e->getCode());
         }
-        if (! $reflector->isInstantiable()) {
+        if (! $reflector->isInstantiable() && ! $reflector->isEnum()) {
             throw new BindingResolutionException("Target [$concrete] is not instantiable.");
         }
         $constructor = $reflector->getConstructor();
@@ -221,7 +207,8 @@ class Container implements ContainerInterface
         }
         $classDependencies = $this->resolveClassDependencies(
             $constructor->getParameters(),
-            $args
+            $args,
+            $reflector
         );
         return $this->objectWithContainer($reflector->newInstanceArgs($classDependencies), $reflector);
     }
@@ -235,14 +222,14 @@ class Container implements ContainerInterface
      * @throws ReflectionException
      * @throws DependencyHasNoDefaultValueException
      */
-    private function resolveClassDependencies(array $parameters, mixed $args = []): array
+    private function resolveClassDependencies(array $parameters, mixed $args): array
     {
         $dependencies = [];
         /** @var ReflectionParameter $parameter */
         foreach ($parameters as $key => $parameter) {
             $type = $parameter->getType();
-            $resolver = DependencyResolverFactory::create($type, $parameter, $args);
-            $resolvedDependencies = $resolver->resolve($key);
+            $resolver = DependencyResolverFactory::create($type, $parameter);
+            $resolvedDependencies = $resolver->resolve($key, $args);
             if (! $type->isBuiltin() && ! $resolvedDependencies) {
                 $dependencies[] = $this->get($type->getName());
             } else {

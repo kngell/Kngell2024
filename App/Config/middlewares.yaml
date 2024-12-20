@@ -1,0 +1,3 @@
+message: ChangeResponseExampleMiddleware
+trim: ChangeRequestExampleMiddleware
+deny: RedirectExampleMiddleware

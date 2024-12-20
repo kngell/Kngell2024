@@ -22,7 +22,7 @@ class Flash implements FlashInterface
      * @param object|null $session
      * @param null|string $flashKey
      */
-    public function __construct(?Object $session = null, ?string $flashKey = null)
+    public function __construct(?SessionInterface $session = null, ?string $flashKey = null)
     {
         $this->session = $session;
         if ($flashKey != null) {
@@ -53,7 +53,7 @@ class Flash implements FlashInterface
     {
         /* Apply default constants to flash type */
         if ($type === null) {
-            $type = FlashType::SUCCESS;
+            $type = FlashType::SUCCESS->value;
         }
         if ($this->session->exists($this->flashKey)) {
             $this->session->set($this->flashKey, []);

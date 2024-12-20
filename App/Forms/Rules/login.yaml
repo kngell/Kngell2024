@@ -1,0 +1,17 @@
+email:
+  display: Email
+  required: true
+  min: 4
+  max: 150
+  valid_email: true
+  unique: users
+name:
+  display: Name
+  required: true
+  min: 2
+  max: 255
+message:
+  display: Message
+  required: true
+  min: 2
+  max: 255

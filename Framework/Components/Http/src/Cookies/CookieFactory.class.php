@@ -24,6 +24,6 @@ class CookieFactory
             throw new CookieUnexpectedValueException($cookieStoreObject::class . 'is not a valid cookie store object.');
         }
 
-        return Container::getInstance()->get(CookieInterface::class, ['cookieStore' => $cookieStoreObject]);
+        return App::getInstance()->get(CookieInterface::class, ['cookieStore' => $cookieStoreObject]);
     }
 }

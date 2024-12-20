@@ -11,9 +11,10 @@ abstract class Model
         $this->entityManager = $entityManager->setEntity($this->entity());
     }
 
-    public function all() : QueryResult
+    public function all(Entity|array|string $params = []) : QueryResult
     {
-        $this->entityManager->getRepository()->findAll();
+        list($entity, $conditions) = $this->conditions($params);
+        $this->entityManager->getRepository($entity)->findAll($conditions);
         return $this->entityManager->persist()->getResults([], 'findAll');
     }
 

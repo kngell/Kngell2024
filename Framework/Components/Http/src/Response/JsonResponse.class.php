@@ -48,7 +48,6 @@ class JsonResponse extends Response
     public function setEncodingOptions($encodingOptions)
     {
         $this->encodingOptions = $encodingOptions;
-
         return $this;
     }
 }

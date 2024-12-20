@@ -4,5 +4,5 @@ declare(strict_types=1);
 
 interface DependenciesResolverInterface
 {
-    public function resolve(int $key) : mixed;
+    public function resolve(int $key, mixed $args) : mixed;
 }

@@ -47,14 +47,18 @@ class ProductsController extends Controller
 
     public function new() : string
     {
-        $form = $this->makeForm('products/create');
+        if ($this->session->exists('form')) {
+            $form = $this->session->get(('form'));
+            $this->session->delete('form');
+        }
+        $form = $form ?? $this->makeForm('products/create');
         return $this->render('new', ['insertFrom' => $form]);
     }
 
     public function update(string $id) : string
     {
         $data = $this->request->getPost()->getAll();
-        $validator = new Validator($data);
+        $validator = new Validator($data, 'productFormRules');
         $errors = $validator->validate();
         if (! empty($errors)) {
             $form = $this->makeForm("products/update/{$id}", $data, $errors);
@@ -62,27 +66,26 @@ class ProductsController extends Controller
         }
         $update = $this->product->save($data);
         if ($update->getQueryResult()) {
-            header("Location: /products/{$id}/show");
-            exit;
+            return $this->redirect("/products/{$id}/show");
         }
     }
 
-    public function create() : Response
+    public function create() : Response|string
     {
         $data = $this->request->getPost()->getAll();
-        $validator = new Validator($data);
+        $validator = new Validator($data, 'productFormRules');
         $results = $validator->validate();
         if (! empty($results)) {
             $form = $this->makeForm('products/create', [], $results);
-            return $this->render('new', ['insertFrom' => $form]);
+            if (! $this->session->exists('form')) {
+                $this->session->set('form', $form);
+                $r = $_SESSION;
+            }
+            return $this->redirect('/products/new');
         }
         $insert = $this->product->save($data);
-        $response = new Response('', HttpStatusCode::HTTP_OK);
         if ($insert->getQueryResult()) {
-            $response->redirect("Location: /products/{$insert->getLastInsertId()}/show");
-            return $response;
-            // header("Location: /products/{$insert->getLastInsertId()}/show");
-            // exit;
+            return $this->redirect("/products/{$insert->getLastInsertId()}/show");
         }
     }
 
@@ -93,20 +96,27 @@ class ProductsController extends Controller
         return $this->render('delete', ['product' => $product, 'deleteForm' => $form]);
     }
 
-    public function destroy(string $id) : string
+    public function destroy(string $id) : Response
     {
         if ($this->request->getServer()->get('request_method') !== 'POST') {
             throw new InvalidPathException('You do not have permission to access this page');
         }
         $delete = $this->product->delete($id)->getResults();
-        return $this->index();
+        return $this->redirect('/products/index');
+    }
+
+    public function responseCodeExample() : Response
+    {
+        $this->response->setStatusCode(HttpStatusCode::HTTP_UNAVAILABLE_FOR_LEGAL_REASONS);
+        $this->response->setContent('Unavailable for leagal reasons');
+        return $this->response;
     }
 
     protected function makeForm(string $action = '', array $formValues = [], array $formErrors = []) : string
     {
         $form = $this->formBuilder->form();
         return
-        $form->name('new-product')->method('post')->class(['mb-3'])->action($action)->formValues($formValues)->formErrors($formErrors)->add(
+        $form->name('new-product')->method('post')->class(['mb-3'])->action($action)->enctype(true)->formValues($formValues)->formErrors($formErrors)->add(
             ! empty($formValues) ? $form->input('hidden')->name('id')->value('') : null,
             $form->label()->for('pdt')->content('Name :')->class(['form-label']),
             $form->input('text')->name('name')->value('')->id('pdt')->class(['form-control']),

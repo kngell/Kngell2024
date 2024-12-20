@@ -30,8 +30,7 @@ readonly class Request
         $this->requestedUri = $superGlobals->server('request_uri');
         $rawContent = file_get_contents('php://input');
         $this->rawContent = $rawContent !== false && ! StringUtils::isBlanc($rawContent) ? $rawContent : null;
-
-        $superGlobals->emptyGlobals();
+        //$superGlobals->emptyGlobals();
     }
 
     public function hasBody() : bool
@@ -46,6 +45,11 @@ readonly class Request
         }
         $contentType = strtolower($this->headers->getContentType());
         return str_starts_with($contentType, 'multipart/formdata');
+    }
+
+    public function hasCookies() : bool
+    {
+        return $this->cookies->exists();
     }
 
     public function hasXmlBody() : bool

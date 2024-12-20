@@ -33,4 +33,36 @@ trait ControllerGettersAndSetters
         $this->formBuilder = $formBuilder;
         return $this;
     }
+
+    /**
+     * @param Response $response
+     * @return Controller
+     */
+    public function setResponse(Response $response): self
+    {
+        $this->response = $response;
+
+        return $this;
+    }
+
+    /**
+     * @param SessionInterface $session
+     * @return Controller
+     */
+    public function setSession(SessionInterface $session): self
+    {
+        $this->session = $session;
+
+        return $this;
+    }
+
+    /**
+     * @param TokenInterface $token
+     * @return Controller
+     */
+    public function setToken(TokenInterface $token): self
+    {
+        $this->token = $token;
+        return $this;
+    }
 }

@@ -34,6 +34,8 @@ final readonly class ContainerClassRegistrator
     private static function bindClasses() : array
     {
         return [
+            FlashInterface::class => Flash::class,
+            AbstractFactory::class => ConcreteFactory1::class,
             RooterInterface::class => Rooter::class,
             CacheStorageInterface::class => NativeCacheStorage::class,
             CacheInterface::class => Cache::class,
@@ -41,9 +43,12 @@ final readonly class ContainerClassRegistrator
             SuperGlobalsInterface::class => SuperGlobals::class,
             CookieStoreInterface::class => NativeCookieStore::class,
             CookieInterface::class => Cookie::class,
+            RouteDispatcher::class => [false,
+                function () {
+                    return YamlFile::get('middlewares');
+                }],
             DataMapperEnvironmentConfig::class => [function () {
-                $file = ROOT_DIR . '/App/Config/database.yaml';
-                return YamlFile::get($file);
+                return YamlFile::get('database');
             }, 'mysql',
             ],
 
@@ -53,6 +58,7 @@ final readonly class ContainerClassRegistrator
     private static function singletonClasses() : array
     {
         return [
+            TokenInterface::class => Token::class,
             ViewInterface::class => View::class,
             CollectionInterface::class => Collection::class,
             EntityManagerInterface::class => EntityManager::class,

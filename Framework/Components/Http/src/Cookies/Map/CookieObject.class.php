@@ -4,6 +4,7 @@ declare(strict_types=1);
 readonly class CookieObject
 {
     private const string RESERVED_CHARS_LIST = '=-, \t\r\n\v\f';
+    // kgl_xsf_session
 
     private string $name;
     private string $value;
@@ -95,8 +96,8 @@ readonly class CookieObject
         if (StringUtils::isBlanc($name)) {
             throw new InvalidArgumentException('The cookie name cannot be empty.');
         }
-        if (strpbrk($name, self::RESERVED_CHARS_LIST)) {
-            throw new InvalidArgumentException("The cookie name '{$name}' contains invalid characters.");
-        }
+        // if (strpbrk($name, self::RESERVED_CHARS_LIST)) {
+        //     throw new InvalidArgumentException("The cookie name '{$name}' contains invalid characters.");
+        // }
     }
 }

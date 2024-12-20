@@ -55,9 +55,9 @@ interface SessionInterface
      *
      * @param string $key - The key to retrieve and remove the value for.
      * @param null $value
-     * @return void
+     * @return mixed
      */
-    public function flush(string $key, $value = null) : void;
+    public function flush(string $key, $value = null) : mixed;
 
     /**
      * Determines whether an item is present in the session.

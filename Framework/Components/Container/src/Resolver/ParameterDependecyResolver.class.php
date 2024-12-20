@@ -3,11 +3,11 @@
 declare(strict_types=1);
 class ParameterDependecyResolver implements DependenciesResolverInterface
 {
-    public function __construct(private ReflectionNamedType $type, private ReflectionParameter $parameter, private mixed $args)
+    public function __construct(private ReflectionNamedType $type, private ReflectionParameter $parameter)
     {
     }
 
-    public function resolve(int $key): mixed
+    public function resolve(int $key, mixed $args): mixed
     {
         $type = $this->type;
         $namedType = $type->getName();
@@ -21,16 +21,19 @@ class ParameterDependecyResolver implements DependenciesResolverInterface
         $position = $this->parameter->getPosition();
         $variatic = $this->parameter->isVariadic();
         $attr = $this->parameter->getAttributes();
-
-        if (empty($this->args)) {
+        $this->parameter->isVariadic();
+        if ($default && empty($args) && $namedType !== 'object') {
+            return $this->parameter->getDefaultValue();
+        }
+        if (empty($args)) {
             return false;
         }
-        if (is_array($this->args)) {
-            if (array_key_exists($name, $this->args)) {
-                return $this->args[$name];
+        if (is_array($args)) {
+            if (array_key_exists($name, $args)) {
+                return $args[$name];
             }
-            if (isset($this->args[$position])) {
-                return $this->args[$position];
+            if (isset($args[$position])) {
+                return $args[$position];
             }
         }
         return false;

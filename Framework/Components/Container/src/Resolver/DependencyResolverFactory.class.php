@@ -15,28 +15,30 @@ final readonly class DependencyResolverFactory
      * @return DependenciesResolverInterface
      * @throws DependencyHasNoValueException
      */
-    public static function create(ReflectionNamedType|ReflectionUnionType|ReflectionIntersectionType|null &$type, ReflectionParameter $parameter, mixed $args = []) :  DependenciesResolverInterface
+    public static function create(ReflectionNamedType|ReflectionUnionType|ReflectionIntersectionType|null &$type, ReflectionParameter $parameter) :  DependenciesResolverInterface
     {
         if ($type instanceof ReflectionUnionType) {
             $types = $type->getTypes();
             foreach ($types as $rType) {
-                if ($rType->isBuiltin() && ! empty($args)) {
+                if ($rType->isBuiltin()) {
                     $type = $rType;
-                    return self::resolver($rType, $parameter, $args);
+                    return self::resolver($rType, $parameter);
                 }
             }
-            return self::resolver($rType, $parameter, $args);
+            return self::resolver($rType, $parameter);
         } else {
-            return self::resolver($type, $parameter, $args);
+            return self::resolver($type, $parameter);
         }
     }
 
-    private static function resolver(ReflectionNamedType $type, ReflectionParameter $parameter, mixed $args = []) : DependenciesResolverInterface
+    private static function resolver(ReflectionNamedType $type, ReflectionParameter $parameter) : DependenciesResolverInterface
     {
+        $name = $type->getName();
         return match (true) {
             $type === null => new ContainerTypeErrorResolver($type, $parameter),
-            $type->isBuiltin() => new BuiltInDependencyResolver($type, $parameter, $args),
-            ! $type->isBuiltin() => new ParameterDependecyResolver($type, $parameter, $args),
+            $type->isBuiltin() && $type->getName() !== 'object' => new BuiltInDependencyResolver($type, $parameter),
+            ! $type->isBuiltin() || $type->getName() === 'object' => new ParameterDependecyResolver($type, $parameter),
+
             default => throw new DependencyHasNoValueException('Could not resolve class dependency ' . $parameter->name)
         };
     }

@@ -11,7 +11,6 @@ $this->start('head'); ?>
       <?= $insertFrom ?>
    </div>
    <!-- Fin Content -->
-
 </main>
 <?php $this->end(); ?>
 <?php $this->start('footer') ?>

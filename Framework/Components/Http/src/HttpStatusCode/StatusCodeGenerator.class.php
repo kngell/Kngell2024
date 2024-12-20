@@ -26,9 +26,9 @@ final readonly class StatusCodeGenerator
         $message = [];
         foreach ($codes as $statusCode) {
             $message[$statusCode->getCode()] = $statusCode->getMessage();
-
             $httpStatusCodeEnum->addCase(self::generateHttpCodeName($statusCode), $statusCode->getCode())->addComment($statusCode->getDescription());
         }
+
         file_put_contents(
             dirname(__DIR__) . '/Common/HttpStatusCode.php',
             "<?php\n\n" . $namespace

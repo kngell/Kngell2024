@@ -25,7 +25,7 @@ class Response
     }
 
     /**
-     * Prepare the response based on the request.
+     * Prepares the response based on the request.
      *
      * @param Request $request
      * @return void
@@ -46,6 +46,9 @@ class Response
         if ($request->getMethod() === HttpMethod::HEAD) {
             $length = $this->headers->getContentLength() ?? strlen($this->content);
             $this->headers->add(HeaderMap::CONTENT_LENGTH_HEADER, $length);
+        }
+        if ($request->hasCookies()) {
+            $this->getCookies()->addAll($request->getCookies()->all());
         }
     }
 
@@ -210,6 +213,9 @@ class Response
         }
         foreach ($this->headers as $name => $value) {
             header("{$name}: {$value}", true, $this->statusCode->value);
+            if ($name === 'Location') {
+                exit;
+            }
         }
         $statusText = HttpStatusCodeMessages::STATUS_CODE_TO_MESSAGE[$this->statusCode->value];
         header("HTTP/{$this->protocolVersion->value} {$this->statusCode->value} {$statusText}", true, $this->statusCode->value);
@@ -218,7 +224,7 @@ class Response
     protected function sendCookies() : void
     {
         /**
-         * @var CookieData $cookie
+         * @var CookieObject $cookie
          */
         foreach ($this->cookies as $cookie) {
             setcookie(

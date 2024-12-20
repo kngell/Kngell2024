@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-class FlashType
+enum FlashType : string
 {
-    public const SUCCESS = 'success';
-    public const WARNING = 'warning';
-    public const DANGER = 'error';
-    public const INFO = 'info';
+    case SUCCESS = 'success';
+    case WARNING = 'warning';
+    case DANGER = 'error';
+    case INFO = 'info';
 }

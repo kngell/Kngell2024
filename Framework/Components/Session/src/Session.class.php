@@ -10,8 +10,7 @@ class Session implements SessionInterface
     /** @var SessionStorageInterface|null */
     protected ?SessionStorageInterface $storage;
 
-    /** @var string */
-    protected string $sessionIdentifier;
+    protected string|null $sessionIdentifier;
 
     /**
      * Class constructor.
@@ -19,12 +18,11 @@ class Session implements SessionInterface
      * @param string $sessionIdentifier
      * @param SessionStorageInterface|null $storage
      */
-    public function __construct(string $sessionIdentifier, ?SessionStorageInterface $storage = null)
+    public function __construct(string|null $sessionIdentifier = null, ?SessionStorageInterface $storage = null)
     {
         if ($this->isSessionKeyValid($sessionIdentifier) === false) {
             throw new SessionInvalidArgumentException($sessionIdentifier . ' is not a valid session name');
         }
-
         $this->sessionIdentifier = $sessionIdentifier;
         $this->storage = $storage;
     }
@@ -103,7 +101,7 @@ class Session implements SessionInterface
 
     /**
      * Invalidate Session
-     * =====================================================================.
+     * ===============================================.
      * @return void
      */
     public function invalidate(): void
@@ -113,17 +111,17 @@ class Session implements SessionInterface
 
     /**
      * Flush the session
-     * =====================================================================.
+     * ================================================.
      * @param string $key
      * @param [type] $value
-     * @return void
+     * @return mixed
      */
-    public function flush(string $key, $value = null) : void
+    public function flush(string $key, $value = null) : mixed
     {
         $this->ensureSessionKeyIsValid($key);
         try {
-            $this->storage->flushSession($key, $value);
-        } catch (\Throwable $th) {
+            return $this->storage->flushSession($key, $value);
+        } catch (Throwable $th) {
             throw $th;
         }
     }

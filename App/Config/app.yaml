@@ -15,7 +15,7 @@ app:
 settings:
   default_charset: UTF-8
   default_locale: fr
-  default_timezone: Europe/Paris
+  default_timezone: Europe/Amsterdam
   favicon: ""
   apple_icon: ""
   secret_key: ""
@@ -43,22 +43,24 @@ theme_builder:
 #=============================================================================
 #=============================================================================
 session:
-  session_name: "kngell_xsf_session"
+  session_name: "kngellSession"
   idle_time: 600 # 10min idle
-  lifetime: 3600 #session expires in 10min if left idle
+  cookie_lifetime: 1600 #session expires in 10min if left idle
   path: /
   domain: "localhost"
-  secure: false
-  httponly: true
-  gc_maxlifetime: "1800"
-  gc_probability: "1000"
-  cookie_lifetime: "1"
-  gc_divisor: "1"
-  use_cookies: "1"
-  globalized: false
+  cookie_secure: On
+  cookie_httponly: On
+  cookie_samesite: lax
+  gc_maxlifetime: 36000
+  gc_probability: 1
+  gc_divisor: 100
+  use_cookies: 1
+  use_only_cookies: 1
+  use_trans_sid: 0
+  # globalized: true
   default_driver: native_storage
-  storage_path: session_dir
-  http_only: false
+  save_path: session_dir
+  save_handler: files
   drivers:
     native_storage:
       class: NativeSessionStorage

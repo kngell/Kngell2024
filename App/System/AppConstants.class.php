@@ -26,6 +26,7 @@ final readonly class AppConstants
         defined('VIEW') or define('VIEW', ROOT_DIR . DS . 'App' . DS . 'Views' . DS);
         defined('SCRIPT') or define('SCRIPT', dirname($_SERVER['SCRIPT_NAME']));
         defined('IMG') or define('IMG', SCRIPT . DS . 'assets' . DS . 'img' . DS);
+        defined('COMPONENTS') or define('COMPONENTS', ROOT_DIR . DS . 'Framework' . DS . 'Components' . DS);
         // -----------------------------------------------------------------------
         // VISITORS, LOGIN & REGISTRATION
         // -----------------------------------------------------------------------
@@ -36,6 +37,8 @@ final readonly class AppConstants
         // Form
         // -----------------------------------------------------------------------
         defined('CSRF_TOKEN_SECRET') or define('CSRF_TOKEN_SECRET', 'sdgdsfdsffgfgglkglqhgfjgqe46454878');
+        defined('CSRF_TOKEN_LENGHT') or define('CSRF_TOKEN_LENGHT', 8);
+        defined('CSRF_TOKEN_LIFETIME') or define('CSRF_TOKEN_LIFETIME', 60 * 30);
         defined('TOKEN_NAME') or define('TOKEN_NAME', 'token');
     }
 }

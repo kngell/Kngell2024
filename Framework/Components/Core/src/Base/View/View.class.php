@@ -57,6 +57,9 @@ class View implements ViewInterface
     private function renderViewContent(string $templatePath, $context) : string
     {
         extract($context, EXTR_SKIP);
+        // foreach ($context as $key => $value) {
+        //     $$key = $value;
+        // }
         require_once $templatePath;
         $layout = $this->viewEnv->getLayout($this->_layout);
         if ($layout) {

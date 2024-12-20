@@ -6,7 +6,7 @@ abstract class AbstractSessionStorage
 {
     use SessionTrait;
 
-    private ?string $sessionPath = 'session_dir';
+    // private ?string $sessionPath = 'session_dir';
 
     /**
      * abstract class constructor.
@@ -15,9 +15,6 @@ abstract class AbstractSessionStorage
      */
     public function __construct(protected SessionEnvironment $sessionEnvironment, protected FilesSystemInterface $fileSyst)
     {
-        if ($sessionEnvironment) {
-            $this->sessionEnvironment = $sessionEnvironment;
-        }
         $this->iniSet();
         // Destroy any existing sessions started with session.auto_start
         if ($this->isSessionStarted()) {
@@ -25,6 +22,7 @@ abstract class AbstractSessionStorage
             session_destroy();
         }
         $this->start();
+        $this->cleanSessionPath();
     }
 
     /**
@@ -70,49 +68,6 @@ abstract class AbstractSessionStorage
     }
 
     /**
-     * Override PHP default session runtime configurations.
-     *
-     * @return void
-     */
-    public function iniSet(): void
-    {
-        foreach ($this->sessionEnvironment->getSessionRuntimeConfigurations() as $option) {
-            $sessionKey = str_replace('session.', '', $option);
-            if ($option && array_key_exists($sessionKey, $this->sessionEnvironment->getConfig())) {
-                ini_set($option, $this->sessionEnvironment->getSessionIniValues($sessionKey));
-            }
-        }
-    }
-
-    /**
-     * Define our session_set_cookie_params method via the $this->options parameters which
-     * will be define within our core config directory.
-     *
-     * @return void
-     */
-    public function start(): void
-    {
-        $this->setSessionName($this->sessionEnvironment->getSessionName());
-        session_set_cookie_params((int) $this->sessionEnvironment->getLifetime(), $this->sessionEnvironment->getPath(), $this->sessionEnvironment->getDomain(), $this->sessionEnvironment->isSecure(), $this->sessionEnvironment->isHttpOnly());
-
-        $this->startSession();
-        $this->cleanSessionPath();
-        if ($this->validateSession()) {
-            if (! $this->preventSessionHijack()) {
-                $_SESSION = [];
-                $_SESSION['IPaddress'] = $_SERVER['REMOTE_ADDR'];
-                $_SESSION['userAgent'] = $_SERVER['HTTP_USER_AGENT'];
-            } elseif (rand(1, 100) <= 5) { // Give a 5% chance of the session id changing on any request
-                $this->sessionRegeneration();
-            }
-        } else {
-            // $_SESSION = array();
-            // session_destroy();
-            // $this->startSession(); // restart session
-        }
-    }
-
-    /**
      * Prevent session within the cli. Even though we can't run sessions within
      * the command line. also we checking we have a session id and its not empty
      * else return false.
@@ -129,12 +84,57 @@ abstract class AbstractSessionStorage
      *
      * @return void
      */
-    public function startSession()
+    private function startSession()
     {
-        if (session_status() == PHP_SESSION_NONE && session_id() == '') {
-            session_save_path(ROOT_DIR . DS . $this->sessionEnvironment->storagePath());
+        if (session_status() == PHP_SESSION_NONE) {
+            session_save_path(ROOT_DIR . DS . $this->sessionEnvironment->storagePath() . DS);
             session_start();
         }
+    }
+
+    /**
+     * Define our session_set_cookie_params method via the $this->options parameters which
+     * will be define within our core config directory.
+     *
+     * @return void
+     */
+    private function start(): void
+    {
+        $this->setSessionName($this->sessionEnvironment->getSessionName());
+        $cookie_Params = $this->cookiesParams();
+        session_set_cookie_params($cookie_Params);
+        $this->startSession();
+    }
+
+    /**
+     * Override PHP default session runtime configurations.
+     *
+     * @return void
+     */
+    private function iniSet(): void
+    {
+        foreach ($this->sessionEnvironment->getSessionRuntimeConfigurations() as $option) {
+            $sessionKey = str_replace('session.', '', $option);
+            if ($option && array_key_exists($sessionKey, $this->sessionEnvironment->getConfig())) {
+                ini_set($option, $this->sessionEnvironment->getSessionIniValues($sessionKey));
+            }
+        }
+    }
+
+    private function cookiesParams() : array
+    {
+        $cookies_params = session_get_cookie_params();
+        $liftime = $this->sessionEnvironment->getLifetime();
+        if ($cookies_params['lifetime'] === 0) {
+            $liftime = $cookies_params['lifetime'];
+        }
+        return [
+            'lifetime' => $liftime,
+            'path' => $this->sessionEnvironment->getPath(),
+            'domain' => $this->sessionEnvironment->getDomain(),
+            'secure' => $this->sessionEnvironment->isSecure(),
+            'httponly' => $this->sessionEnvironment->isHttpOnly(),
+        ];
     }
 
     private function cleanSessionPath(): void
@@ -142,6 +142,7 @@ abstract class AbstractSessionStorage
         $fileList = $this->fileSyst->listAllFiles($this->sessionEnvironment->storagePath());
         if ($fileList && is_array($fileList)) {
             foreach ($fileList as $file) {
+                $sess = session_id();
                 if (str_replace('sess_', '', $file) !== session_id()) {
                     $this->fileSyst->removeFile($this->sessionEnvironment->storagePath(), $file);
                 }

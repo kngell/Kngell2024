@@ -7,7 +7,7 @@ class ErrorHandling
     /**
      * Number of lines to be returned.
      */
-    private const NUM_LINES = 10;
+    private const int NUM_LINES = 10;
     private static $trace = [];
 
     public function __construct()

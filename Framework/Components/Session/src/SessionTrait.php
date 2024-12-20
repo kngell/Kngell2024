@@ -13,7 +13,7 @@ trait SessionTrait
      */
     public function preventSessionHijack(): bool
     {
-        if (!isset($_SESSION['IPaddress']) || !isset($_SESSION['userAgent'])) {
+        if (! isset($_SESSION['IPaddress']) || ! isset($_SESSION['userAgent'])) {
             return false;
         }
         if ($_SESSION['IPaddress'] != $_SERVER['REMOTE_ADDR']) {
@@ -22,7 +22,6 @@ trait SessionTrait
         if ($_SESSION['userAgent'] != $_SERVER['HTTP_USER_AGENT']) {
             return false;
         }
-
         return true;
     }
 
@@ -66,7 +65,7 @@ trait SessionTrait
     {
         /* Get the stored session Object */
         $storedSessionObject = GlobalManager::get('session_global');
-        if (!$storedSessionObject) {
+        if (! $storedSessionObject) {
             throw new SessionException('No session object found within the global manager');
         }
         return $storedSessionObject;
@@ -94,7 +93,7 @@ trait SessionTrait
      */
     protected function validateSession(): bool
     {
-        if (isset($_SESSION['OBSOLETE']) && !isset($_SESSION['EXPIRES'])) {
+        if (isset($_SESSION['OBSOLETE']) && ! isset($_SESSION['EXPIRES'])) {
             return false;
         }
         if (isset($_SESSION['EXPIRES']) && $_SESSION['EXPIRES'] < time()) {

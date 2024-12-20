@@ -60,10 +60,10 @@ class Repository implements RepositoryInterface
         }
     }
 
-    public function findAll(): void
+    public function findAll(array $conditions = []): void
     {
         try {
-            $this->findBy();
+            $this->findBy($conditions);
         } catch (Throwable $th) {
             throw $th;
         }

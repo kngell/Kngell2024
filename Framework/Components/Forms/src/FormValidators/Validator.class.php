@@ -4,45 +4,38 @@ declare(strict_types=1);
 
 final class Validator
 {
-    protected array $validators = [];
     private array $inputRules;
+    private AbstractValidatorFactory $validator;
 
-    public function __construct(private array $inputFields)
+    public function __construct(private array $inputFields, string $rules, ?Model $model = null)
     {
-        $rulesFile = FileManager::searchFile(APP . 'Forms', 'productFormRules.yaml');
+        $rulesFile = FileManager::searchFile(APP . 'Forms', $rules . '.yaml');
         $this->inputRules = YamlFile::get($rulesFile);
+        $this->validator = new ValidatorFactory($model);
     }
 
-    public function validate() : array
+    public function validate() : array|bool
     {
+        $results = [];
         foreach ($this->inputRules as $input => $rules) {
             if (array_key_exists($input, $this->inputFields)) {
                 $display = $rules['display'];
                 unset($rules['display']);
-                foreach ($rules as $rule_name => $rule_value) {
-                    $this->add($input, ValidatorFactory::create($rule_name, $display, $this->inputFields[$input], $rule_value));
-                }
-            }
-        }
-        return $this->runValidator();
-    }
-
-    private function runValidator() : array
-    {
-        $results = [];
-        foreach ($this->validators as $input => $validators) {
-            /** @var ValidatorInterface[] $validators */
-            foreach ($validators as $validator) {
-                if ($result = $validator->validate()) {
-                    $results[$input][] = $result;
-                }
+                $results = array_merge($results, $this->runValidator($display, $input, $rules));
             }
         }
         return $results;
     }
 
-    private function add(string $inputName, ValidatorInterface $component): void
+    private function runValidator(string $display, string $input, array $rules) : array
     {
-        $this->validators[$inputName][] = $component;
+        $results = [];
+        foreach ($rules as $rule_name => $rule_value) {
+            $error = $this->validator->run($rule_name, $display, $this->inputFields[$input], $rule_value);
+            if (is_string($error) && ! empty($error)) {
+                $results[$input][] = $error;
+            }
+        }
+        return $results;
     }
 }
