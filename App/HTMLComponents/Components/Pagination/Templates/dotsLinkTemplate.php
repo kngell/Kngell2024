@@ -1,1 +1,0 @@
-<li class="page-item dots"><a class="page-link" href="#">...</a></li>

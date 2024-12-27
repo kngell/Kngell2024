@@ -7,16 +7,12 @@ class DataMapper extends AbstractDataMapper
     private bool $queryResult;
 
     /**
-     * @param DataMapperEnvironmentConfig $env
+     * @param DatabaseConnexionInterface $_con
      * @return void
-     * @throws DataMapperInvalidArgumentException
-     * @throws BindingResolutionException
-     * @throws ReflectionException
-     * @throws DependencyHasNoDefaultValueException
      */
-    public function __construct(DataMapperEnvironmentConfig $env)
+    public function __construct(DatabaseConnexionInterface $_con)
     {
-        parent::__construct($env);
+        parent::__construct($_con);
     }
 
     public function persist(string $sql = '', array $parameters = [], bool $isSearch = false) : self

@@ -1,6 +1,11 @@
 <?php
 
 declare(strict_types=1);
+
+use JMS\Serializer\Exception\NotAcceptableException;
+use JMS\Serializer\Exception\RuntimeException;
+use JMS\Serializer\Exception\UnsupportedFormatException;
+
 readonly class RouteDispatcher
 {
     public function __construct(
@@ -9,19 +14,43 @@ readonly class RouteDispatcher
     ) {
     }
 
+    /**
+     * @param RouteInfo $route
+     * @param string $url
+     * @param App $app
+     * @param array $params
+     * @param Request $request
+     * @return string|Response
+     * @throws DispatchRouteException
+     * @throws UnsupportedFormatException
+     * @throws RuntimeException
+     * @throws NotAcceptableException
+     * @throws InvalidRouteArgumentException
+     * @throws BindingResolutionException
+     * @throws ReflectionException
+     * @throws DependencyHasNoDefaultValueException
+     */
     public function dispatch(RouteInfo $route, string $url, App $app, array $params, Request $request) : string|Response
     {
-        $arguments = ! empty($params) ? $params : $this->routeArgumentGenerator->generate($route, $request);
-        $controllerObject = $this->controller($route, $app);
-        return $app->get(MiddlewareRequest::class, [
-            $this->middlewares($route, $app),
-            $app->get(ControllerRequest::class, [
-                $route,
-                $controllerObject,
-                $arguments,
-                $url,
-            ]),
-        ])->handle($request);
+        try {
+            $arguments = ! empty($params) ? $params : $this->routeArgumentGenerator->generate($route, $request);
+            $controllerObject = $this->controller($route, $app);
+            $app->bind('Route', null, false, [
+                $route->getController(),
+                $route->getMethod(),
+            ]);
+            return $app->get(MiddlewareRequest::class, [
+                $this->middlewares($route, $app),
+                $app->get(ControllerRequest::class, [
+                    $route,
+                    $controllerObject,
+                    $arguments,
+                    $url,
+                ]),
+            ])->handle($request);
+        } catch (DispatchRouteException $th) {
+            throw new DispatchRouteException($th->getMessage());
+        }
     }
 
     /**
@@ -43,6 +72,14 @@ readonly class RouteDispatcher
         return $middlewares;
     }
 
+    /**
+     * @param RouteInfo $route
+     * @param App $app
+     * @return Controller
+     * @throws BindingResolutionException
+     * @throws ReflectionException
+     * @throws DependencyHasNoDefaultValueException
+     */
     private function controller(RouteInfo $route, App $app) : Controller
     {
         $path = $this->controlllerPath(
@@ -52,9 +89,7 @@ readonly class RouteDispatcher
         return $app->get($route->getController())
             ->setRequest($app->getRequest())
             ->setView($app->get(ViewInterface::class))
-            ->setFormBuilder($app->get(FormBuilder::class))
             ->setresponse($app->getResponse())
-            ->setSession($app->getSession())
             ->setToken($app->get(TokenInterface::class));
     }
 

@@ -43,17 +43,16 @@ class Flash implements FlashInterface
     }
 
     /**
-     * @inheritdoc
-     *
      * @param string $message
-     * @param string $type
+     * @param null|FlashType $type
      * @return void
+     * @throws SessionInvalidArgumentException
      */
-    public function add(string $message, ?string $type = null) : void
+    public function add(string $message, ?FlashType $type = null) : void
     {
         /* Apply default constants to flash type */
         if ($type === null) {
-            $type = FlashType::SUCCESS->value;
+            $type = FlashType::SUCCESS;
         }
         if ($this->session->exists($this->flashKey)) {
             $this->session->set($this->flashKey, []);
@@ -75,7 +74,21 @@ class Flash implements FlashInterface
     public function get()
     {
         if ($this->session->exists($this->flashKey)) {
-            return $this->session->flush($this->flashKey);
+            return $this->formatMessage($this->session->flush($this->flashKey));
         }
+    }
+
+    public function getSession() : SessionInterface
+    {
+        return $this->session;
+    }
+
+    private function formatMessage(array $flashMsg) : string
+    {
+        $flashMsg = ArrayUtils::first($flashMsg);
+        $msg = "<div id='message' class='alert alert-" . $flashMsg['type']->value . ' text-center' . "'>";
+        $msg .= $flashMsg['message'];
+        $msg .= '</div>';
+        return $msg;
     }
 }

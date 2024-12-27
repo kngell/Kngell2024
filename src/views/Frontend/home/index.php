@@ -6,7 +6,14 @@ $this->start('head'); ?>
 <?php $this->start('body'); ?>
 <main id="main-site">
    <!-- Content -->
+   <?php if($this->isUserLoggedIn()) :?>
+   <p><a href="/logout" id="">Log Out</a></p>
+   <?php else : ?>
+   <p><a href="/signup" id="">Sign Up</a></p>
+   <p><a href="/login" id="">Login</a></p>
+   <?php endif; ?>
 
+   <?=$message ?? ''?>
    Here is home index page
    <!-- Fin Content -->
 

@@ -1,0 +1,5 @@
+title:
+  display: Post title
+  required: true
+  min: 2
+  max: 150

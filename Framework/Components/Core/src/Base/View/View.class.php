@@ -101,4 +101,20 @@ class View implements ViewInterface
             default => throw new ViewException('no content to display')
         };
     }
+
+    private function getContentOverview(string $content):string
+    {
+        return substr(strip_tags($this->htmlDecode($content)), 0, 200) . '...';
+    }
+
+    private function htmlDecode(string|null $str) : string
+    {
+        return ! empty($str) ? htmlspecialchars_decode(html_entity_decode($str), ENT_QUOTES) : '';
+    }
+
+    private function isUserLoggedIn() : bool
+    {
+        $session = App::getInstance()->getSession();
+        return $session->exists(CURRENT_USER_SESSION_NAME);
+    }
 }

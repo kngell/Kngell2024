@@ -6,6 +6,7 @@ use Ramsey\Collection\Exception\InvalidPropertyOrMethod;
 
 class RouteMatcher
 {
+    private const array MIDDLEWARE = [];
     private array $routes;
     private string $controllerSuffix = 'Controller';
 
@@ -27,14 +28,32 @@ class RouteMatcher
                 $matches = array_merge(array_filter($matches, 'is_string', ARRAY_FILTER_USE_KEY), $params ?? []);
                 if (array_key_exists('httpMethod', $matches)) {
                     $httpMethod = $request->getServer()->get('request_method');
-                    if (strtolower($httpMethod) !== strtolower($params['httpMethod'])) {
+                    if (strtolower($httpMethod) !== strtolower($matches['httpMethod'])) {
                         continue;
                     }
                 }
-                return $this->routeInfo($route, $pattern, $matches, $request);
+                return $this->routeInfo(
+                    $route,
+                    $pattern,
+                    $this->addMiddleware('crsfToken', $matches),
+                    $request
+                );
             }
         }
         return null;
+    }
+
+    private function addMiddleware(string $middleware, array $matches) : array
+    {
+        foreach (self::MIDDLEWARE as $key => $middleware) {
+            $end = $key === array_key_last(self::MIDDLEWARE) ? '' : '|';
+            if (array_key_exists('middleware', $matches)) {
+                $matches['middleware'] = $middleware . '|' . $matches['middleware'] . $end;
+            } else {
+                $matches['middleware'] = $middleware . $end;
+            }
+        }
+        return $matches;
     }
 
     private function routeInfo(string $path, string $pattern, array $matches, Request $request) : RouteInfo
@@ -145,6 +164,7 @@ class RouteMatcher
             if ($part !== '' && ! str_contains($part, 'controller') && ! str_contains($part, 'method')) {
                 $builder = new PathElementBuilder();
                 if (str_starts_with($part, '{') && str_ends_with($part, '}')) {
+                    $part = rtrim(strtok($part, '\\'), ':') . '}';
                     $builder->withType(PathElementType::VARIABLE)
                         ->withValue(ltrim(rtrim($part, '}'), '{'));
                 } else {

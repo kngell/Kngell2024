@@ -13,9 +13,14 @@ class PDOConnexion implements DatabaseConnexionInterface
      */
     private ?PDO $con = null;
 
-    public function __construct(array $credentials)
+    /**
+     * @param DatabaseEnvironmentConfig $env
+     * @return void
+     * @throws DataMapperInvalidArgumentException
+     */
+    public function __construct(DatabaseEnvironmentConfig $env)
     {
-        $this->credentials = $credentials;
+        $this->credentials = $env->getCredentials();
     }
 
     /**
@@ -52,16 +57,6 @@ class PDOConnexion implements DatabaseConnexionInterface
     public function close():void
     {
         $this->con = null;
-    }
-
-    /**
-     * Get the value of credentials.
-     *
-     * @return  array
-     */
-    public function getCredentials() : array
-    {
-        return $this->credentials;
     }
 
     /**

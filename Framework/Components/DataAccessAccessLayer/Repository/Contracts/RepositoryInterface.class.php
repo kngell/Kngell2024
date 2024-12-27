@@ -17,4 +17,6 @@ interface RepositoryInterface
     public function findBy(array $conditions = []) : void;
 
     public function findOneBy(array $conditions = []) : void;
+
+    public function showColumns(string $tableName) : void;
 }

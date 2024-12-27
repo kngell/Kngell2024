@@ -3,33 +3,17 @@
     "denied": {
       "AdminController": ["*"]
     },
-    "LearningController": ["*"],
     "HomeController": ["*"],
-    "ShoppingCartController": ["*"],
     "ErrorsController": ["*"],
-    "ClothingController": ["*"],
-    "AdminController": ["login"],
-    "AuthController": ["*"],
-    "NewsController": ["*"],
-    "RestrictedController": ["*"],
-    "VisitorsController": ["*"],
-    "CommentsController": ["*"],
-    "NewslettersController": ["*"],
-    "AssetsController": ["*"],
-    "TestController": ["*"]
+    "LoginController": ["*"],
+    "PostController": ["index"]
   },
   "LoggedIn": {
     "denied": {},
-    "CheckoutProcessController": ["*"],
-    "UserAccountController": ["*"],
-    "CheckoutController": ["*"],
-    "CommentsController": ["*"]
+    "PostController": ["*"]
   },
   "admin": {
-    "denied": {},
-    "AdminController": ["*"],
-    "VisitorsController": ["*"],
-    "TablesController": ["*"]
+    "denied": {}
   },
   "user": {
     "denied": {},

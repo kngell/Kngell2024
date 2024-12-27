@@ -15,20 +15,20 @@ abstract class Model
     {
         list($entity, $conditions) = $this->conditions($params);
         $this->entityManager->getRepository($entity)->findAll($conditions);
-        return $this->entityManager->persist()->getResults([], 'findAll');
+        return $this->entityManager->persist()->getResults();
     }
 
     public function find(int|string $id) : QueryResult
     {
         $this->entityManager->getRepository()->findByID($id);
-        return $this->entityManager->persist()->getResults([], 'findByID');
+        return $this->entityManager->persist()->getResults();
     }
 
-    public function delete(Entity|array|string $params = []) : QueryResult
+    public function delete(Entity|array|string|int $params = []) : QueryResult
     {
         list($entity, $conditions) = $this->conditions($params);
         $this->entityManager->getRepository($entity)->delete($conditions);
-        return $this->entityManager->persist()->getResults([], 'delete');
+        return $this->entityManager->persist()->getResults();
     }
 
     public function save(array|Entity|null $data = null): QueryResult
@@ -49,37 +49,43 @@ abstract class Model
     public function insert(Entity|null $entity = null) : QueryResult
     {
         $this->entityManager->getrepository($entity)->create();
-        return $this->entityManager->persist()->getResults([], 'create');
+        return $this->entityManager->persist()->getResults();
     }
 
     public function update(Entity|array|string $params = []) : QueryResult
     {
         list($entity, $conditions) = $this->conditions($params);
         $this->entityManager->getrepository($entity)->update($conditions);
-        return $this->entityManager->persist()->getResults([], 'update');
+        return $this->entityManager->persist()->getResults();
     }
 
-    /**
-     * Get the value of entityManager.
-     *
-     * @return EntityManagerInterface
-     */
-    public function getEntityManager(): EntityManagerInterface
+    public function showColumns(string|null $tableName = null) : QueryResult
     {
-        return $this->entityManager;
+        if ($tableName === null) {
+            $tableName = strtolower($this->entityManager->getEntity()::class);
+        }
+        $this->entityManager->getRepository()->showColumns($tableName);
+        return $this->entityManager->persist()->getResults();
     }
 
-    private function conditions(Entity|array|string $params = []) : array
+    public function getTableColumns(string $tableName) : string
+    {
+        $result = $this->showColumns($tableName);
+        $colums = array_column($result->all(), 'Field');
+        return StringUtils::camelCase('$' . implode('; $', $colums));
+    }
+
+    private function conditions(Entity|array|string|int $params = []) : array
     {
         return match (true) {
             $params instanceof Entity => [$params, []],
             is_array($params) => [null, $params],
-            is_string($params) => $this->idCondition($params),
+            is_string($params) || is_int($params) => $this->idCondition($params),
             default => [null, []]
         };
     }
 
-    private function idCondition(string $id) : array
+    private function idCondition(string|int $id) : array
     {
         $fieldId = $this->entityManager->getEntityKeyField();
         return $fieldId ? [null, [$fieldId => $id]] : [null, []];
@@ -88,6 +94,6 @@ abstract class Model
     private function entity() : Entity
     {
         $entityName = str_replace('Model', '', $this::class);
-        return App::getInstance()->get($entityName);
+        return App::diGet($entityName);
     }
 }

@@ -7,23 +7,11 @@ class QueryResult
     private mixed $results;
     private int $rowCount;
     private PDOStatement $_query;
+    private string $returnType;
 
-    public function __construct(private DataMapperInterface $mapper, private array $options = [], private string|null $method = null)
+    public function __construct(private DataMapperInterface $mapper, private Entity $entity)
     {
         $this->_query = $mapper->getQueryStatement();
-        $this->processResults();
-        $this->rowCount();
-    }
-
-    public function getQueryResult() : bool
-    {
-        return $this->mapper->getQueryResult();
-    }
-
-    public function getResultSet() : self
-    {
-        return $this->processResults();
-        return $this;
     }
 
     public function getLastInsertId(string|null $name = null) : string|false
@@ -31,74 +19,93 @@ class QueryResult
         return $this->mapper->getConnexion()->open()->lastInsertId($name);
     }
 
-    /**
-     * Get the value of _results.
-     *
-     * @return mixed
-     */
-    public function getResults(): mixed
+    public function getResults(string|array|null $params = null, string|null $type = null): self
     {
-        return $this->results;
+        list($mode, $className, $constructorAgrs) = $this->params($params);
+        $mode = $this->returType($mode);
+        $this->fetchMode($mode, $className, $constructorAgrs);
+        $this->rowCount = $this->_query->rowCount();
+        return $this;
     }
 
-    /**
-     * Get the value of rowCount.
-     *
-     * @return int
-     */
-    public function getNumRows(): int
+    public function count() : mixed
     {
-        return $this->rowCount;
+        $this->returnType = 'count';
+        return $this->results = $this->readResults();
     }
 
-    private function getSingleResult(string $option = '') : mixed
+    public function single() : mixed
     {
-        return match ($option) {
-            'object' => $this->_query->fetch(PDO::FETCH_OBJ),
-            default => $this->_query->fetch(PDO::FETCH_ASSOC),
+        $this->returnType = 'single';
+        return $this->results = $this->readResults();
+    }
+
+    public function first() : mixed
+    {
+        $this->returnType = 'first';
+        return $this->results = $this->readResults();
+    }
+
+    public function all() : mixed
+    {
+        $this->returnType = 'all';
+        return $this->results = $this->readResults();
+    }
+
+    public function rowCount() : int
+    {
+        return $this->_query->rowCount();
+    }
+
+    public function getQueryResult(): bool
+    {
+        return $this->mapper->getQueryResult();
+    }
+
+    private function params(string|array|null $params = null) : array
+    {
+        return match (true) {
+            is_string($params) => $this->stringOptions($params),
+            is_array($params) => $this->arrayOptions($params),
+            default => ['', null, null],
         };
     }
 
-    private function processResults() : self
+    private function stringOptions(string $params) : array
     {
-        if ($this->_query) {
-            $this->results = match ($this->method) {
-                'findByID' => $this->getSingleResult(),
-                default => match ($this->method) {
-                    'findAll','read','showColumns' => $this->readingFromDatabaseResults($this->options),
-                    'create','update','delete' => $this->rowCount(),
-                    default => $this->readingFromDatabaseResults()
-                },
-            };
-            return $this;
+        if ($params === 'class') {
+            $className = $this->entity::class;
         }
+        return [$params, $className ?? null, null];
     }
 
-    private function rowCount() : void
+    private function arrayOptions(array $params) : array
     {
-        $this->rowCount = $this->_query->rowCount();
+        if (array_key_exists('class', $params)) {
+            if (array_key_exists('constructorArgs', $params)) {
+                $constructorArs = $params['constructorArgs'];
+            }
+            return [key($params), $params[key($params)], $constructorArs ?? null];
+        }
+        return ['', null, null];
     }
 
-    private function readingFromDatabaseResults(array $options = []) : mixed
+    private function readResults() : mixed
     {
-        $results_type = $this->returType($options);
-        $this->fetchMode($results_type, $options);
-        $check = array_key_exists('return_type', $options) ? $options['return_type'] : 'all';
-        return match ($check) {
+        return match ($this->returnType) {
             'count' => $this->_query->rowCount(),
             'single' => $this->_query->fetch(),
             'first' => ArrayUtils::first($this->_query->fetchAll()),
+            'all' => $this->_query->fetchAll(),
             default => $this->_query->fetchAll()
         };
     }
 
-    private function fetchMode(int $type, array $options) : void
+    private function fetchMode(int $type, string|null $className = null, ?array $constructorAgrs = null) : void
     {
-        $className = isset($options['class']) ? $options['class'] : null;
-        $contructorArgs = isset($options['constructorArgs']) ? $options['constructorArgs'] : null;
         if ($className != null) {
-            if ($contructorArgs != null) {
-                $this->_query->setFetchMode($type, $className, $contructorArgs);
+            if ($constructorAgrs != null) {
+                $this->_query->setFetchMode($type, $className, $constructorAgrs);
             } else {
                 $this->_query->setFetchMode($type, $className);
             }
@@ -107,15 +114,12 @@ class QueryResult
         }
     }
 
-    private function returType(array $options) : int
+    private function returType(string|null $type) : int
     {
-        if (array_key_exists('return_type', $options)) {
-            return match ($options['return_type']) {
-                'object' => PDO::FETCH_OBJ,
-                'class' => PDO::FETCH_CLASS,
-                default => PDO::FETCH_ASSOC
-            };
-        }
-        return PDO::FETCH_ASSOC;
+        return match ($type) {
+            'object' => PDO::FETCH_OBJ,
+            'class' => PDO::FETCH_CLASS,
+            default => PDO::FETCH_ASSOC
+        };
     }
 }

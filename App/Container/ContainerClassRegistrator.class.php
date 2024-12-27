@@ -12,9 +12,8 @@ final readonly class ContainerClassRegistrator
     {
         foreach (self::bindClasses() as $abstract => $concrete) {
             self::registerClass($abstract, $concrete, 'bind', $app);
-            //$app->bind($abstract, $concrete);
         }
-        foreach (self::singletonClasses() as $abstract => $concrete) {
+        foreach (self::singletonClasses($app) as $abstract => $concrete) {
             self::registerClass($abstract, $concrete, 'singleton', $app);
         }
     }
@@ -22,19 +21,31 @@ final readonly class ContainerClassRegistrator
     private static function registerClass(string $abstract, mixed $concrete, string $function, App $app) : void
     {
         if (is_array($concrete)) {
-            $class = key($concrete);
-            $class = is_numeric($class) ? $abstract : $class;
-            $args = $concrete[$class] ?? $concrete;
+            list($class, $args) = self::params($concrete, $abstract);
             $app->$function($abstract, $class, false, $args);
         } else {
             $app->$function($abstract, $concrete);
         }
     }
 
+    private static function params(array $concrete, string $abstract)
+    {
+        if (count($concrete) === 1) {
+            return [$abstract, $concrete[0]];
+        }
+        $class = $concrete[0];
+        if (! is_string($class)) {
+            $class = $abstract;
+        } else {
+            unset($concrete[0]);
+            $concrete = array_values($concrete);
+        }
+        return [$class, $concrete];
+    }
+
     private static function bindClasses() : array
     {
         return [
-            FlashInterface::class => Flash::class,
             AbstractFactory::class => ConcreteFactory1::class,
             RooterInterface::class => Rooter::class,
             CacheStorageInterface::class => NativeCacheStorage::class,
@@ -47,7 +58,7 @@ final readonly class ContainerClassRegistrator
                 function () {
                     return YamlFile::get('middlewares');
                 }],
-            DataMapperEnvironmentConfig::class => [function () {
+            DatabaseEnvironmentConfig::class => [function () {
                 return YamlFile::get('database');
             }, 'mysql',
             ],
@@ -55,9 +66,12 @@ final readonly class ContainerClassRegistrator
         ];
     }
 
-    private static function singletonClasses() : array
+    private static function singletonClasses(App $app) : array
     {
         return [
+            DatabaseConnexionInterface::class => PDOConnexion::class,
+            UsersModel::class => UsersModel::class,
+            FlashInterface::class => Flash::class,
             TokenInterface::class => Token::class,
             ViewInterface::class => View::class,
             CollectionInterface::class => Collection::class,
@@ -66,6 +80,9 @@ final readonly class ContainerClassRegistrator
             SessionStorageInterface::class => NativeSessionStorage::class,
             SessionInterface::class => Session::class,
             DataMapperInterface::class => DataMapper::class,
+            HashInterface::class => [Hash::class, function () use ($app) {
+                return $app->getAppConfig()->getConfig()['security'];
+            }],
         ];
     }
 }

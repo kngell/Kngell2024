@@ -7,9 +7,9 @@ abstract class AbstractDataMapper implements DataMapperInterface
     protected DatabaseConnexionInterface $_con;
     protected PDOStatement $_query;
 
-    public function __construct(DataMapperEnvironmentConfig $env)
+    public function __construct(DatabaseConnexionInterface $_con)
     {
-        $this->_con = $this->connection($env);
+        $this->_con = $_con;
     }
 
     public function beginTransaction() : bool
@@ -40,13 +40,5 @@ abstract class AbstractDataMapper implements DataMapperInterface
     public function getQueryStatement(): PDOStatement
     {
         return $this->_query;
-    }
-
-    private function connection(DataMapperEnvironmentConfig $env) : DatabaseConnexionInterface
-    {
-        $credentials = $env->getCredentials();
-        $app = App::getInstance();
-        $app->singleton(DatabaseConnexionInterface::class, PDOConnexion::class, $credentials);
-        return $app->get(DatabaseConnexionInterface::class);
     }
 }

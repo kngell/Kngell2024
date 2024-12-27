@@ -28,7 +28,7 @@ class ViewEnvironment
         if (! str_contains($fileName, $this->appPath)) {
             $directory = $directory . DS . $this->appPath;
         }
-        return FileManager::searchFile($directory, $fileName);
+        return FileManager::get($directory, $fileName);
     }
 
     public function getCss(string $path) : string

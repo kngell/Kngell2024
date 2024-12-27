@@ -9,6 +9,7 @@ abstract class AbstractApp extends Container
     protected Request $request;
     protected Response $response;
     protected SessionInterface $session;
+    protected CookieInterface $cookie;
     protected RooterInterface $rooter;
 
     public function app(): App
@@ -149,10 +150,7 @@ abstract class AbstractApp extends Container
 
     protected function loadCookies()
     {
-        return $this->get(CookieFacade::class, [
-            'cookieEnvironmentArray' => [],
-            'cookieConfig' => $this->get(CookieConfig::class),
-            'gv' => $this->get(SuperGlobalsInterface::class),
-        ])->initialize();
+        $this->bindParams(CookieEnvironment::class, $this->appConfig->getCookie());
+        return $this->cookie = $this->get(CookieInterface::class);
     }
 }

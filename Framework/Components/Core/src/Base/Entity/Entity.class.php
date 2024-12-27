@@ -3,16 +3,55 @@
 declare(strict_types=1);
 abstract class Entity
 {
-    public function table() : string
+    public function __set($name, $value)
     {
-        return strtolower($this::class);
+        $name = lcfirst(StringUtils::studlyCaps($name));
+        if (property_exists($this, $name)) {
+            $reflection = CustomReflection::getInstance($this)->getObject();
+            $reflection->getMethod('set' . $name)->invoke($this, $value);
+        }
     }
 
-    public function assign(array $data) : self
+    public function table() : string
     {
-        foreach ($data as $key => $value) {
-            // code...
+        return StringUtils::StudlyCapsToUnderscore($this::class);
+    }
+
+    public function toOriginalArray() : array
+    {
+        $array = [];
+        $reflection = CustomReflection::getInstance($this)->getObject();
+        $props = $reflection->getProperties();
+        foreach ($props as $prop) {
+            $name = StringUtils::StudlyCapsToUnderscore($prop->getName());
+            $array[$name] = $prop->getValue($this);
         }
-        return $this;
+        return $array;
+    }
+
+    public function getEntityKeyField() : string|bool
+    {
+        $reflector = CustomReflection::getInstance($this)->getObject();
+        $properties = $reflector->getProperties(ReflectionProperty::IS_PRIVATE);
+        foreach ($properties as $property) {
+            $identifier = $property->getAttributes();
+            if (! empty($identifier)) {
+                /** @var ReflectionAttribute */
+                $attribute = ArrayUtils::first($identifier);
+                $attrArguments = $attribute->getArguments();
+                if (! empty($attrArguments['name'])) {
+                    $entityFieldId = $attrArguments['name'];
+                } else {
+                    $entityFieldId = StringUtils::StudlyCapsToUnderscore($property->getName());
+                }
+                return $entityFieldId;
+            }
+        }
+        return false;
+    }
+
+    public function getLable(string $name) : string
+    {
+        return '';
     }
 }

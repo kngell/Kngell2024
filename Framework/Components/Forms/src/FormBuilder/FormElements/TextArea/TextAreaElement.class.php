@@ -33,7 +33,7 @@ class TextAreaElement extends AbstractFormDataElement
             if ($key === 'formErrors' || $key === 'formValues' || is_object($value) || $key === 'message') {
                 continue;
             }
-            if (in_array(gettype($value), ['string', 'bool', 'boolean', 'array'])) {
+            if (in_array(gettype($value), ['string', 'bool', 'boolean', 'array', 'integer'])) {
                 $textArea .= $this->formElementAttribute($key, $value);
             }
         }

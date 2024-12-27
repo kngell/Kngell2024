@@ -32,8 +32,7 @@ abstract class AbstractFormDataElement extends AbstractFormElement
             foreach ($this->formErrors[$name] as $error) {
                 $errorStr .= $error;
             }
-            array_pop($this->class);
-            $this->class[] = 'is-invalid';
+            isset($this->class) ? array_push($this->class, 'is-invalid') : $this->class = ['is-invalid'];
         }
         return $errorStr;
     }
@@ -42,12 +41,12 @@ abstract class AbstractFormDataElement extends AbstractFormElement
     {
         $value = $value;
         if (isset($this->formValues) && array_key_exists($name, $this->formValues)) {
-            $value = $this->formValues[$name];
+            $value = ! str_contains($name, 'password') ? $this->formValues[$name] : '';
         }
         return $value;
     }
 
-    protected function classStyle() : void
+    protected function classStyle(string $type = '') : void
     {
         if (isset($this->class)) {
             foreach ($this->class as $key => $class) {
@@ -55,9 +54,19 @@ abstract class AbstractFormDataElement extends AbstractFormElement
                     unset($this->class[$key]);
                 }
             }
-            isset($this->formValues[$this->name]) ? $this->class[] = 'is-valid' : '';
+            $this->class[] = $this->isValidClass($type);
         } else {
-            isset($this->formValues[$this->name]) ? $this->class = ['is-valid'] : '';
+            $this->class = [$this->isValidClass($type)];
         }
+    }
+
+    private function isValidClass(string $type = '') : string
+    {
+        if (isset($this->formValues[$this->name]) && ! str_contains($this->name, 'password')) {
+            if (isset($type) || $type !== 'submit') {
+                return 'is-valid';
+            }
+        }
+        return '';
     }
 }

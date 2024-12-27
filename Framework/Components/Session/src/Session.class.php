@@ -71,8 +71,8 @@ class Session implements SessionInterface
     /**
      * @param string $key
      * @param mixed|null $default
-     * @return void
-     * @throws SessionException|Throwable
+     * @return mixed
+     * @throws SessionException
      */
     public function get(string $key, mixed $default = null): mixed
     {
@@ -124,6 +124,11 @@ class Session implements SessionInterface
         } catch (Throwable $th) {
             throw $th;
         }
+    }
+
+    public function regenerate() : void
+    {
+        session_regenerate_id(true);
     }
 
     /**

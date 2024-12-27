@@ -5,7 +5,7 @@ class ProductsController extends Controller
 {
     private ProductModel $product;
 
-    public function __construct(ProductModel $product)
+    public function __construct(ProductModel $product, private ProductFormCreator $frm)
     {
         $this->product = $product;
     }
@@ -16,7 +16,7 @@ class ProductsController extends Controller
         $total = $this->product->getTotal();
         $this->pageTitle('Products');
         return $this->render('products/index', [
-            'products' => $products->getResults(),
+            'products' => $products->getResults()->all(),
             'total' => $total,
 
         ]);
@@ -25,7 +25,7 @@ class ProductsController extends Controller
     public function show(string $id) : string
     {
         $this->pageTitle('Show');
-        $product = $this->product->find($id)->getResults();
+        $product = $this->product->find($id)->getResults()->single();
         if ($product === false) {
             throw new PageNotFoundException("Product $id not found");
         }
@@ -35,9 +35,9 @@ class ProductsController extends Controller
     public function edit(string $id, string|null $form = null) : string
     {
         $this->pageTitle('Edit Product');
-        $product = $this->product->find($id)->getResults();
+        $product = $this->product->find($id)->getResults()->first();
         if ($form === null) {
-            $form = $this->makeForm("products/$id/update", $product);
+            $form = $this->frm->make("products/$id/update", $product);
         }
         if ($product === false) {
             throw new PageNotFoundException("Product $id not found");
@@ -47,21 +47,22 @@ class ProductsController extends Controller
 
     public function new() : string
     {
-        if ($this->session->exists('form')) {
-            $form = $this->session->get(('form'));
-            $this->session->delete('form');
+        $session = $this->token->getSession();
+        if ($session->exists('form')) {
+            $form = $session->get(('form'));
+            $session->delete('form');
         }
-        $form = $form ?? $this->makeForm('products/create');
+        $form = $form ?? $this->frm->make('products/create');
         return $this->render('new', ['insertFrom' => $form]);
     }
 
-    public function update(string $id) : string
+    public function update(string $id) : Response
     {
         $data = $this->request->getPost()->getAll();
         $validator = new Validator($data, 'productFormRules');
         $errors = $validator->validate();
         if (! empty($errors)) {
-            $form = $this->makeForm("products/update/{$id}", $data, $errors);
+            $form = $this->frm->make("products/update/{$id}", $data, $errors);
             return $this->edit($id, $form);
         }
         $update = $this->product->save($data);
@@ -75,11 +76,11 @@ class ProductsController extends Controller
         $data = $this->request->getPost()->getAll();
         $validator = new Validator($data, 'productFormRules');
         $results = $validator->validate();
+        $session = $this->token->getSession();
         if (! empty($results)) {
-            $form = $this->makeForm('products/create', [], $results);
-            if (! $this->session->exists('form')) {
-                $this->session->set('form', $form);
-                $r = $_SESSION;
+            $form = $this->frm->make('products/create', [], $results);
+            if (! $session->exists('form')) {
+                $session->set('form', $form);
             }
             return $this->redirect('/products/new');
         }
@@ -91,9 +92,12 @@ class ProductsController extends Controller
 
     public function delete(string $id) : string
     {
-        $product = $this->product->find($id)->getResults();
-        $form = $this->deleteFormConfirmation("products/destroy/{$product['id']}", $product);
-        return $this->render('delete', ['product' => $product, 'deleteForm' => $form]);
+        $product = $this->product->find($id)->getResults()->single();
+        if ($product !== false) {
+            $form = $this->frm->make("products/destroy/{$product['id']}", $product);
+            return $this->render('delete', ['product' => $product, 'deleteForm' => $form]);
+        }
+        $this->redirect("products/edit/{$id}");
     }
 
     public function destroy(string $id) : Response
@@ -110,29 +114,5 @@ class ProductsController extends Controller
         $this->response->setStatusCode(HttpStatusCode::HTTP_UNAVAILABLE_FOR_LEGAL_REASONS);
         $this->response->setContent('Unavailable for leagal reasons');
         return $this->response;
-    }
-
-    protected function makeForm(string $action = '', array $formValues = [], array $formErrors = []) : string
-    {
-        $form = $this->formBuilder->form();
-        return
-        $form->name('new-product')->method('post')->class(['mb-3'])->action($action)->enctype(true)->formValues($formValues)->formErrors($formErrors)->add(
-            ! empty($formValues) ? $form->input('hidden')->name('id')->value('') : null,
-            $form->label()->for('pdt')->content('Name :')->class(['form-label']),
-            $form->input('text')->name('name')->value('')->id('pdt')->class(['form-control']),
-            $form->label()->for('description')->content('Description :')->class(['form-label']),
-            $form->textArea()->name('description')->id('description')->class(['form-control']),
-            $form->button()->content('save')->type(ButtontypeAttr::SUBMIT->value)->class(['button', 'btn',
-                'btn-primary'])->name('button')
-        )->makeForm();
-    }
-
-    private function deleteFormConfirmation(string $action = '', array $formValues = [], array $formErrors = []) : string
-    {
-        $form = $this->formBuilder->form();
-        return $form->name('confirm-delete-product')->method('post')->action($action)->add(
-            $form->htmlTag('p')->class(['text-center'])->content('Are you sur you want to delete this product?'),
-            $form->button()->name('submit')->content('Yes')->class(['btn', 'btn-info'])
-        )->makeForm();
     }
 }

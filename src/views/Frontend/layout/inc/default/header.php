@@ -23,6 +23,8 @@
    <?= $this->css('css/plugins/homeplugins', 'css') ?? '' ?>
    <!-- Main style -->
    <?= $this->css('css/client/main', 'css') ?? '' ?>
+   <!-- CkEditor -->
+   <?= $this->css('css/ckeditor/ckeditor', 'css') ?? '' ?>
    <link rel="shortcut icon" href="data:," />
    <?= $this->content('head'); ?>
 </head>

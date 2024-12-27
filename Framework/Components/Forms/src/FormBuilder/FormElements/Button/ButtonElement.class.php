@@ -18,6 +18,7 @@ class ButtonElement extends AbstractFormDataElement
     private string $popovertarget;
     private string $popovertargetaction;
     private string $content;
+    private int $tabindex;
 
     public function makeForm(): string
     {
@@ -212,6 +213,16 @@ class ButtonElement extends AbstractFormDataElement
     {
         $this->content = $content;
 
+        return $this;
+    }
+
+    /**
+     * @param int $tabindex
+     * @return ButtonElement
+     */
+    public function tabindex(int $tabindex): self
+    {
+        $this->tabindex = $tabindex;
         return $this;
     }
 }

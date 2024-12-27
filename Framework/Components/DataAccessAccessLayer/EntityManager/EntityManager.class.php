@@ -72,9 +72,9 @@ class EntityManager implements EntityManagerInterface
         return $this;
     }
 
-    public function getResults(array $options = [], string|null $repositoryMethod = null) : QueryResult
+    public function getResults() : QueryResult
     {
-        return new QueryResult($this->mapper, $options, $repositoryMethod);
+        return new QueryResult($this->mapper, $this->entity);
     }
 
     public function assign(array $data) : self
@@ -84,7 +84,7 @@ class EntityManager implements EntityManagerInterface
 
         foreach ($data as $key => $prop) {
             $ok = array_filter($attrs, function ($attr) use ($key) {
-                return $key === $attr->getName();
+                return StringUtils::camelCase($key) === $attr->getName();
             });
             if ($ok) {
                 /** @var ReflectionProperty */
@@ -101,25 +101,12 @@ class EntityManager implements EntityManagerInterface
         if (isset($this->entityFieldId)) {
             return $this->entityFieldId;
         }
-        $properties = $this->reflector->getProperties(ReflectionProperty::IS_PRIVATE);
-        foreach ($properties as $property) {
-            $identifier = $property->getAttributes();
-            if (! empty($identifier)) {
-                /** @var ReflectionAttribute */
-                $attribute = ArrayUtils::first($identifier);
-                $attrArguments = $attribute->getArguments();
-                if ($attrArguments['name'] === 'id') {
-                    $this->entityFieldId = $property->getName();
-                    return $this->entityFieldId;
-                }
-            }
-        }
-        return false;
+        return $this->entity->getEntityKeyField();
     }
 
     public function getEntityKeyValue() : mixed
     {
-        $keyField = $this->getEntityKeyField();
+        $keyField = StringUtils::studlyCaps($this->getEntityKeyField());
         $method = 'get' . ucfirst($keyField);
         return $this->reflector->getMethod($method)->invoke($this->entity, $method);
     }
@@ -129,7 +116,8 @@ class EntityManager implements EntityManagerInterface
         $fieldId = $this->entityFieldId ?? $this->getEntityKeyField();
         $properties = $this->reflector->getProperties(ReflectionProperty::IS_PRIVATE);
         foreach ($properties as $property) {
-            if ($property->getName() === $fieldId && $property->isInitialized($this->entity)) {
+            $prop = StringUtils::StudlyCapsToUnderscore($property->getName());
+            if ($prop === $fieldId && $property->isInitialized($this->entity)) {
                 return true;
             }
         }
@@ -142,7 +130,7 @@ class EntityManager implements EntityManagerInterface
         $all = $this->reflector->getProperties(ReflectionProperty::IS_PUBLIC | ReflectionProperty::IS_PRIVATE);
         foreach ($all as $property) {
             if ($property->isInitialized($this->entity)) {
-                $field = $property->getName();
+                $field = StringUtils::StudlyCapsToUnderscore($property->getName());
                 if ($property->getType()->getName() === 'DateTimeInterface') {
                     $properties[$field] = $property->getValue($this->entity)->format('Y-m-d H:i:s');
                 } else {
@@ -152,11 +140,6 @@ class EntityManager implements EntityManagerInterface
         }
         return $properties;
     }
-
-    // public function find($entityName, $identifier) : object
-    // {
-    //     return $this->getRepository($entityName)->find($identifier);
-    // }
 
     public static function create(DataMapperInterface $mapper, TablesAliasHelper $tblh)
     {

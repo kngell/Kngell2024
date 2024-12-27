@@ -14,16 +14,16 @@ class CookieConfig
      *
      * @return array
      */
-    public function baseConfig(): array
+    public static function baseConfig(): array
     {
         return [
 
-            // 'name' => VISITOR_COOKIE_NAME, //'__kngell_cookie__',
-            // 'expires' => time() + COOKIE_EXPIRY,
-            // 'path' => '/',
-            // 'domain' => 'localhost',
-            // 'secure' => false,
-            // 'httponly' => true,
+            'name' => VISITOR_COOKIE_NAME, //'__kngell_cookie__',
+            'expires' => time() + COOKIE_EXPIRY,
+            'path' => '/',
+            'domain' => 'localhost',
+            'secure' => false,
+            'httponly' => true,
 
         ];
     }

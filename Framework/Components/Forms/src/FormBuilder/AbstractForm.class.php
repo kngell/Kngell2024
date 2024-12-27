@@ -3,13 +3,15 @@
 declare(strict_types=1);
 abstract class AbstractForm
 {
-    protected AbstractForm|null $parent;
+    protected AbstractForm|AbstractHtmlComponent|null $parent;
     protected array $formErrors = [];
     protected array $formValues = [];
     protected string $id;
     protected array $class;
+    protected array $style;
+    protected string $href;
 
-    public function setParent(?self $parent)
+    public function setParent(self|AbstractHtmlComponent|null $parent)
     {
         $this->parent = $parent;
     }
@@ -70,6 +72,15 @@ abstract class AbstractForm
      * @return self
      */
     public function class(array $class): self
+    {
+        return $this;
+    }
+
+    /**
+     * @param array $style
+     * @return self
+     */
+    public function style(array $style): self
     {
         return $this;
     }

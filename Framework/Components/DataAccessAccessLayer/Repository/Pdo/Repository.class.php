@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 class Repository implements RepositoryInterface
 {
-    public function __construct(private EntityManagerInterface $em)
+    public function __construct(protected EntityManagerInterface $em)
     {
     }
 
@@ -73,6 +73,15 @@ class Repository implements RepositoryInterface
     {
         try {
             $this->em->createQueryBuilder()->select()->where($conditions)->build();
+        } catch (Throwable $th) {
+            throw $th;
+        }
+    }
+
+    public function showColumns(string $tableName) : void
+    {
+        try {
+            $this->em->createQueryBuilder()->raw("SHOW COLUMNS FROM $tableName")->build();
         } catch (Throwable $th) {
             throw $th;
         }

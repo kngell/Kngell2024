@@ -24,7 +24,14 @@ class Container implements ContainerInterface
     {
     }
 
-    public function bind(string $abstract, Closure | string | null $concrete = null, bool $shared = false, mixed $parameters = []): self
+    /**
+     * @param string $abstract
+     * @param Closure|string|null $concrete
+     * @param bool $shared
+     * @param mixed $parameters
+     * @return ContainerInterface
+     */
+    public function bind(string $abstract, Closure | string | null $concrete = null, bool $shared = false, mixed $parameters = []): ContainerInterface
     {
         $this->bindings[$abstract] = [
             'concrete' => $concrete !== null ? $concrete : $abstract,
@@ -34,7 +41,40 @@ class Container implements ContainerInterface
         return $this;
     }
 
-    public function bindParams(string $abstract, mixed $args, ?string $argName = null) : self
+    /**
+     * @param string $abstract
+     * @param Closure|string|null $concrete
+     * @param mixed $args
+     * @return ContainerInterface
+     */
+    public function singleton(string $abstract, Closure | string | null $concrete = null, bool $shared = true, mixed $args = []): ContainerInterface
+    {
+        return $this->bind($abstract, $concrete, $shared, $args);
+    }
+
+    /**
+     * @param string $id
+     * @param mixed $args
+     * @return mixed
+     * @throws BindingResolutionException
+     * @throws ReflectionException
+     * @throws DependencyHasNoDefaultValueException
+     */
+    public function get(string $id, mixed $args = []) : mixed
+    {
+        if ($this->has($id)) {
+            return $this->services[$id];
+        }
+        return $this->make($id, $args);
+    }
+
+    /**
+     * @param string $abstract
+     * @param mixed $args
+     * @param null|string $argName
+     * @return ContainerInterface
+     */
+    public function bindParams(string $abstract, mixed $args, ?string $argName = null) : ContainerInterface
     {
         if ($this->isBound($abstract)) {
             $this->bindings[$abstract]['parameters'] = $args;
@@ -43,25 +83,6 @@ class Container implements ContainerInterface
             null !== $argName ? $this->bindings[$abstract]['parameters'][$argName] = $args : $this->bindings[$abstract]['parameters'] = $args;
         }
         return $this;
-    }
-
-    public function singleton(string $abstract, Closure | string | null $concrete = null, mixed $args = []): self
-    {
-        return $this->bind($abstract, $concrete, true, $args);
-    }
-
-    /**
-     * Get Objetct.
-     * ================================================.
-     * @param string $id
-     * @return mixed
-     */
-    public function get(string $id, mixed $args = []) : mixed
-    {
-        if ($this->has($id)) {
-            return $this->services[$id];
-        }
-        return $this->make($id, $args);
     }
 
     public static function setInstance(?self $container = null)
@@ -132,7 +153,7 @@ class Container implements ContainerInterface
      */
     protected function rebound($abstract)
     {
-        $instance = $this->make($abstract);
+        $instance = $this->get($abstract);
         foreach ($this->getReboundCallbacks($abstract) as $callback) {
             call_user_func($callback, $this, $instance);
         }

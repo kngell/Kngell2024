@@ -9,4 +9,10 @@ interface TokenInterface
     public function validate(string $token = '', string $frm = '') : bool;
 
     public function isTokenTimeValid() : bool;
+
+    public function getSession() : SessionInterface;
+
+    public function urlSafeDecode(string $str) : string;
+
+    public function urlSafeEncode(string $str) : string;
 }

@@ -13,10 +13,10 @@ class App extends AbstractApp
     {
         $this->createAppProperties();
         $this->loadErrorHandlers();
+        $this->loadSession();
         $this->phpVersion();
         $this->loadEnvironment();
         $this->loadCache();
-        $this->loadSession();
         $this->loadCookies();
         return $this;
     }
@@ -28,7 +28,7 @@ class App extends AbstractApp
         $response->send();
     }
 
-    public function runError(string $url, array $params) : void
+    public function runError(string $url, array $params = []) : void
     {
         $this->run($url, $params);
     }

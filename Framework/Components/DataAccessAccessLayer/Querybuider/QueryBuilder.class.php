@@ -19,6 +19,7 @@ class QueryBuilder
     private QueryStatement $fields;
     private QueryStatement $values;
     private QueryStatement $delete;
+    private QueryStatement $raw;
     private string $currentTableName;
     private string $joinMethod;
     private string $whereMethod;
@@ -30,6 +31,15 @@ class QueryBuilder
     {
         $this->currentTableName = $entityManager->table();
         $this->entityManager = $entityManager;
+    }
+
+    public function raw(string $sql) : self
+    {
+        ! isset($this->queryType) ? $this->queryType = QueryType::get(__FUNCTION__) : '';
+        ! isset($this->raw) ? $this->raw = new QueryStatement : '';
+        $this->raw->add(new RawQuery($this->entityManager, $sql));
+        $this->raw->getChildren()->last()->setMethod(__FUNCTION__);
+        return $this;
     }
 
     public function select(array|string|null ...$columns): self

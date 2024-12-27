@@ -11,7 +11,7 @@ $this->start('head'); ?>
       <h2> <?='Prodcut Name :' . $product['name'] ?></h2>
       <h3><?= 'Description :' . $product['description']?></h3>
       <p><a href="/products/<?=$product['id']?>/edit">Edit</a></p>
-      <p><a href="/products/<?=$product['id']?>/delete">Delete</a></p>
+      <p><a href="/products/<?=$product['id']?>/show">Cancel</a></p>
    </div>
    <!-- Fin Content -->
 

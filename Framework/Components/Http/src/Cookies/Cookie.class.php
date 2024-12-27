@@ -13,11 +13,10 @@ class Cookie implements CookieInterface
     }
 
     /**
-     * @inheritdoc
-     *
+     * @param string|null $name
      * @return bool
      */
-    public function exists(string $name = ''): bool
+    public function exists(string|null $name = null): bool
     {
         return $this->cookieStore->exists($name);
     }
@@ -45,7 +44,7 @@ class Cookie implements CookieInterface
      */
     public function delete(?string $name = null): void
     {
-        if ($this->exists()) {
+        if ($this->exists($name)) {
             $this->cookieStore->deleteCookie($name);
         }
     }

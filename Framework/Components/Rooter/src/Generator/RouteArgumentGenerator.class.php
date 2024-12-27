@@ -29,6 +29,8 @@ readonly class RouteArgumentGenerator
         foreach ($route->getArguments() as $argument) {
             if (array_key_exists($argument->getParameterName(), $urlRouteParams)) {
                 $args[$argument->getParameterName()] = $urlRouteParams[$argument->getParameterName()];
+            } elseif (array_key_exists('arguments', $urlRouteParams)) {
+                $args[$argument->getParameterName()] = $urlRouteParams['arguments'];
             } elseif ($argument->isDefaultValue()) {
                 $args[$argument->getParameterName()] = $argument->getDefaultValue();
             }

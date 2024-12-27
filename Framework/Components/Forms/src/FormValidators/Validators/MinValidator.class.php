@@ -3,7 +3,7 @@
 declare(strict_types=1);
 class MinValidator extends AbstractValidator
 {
-    private const string ERROR_MESSAGE = '%s must be a minimum of %s characters';
+    private const string ERROR_MESSAGE = 'The %s must have a minimum of %s characters';
 
     public function __construct(private string $display, private mixed $inputValue, private mixed $ruleValue)
     {

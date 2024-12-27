@@ -6,6 +6,6 @@ enum FlashType : string
 {
     case SUCCESS = 'success';
     case WARNING = 'warning';
-    case DANGER = 'error';
+    case DANGER = 'danger';
     case INFO = 'info';
 }

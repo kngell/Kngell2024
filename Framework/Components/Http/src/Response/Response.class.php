@@ -47,9 +47,14 @@ class Response
             $length = $this->headers->getContentLength() ?? strlen($this->content);
             $this->headers->add(HeaderMap::CONTENT_LENGTH_HEADER, $length);
         }
-        if ($request->hasCookies()) {
-            $this->getCookies()->addAll($request->getCookies()->all());
-        }
+        // if ($request->hasCookies()) {
+        //     $this->getCookies()->addAll($request->getCookies()->all());
+        // }
+        // /** @var SessionInterface */
+        // $session = GlobalManager::get(App::getInstance()->getGlobalSessionKey());
+        // if (! $session->exists(PREVIOUS_URL_KEY)) {
+        //     $session->set(PREVIOUS_URL_KEY, $request->getRequestedUri());
+        // }
     }
 
     public function send() : void

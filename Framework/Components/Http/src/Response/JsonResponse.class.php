@@ -3,11 +3,11 @@
 declare(strict_types=1);
 class JsonResponse extends Response
 {
-    protected array|object|string $data;
+    protected array|object|string|bool $data;
     protected int $encodingOptions;
 
     public function __construct(
-        string|object|array $data = [],
+        string|object|array|bool $data = [],
         HttpStatusCode $statusCode = HttpStatusCode::HTTP_OK,
         array $headers = [],
         array $cookies = [],
@@ -18,7 +18,7 @@ class JsonResponse extends Response
         $this->setDate($data);
     }
 
-    public function setDate(string|object|array $data) : void
+    public function setDate(string|object|array|bool $data) : void
     {
         $this->data = $data;
         if (is_string($data)) {

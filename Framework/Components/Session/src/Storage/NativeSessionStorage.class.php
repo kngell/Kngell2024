@@ -4,12 +4,9 @@ declare(strict_types=1);
 
 class NativeSessionStorage extends AbstractSessionStorage implements SessionStorageInterface
 {
-    private array $session;
-
-    public function __construct(SessionEnvironment $sessionEnvironment, FilesSystemInterface $fileSyst)
+    public function __construct(SessionEnvironment $sessionEnvironment, FilesSystemInterface $fileSyst, SuperGlobalsInterface $globals)
     {
-        parent::__construct($sessionEnvironment, $fileSyst);
-        // $this->session = $_SESSION;
+        parent::__construct($sessionEnvironment, $fileSyst, $globals);
     }
 
     /**
@@ -74,20 +71,13 @@ class NativeSessionStorage extends AbstractSessionStorage implements SessionStor
         $_SESSION = [];
         if (ini_get('session.use_cookies')) {
             $params = session_get_cookie_params();
-            if (class_exists(CookieFacade::class)) {
-                $cookie = (@new CookieFacade(['name' => $this->getSessionName()], new CookieConfig, App::diGet(SuperGlobalsInterface::class)))->initialize();
-                $cookie->delete();
-            } else {
-                setcookie($this->getSessionName(), '', time() - $params['lifetime'], $params['path'], $params['domain'], $params['secure'], $params['httponly']);
-            }
+            setcookie($this->getSessionName(), '', time() - $params['lifetime'], $params['path'], $params['domain'], $params['secure'], $params['httponly']);
         }
         session_unset();
         session_destroy();
     }
 
     /**
-     * @inheritdoc
-     *
      * @param string $key
      * @param mixed $default
      * @return mixed

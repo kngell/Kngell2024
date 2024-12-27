@@ -6,6 +6,7 @@ class CustomHtmlElement extends AbstractFormElement
 {
     private string $htmlTag;
     private mixed $content;
+    private int $tabindex;
 
     public function __construct(string $htmlTag)
     {
@@ -62,6 +63,26 @@ class CustomHtmlElement extends AbstractFormElement
     public function class(array $class): self
     {
         $this->class = $class;
+        return $this;
+    }
+
+    /**
+     * @param string $href
+     * @return CustomHtmlElement
+     */
+    public function href(string $href): self
+    {
+        $this->href = $href;
+        return $this;
+    }
+
+    /**
+     * @param int $tabindex
+     * @return CustomHtmlElement
+     */
+    public function tabindex(int $tabindex): self
+    {
+        $this->tabindex = $tabindex;
         return $this;
     }
 }

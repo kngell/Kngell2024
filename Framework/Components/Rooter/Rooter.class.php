@@ -19,6 +19,7 @@ class Rooter implements RooterInterface
 
     public function handle(Request $request, ?App $app = null, string|null $url = null, array $params = []) : Response
     {
+        $s = $_SESSION;
         $route = $this->routeMatcher->match($request, $url);
         if ($route === null) {
             throw new PageNotFoundException("Page not Found with method {$request->getServer()->get('request_method')}");

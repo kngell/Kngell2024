@@ -15,15 +15,9 @@ class CookieFacade
      * @param string $store - optional defaults to nativeCookieStore
      * @return void
      */
-    public function __construct(array $cookieEnvironmentArray, ?CookieConfig $cookieConfig = null, ?SuperGlobalsInterface $gv = null)
+    public function __construct(CookieStoreInterface $store)
     {
-        $cookieArray = array_merge($cookieConfig->baseConfig(), $cookieEnvironmentArray);
-        $this->store = App::diget(CookieStoreInterface::class, [
-            'cookieEnvironment' => App::diGet(CookieEnvironment::class, [
-                'cookieConfig' => $cookieArray,
-            ]),
-            'gv' => $gv,
-        ]);
+        $this->store = $store;
     }
 
     /**

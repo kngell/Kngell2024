@@ -34,5 +34,5 @@ interface EntityManagerInterface
 
     public function getEntityKeyValue() : mixed;
 
-    public function getResults(array $options = [], string|null $repositoryMethod = null) : QueryResult;
+    public function getResults() : QueryResult;
 }

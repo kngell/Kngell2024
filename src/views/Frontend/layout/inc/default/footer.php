@@ -80,7 +80,7 @@
   <!-- Plugins -->
   <?= $this->js('js/plugins/homeplugins', 'js') ?>
   <!-- Mainjs -->
-  <?= $this->js('js/client/main/main', 'js')?>
+  <?= $this->js('js/frontend/main/main', 'js')?>
   <!-- Custom -->
   <?= $this->content('footer'); ?>
   </body>

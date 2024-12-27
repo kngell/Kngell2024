@@ -7,13 +7,20 @@ class ErrorsController extends Controller
     {
         $this->pageTitle('Errors');
         $this->setLayout('default');
-        return $this->render('errors' . DS . '404', $data);
+        return $this->render('errors' . DS . 'dev', $data);
     }
 
-    public function _500(array $data) : String
+    public function _500() : String
     {
         $this->pageTitle('Errors');
         $this->setLayout('default');
-        return $this->render('errors' . DS . '500', $data);
+        return $this->render('500');
+    }
+
+    public function _400() : string
+    {
+        $this->pageTitle('Errors');
+        $this->setLayout('default');
+        return $this->render('404');
     }
 }

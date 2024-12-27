@@ -29,7 +29,7 @@ enum QueryType: string
         'updateCte' => ['update', 'fields', 'join', 'values', 'where'],
         'delete' => ['delete' => true, 'from' => true, 'where' => false],
         'create' => [],
-        'raw' => ['raw', 'join', 'where', 'groupBy', 'orderBy', 'limit', 'offset'],
+        'raw' => ['raw' => true],
         'show' => ['show'],
         'withCte' => ['with', 'fields', 'values', 'where'],
 

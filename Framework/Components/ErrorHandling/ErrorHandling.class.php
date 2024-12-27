@@ -53,9 +53,9 @@ class ErrorHandling
      * @return void
      * @throws Exception
      */
-    public static function exceptionHandle($exception) : void
+    public static function exceptionHandle(Exception $exception) : void
     {
-        self::buildStackTrace($exception);
+        static::buildStackTrace($exception);
         if ($exception instanceof PageNotFoundException) {
             $code = 404;
             $route = '/_404_error';
@@ -66,29 +66,50 @@ class ErrorHandling
             }
             $route = '/_500_error';
         }
-
         http_response_code($code);
         if (self::isMode()['mode'] == 'dev' && self::isMode()['mode'] != 'prod') {
             list($srcCode, $snippet) = self::srcCode($exception->getFile(), $exception->getLine(), 'highlight');
             $stacktrace = self::$trace;
-            $params = ['exception' => $exception, 'snippet' => $snippet, 'srcCode' => $srcCode, 'stacktrace' => $stacktrace, 'code' => $code];
-            App::getInstance()->runError($route, $params);
+            App::getInstance()->runError('/_dev_error', [
+                'exception' => $exception,
+                'snippet' => $snippet,
+                'srcCode' => $srcCode,
+                'stacktrace' => $stacktrace,
+                'code' => $code,
+            ]);
         } else {
             $logFile = LOG_DIR . '/error-' . date('Y-m-d') . '-.log';
             ini_set('log_errors', 'On');
             ini_set('error_log', $logFile);
-            $message = 'Uncaught exception: ' . get_class($exception);
-            $message .= 'with message ' . $exception->getMessage();
-            $message .= "\nStack trace: " . $exception->getTraceAsString();
-            $message .= "\nThrown in " . $exception->getFile() . ' on line ' . $exception->getLine();
-            error_log($message, 1, $logFile);
-            $params = ['exception' => $exception, 'snippet' => '', 'srcCode' => '', 'stacktrace' => ''];
+            // $message = 'Uncaught exception: ' . get_class($exception);
+            // $message .= 'with message ' . $exception->getMessage();
+            // $message .= "\nStack trace: " . $exception->getTraceAsString();
+            // $message .= "\nThrown in " . $exception->getFile() . ' on line ' . $exception->getLine();
+            $message = static::formatErrorMessage(
+                $exception,
+                '\033[31m[%s] Error:\033[0m %s: %s in %s on line %d\n'
+            );
+            error_log($message);
+            // error_log($message, 1, $logFile);
+            App::getInstance()->runError($route);
         }
     }
 
-    public static function buildStackTrace($exception)
+    private static function formatErrorMessage(Throwable $exception, string $format) : string
     {
-        self::$trace[] = [
+        return sprintf(
+            $format,
+            date('Y-m-d H:i:s'),
+            get_class($exception),
+            $exception->getMessage(),
+            $exception->getFile(),
+            $exception->getLine()
+        );
+    }
+
+    private static function buildStackTrace($exception)
+    {
+        static::$trace[] = [
             'file' => $exception->getFile(),
             'code' => self::getSrcCode($exception->getFile(), $exception->getLine(), 'error-line'),
         ];
@@ -105,7 +126,7 @@ class ErrorHandling
         }
     }
 
-    public static function srcCode($errfile, $errline)
+    private static function srcCode($errfile, $errline)
     {
         $range = [$errline - 5, $errline + 10];
         $src = explode(PHP_EOL, file_get_contents($errfile));
@@ -136,7 +157,7 @@ class ErrorHandling
      * @param $errclass
      * @return string
      */
-    public static function getSrcCode($errfile, $errline, $errclass)
+    private static function getSrcCode($errfile, $errline, $errclass)
     {
         $start = max($errline - floor(self::NUM_LINES / 2), 1);
         $start = (int) $start;
@@ -160,7 +181,7 @@ class ErrorHandling
      * @param int $flags
      * @return array
      */
-    public static function getLines(string $filename, int $offset, ?int $length, int $flags = 0): array
+    private static function getLines(string $filename, int $offset, ?int $length, int $flags = 0): array
     {
         return array_slice(file($filename, $flags), $offset, $length, true);
     }

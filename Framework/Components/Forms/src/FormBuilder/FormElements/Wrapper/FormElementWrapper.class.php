@@ -48,4 +48,14 @@ class FormElementWrapper extends AbstractFormElement
         $this->class = $class;
         return $this;
     }
+
+    /**
+     * @param array $style
+     * @return self
+     */
+    public function style(array $style): self
+    {
+        $this->style = $style;
+        return $this;
+    }
 }

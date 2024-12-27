@@ -32,7 +32,8 @@ final readonly class AppConstants
         // -----------------------------------------------------------------------
         defined('VISITOR_COOKIE_NAME') or define('VISITOR_COOKIE_NAME', 'gcx_kngell_eshop01_visitor');
         defined('COOKIE_EXPIRY') or define('COOKIE_EXPIRY', 60 * 60 * 24 * 360);
-
+        defined('CURRENT_USER_SESSION_NAME') or define('CURRENT_USER_SESSION_NAME', 'user_kngell_xfh');
+        defined('REMEMBER_ME_COOKIE_NAME') or define('REMEMBER_ME_COOKIE_NAME', 'hash');
         //-----------------------------------------------------------------------
         // Form
         // -----------------------------------------------------------------------
@@ -40,5 +41,10 @@ final readonly class AppConstants
         defined('CSRF_TOKEN_LENGHT') or define('CSRF_TOKEN_LENGHT', 8);
         defined('CSRF_TOKEN_LIFETIME') or define('CSRF_TOKEN_LIFETIME', 60 * 30);
         defined('TOKEN_NAME') or define('TOKEN_NAME', 'token');
+
+        //-----------------------------------------------------------------------
+        // URLs
+        // -----------------------------------------------------------------------
+        defined('PREVIOUS_URL_KEY') or define('PREVIOUS_URL_KEY', 'urlwwww1213212');
     }
 }

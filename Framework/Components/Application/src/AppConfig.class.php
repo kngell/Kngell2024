@@ -38,7 +38,7 @@ final class AppConfig
         $this->setConfig(YamlFile::get('app'))
             ->setErrorHandler(E_ALL)
             ->setSession(null, true)
-            ->setCookie([])
+            ->setCookie(CookieConfig::baseConfig())
             ->setCache(null, true)
             ->setRoutes(YamlFile::get('routes'))
             ->setContainerProviders(YamlFile::get('providers'));
@@ -99,12 +99,11 @@ final class AppConfig
     }
 
     /**
-     * Set the application cookie configuration from the session.yml file.
-     *
+     * et the application cookie configuration from the session.yml file.
      * @param array $ymlCookie
-     * @return self
+     * @return AppConfig
      */
-    public function setCookie(array $ymlCookie): self
+    public function setCookie(array $ymlCookie = []): self
     {
         $this->cookie = $ymlCookie;
         return $this;

@@ -1,7 +1,6 @@
 /{title}/{id:\d+}/{page:\d+}:
   controller: products
   method: showPage
-  httpMethod: post
   responseBody:
     type: RAW
     produces: text/xml
@@ -10,49 +9,89 @@
 /product/{slug:[\w-]+}:
   controller: products
   method: show
-"/home/index":
+/home/index:
   controller: home
   method: index
-"/products":
+  httpMethod: get
+  middleware: user
+/products:
   controller: products
   method: index
-"/":
+  httpMethod: get
+/:
   controller: home
   method: index
-
+  httpMethod: get
 home:
   controller: home
   method: index
+  httpMethod: get
 /_404_error:
   controller: errors
-  method: index
+  method: _404
 /_500_error:
   controller: errors
   method: _500
-admin:
-  controller: admin_home
+/login:
+  controller: login
+  method: index
+  httpMethod: get
+/signup:
+  controller: singup
+  method: index
+  httpMethod: get
+/register:
+  controller: singup
+  method: register
+  httpMethod: post
+/auth-user:
+  controller: login
+  method: authenticate-user
+  httpMethod: post
+/logout:
+  controller: logout
+  method: index
+  httpMethod: get
+/_dev_error:
+  controller: errors
   method: index
 /{controller}/new/{form:\d+}:
   method: new
 /{controller}/show/{id:\d+}:
   method: show
   middleware: message|message
+/{controller}/{id:\d+}/show:
+  method: show
+  middleware: message|message
 /{controller}/create:
   method: create
-  middleware: trim
+  middleware: trim|user
+  httpMethod: post
 /{controller}/handleForm:
   method: handleForm
   middleware: trim
-  httpMethod: post
 /{controller}/edit/{id:\d+}:
   method: edit
+  middleware: requireLogin
+/{controller}/{id:\d+}/edit:
+  method: edit
+  middleware: requireLogin
 /{controller}/update/{id:\d+}:
   method: update
+  middleware: requireLogin
+/{controller}/{id:\d+}/update:
+  method: update
+  middleware: requireLogin
 /{controller}/delete/{id:\d+}:
   method: delete
+  middleware: requireLogin
+/{controller}/{id:\d+}/delete:
+  method: delete
+  middleware: requireLogin
 /{controller}/destroy/{id:\d+}:
   method: destroy
   httpMethod: post
+  middleware: requireLogin
 /admin/{controller}/{method}:
 /{controller}/{method}:
   # /{controller}/{id:\d+}/{method}:

@@ -14,7 +14,7 @@ class UniqueValidator extends AbstractValidator
     {
         if (! empty($this->inputValue)) {
             $user = $this->md->all(['email', $this->inputValue]);
-            if ($user->getNumRows() >= 1) {
+            if ($user->rowCount() >= 1) {
                 return $this->erroMessage(sprintf(self::ERROR_MESSAGE, $this->display));
             }
         }

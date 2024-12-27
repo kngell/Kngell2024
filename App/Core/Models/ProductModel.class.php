@@ -13,7 +13,7 @@ class ProductModel extends Model
     {
         $this->entityManager->createQueryBuilder()->select('count(name) AS tot')->build();
         $total = $this->entityManager->persist()->getResults();
-        $count = ArrayUtils::first($total->getResults());
+        $count = ArrayUtils::first($total->getResults()->all());
         return $count['tot'];
     }
 }

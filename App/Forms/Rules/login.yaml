@@ -2,16 +2,16 @@ email:
   display: Email
   required: true
   min: 4
-  max: 150
+  max: 255
   valid_email: true
-  unique: users
-name:
-  display: Name
+password:
+  display: Password
   required: true
-  min: 2
+  min: 8
   max: 255
-message:
-  display: Message
-  required: true
-  min: 2
-  max: 255
+  letter_number: 1
+  capital_letter: 1
+  small_letter: 1
+  digit: 1
+  specialchar: 1
+  white_space: 0

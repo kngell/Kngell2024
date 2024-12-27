@@ -1,7 +1,7 @@
 <?php
 
 declare(strict_types=1);
-class HTMLComponent extends AbstractHTMLComponent
+class HTMLComponent_old extends AbstractHTMLComponent
 {
     private string $html;
     private string $section;

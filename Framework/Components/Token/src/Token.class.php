@@ -84,6 +84,11 @@ class Token extends RandomStringGenerator implements TokenInterface
         return base64_decode(strtr($str, '-_', '+/'));
     }
 
+    public function getSession() : SessionInterface
+    {
+        return $this->session;
+    }
+
     private function tokenTime(string $key) : int
     {
         $time = time();

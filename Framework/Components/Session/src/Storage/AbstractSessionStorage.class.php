@@ -13,7 +13,7 @@ abstract class AbstractSessionStorage
      *
      * @param SessionEnvironment $sessionEnvironment
      */
-    public function __construct(protected SessionEnvironment $sessionEnvironment, protected FilesSystemInterface $fileSyst)
+    public function __construct(protected SessionEnvironment $sessionEnvironment, protected FilesSystemInterface $fileSyst, private SuperGlobalsInterface $globals)
     {
         $this->iniSet();
         // Destroy any existing sessions started with session.auto_start
@@ -104,6 +104,20 @@ abstract class AbstractSessionStorage
         $cookie_Params = $this->cookiesParams();
         session_set_cookie_params($cookie_Params);
         $this->startSession();
+        $s = $_SESSION;
+        if ($this->validateSession()) {
+            if (! $this->preventSessionHijack()) {
+                $_SESSION = [];
+                $_SESSION['IPaddress'] = $this->globals->server('remote_addr'); //$_SERVER['REMOTE_ADDR'];
+                $_SESSION['userAgent'] = $this->globals->server('http_user_agent'); //$_SERVER['HTTP_USER_AGENT'];
+            } elseif (rand(1, 100) <= 5) { // Give a 5% chance of the session id changing on any request
+                $this->sessionRegeneration();
+            }
+        } else {
+            $_SESSION = [];
+            session_destroy();
+            $this->startSession(); // restart session
+        }
     }
 
     /**

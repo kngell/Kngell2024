@@ -21,11 +21,13 @@ abstract class AbstractInput extends AbstractFormDataElement
     protected int $width;
     protected string $list;
     protected string $autocomplete;
+    protected int $tabindex;
+    protected string $title;
 
     public function getFormElementAttributes(string $type) : string
     {
         $input = "<input type='" . $type . "'";
-        $this->classStyle();
+        $this->classStyle($type);
         $errorStr = $this->inputErrors($this->name);
         $this->value = $this->inputValue($this->name, $this->value ?? '');
         foreach ($this as $key => $value) {
@@ -153,7 +155,7 @@ abstract class AbstractInput extends AbstractFormDataElement
      * @param bool $autofocus
      * @return AbstractInput
      */
-    public function autofocus(bool $autofocus): self
+    public function autofocus(bool $autofocus = true): self
     {
         $this->autofocus = $autofocus;
         return $this;
@@ -236,6 +238,26 @@ abstract class AbstractInput extends AbstractFormDataElement
     public function value(mixed $value): self
     {
         $this->value = $value;
+        return $this;
+    }
+
+    /**
+     * @param int $tabindex
+     * @return AbstractInput
+     */
+    public function tabindex(int $tabindex): self
+    {
+        $this->tabindex = $tabindex;
+        return $this;
+    }
+
+    /**
+     * @param string $title
+     * @return AbstractInput
+     */
+    public function title(string $title): self
+    {
+        $this->title = $title;
         return $this;
     }
 }

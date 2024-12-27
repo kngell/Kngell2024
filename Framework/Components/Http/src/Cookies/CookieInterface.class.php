@@ -17,10 +17,10 @@ interface CookieInterface
 
     /**
      * Checks to see whether the cookie was set or not return true or false.
-     * @param string $name
+     * @param string|null $name
      * @return bool
      */
-    public function exists(string $name = '') : bool;
+    public function exists(string|null $name = null): bool;
 
     /**
      * Delete Cookies.

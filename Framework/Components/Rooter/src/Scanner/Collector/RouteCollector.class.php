@@ -20,4 +20,17 @@ final class RouteCollector
     {
         return $this->routes;
     }
+
+    public function routeMiddleware() : void
+    {
+        foreach ($this->routes as $route => $params) {
+            if (array_key_exists('httpmethod', $params) && $params['httpmethod'] === 'post') {
+                if (array_key_exists('middleware', $params)) {
+                    $params['middleware'] = 'csrfToken|' . $params['middleware'];
+                } else {
+                    $params['middleware'] = 'csrfToken';
+                }
+            }
+        }
+    }
 }

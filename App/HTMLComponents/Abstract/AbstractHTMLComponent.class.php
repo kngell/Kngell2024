@@ -1,7 +1,7 @@
 <?php
 
 declare(strict_types=1);
-abstract class AbstractHTMLComponent extends AbstractHTMLPage
+abstract class AbstractHTMLComponent_old extends AbstractHTMLPage
 {
     protected ?CollectionInterface $children;
     protected array $params;

@@ -97,7 +97,6 @@ class RouteInfosBuilder
     public function withMethod(ReflectionMethod $method): self
     {
         $this->method = $method;
-
         return $this;
     }
 
@@ -125,7 +124,6 @@ class RouteInfosBuilder
     public function withRoutePattern(string $routePattern): self
     {
         $this->routePattern = $routePattern;
-
         return $this;
     }
 
@@ -139,7 +137,6 @@ class RouteInfosBuilder
     public function withRouteParams(array $routeParams): self
     {
         $this->routeParams = $routeParams;
-
         return $this;
     }
 
@@ -166,7 +163,6 @@ class RouteInfosBuilder
     public function withResponseStatus(ResponseStatus|null $responseStatus): self
     {
         $this->responseStatus = $responseStatus;
-
         return $this;
     }
 

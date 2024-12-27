@@ -42,6 +42,7 @@ abstract class AbstractFormElement extends AbstractForm
             is_string($value) || is_int($value) => ' ' . $key . '="' . $value . '"',
             is_bool($value) => ' ' . $key,
             is_array($value) && $key === 'class' => ' class="' . implode(' ', $value) . '"',
+            is_array($value) && $key === 'style' => ' style="' . implode('; ', $value) . '"',
             default => ''
         };
     }

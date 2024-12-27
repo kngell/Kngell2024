@@ -27,6 +27,7 @@ class BuiltInDependencyResolver implements DependenciesResolverInterface
             return match (true) {
                 $this->parameter->allowsNull() => null,
                 ($default || $optional) && ! array_key_exists($name, $args) => $this->parameter->getDefaultValue(),
+                $namedType === 'string' => '',
                 default => throw new DependencyHasNoValueException('Could not resolve class dependency ' . $this->parameter->name)
             };
         }

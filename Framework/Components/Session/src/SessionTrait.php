@@ -16,10 +16,12 @@ trait SessionTrait
         if (! isset($_SESSION['IPaddress']) || ! isset($_SESSION['userAgent'])) {
             return false;
         }
-        if ($_SESSION['IPaddress'] != $_SERVER['REMOTE_ADDR']) {
+        // ['REMOTE_ADDR']
+        if ($_SESSION['IPaddress'] != $this->globals->server('remote_addr')) {
             return  false;
         }
-        if ($_SESSION['userAgent'] != $_SERVER['HTTP_USER_AGENT']) {
+        // $_SERVER['HTTP_USER_AGENT']
+        if ($_SESSION['userAgent'] != $this->globals->server('http_user_agent')) {
             return false;
         }
         return true;

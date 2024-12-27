@@ -1,13 +1,15 @@
 {
-  "Boutique": "/home/shop",
-  "Blog": "/home/blog",
-  "Contact": "/home/contacts",
-  "Qui Sommes nous?": "/home/apropos",
-  "menu_admin_user": {
+  "Accueil": "/home",
+  "Clothes": "/clothes",
+  "Clothes-Shop": "/shop",
+  "Blog": "home/realisations",
+  "About": "home/recrutement",
+  "Contact": "home/contacts",
+  "log_reg_menu": {
     "Mon compte": "/user_account/my_account_show",
-    "Espace admin": "/admin",
+    "Espace admin": "admin",
     "separator": "",
-    "Confirmez votre compte": "/verify_email",
-    "Logout": "/logout"
+    "Confirmez votre compte": "verify_email",
+    "Logout": "logout"
   }
 }

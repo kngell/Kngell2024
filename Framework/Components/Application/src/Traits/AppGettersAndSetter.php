@@ -38,4 +38,12 @@ trait AppGettersAndSetter
     {
         return $this->appConfig->getRoutes();
     }
+
+    /**
+     * @return CookieInterface
+     */
+    public function getCookie(): CookieInterface
+    {
+        return $this->cookie;
+    }
 }

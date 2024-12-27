@@ -15,6 +15,7 @@ class FormBuilder extends AbstractFormElement
     private string $acceptCharset;
     private string $autocapitalize;
     private bool $novalidate;
+    private string $role;
 
     public function __construct(TokenInterface $token)
     {
@@ -52,7 +53,10 @@ class FormBuilder extends AbstractFormElement
             'text' => new TextType(),
             'radio' => new RadioType(),
             'hidden' => new HiddenType(),
-            'email' => new EmailType()
+            'email' => new EmailType(),
+            'password' => new PasswordType(),
+            'checkbox' => new CheckBoxType(),
+            'submit' => new SubmitType()
         };
     }
 
@@ -224,6 +228,46 @@ class FormBuilder extends AbstractFormElement
     public function name(string $name): self
     {
         $this->name = $name;
+        return $this;
+    }
+
+    /**
+     * @param array $formErrors
+     * @return FormBuilder
+     */
+    public function formErrors(array $formErrors): self
+    {
+        $this->formErrors = $formErrors;
+        return $this;
+    }
+
+    /**
+     * @param array $formValues
+     * @return FormBuilder
+     */
+    public function formValues(array $formValues): self
+    {
+        $this->formValues = $formValues;
+        return $this;
+    }
+
+    /**
+     * @param string $role
+     * @return FormBuilder
+     */
+    public function role(string $role): self
+    {
+        $this->role = $role;
+        return $this;
+    }
+
+    /**
+     * @param array $style
+     * @return FormBuilder
+     */
+    public function style(array $style): self
+    {
+        $this->style = $style;
         return $this;
     }
 

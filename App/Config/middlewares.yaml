@@ -1,3 +1,7 @@
 message: ChangeResponseExampleMiddleware
 trim: ChangeRequestExampleMiddleware
 deny: RedirectExampleMiddleware
+crsfToken: CsrfTokenMiddleware
+requireLogin: RequireLoginMiddleware
+return_to: RememberRequestPageMiddleware
+grantAccess: GrantAccessMiddleware

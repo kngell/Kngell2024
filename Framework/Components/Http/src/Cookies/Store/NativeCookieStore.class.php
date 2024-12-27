@@ -17,13 +17,10 @@ class NativeCookieStore extends AbstractCookieStore
     }
 
     /**
-     * @inheritdoc
-     *
-     * @param mixed $value
-     * @param null|array $attributes
-     * @return self
+     * @param string|null $name
+     * @return bool
      */
-    public function exists(string $name = ''): bool
+    public function exists(string|null $name = null): bool
     {
         $CookieName = $name == '' ? $this->cookieEnvironment->getCookieName() : $name;
         return array_key_exists($CookieName, $this->gv->cookies());

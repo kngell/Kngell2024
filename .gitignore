@@ -1,8 +1,9 @@
-composer.phar
-node_modules/
-dist/
-vendor/
-public/
-App/Views/
-webpack/
-session_dir/
+/node_modules/
+/dist/
+/vendor/
+/.vscode/
+/public/
+/App/Views/
+/webpack/
+/session_dir/
+/Temp/

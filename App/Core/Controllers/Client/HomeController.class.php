@@ -4,28 +4,26 @@ declare(strict_types=1);
 
 class HomeController extends Controller
 {
-    private UsersModel $users;
-    private FlashInterface $flash;
-
-    public function __construct(UsersModel $users, FlashInterface $flash)
+    public function __construct(private UsersModel $user, private FlashInterface $flash, private TestFormCreator $frm, private Validator $validator)
     {
-        $this->users = $users;
-        $this->flash = $flash;
     }
 
     public function index() : string
     {
         $this->pageTitle('Home');
-        return $this->render('index');
+        return $this->render('index', [
+            'message' => $this->flash->get(),
+        ]);
     }
 
     public function form() : string
     {
-        if ($this->session->exists('form')) {
-            $form = $this->session->get(('form'));
-            $this->session->delete('form');
+        $session = $this->token->getSession();
+        if ($session->exists('form')) {
+            $form = $session->get(('form'));
+            $session->delete('form');
         } else {
-            $form = $this->makeForm('home/handleForm');
+            $form = $this->frm->make('home/handleForm');
         }
         $flash = $this->flash->get();
         if (! empty($flash)) {
@@ -42,35 +40,15 @@ class HomeController extends Controller
     public function handleForm() : Response
     {
         $data = $this->request->getPost()->getAll();
-        $validator = new Validator($data, 'login', $this->users);
-        $results = $validator->validate();
-        $form = $this->makeForm('home/handleForm', $data, $results);
-        if (! $this->session->exists('form')) {
-            $this->session->set('form', $form);
+        $results = $this->validator->validate($data, 'login', $this->user);
+        $form = $this->frm->make('home/handleForm', $data, $results);
+        $session = $this->token->getSession();
+        if (! $session->exists('form')) {
+            $session->set('form', $form);
         }
         if ($this->token->validate($data['csrfToken'], $data['frm_name']) && $this->token->isTokenTimeValid() && empty($results)) {
-            $this->flash->add('Form Submitted Sucessfully', FlashType::SUCCESS->value);
+            $this->flash->add('Form Submitted Sucessfully', FlashType::SUCCESS);
         }
         return $this->redirect('/home/form');
-    }
-
-    public function makeForm(string $action = '', array $formValues = [], array $formErrors = []) : string
-    {
-        $form = $this->formBuilder->form();
-        return $form->method('post')->class(['w-25'])->action($action)->formValues($formValues)->formErrors($formErrors)->add(
-            $form->wrapper('div')->class(['mb-3', 'input-box'])->id('input-box1')->add(
-                $form->label('Name :'),
-                $form->input('text')->name('name')->class(['form-control'])
-            ),
-            $form->wrapper('div')->class(['mb-3', 'input-box'])->add(
-                $form->label()->content('Email :'),
-                $form->input('text')->name('email')->class(['form-control']),
-            ),
-            $form->wrapper('div')->class(['mb-3', 'input-box'])->add(
-                $form->label('Message :'),
-                $form->textArea()->rows(4)->name('message')->class(['form-control'])
-            ),
-            $form->button()->content('Send Message')->class(['btn', 'btn-primary', 'w-100'])
-        )->makeForm();
     }
 }
