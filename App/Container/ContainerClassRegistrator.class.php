@@ -46,6 +46,8 @@ final readonly class ContainerClassRegistrator
     private static function bindClasses() : array
     {
         return [
+            MenuItemInterface::class => MenuItem::class,
+            EntityManagerInterface::class => EntityManager::class,
             AbstractFactory::class => ConcreteFactory1::class,
             RooterInterface::class => Rooter::class,
             CacheStorageInterface::class => NativeCacheStorage::class,
@@ -75,7 +77,6 @@ final readonly class ContainerClassRegistrator
             TokenInterface::class => Token::class,
             ViewInterface::class => View::class,
             CollectionInterface::class => Collection::class,
-            EntityManagerInterface::class => EntityManager::class,
             SessionEnvironment::class => SessionEnvironment::class,
             SessionStorageInterface::class => NativeSessionStorage::class,
             SessionInterface::class => Session::class,

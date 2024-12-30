@@ -2,16 +2,18 @@
 
 declare(strict_types=1);
 
-class LoginController extends AuthenticationController
+class LoginController extends AuthController
 {
     public function __construct(
         UsersModel $users,
+        UserSessionModel $userSession,
+        CookieInterface $cookie,
         private UserFormCreator $frm,
         private Validator $validator,
+        private HtmlBuilder $html,
         HashInterface $hash,
-        FlashInterface $flash
     ) {
-        parent::__construct($users, $hash, $flash);
+        parent::__construct($users, $userSession, $cookie, $hash);
     }
 
     public function before() : void
@@ -22,32 +24,34 @@ class LoginController extends AuthenticationController
     public function index() : string
     {
         $this->pageTitle('Login');
-        $session = $this->token->getSession();
-        if ($session->exists('form')) {
-            $form = $session->get('form');
-            $session->delete('form');
+        if ($this->session->exists('form')) {
+            $form = $this->session->get('form');
+            $this->session->delete('form');
         } else {
             $form = $this->frm->make('auth-user');
         }
-        return $this->render('index', ['authForm' => $form, 'message' => $this->flash->get()]);
+        return $this->render('index', array_merge([
+            'authForm' => $form,
+        ]));
     }
 
     public function authenticateUser() : Response
     {
-        [$userData, $errors, $session] = $this->userData();
+        [$userData, $errors] = $this->userData();
         if (! empty($errors)) {
             $this->flash->add('Fields Errors... Please check.', FlashType::WARNING);
             return $this->redirect(DS . 'login');
         }
         $user = $this->authenticate($userData);
         if (! $user) {
-            $this->flash->add('The authentication failed! Please create an account before login In.', FlashType::WARNING);
+            $this->flash->add('The authentication failed! Please create an account.', FlashType::WARNING);
             return $this->redirect('/login');
         }
-        if (! $this->loginUser($user)) {
+        if (! $this->loginUser($user, $userData)) {
             $this->flash->add('Login failed! Please try again', FlashType::WARNING);
+            return $this->redirect('/login');
         }
-        return $this->redirect($session->get(PREVIOUS_URL_KEY) ?? '/');
+        return $this->redirect($this->session->get(PREVIOUS_PAGE) ?? '/');
     }
 
     private function userData() : array
@@ -55,10 +59,9 @@ class LoginController extends AuthenticationController
         $userData = $this->request->getPost()->getAll();
         $errors = $this->validator->validate($userData, 'login', $this->users);
         $form = $this->frm->make('auth-user', $userData, $errors);
-        $session = $this->token->getSession();
-        if (! $session->exists('form')) {
-            $session->set('form', $form);
+        if (! $this->session->exists('form')) {
+            $this->session->set('form', $form);
         }
-        return [$userData, $errors, $session];
+        return [$userData, $errors];
     }
 }

@@ -4,24 +4,21 @@ declare(strict_types=1);
 
 class HomeController extends Controller
 {
-    public function __construct(private UsersModel $user, private FlashInterface $flash, private TestFormCreator $frm, private Validator $validator)
+    public function __construct(private UsersModel $user, private TestFormCreator $frm, private Validator $validator)
     {
     }
 
     public function index() : string
     {
         $this->pageTitle('Home');
-        return $this->render('index', [
-            'message' => $this->flash->get(),
-        ]);
+        return $this->render('index');
     }
 
     public function form() : string
     {
-        $session = $this->token->getSession();
-        if ($session->exists('form')) {
-            $form = $session->get(('form'));
-            $session->delete('form');
+        if ($this->session->exists('form')) {
+            $form = $this->session->get(('form'));
+            $this->session->delete('form');
         } else {
             $form = $this->frm->make('home/handleForm');
         }
@@ -42,11 +39,10 @@ class HomeController extends Controller
         $data = $this->request->getPost()->getAll();
         $results = $this->validator->validate($data, 'login', $this->user);
         $form = $this->frm->make('home/handleForm', $data, $results);
-        $session = $this->token->getSession();
-        if (! $session->exists('form')) {
-            $session->set('form', $form);
+        if (! $this->session->exists('form')) {
+            $this->session->set('form', $form);
         }
-        if ($this->token->validate($data['csrfToken'], $data['frm_name']) && $this->token->isTokenTimeValid() && empty($results)) {
+        if ($this->token->validate($data['csrfToken'], $data['frm_name']) && empty($results)) {
             $this->flash->add('Form Submitted Sucessfully', FlashType::SUCCESS);
         }
         return $this->redirect('/home/form');

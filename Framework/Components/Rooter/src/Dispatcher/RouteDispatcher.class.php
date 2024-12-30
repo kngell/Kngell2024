@@ -63,11 +63,15 @@ readonly class RouteDispatcher
             return [];
         }
         $middlewares = explode('|', $route->getRouteParams()['middleware']);
-        array_walk($middlewares, function (&$value) use ($app) {
+        array_walk($middlewares, function (&$value) use ($app, $route) {
             if (! array_key_exists($value, $this->middlewares)) {
                 throw new UnexpectedValueException("Middleware $value not found in the configuration route settings");
             }
-            $value = $app->get($this->middlewares[$value]);
+            if (in_array($value, ['grantAccess'])) {
+                $value = $app->get($this->middlewares[$value], [$route]);
+            } else {
+                $value = $app->get($this->middlewares[$value]);
+            }
         });
         return $middlewares;
     }
@@ -90,7 +94,9 @@ readonly class RouteDispatcher
             ->setRequest($app->getRequest())
             ->setView($app->get(ViewInterface::class))
             ->setresponse($app->getResponse())
-            ->setToken($app->get(TokenInterface::class));
+            ->setToken($app->get(TokenInterface::class))
+            ->setFlash($app->get(FlashInterface::class))
+            ->setSession($app->getSession());
     }
 
     private function controlllerPath(string $path) : string

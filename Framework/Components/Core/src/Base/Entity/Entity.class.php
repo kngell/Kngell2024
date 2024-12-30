@@ -49,9 +49,4 @@ abstract class Entity
         }
         return false;
     }
-
-    public function getLable(string $name) : string
-    {
-        return '';
-    }
 }

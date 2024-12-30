@@ -23,6 +23,20 @@ abstract class AbstractHtmlComponent
     protected string $tabindex;
     protected string $title;
     protected string $translate;
+    protected array $custom;
+    protected string $align;
+    protected string $onclick;
+    protected string $ondblclick;
+    protected string $onmousedown;
+    protected string $onmouseup;
+    protected string $onmouseover;
+    protected string $onmousemove;
+    protected string $onmouseout;
+    protected string $onkeypress;
+    protected string $onkeydown;
+    protected string $onkeyup;
+    protected array $formErrors = [];
+    protected array $formValues = [];
 
     public function setParent(?self $parent)
     {
@@ -34,12 +48,22 @@ abstract class AbstractHtmlComponent
         return $this->parent;
     }
 
-    public function add(self|AbstractForm|null ...$htmlelements) : self
+    public function add(self|null ...$htmlelements) : self
     {
         return $this;
     }
 
     public function remove(self $component): self
+    {
+        return $this;
+    }
+
+    public function formErrors(array $formErrors): self
+    {
+        return $this;
+    }
+
+    public function formValues(array $formValues): self
     {
         return $this;
     }
@@ -53,5 +77,29 @@ abstract class AbstractHtmlComponent
             is_array($value) && $key === 'style' => " $key='" . implode('; ', $value) . "'",
             is_array($value) => " $key='" . implode(' ', $value) . "'",
         };
+    }
+
+    protected function formElementAttribute(string $key, string|array|bool|int $value) : string
+    {
+        if ($this instanceof CheckBoxType && $key === 'value' && $value === 'on') {
+            return 'checked';
+        }
+        return match (true) {
+            is_string($value) || is_int($value) => ' ' . $key . '="' . $value . '"',
+            is_bool($value) => ' ' . $key,
+            is_array($value) && $key === 'class' => ' class="' . implode(' ', $value) . '"',
+            is_array($value) && $key === 'style' => ' style="' . implode('; ', $value) . '"',
+            is_array($value) && $key === 'custom' => $this->customAttribute($value),
+            default => ''
+        };
+    }
+
+    private function customAttribute(array $Attrs) : string
+    {
+        $strCustom = '';
+        foreach ($Attrs as $key => $attr) {
+            $strCustom .= "$key ='" . $attr . "'";
+        }
+        return $strCustom;
     }
 }

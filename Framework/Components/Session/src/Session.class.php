@@ -147,7 +147,7 @@ class Session implements SessionInterface
      *
      * @return string
      */
-    public static function uagent_no_version() : string
+    public function uagent_no_version() : string
     {
         $uagent = $_SERVER['HTTP_USER_AGENT'];
         $regx = '/\/[a-zA-z0-9.]+/';

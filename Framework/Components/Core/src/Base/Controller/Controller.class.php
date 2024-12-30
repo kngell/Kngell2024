@@ -7,6 +7,8 @@ abstract class Controller
     protected Request $request;
     protected Response $response;
     protected TokenInterface $token;
+    protected FlashInterface $flash;
+    protected SessionInterface $session;
     private ViewInterface $view;
 
     public function __call($name, $args)
@@ -29,15 +31,23 @@ abstract class Controller
         if (count($pathParts) === 1) {
             $templatePath = strtolower(str_replace('Controller', '', $this::class) . DS . $templatePath);
         }
+        $context = array_merge($context, (new NavbarDecorator($this))->page(), ['message' => $this->flash->get()]);
         return $this->view->render($templatePath, $context);
     }
 
     public function redirect(string $url, bool $permanent = true) : Response
     {
-        $statusCode = $permanent ? HttpStatusCode::HTTP_SEE_OTHER : HttpStatusCode::HTTP_MOVED_PERMANENTLY;
-        $this->response->setStatusCode($statusCode);
-        $this->response->redirect($url);
-        return $this->response;
+        // $this->session->delete(PREVIOUS_PAGE);
+        // $s = $_SESSION;
+        // $statusCode = $permanent ? HttpStatusCode::HTTP_SEE_OTHER : HttpStatusCode::HTTP_MOVED_PERMANENTLY;
+        // $this->response->setStatusCode($statusCode);
+        // $this->response->redirect($url);
+        return Rooter::redirect($url, $permanent);
+    }
+
+    public function page() : array
+    {
+        return [];
     }
 
     /**

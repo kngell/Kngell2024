@@ -22,22 +22,25 @@
   controller: home
   method: index
   httpMethod: get
-home:
+/home:
   controller: home
   method: index
   httpMethod: get
 /_404_error:
   controller: errors
-  method: _404
+  method: e_404
 /_500_error:
   controller: errors
-  method: _500
+  method: e_500
+/_403_error:
+  controller: errors
+  method: e_403
 /login:
   controller: login
   method: index
   httpMethod: get
 /signup:
-  controller: singup
+  controller: signup
   method: index
   httpMethod: get
 /register:
@@ -48,6 +51,10 @@ home:
   controller: login
   method: authenticate-user
   httpMethod: post
+/user-from-cookie:
+  controller: login-from-cookie
+  method: index
+  httpMethod: get
 /logout:
   controller: logout
   method: index

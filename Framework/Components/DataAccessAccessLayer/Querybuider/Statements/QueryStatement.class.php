@@ -23,7 +23,7 @@ class QueryStatement extends MainQuery
             $child->setParameters($this->parameters);
             $child->setBindArr($this->bind_arr);
             list($query, $this->tableAlias, $this->aliasCheck, $this->parameters, $this->bind_arr) = $child->getSql();
-            $results[] = $this->link() . $query;
+            $results[] = ($this->children->last() !== $child ? $this->link() : '') . $query;
         }
         $method = $this->children->first()->getMethod();
         $statement = $this->statement($method);

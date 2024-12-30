@@ -44,4 +44,24 @@ trait ControllerGettersAndSetters
         $this->token = $token;
         return $this;
     }
+
+    /**
+     * @param FlashInterface $flash
+     * @return Controller
+     */
+    public function setFlash(FlashInterface $flash): self
+    {
+        $this->flash = $flash;
+        return $this;
+    }
+
+    /**
+     * @param SessionInterface $session
+     * @return Controller
+     */
+    public function setSession(SessionInterface $session): self
+    {
+        $this->session = $session;
+        return $this;
+    }
 }

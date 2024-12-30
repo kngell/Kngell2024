@@ -12,11 +12,11 @@ class MiddlewareRequest implements RequestHandlerInterface
     {
     }
 
-    public function handle(Request $request, array $args = []): string|Response
+    public function handle(Request $request): string|Response
     {
         $middleware = array_shift($this->middlewares);
         if ($middleware === null) {
-            return $this->requestHandler->handle($request, $args);
+            return $this->requestHandler->handle($request);
         }
         return $middleware->process($request, $this);
     }

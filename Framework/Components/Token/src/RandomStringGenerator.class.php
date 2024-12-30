@@ -15,13 +15,6 @@ abstract class RandomStringGenerator
     /**
      * @param string $alphabet
      */
-    public function __construct()
-    {
-    }
-
-    /**
-     * @param string $alphabet
-     */
     public function setAlphabet($alphabet)
     {
         if ('' !== $alphabet) {

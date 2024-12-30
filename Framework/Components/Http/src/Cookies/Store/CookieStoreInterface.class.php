@@ -22,4 +22,6 @@ interface CookieStoreInterface
     public function deleteCookie(string|null $cookieName = null): void;
 
     public function getCookie(string $name) : mixed;
+
+    public function getCookieEnvironment(): CookieEnvironment;
 }

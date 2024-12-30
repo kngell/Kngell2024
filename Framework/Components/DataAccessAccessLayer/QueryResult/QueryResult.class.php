@@ -19,9 +19,9 @@ class QueryResult
         return $this->mapper->getConnexion()->open()->lastInsertId($name);
     }
 
-    public function getResults(string|array|null $params = null, string|null $type = null): self
+    public function getResults(string|array|null $params = null, string|null $className = null): self
     {
-        list($mode, $className, $constructorAgrs) = $this->params($params);
+        list($mode, $className, $constructorAgrs) = $this->params($params, $className);
         $mode = $this->returType($mode);
         $this->fetchMode($mode, $className, $constructorAgrs);
         $this->rowCount = $this->_query->rowCount();
@@ -62,19 +62,19 @@ class QueryResult
         return $this->mapper->getQueryResult();
     }
 
-    private function params(string|array|null $params = null) : array
+    private function params(string|array|null $params = null, string|null $className = null) : array
     {
         return match (true) {
-            is_string($params) => $this->stringOptions($params),
+            is_string($params) => $this->stringOptions($params, $className),
             is_array($params) => $this->arrayOptions($params),
             default => ['', null, null],
         };
     }
 
-    private function stringOptions(string $params) : array
+    private function stringOptions(string $params, string|null $className = null) : array
     {
         if ($params === 'class') {
-            $className = $this->entity::class;
+            $className = $className === null ? $this->entity::class : $className;
         }
         return [$params, $className ?? null, null];
     }

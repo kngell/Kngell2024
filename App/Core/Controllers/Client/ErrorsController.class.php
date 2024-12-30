@@ -10,17 +10,24 @@ class ErrorsController extends Controller
         return $this->render('errors' . DS . 'dev', $data);
     }
 
-    public function _500() : String
+    public function e500() : String
     {
         $this->pageTitle('Errors');
         $this->setLayout('default');
         return $this->render('500');
     }
 
-    public function _400() : string
+    public function e400() : string
     {
         $this->pageTitle('Errors');
         $this->setLayout('default');
         return $this->render('404');
+    }
+
+    public function e403() : string
+    {
+        $this->pageTitle('Errors');
+        $this->setLayout('default');
+        return $this->render('403');
     }
 }

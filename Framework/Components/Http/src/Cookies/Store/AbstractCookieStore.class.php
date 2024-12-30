@@ -18,4 +18,12 @@ abstract class AbstractCookieStore implements CookieStoreInterface
         $this->cookieEnvironment = $cookieEnvironment;
         $this->gv = $gv;
     }
+
+    /**
+     * @return CookieEnvironment
+     */
+    public function getCookieEnvironment(): CookieEnvironment
+    {
+        return $this->cookieEnvironment;
+    }
 }

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 class whereConditionRule extends AbstractConditionRules
 {
+    private const string PARAM_SUFIX = 'azertyuiopmlkjhgfdsq';
+
     /**
      * @param EntityManagerInterface $em
      * @param QueryBuilder $builder
@@ -90,17 +92,19 @@ class whereConditionRule extends AbstractConditionRules
 
     private function condition(array $condition) : string
     {
-        $tblh = $this->em->getTableAliasHelper()->setTables($this->tables);
+        $keyColumns = $this->keyColumns($condition);
+        $tblh = $this->em->getTableAliasHelper()->setTables($this->tables)
+            ->setConditionIndex($keyColumns);
         list($table1, $column1) = $tblh->mapTableColumn($condition['left']);
         list($table1, $alias1) = $tblh->get($table1, $this->tableAlias, $this->aliasCheck);
         $alias1 = ! empty($alias1) ? $alias1 . '.' : '';
         if (Statement::exists($this->method) && in_array($this->method, array_merge(Statement::getFamily('where'), Statement::getFamily('having')))) {
-            $stmt = $tblh->getToken()->generate(2, $condition['left']);
+            $stmt = $tblh->getToken()->generate(2, self::PARAM_SUFIX);
             while (in_array($stmt, array_keys($this->parameters))) {
-                $stmt = $tblh->getToken()->generate(2, $condition['left']);
+                $stmt = $tblh->getToken()->generate(2, self::PARAM_SUFIX);
             }
-            $right = ':' . $stmt . '_' . $condition['left'];
-            $this->parameters[$stmt . '_' . $condition['left']] = $condition['right'];
+            $right = ':' . $stmt . '_' . $this->conditionLeft($condition['left']);
+            $this->parameters[$stmt . '_' . $this->conditionLeft($condition['left'])] = $condition['right'];
         } else {
             list($table2, $column2) = $tblh->mapTableColumn($condition['right']);
             list($table2, $alias2) = $tblh->get($table2, $this->tableAlias, $this->aliasCheck);
@@ -108,6 +112,15 @@ class whereConditionRule extends AbstractConditionRules
             $right = $alias2 . $column2;
         }
         return  $alias1 . $column1 . ' ' . $condition['operator'] . ' ' . $right;
+    }
+
+    private function conditionLeft(string $strCondition) : string
+    {
+        $parts = explode('.', $strCondition);
+        if (count($parts) === 2) {
+            return $parts[1];
+        }
+        return $strCondition;
     }
 
     private function closure(Closure $condition) : string
@@ -136,5 +149,13 @@ class whereConditionRule extends AbstractConditionRules
             return ')';
         }
         return '';
+    }
+
+    private function keyColumns(array $condition) : array
+    {
+        if (array_key_last($condition) === 'operator') {
+            unset($condition['operator']);
+        }
+        return array_values($condition);
     }
 }

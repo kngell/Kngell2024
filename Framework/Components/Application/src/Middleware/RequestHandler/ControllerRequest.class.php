@@ -10,13 +10,12 @@ class ControllerRequest implements RequestHandlerInterface
     {
     }
 
-    public function handle(Request $request, array $args = []): string|Response
+    public function handle(Request $request): string|Response
     {
-        $arguments = array_merge($this->arguments, $args);
         if (in_array($this->url, self::ERRORS_URL)) {
-            return $this->route->getMethod()->invoke($this->controller, $arguments);
+            return $this->route->getMethod()->invoke($this->controller, $this->arguments);
         } else {
-            return $this->route->getMethod()->invoke($this->controller, ...$arguments);
+            return $this->route->getMethod()->invoke($this->controller, ...$this->arguments);
         }
     }
 }

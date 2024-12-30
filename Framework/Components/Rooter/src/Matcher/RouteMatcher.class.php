@@ -6,7 +6,7 @@ use Ramsey\Collection\Exception\InvalidPropertyOrMethod;
 
 class RouteMatcher
 {
-    private const array MIDDLEWARE = [];
+    private const array MIDDLEWARE = ['grantAccess']; //'grantAccess'
     private array $routes;
     private string $controllerSuffix = 'Controller';
 

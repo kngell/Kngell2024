@@ -18,7 +18,7 @@ class HtmlaElement extends AbstractHtmlComponent
     {
         $tag = '<a';
         foreach ($this as $key => $value) {
-            if ($key === 'divContent' || is_object($value)) {
+            if (in_array($key, ['content', 'tag', 'formErrors', 'formValues']) || is_object($value)) {
                 continue;
             }
             if (in_array(gettype($value), ['string', 'array'])) {
@@ -30,6 +30,16 @@ class HtmlaElement extends AbstractHtmlComponent
             $tag .= $this->content;
         }
         return $tag . '</a>';
+    }
+
+    /**
+     * @param array $custom
+     * @return HtmlaElement
+     */
+    public function custom(array $custom): self
+    {
+        $this->custom = $custom;
+        return $this;
     }
 
     /**

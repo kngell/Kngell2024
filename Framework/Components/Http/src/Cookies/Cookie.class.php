@@ -62,4 +62,9 @@ class Cookie implements CookieInterface
             }
         }
     }
+
+    public function getExpiry() : int
+    {
+        return $this->cookieStore->getCookieEnvironment()->getExpiration();
+    }
 }

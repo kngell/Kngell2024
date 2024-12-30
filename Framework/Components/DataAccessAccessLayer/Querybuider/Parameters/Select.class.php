@@ -48,7 +48,7 @@ class Select extends MainQuery
     private function emptyColumn(string $alias) : string
     {
         if ($this->method === 'select') {
-            return $alias . '.' . '*, ';
+            return $alias . '.' . '*';
         } else {
             return '';
         }

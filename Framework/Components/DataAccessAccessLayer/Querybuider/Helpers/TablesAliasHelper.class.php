@@ -4,6 +4,7 @@ declare(strict_types=1);
 final class TablesAliasHelper
 {
     private array $tables;
+    private array $conditionIndex;
 
     public function __construct(private Token $token)
     {
@@ -35,10 +36,19 @@ final class TablesAliasHelper
         return [$tbl, $alias];
     }
 
+    public function keyColumns(array $condition) : array
+    {
+        if (array_key_last($condition) === 'operator') {
+            unset($condition['operator']);
+        }
+        return array_values($condition);
+    }
+
     public function mapTableColumn(string $str, array $tables = []) : array
     {
         $parts = explode('.', $str);
         if (count($parts) === 2) {
+            $tableColumn = $parts[0];
             $column = $parts[1];
         } elseif (count($parts) === 1) {
             $column = $parts[0];
@@ -82,6 +92,20 @@ final class TablesAliasHelper
     public function setTables(array $tables): self
     {
         $this->tables = $tables;
+
+        return $this;
+    }
+
+    /**
+     * Set the value of conditionIndex.
+     *
+     * @param array $conditionIndex
+     *
+     * @return self
+     */
+    public function setConditionIndex(array $conditionIndex): self
+    {
+        $this->conditionIndex = $conditionIndex;
 
         return $this;
     }

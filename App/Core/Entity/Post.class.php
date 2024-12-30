@@ -215,7 +215,6 @@ class Post extends Entity
         return $this;
     }
 
-    #[Override]
     public function getLable(string $name) : string
     {
         $label = match ($name) {

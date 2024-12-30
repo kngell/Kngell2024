@@ -2,19 +2,18 @@
 
 declare(strict_types=1);
 
-class SingupController extends Controller
+class SignupController extends Controller
 {
-    public function __construct(private UsersModel $user, private UserFormCreator $frm, private Validator $validator, private FlashInterface $flash, private HashInterface $hash)
+    public function __construct(private UsersModel $user, private UserFormCreator $frm, private Validator $validator, private HashInterface $hash)
     {
     }
 
     public function index() : string
     {
         $this->pageTitle('Register');
-        $session = $this->token->getSession();
-        if ($session->exists('form')) {
-            $form = $session->get('form');
-            $session->delete('form');
+        if ($this->session->exists('form')) {
+            $form = $this->session->get('form');
+            $this->session->delete('form');
         } else {
             $form = $this->frm->make('register');
         }
@@ -26,9 +25,8 @@ class SingupController extends Controller
         $data = $this->request->getPost()->getAll();
         $errors = $this->validator->validate($data, 'register', $this->user);
         $form = $this->frm->make('register', $data, $errors);
-        $session = $this->token->getSession();
-        if (! $session->exists('form')) {
-            $session->set('form', $form);
+        if (! $this->session->exists('form')) {
+            $this->session->set('form', $form);
         }
         if (! empty($errors)) {
             $this->flash->add('Fields Errors... Please check.', FlashType::WARNING);

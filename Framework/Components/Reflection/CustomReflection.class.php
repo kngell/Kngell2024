@@ -6,16 +6,19 @@ final class CustomReflection
     /** @var CustomReflection */
     private static $instance;
 
+    private static $object;
+
     private function __construct(private ReflectionObject $reflection)
     {
     }
 
     public static function getInstance(object $object) : self
     {
-        if (! isset(self::$instance)) {
-            self::$instance = new static(new ReflectionObject($object));
+        if (! isset(static::$instance) || static::$object !== $object) {
+            static::$object = $object;
+            static::$instance = new static(new ReflectionObject($object));
         }
-        return self::$instance;
+        return static::$instance;
     }
 
     public function getObject() : ReflectionObject

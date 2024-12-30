@@ -11,18 +11,10 @@ class RequireLoginMiddleware implements MiddlewareInterface
     {
         $session = $this->flash->getSession();
         if (! $session->exists(CURRENT_USER_SESSION_NAME)) {
-            $session->set(PREVIOUS_URL_KEY, $request->getServer()->get('request_uri'));
-            return $this->controller()->redirect('/login');
+            $this->flash->add('Please Login to access that page', FlashType::INFO);
+            $session->set(PREVIOUS_PAGE, $request->getServer()->get('request_uri'));
+            return $this->redirect('/login');
         }
         return $next->handle($request, []);
-    }
-
-    private function Controller() : Controller
-    {
-        $app = App::getInstance();
-        return (new ControllerMiddleware())->setRequest($app->getRequest())
-            ->setView($app->get(ViewInterface::class))
-            ->setresponse($app->getResponse())
-            ->setToken($app->get(TokenInterface::class));
     }
 }

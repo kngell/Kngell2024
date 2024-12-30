@@ -36,4 +36,6 @@ interface CookieInterface
      * @return void
      */
     public function invalidate() : void;
+
+    public function getExpiry() : int;
 }

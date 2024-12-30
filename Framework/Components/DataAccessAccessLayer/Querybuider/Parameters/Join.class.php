@@ -12,7 +12,8 @@ class Join extends MainQuery
     public function getSql(): array
     {
         $tblh = $this->em->getTableAliasHelper();
-        $statement = strtoupper(Statement::from($this->method)->value);
+        $statement = strtoupper(Statement::from($this->method)->name);
+        $statement = str_replace('_', ' ', $statement);
         list($table, $alias) = $tblh->get($this->table, $this->tableAlias, $this->aliasCheck);
         return [
             $statement . ' ' . $table . ' AS ' . $alias,

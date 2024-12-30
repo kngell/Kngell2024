@@ -4,12 +4,17 @@
       "AdminController": ["*"]
     },
     "HomeController": ["*"],
+    "LogoutController": ["*"],
     "ErrorsController": ["*"],
     "LoginController": ["*"],
-    "PostController": ["index"]
+    "PostController": ["index", "show"],
+    "SignupController": ["*"]
   },
   "LoggedIn": {
-    "denied": {},
+    "denied": {
+      "LoginController": ["*"],
+      "SignupController": ["*"]
+    },
     "PostController": ["*"]
   },
   "admin": {

@@ -6,8 +6,8 @@ $this->start('head'); ?>
 <?php $this->start('body'); ?>
 <main id="main-site">
    <!-- Content -->
-   <div class="container-sm h-100">
-      <div class="row h-100 justify-content-center align-items-center">
+   <div class="container align-content-md-between">
+      <div class="row">
          <?= $form ?>
       </div>
    </div>

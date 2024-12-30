@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 class PostController extends Controller
 {
-    public function __construct(private PostModel $post, private PostFormCreator $frm, private Validator $validator, private FlashInterface $flash, private HtmlBuilder $html)
+    public function __construct(private PostModel $post, private PostFormCreator $frm, private Validator $validator, private HtmlBuilder $html)
     {
     }
 
@@ -17,17 +17,15 @@ class PostController extends Controller
             [
                 'posts' => $postHtmlObj->display(),
                 'total' => $this->post->getTotal(),
-                'message' => $this->flash->get(),
             ]
         );
     }
 
     public function new(string|null $form = null) : Response
     {
-        $session = $this->token->getSession();
-        if ($session->exists('form')) {
-            $form = $session->get('form');
-            $session->delete('form');
+        if ($this->session->exists('form')) {
+            $form = $this->session->get('form');
+            $this->session->delete('form');
         }
         $form = $form ?? $this->frm->make('post/create');
         return $this->response('new', ['form' => $form]);
@@ -37,11 +35,10 @@ class PostController extends Controller
     {
         $data = $this->request->getPost()->getAll();
         $results = $this->validator->validate($data, 'postRules');
-        $session = $this->token->getSession();
         if (! empty($results)) {
             $form = $this->frm->make('post/create', [], $results);
-            if (! $session->exists('form')) {
-                $session->set('form', $form);
+            if (! $this->session->exists('form')) {
+                $this->session->set('form', $form);
             }
             return $this->redirect('/post/new');
         }

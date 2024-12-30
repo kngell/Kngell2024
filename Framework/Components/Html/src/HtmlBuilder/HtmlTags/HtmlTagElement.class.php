@@ -16,7 +16,7 @@ class HtmlTagElement extends AbstractHtmlComponent
     {
         $tag = '<' . $this->tag;
         foreach ($this as $key => $value) {
-            if ($key === 'content' || is_object($value) || $key === 'tag') {
+            if (in_array($key, ['content', 'tag', 'formErrors', 'formValues']) || is_object($value)) {
                 continue;
             }
             if (in_array(gettype($value), ['string', 'array'])) {

@@ -19,7 +19,6 @@ class Rooter implements RooterInterface
 
     public function handle(Request $request, ?App $app = null, string|null $url = null, array $params = []) : Response
     {
-        $s = $_SESSION;
         $route = $this->routeMatcher->match($request, $url);
         if ($route === null) {
             throw new PageNotFoundException("Page not Found with method {$request->getServer()->get('request_method')}");
@@ -40,6 +39,19 @@ class Rooter implements RooterInterface
             $results,
             $app->getResponse()
         );
+    }
+
+    public static function redirect(string $url, bool|HttpStatusCode $permanent = true) : Response
+    {
+        $response = new Response();
+        if (is_bool($permanent)) {
+            $statusCode = $permanent ? HttpStatusCode::HTTP_SEE_OTHER : HttpStatusCode::HTTP_MOVED_PERMANENTLY;
+        } else {
+            $statusCode = $permanent;
+        }
+        $response->setStatusCode($statusCode);
+        $response->redirect($url);
+        return $response;
     }
 
     private function getResponseStatus(array $params) : ResponseStatus

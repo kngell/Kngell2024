@@ -1,2 +1,2 @@
 import "./login/login";
-import "./singup/singup";
+import "./signup/signup";

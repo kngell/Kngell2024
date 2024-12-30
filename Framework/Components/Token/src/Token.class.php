@@ -3,47 +3,24 @@
 declare(strict_types=1);
 class Token extends RandomStringGenerator implements TokenInterface
 {
-    private const string CSRF_KEY = 'UYUZYZ3121331azeazesfKngell';
+    private string $token;
+    private string $tokenHash;
 
-    public function __construct(private SessionInterface $session)
+    public function __construct(string|null $token = null)
     {
+        if ($token === null) {
+            $this->token = $this->generate();
+        } else {
+            $this->token = $token;
+        }
     }
 
-    public function create(int $length = CSRF_TOKEN_LENGHT, string $frm = '', string $alphabet = '') : string
+    public function getCsrfHash(int $length = CSRF_TOKEN_LENGHT, string $frm = '', string $alphabet = '') : string
     {
-        $identifiant = '';
-        $this->setAlphabet($alphabet);
-        for ($i = 0; $i < $length; $i++) {
-            $randomKey = $this->getRandomInteger(0, $this->alphabetLength);
-            $identifiant .= $this->alphabet[$randomKey];
-        }
-        $time = $this->tokenTime(self::CSRF_KEY);
+        $time = time();
         $separator = ! empty($frm) ? $frm : '|';
-        $hash = hash_hmac('sha256', session_id() . $identifiant . $time . $frm, CSRF_TOKEN_SECRET, true);
-        return $this->urlSafeEncode($hash . $separator . $identifiant . $separator . $time);
-    }
-
-    public function validate(string $token = '', string $frm = '') : bool
-    {
-        $separator = ! empty($frm) ? $frm : '|';
-        $part = explode($separator, $this->urlSafeDecode($token));
-        if (count($part) === 3) {
-            $hash = hash_hmac('sha256', session_id() . $part[1] . $part[2] . $frm, CSRF_TOKEN_SECRET, true);
-            if (hash_equals($hash, $part[0])) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public function isTokenTimeValid() : bool
-    {
-        if ($this->session->exists(self::CSRF_KEY)) {
-            $timeOk = time() - $this->session->get(self::CSRF_KEY) > CSRF_TOKEN_LIFETIME;
-            $this->session->delete(self::CSRF_KEY);
-            return $timeOk;
-        }
-        return false;
+        $hash = hash_hmac('sha256', session_id() . $this->token . $time . $frm, CSRF_TOKEN_SECRET, true);
+        return $this->urlSafeEncode($hash . $separator . $this->token . $separator . $time);
     }
 
     public function generate(int $length = CSRF_TOKEN_LENGHT, string $alphabet = '') : string
@@ -57,20 +34,18 @@ class Token extends RandomStringGenerator implements TokenInterface
         return $token;
     }
 
-    public function check($formName, $token)
+    public function validate(string $token = '', string $frm = '') : bool
     {
-        if ($this->session->exists(TOKEN_NAME) && $token === $this->session->get(TOKEN_NAME)) {
-            $this->session->delete(TOKEN_NAME);
-            return true;
+        $separator = ! empty($frm) ? $frm : '|';
+        $part = explode($separator, $this->urlSafeDecode($token));
+        if (count($part) === 3) {
+            $hash = hash_hmac('sha256', session_id() . $part[1] . $part[2] . $frm, CSRF_TOKEN_SECRET, true);
+            if (hash_equals($hash, $part[0])) {
+                $this->tokenHash = $hash;
+                return true;
+            }
         }
-        $serverToken = hash_hmac('sha256', $formName, $this->session->exists(TOKEN_NAME) ? $this->session->get(TOKEN_NAME) : '');
-
-        return hash_equals($serverToken, $token);
-    }
-
-    public function getHash() : string
-    {
-        return hash_hmac('sha256', '$this->token', YamlFile::get('app')['settings']['secret_key']);
+        return false;
     }
 
     public function urlSafeEncode(string $str) : string
@@ -80,21 +55,22 @@ class Token extends RandomStringGenerator implements TokenInterface
 
     public function urlSafeDecode(string $str) : string
     {
-        // $st = base64_decode(strtr($str, '-_', '+/'));
         return base64_decode(strtr($str, '-_', '+/'));
     }
 
-    public function getSession() : SessionInterface
+    /**
+     * @return string
+     */
+    public function getValue(): string
     {
-        return $this->session;
+        return $this->token;
     }
 
-    private function tokenTime(string $key) : int
+    /**
+     * @return string
+     */
+    public function getRememberHash(): string
     {
-        $time = time();
-        if (! $this->session->exists($key)) {
-            $this->session->set($key, $time);
-        }
-        return $time;
+        return hash_hmac('sha256', $this->token, CSRF_TOKEN_SECRET);
     }
 }
