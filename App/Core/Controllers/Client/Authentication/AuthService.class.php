@@ -7,8 +7,12 @@ final class AuthService
     /** @var AuthService */
     private static $instance = null;
 
-    private Users|null $currentLoggedInUser = null;
+    private User|null $currentLoggedInUser = null;
     private SessionInterface $session;
+    private bool $isUserFromCookie = false;
+    private string $hash;
+    private UserSessionModel $userSession;
+    private CookieInterface $cookie;
 
     private function __construct(private App $app)
     {
@@ -30,9 +34,9 @@ final class AuthService
     }
 
     /**
-     * @return Users|null
+     * @return User|null
      */
-    public static function currentUser(): Users|null
+    public static function currentUser(): User|null
     {
         return static::getInstance()->currentLoggedInUser;
     }
@@ -42,35 +46,66 @@ final class AuthService
      *
      * @return Users|null
      */
-    public function getCurrentLoggedInUser(): Users|null
+    public function getCurrentLoggedInUser(): User|null
     {
         return $this->currentLoggedInUser;
     }
 
-    private function currenUserFromSessionOrCookie() : void
+    /**
+     * Get the value of isUserFromCookie.
+     *
+     * @return bool
+     */
+    public function isUserFromCookie(): bool
     {
-        $userModel = $this->app->get(UsersModel::class);
-        if ($this->session->exists(CURRENT_USER_SESSION_NAME)) {
-            $id = $this->session->get(CURRENT_USER_SESSION_NAME);
-            $this->currentLoggedInUser = $userModel->getUser($id);
-            $this->currentLoggedInUser;
-        } else {
-            $this->currentLoggedInUser = $this->userFromRememberCookie();
-        }
+        return $this->isUserFromCookie;
     }
 
-    private function userFromRememberCookie() : Users|null
+    /**
+     * Get the value of hash.
+     *
+     * @return string
+     */
+    public function getHash(): string
+    {
+        return $this->hash;
+    }
+
+    public function forget() : int
+    {
+        $result = $this->userSession->delete(['token_hash' => $this->hash]);
+        $this->cookie->delete(REMEMBER_ME_COOKIE_NAME);
+        return $result->rowCount();
+    }
+
+    public function getUserFromRememberCookie() : User|null
     {
         $cookie = $this->app->get(CookieInterface::class);
         if ($cookie->exists(REMEMBER_ME_COOKIE_NAME)) {
             $token_value = $cookie->get(REMEMBER_ME_COOKIE_NAME);
             $tokenHash = (new Token($token_value))->getRememberHash();
-            /** @var Users */
-            $user = $this->app->get(UserSessionModel::class)->getByHash($tokenHash);
-            if ($user) {
+            /* @var UserSessionModel */
+            $this->userSession = $this->app->get(UserSessionModel::class);
+            [$user,$hasExprired] = $this->userSession->getByHash($tokenHash);
+            if ($user && ! $hasExprired) {
+                $this->isUserFromCookie = true;
+                $this->hash = $tokenHash;
+                $this->cookie = $cookie;
                 return $user;
             }
-            return null;
+        }
+        return null;
+    }
+
+    private function currenUserFromSessionOrCookie() : void
+    {
+        $userModel = $this->app->get(UserModel::class);
+        if ($this->session->exists(CURRENT_USER_SESSION_NAME)) {
+            $id = $this->session->get(CURRENT_USER_SESSION_NAME);
+            $this->currentLoggedInUser = $userModel->getUser($id);
+            $this->currentLoggedInUser;
+        } else {
+            $this->currentLoggedInUser = $this->getUserFromRememberCookie();
         }
     }
 }

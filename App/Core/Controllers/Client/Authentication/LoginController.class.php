@@ -5,7 +5,7 @@ declare(strict_types=1);
 class LoginController extends AuthController
 {
     public function __construct(
-        UsersModel $users,
+        UserModel $users,
         UserSessionModel $userSession,
         CookieInterface $cookie,
         private UserFormCreator $frm,
@@ -30,9 +30,9 @@ class LoginController extends AuthController
         } else {
             $form = $this->frm->make('auth-user');
         }
-        return $this->render('index', array_merge([
+        return $this->render('index', [
             'authForm' => $form,
-        ]));
+        ]);
     }
 
     public function authenticateUser() : Response
@@ -57,7 +57,7 @@ class LoginController extends AuthController
     private function userData() : array
     {
         $userData = $this->request->getPost()->getAll();
-        $errors = $this->validator->validate($userData, 'login', $this->users);
+        $errors = $this->validator->validate($userData, 'login', $this->user);
         $form = $this->frm->make('auth-user', $userData, $errors);
         if (! $this->session->exists('form')) {
             $this->session->set('form', $form);

@@ -6,10 +6,9 @@ $this->start('head'); ?>
 <?php $this->start('body'); ?>
 <main id="main-site">
    <!-- Content -->
-   <div class="container justify-content-center align-items-center w-50">
+   <div class="container">
       <div class="row">
-         <hr>
-         <!-- Login Form -->
+         <!-- Register Form -->
          <?=$message ?? '' ?>
          <?=$authForm ?? '' ?>
       </div>

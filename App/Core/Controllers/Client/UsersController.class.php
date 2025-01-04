@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-class UsersController extends Controller
+class UserController extends Controller
 {
-    public function __construct(private UsersModel $user, private UserFormCreator $frm, private Validator $validator, private FlashInterface $flash)
+    public function __construct(private UserModel $user, private UserFormCreator $frm, private Validator $validator, private FlashInterface $flash)
     {
     }
 

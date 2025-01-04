@@ -49,4 +49,21 @@ abstract class Entity
         }
         return false;
     }
+
+    public function assign(array $data) : self
+    {
+        $attrs = CustomReflection::getInstance($this)->getObject()->getProperties(ReflectionProperty::IS_PRIVATE);
+        foreach ($data as $key => $prop) {
+            $ok = array_filter($attrs, function ($attr) use ($key) {
+                return StringUtils::camelCase($key) === $attr->getName();
+            });
+            if ($ok) {
+                /** @var ReflectionProperty */
+                $property = ArrayUtils::first($ok);
+                $property->setAccessible(true);
+                $property->setValue($this, $prop);
+            }
+        }
+        return $this;
+    }
 }

@@ -20,16 +20,16 @@ readonly class LoginForm extends AbstractTemplateForm
             $html->tag('div')->class(self::INPUT_BOX_CLASS)->add(
                 $form->input('password')->name('password')->id('login-password')->class(self::INPUT_CLASS)->placeholder('Password'),
             ),
-            $html->tag('div')->class(self::INPUT_BOX_CLASS)->add(
+            $html->tag('div')->class(self::CHECKBOX_CLASS)->add(
                 $form->label('Remember Me')->for('remember')->class(self::LABEL_CLASS)->add(
                     $form->input('checkbox')->name('remember_me')->id('remember')->class(self::INPUT_CHECKBOX_CLASS)
                 )
             ),
             $html->tag('div')->class(self::INPUT_BOX_CLASS)->add(
-                $form->button()->type('submit')->class(['btn', 'btn-primary'])->content('Log In')
+                $form->button()->type('submit')->class(self::BUTTON_CLASS)->content('Log In')
             ),
             $html->tag('div')->class(['text-center'])->add(
-                $html->tag('a')->href('/user/recover')->class(['forgot-password'])->content('Forgot Password?')
+                $html->tag('a')->href('/forgot')->class(['forgot-password'])->content('Forgot Password?')
             )
         );
         return $form->generate();

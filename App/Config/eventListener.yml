@@ -1,0 +1,6 @@
+ResetPwEvent:
+- callback: BasicEmailListener
+  priority: 1
+RegisterEvent:
+- callback: BasicEmailListener
+  priority: 1

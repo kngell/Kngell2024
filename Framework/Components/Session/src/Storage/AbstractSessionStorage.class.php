@@ -104,7 +104,6 @@ abstract class AbstractSessionStorage
         $cookie_Params = $this->cookiesParams();
         session_set_cookie_params($cookie_Params);
         $this->startSession();
-        $s = $_SESSION;
         if ($this->validateSession()) {
             if (! $this->preventSessionHijack()) {
                 $_SESSION = [];

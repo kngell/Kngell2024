@@ -1,0 +1,23 @@
+password:
+  display: Password
+  required: true
+  min: 8
+  max: 255
+  letter_number: 1
+  capital_letter: 1
+  small_letter: 1
+  digit: 1
+  specialchar: 1
+  white_space: 0
+confirm_password:
+  display: Confirm Password
+  required: true
+  min: 8
+  max: 255
+  letter_number: 1
+  capital_letter: 1
+  small_letter: 1
+  digit: 1
+  specialchar: 1
+  white_space: 0
+  match: password

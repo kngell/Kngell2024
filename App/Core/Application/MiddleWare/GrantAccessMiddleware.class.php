@@ -42,12 +42,12 @@ class GrantAccessMiddleware extends AbstractMiddleware implements MiddlewareInte
             }
         }
         if (! $grantAccess) {
-            return $this->redirect('/_403_error', false);
+            return $this->redirect('/_restrict', false);
         }
         return $next->handle($request);
     }
 
-    // private function menuItem(Users|null $user) : array
+    // private function menuItem(User|null $user) : array
     // {
     //     $menuItems = json_decode(file_get_contents(FileManager::get(APP, 'menu_acl.json')), true);
     //     $menuItems = $this->verifyAccount($menuItems, $user);

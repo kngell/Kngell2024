@@ -6,7 +6,7 @@ $this->start('head'); ?>
 <?php $this->start('body'); ?>
 <main id="main-site">
    <!-- Content -->
-   <div class='container mb-3 w-50'>
+   <div class='container'>
       <h1>Products</h1>
       <h5>Total Product : <?= $total?></h5>
       <p><a href="/products/new">New Product</a></p>

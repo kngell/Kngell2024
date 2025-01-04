@@ -6,7 +6,6 @@ use Ramsey\Collection\Exception\InvalidPropertyOrMethod;
 
 class RouteMatcher
 {
-    private const array MIDDLEWARE = ['grantAccess']; //'grantAccess'
     private array $routes;
     private string $controllerSuffix = 'Controller';
 
@@ -35,25 +34,12 @@ class RouteMatcher
                 return $this->routeInfo(
                     $route,
                     $pattern,
-                    $this->addMiddleware('crsfToken', $matches),
+                    $matches,
                     $request
                 );
             }
         }
         return null;
-    }
-
-    private function addMiddleware(string $middleware, array $matches) : array
-    {
-        foreach (self::MIDDLEWARE as $key => $middleware) {
-            $end = $key === array_key_last(self::MIDDLEWARE) ? '' : '|';
-            if (array_key_exists('middleware', $matches)) {
-                $matches['middleware'] = $middleware . '|' . $matches['middleware'] . $end;
-            } else {
-                $matches['middleware'] = $middleware . $end;
-            }
-        }
-        return $matches;
     }
 
     private function routeInfo(string $path, string $pattern, array $matches, Request $request) : RouteInfo

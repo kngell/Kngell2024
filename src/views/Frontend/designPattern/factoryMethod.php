@@ -5,11 +5,12 @@ $this->start('head'); ?>
 <?php $this->end(); ?>
 <?php $this->start('body'); ?>
 <main id="main-site">
-   <!-- Content -->
-   <p><?=$client1?></p>
-   <p><?=$client2?></p>
-   <!-- Fin Content -->
-
+   <div class="container">
+      <!-- Content -->
+      <p><?=$client1?></p>
+      <p><?=$client2?></p>
+      <!-- Fin Content -->
+   </div>
 </main>
 <?php $this->end(); ?>
 <?php $this->start('footer') ?>

@@ -60,11 +60,13 @@ abstract class AbstractHtmlComponent
 
     public function formErrors(array $formErrors): self
     {
+        $this->formErrors = $formErrors;
         return $this;
     }
 
     public function formValues(array $formValues): self
     {
+        $this->formValues = $formValues;
         return $this;
     }
 
@@ -73,9 +75,14 @@ abstract class AbstractHtmlComponent
     public function getTagAttribute(string $key, string|array $value) : string
     {
         return match (true) {
-            is_string($value) => " $key='" . $value . "'",
+            $key === 'action' => ' ' . $key . '="/' . $value . '"',
+            $key === 'acceptCharset' => ' accept-charset="' . $value . '"',
+            is_bool($value) => $value,
             is_array($value) && $key === 'style' => " $key='" . implode('; ', $value) . "'",
             is_array($value) => " $key='" . implode(' ', $value) . "'",
+
+            is_string($value) => " $key='" . $value . "'",
+            default => $key . '="' . $value . '"',
         };
     }
 

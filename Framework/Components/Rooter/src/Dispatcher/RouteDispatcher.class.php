@@ -8,6 +8,8 @@ use JMS\Serializer\Exception\UnsupportedFormatException;
 
 readonly class RouteDispatcher
 {
+    private const array GLOBAL_MIDDLEWARES = ['return_to', 'grantAccess']; //'return_to',
+
     public function __construct(
         private RouteArgumentGenerator $routeArgumentGenerator,
         private array $middlewares
@@ -59,10 +61,8 @@ readonly class RouteDispatcher
      */
     private function middlewares(RouteInfo $route, App $app) : array
     {
-        if (! array_key_exists('middleware', $route->getRouteParams())) {
-            return [];
-        }
-        $middlewares = explode('|', $route->getRouteParams()['middleware']);
+        $middlewares = $this->addMiddleware($route->getRouteParams());
+        $middlewares = explode('|', $middlewares);
         array_walk($middlewares, function (&$value) use ($app, $route) {
             if (! array_key_exists($value, $this->middlewares)) {
                 throw new UnexpectedValueException("Middleware $value not found in the configuration route settings");
@@ -74,6 +74,18 @@ readonly class RouteDispatcher
             }
         });
         return $middlewares;
+    }
+
+    private function addMiddleware(array $matches) : string
+    {
+        if (isset($matches['middleware'])) {
+            $middlewares = explode('|', $matches['middleware']);
+        }
+        $middlewares = array_merge(self::GLOBAL_MIDDLEWARES, $middlewares ?? []);
+        if (! empty($middlewares)) {
+            return implode('|', $middlewares);
+        }
+        return [];
     }
 
     /**
@@ -96,7 +108,8 @@ readonly class RouteDispatcher
             ->setresponse($app->getResponse())
             ->setToken($app->get(TokenInterface::class))
             ->setFlash($app->get(FlashInterface::class))
-            ->setSession($app->getSession());
+            ->setSession($app->getSession())
+            ->setEventManager($app->get(EventManagerInterface::class));
     }
 
     private function controlllerPath(string $path) : string

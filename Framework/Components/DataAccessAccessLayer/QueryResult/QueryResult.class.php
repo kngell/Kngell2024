@@ -54,7 +54,7 @@ class QueryResult
 
     public function rowCount() : int
     {
-        return $this->_query->rowCount();
+        return $this->rowCount = $this->_query->rowCount();
     }
 
     public function getQueryResult(): bool

@@ -15,6 +15,14 @@ trait ControllerGettersAndSetters
     }
 
     /**
+     * @return Request
+     */
+    public function getRequest(): Request
+    {
+        return $this->request;
+    }
+
+    /**
      * @param ViewInterface $view
      * @return Controller
      */
@@ -62,6 +70,16 @@ trait ControllerGettersAndSetters
     public function setSession(SessionInterface $session): self
     {
         $this->session = $session;
+        return $this;
+    }
+
+    /**
+     * @param EventManagerInterface $eventManager
+     * @return Controller
+     */
+    public function setEventManager(EventManagerInterface $eventManager): self
+    {
+        $this->eventManager = $eventManager;
         return $this;
     }
 }

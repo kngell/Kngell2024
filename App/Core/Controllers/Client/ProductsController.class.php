@@ -47,10 +47,9 @@ class ProductsController extends Controller
 
     public function new() : string
     {
-        $session = $this->token->getSession();
-        if ($session->exists('form')) {
-            $form = $session->get(('form'));
-            $session->delete('form');
+        if ($this->session->exists('form')) {
+            $form = $this->session->get(('form'));
+            $this->session->delete('form');
         }
         $form = $form ?? $this->frm->make('products/create');
         return $this->render('new', ['insertFrom' => $form]);
@@ -60,7 +59,7 @@ class ProductsController extends Controller
     {
         $data = $this->request->getPost()->getAll();
         $validator = new Validator($data, 'productFormRules');
-        $errors = $validator->validate();
+        $errors = $validator->validate($data, 'products');
         if (! empty($errors)) {
             $form = $this->frm->make("products/update/{$id}", $data, $errors);
             return $this->edit($id, $form);
@@ -75,12 +74,11 @@ class ProductsController extends Controller
     {
         $data = $this->request->getPost()->getAll();
         $validator = new Validator($data, 'productFormRules');
-        $results = $validator->validate();
-        $session = $this->token->getSession();
+        $results = $validator->validate($data, 'products');
         if (! empty($results)) {
             $form = $this->frm->make('products/create', [], $results);
-            if (! $session->exists('form')) {
-                $session->set('form', $form);
+            if (! $this->session->exists('form')) {
+                $this->session->set('form', $form);
             }
             return $this->redirect('/products/new');
         }

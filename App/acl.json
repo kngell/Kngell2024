@@ -8,14 +8,17 @@
     "ErrorsController": ["*"],
     "LoginController": ["*"],
     "PostController": ["index", "show"],
-    "SignupController": ["*"]
+    "SignupController": ["*"],
+    "ForgotPasswordController": ["*"],
+    "AccountController": ["*"]
   },
   "LoggedIn": {
     "denied": {
       "LoginController": ["*"],
       "SignupController": ["*"]
     },
-    "PostController": ["*"]
+    "PostController": ["*"],
+    "ProfileController": ["*"]
   },
   "admin": {
     "denied": {}

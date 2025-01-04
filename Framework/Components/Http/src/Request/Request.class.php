@@ -5,7 +5,7 @@ declare(strict_types=1);
 readonly class Request
 {
     protected HeaderMap $headers;
-    protected CustomHttpMap $query;
+    protected QueryHttpMap $query;
     protected CustomHttpMap $post;
     protected CustomHttpMap $server;
     protected CookiesMap $cookies;
@@ -19,7 +19,7 @@ readonly class Request
     public function __construct(SuperGlobalsInterface $superGlobals)
     {
         $this->server = new CustomHttpMap($superGlobals->server());
-        $this->query = new CustomHttpMap($superGlobals->get());
+        $this->query = new QueryHttpMap($superGlobals->get());
         $this->post = new CustomHttpMap($superGlobals->post());
         $this->cookies = CookiesMap::createFromCookieGlobals($superGlobals->cookies());
         $this->headers = HeaderMap::createFromServerGlobals($superGlobals->server());
@@ -87,7 +87,7 @@ readonly class Request
         return $this->headers;
     }
 
-    public function getQuery(): CustomHttpMap
+    public function getQuery(): QueryHttpMap
     {
         return $this->query;
     }

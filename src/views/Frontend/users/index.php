@@ -6,7 +6,7 @@ $this->start('head'); ?>
 <?php $this->start('body'); ?>
 <main id="main-site">
    <!-- Content -->
-   <div class="container justify-content-center align-items-center">
+   <div class="container">
       <div class="row">
          <div class="col-lg-6 offset-md-3">
 

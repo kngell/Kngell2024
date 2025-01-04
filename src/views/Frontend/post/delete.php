@@ -7,7 +7,7 @@ $this->start('head'); ?>
 <main id="main-site">
    <!-- Content -->
 
-   <div class='container mb-3 w-50'>
+   <div class='container'>
       <h1>Delete Post</h1>
       <?=$deleteForm?>
       <p><a href="/post/<?=$id?>/show">Cancel</a></p>

@@ -34,12 +34,12 @@ class Token extends RandomStringGenerator implements TokenInterface
         return $token;
     }
 
-    public function validate(string $token = '', string $frm = '') : bool
+    public function validate(array $data) : bool
     {
         $separator = ! empty($frm) ? $frm : '|';
-        $part = explode($separator, $this->urlSafeDecode($token));
+        $part = explode($separator, $this->urlSafeDecode($data['csrfToken'] ?? ''));
         if (count($part) === 3) {
-            $hash = hash_hmac('sha256', session_id() . $part[1] . $part[2] . $frm, CSRF_TOKEN_SECRET, true);
+            $hash = hash_hmac('sha256', session_id() . $part[1] . $part[2] . ($data['frm_name'] ?? ''), CSRF_TOKEN_SECRET, true);
             if (hash_equals($hash, $part[0])) {
                 $this->tokenHash = $hash;
                 return true;

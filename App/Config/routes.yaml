@@ -32,19 +32,20 @@
 /_500_error:
   controller: errors
   method: e_500
-/_403_error:
+/_restrict:
   controller: errors
-  method: e_403
+  method: restrict-access
 /login:
   controller: login
   method: index
   httpMethod: get
+  middleware: remember
 /signup:
   controller: signup
   method: index
   httpMethod: get
 /register:
-  controller: singup
+  controller: signup
   method: register
   httpMethod: post
 /auth-user:
@@ -59,6 +60,30 @@
   controller: logout
   method: index
   httpMethod: get
+/forgot:
+  controller: forgot-password
+  method: index
+  httpMethod: get
+/password/reset/{token}:
+  controller: forgot-password
+  method: reset
+  httpMethod: get
+/signup/activate/{token}:
+  controller: signup
+  method: activate
+  httpMethod: get
+/reset-pw:
+  controller: forgot-password
+  method: reset-password
+  httpMethod: post
+/forgot-pw:
+  controller: forgot-password
+  method: process-forgot-password
+  httpMethod: post
+/save-profile:
+  controller: profile
+  method: update
+  httpMethod: post
 /_dev_error:
   controller: errors
   method: index
@@ -66,10 +91,8 @@
   method: new
 /{controller}/show/{id:\d+}:
   method: show
-  middleware: message|message
 /{controller}/{id:\d+}/show:
   method: show
-  middleware: message|message
 /{controller}/create:
   method: create
   middleware: trim|user

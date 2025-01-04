@@ -2,8 +2,10 @@
 
 declare(strict_types=1);
 
-class ButtonElement extends AbstractFormDataElement
+class ButtonElement extends AbstractHtmlElement
 {
+    private string $name;
+    private string $value;
     private string $type;
     private bool $autofocus;
     private string $command;
@@ -17,35 +19,35 @@ class ButtonElement extends AbstractFormDataElement
     private string $formtarget;
     private string $popovertarget;
     private string $popovertargetaction;
-    private string $content;
 
     public function __construct(string $type = '')
     {
         $this->type = $type;
+        $this->tag = 'button';
         parent::__construct();
     }
 
-    public function generate(): string
-    {
-        $button = '<button';
-        foreach ($this as $key => $value) {
-            if (in_array($key, ['content', 'tag', 'formErrors', 'formValues']) || is_object($value)) {
-                continue;
-            }
-            if (in_array(gettype($value), ['string', 'bool', 'boolean', 'array'])) {
-                $button .= $this->formElementAttribute($key, $value);
-            }
-        }
-        $button .= '>' . ($this->content ?? '');
-        $results = [];
-        /** @var AbstractHtmlComponent $child */
-        foreach ($this->children as $child) {
-            $child->formErrors($this->formErrors);
-            $child->formValues($this->formValues);
-            $results[] = $child->generate();
-        }
-        return $button . implode(' ', $results) . '</button>';
-    }
+    // public function generate(): string
+    // {
+    //     $button = '<button';
+    //     foreach ($this as $key => $value) {
+    //         if (in_array($key, ['content', 'tag', 'formErrors', 'formValues']) || is_object($value)) {
+    //             continue;
+    //         }
+    //         if (in_array(gettype($value), ['string', 'bool', 'boolean', 'array'])) {
+    //             $button .= $this->formElementAttribute($key, $value);
+    //         }
+    //     }
+    //     $button .= '>' . ($this->content ?? '');
+    //     $results = [];
+    //     /** @var AbstractHtmlComponent $child */
+    //     foreach ($this->children as $child) {
+    //         $child->formErrors($this->formErrors);
+    //         $child->formValues($this->formValues);
+    //         $results[] = $child->generate();
+    //     }
+    //     return $button . implode(' ', $results) . '</button>';
+    // }
 
     public function custom(array $custom): self
     {

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 class SignupController extends Controller
 {
-    public function __construct(private UsersModel $user, private UserFormCreator $frm, private Validator $validator, private HashInterface $hash)
+    public function __construct(private UserModel $user, private UserFormCreator $frm, private Validator $validator, private HashInterface $hash)
     {
     }
 
@@ -17,7 +17,13 @@ class SignupController extends Controller
         } else {
             $form = $this->frm->make('register');
         }
-        return $this->render('index', ['authForm' => $form, 'message' => $this->flash->get()]);
+        return $this->render('index', ['authForm' => $form]);
+    }
+
+    public function successSingup() : string
+    {
+        $this->pageTitle('Register');
+        return $this->render('success');
     }
 
     public function register() : Response
@@ -33,13 +39,43 @@ class SignupController extends Controller
             return $this->redirect(DS . 'signup');
         }
         $data['password'] = $this->hash->password($data['password']);
-        $result = $this->user->save($data);
+        $result = $this->user->saveRegisteredUser($data, $this->token);
         if ($result->getQueryResult() && $result->getLastInsertId()) {
             $logIn = "<a href='/login'> Log In</a>";
             $this->flash->add('Congratulations!!! You have been registerd successfully. you can now ' . $logIn);
-            return $this->redirect(DS . 'signup');
+            $res = $this->notifyEmail($data);
+            return $this->redirect(DS . 'signup' . DS . 'success-singup');
         }
         $this->flash->add('An error occures when saving data. Please try again', FlashType::DANGER);
         return $this->redirect(DS . 'signup');
+    }
+
+    public function activate(string $token) : Response
+    {
+        $result = $this->user->activateAccount($token);
+        if ($result) {
+            return $this->redirect('/signup/account-activated');
+        }
+    }
+
+    public function accountActivated() : string
+    {
+        $this->pageTitle('Account activated');
+        return $this->render('activated');
+    }
+
+    private function notifyEmail(array $params) : ?object
+    {
+        $this->setLayout('email');
+        $host = $this->request->getServer()->get('http_host');
+        $url = 'https://' . $host . '/signup/activate/' . $this->token->getValue();
+        $html = $this->render('activation_email', ['url' => $url]);
+        return $this->eventManager->notify(new RegisterEvent(
+            [
+                'email' => $params['email'],
+                'html' => $html,
+                'subject' => 'Account activation',
+            ]
+        ), $this);
     }
 }

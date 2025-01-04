@@ -5,10 +5,12 @@ $this->start('head'); ?>
 <?php $this->end(); ?>
 <?php $this->start('body'); ?>
 <main id="main-site">
-   <!-- Content -->
-   <?=$product1?>
-   <?=$product2?>
-   <?=$memory?>
+   <div class="container">
+      <!-- Content -->
+      <?=$product1?>
+      <?=$product2?>
+      <?=$memory?>
+   </div>
    <?php foreach ($vehicules as $vehicule) :?>
    <p><?= $vehicule->afficheCaracteristiques(); ?></p>
    <?php endforeach; ?>

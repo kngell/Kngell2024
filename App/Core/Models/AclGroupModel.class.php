@@ -9,7 +9,7 @@ class AclGroupModel extends Model
         parent::__construct($em);
     }
 
-    public function acl(Users $user) : array
+    public function acl(User $user) : array
     {
         $aclGroup = $this->getUserAclGroup($user);
         $response = [];
@@ -19,7 +19,7 @@ class AclGroupModel extends Model
         return $response;
     }
 
-    private function getUserAclGroup(Users $user) : array|null
+    private function getUserAclGroup(User $user) : array
     {
         $this->entityManager->createQueryBuilder()->select()
             ->innerjoin('acl_user_group', ['user_id', 'group_id'])
@@ -30,6 +30,6 @@ class AclGroupModel extends Model
         if ($result->getQueryResult() && $result->rowCount() > 0) {
             return $result->getResults('object')->all();
         }
-        return null;
+        return [];
     }
 }

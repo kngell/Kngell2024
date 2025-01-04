@@ -2,7 +2,8 @@
   "Home": "/",
   "Posts": "/post/index",
   "Account": {
-    "Mon compte": "",
+    "My Account": "",
+    "Profile": "/profile/show",
     "Espace admin": "",
     "separator": "",
     "Verifiez votre Email": "",

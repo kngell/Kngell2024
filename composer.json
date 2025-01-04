@@ -14,7 +14,9 @@
     "jms/serializer": "^3.30",
     "ramsey/uuid": "^4.7",
     "symfony/cache": "^7.2",
-    "brick/money": "dev-master"
+    "brick/money": "dev-master",
+    "phpmailer/phpmailer": "dev-master",
+    "symfony/dotenv": "7.3.x-dev"
   },
   "require-dev": {
     "symfony/var-dumper": "^7.1",

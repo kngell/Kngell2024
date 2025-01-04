@@ -125,10 +125,8 @@ class SessionEnvironment
             'session.cookie_lifetime',
             'session.use_cookies',
             'session.cookie_secure',
-            'session.gc_divisor',
             'session.cookie_httponly',
             'session.cookie_samesite',
-            'session.save_handler',
             'session.use_only_cookies',
             'session.save_path',
         ];

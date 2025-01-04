@@ -5,7 +5,7 @@ declare(strict_types=1);
 class HtmlTagElement extends AbstractHtmlComponent
 {
     private string $tag;
-    private string $content;
+    private ?string $content;
 
     public function __construct(string $tag)
     {
@@ -31,10 +31,10 @@ class HtmlTagElement extends AbstractHtmlComponent
     }
 
     /**
-     * @param string $content
+     * @param string|null $content
      * @return HtmlTagElement
      */
-    public function content(string $content) : self
+    public function content(?string $content) : self
     {
         $this->content = $content;
         return $this;

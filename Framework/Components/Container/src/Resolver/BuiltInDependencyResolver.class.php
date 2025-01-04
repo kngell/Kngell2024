@@ -24,16 +24,15 @@ class BuiltInDependencyResolver implements DependenciesResolverInterface
         $variatic = $this->parameter->isVariadic();
         $attr = $this->parameter->getAttributes();
         if (empty($args)) {
-            return match (true) {
-                $this->parameter->allowsNull() => null,
-                ($default || $optional) && ! array_key_exists($name, $args) => $this->parameter->getDefaultValue(),
-                $namedType === 'string' => '',
-                default => throw new DependencyHasNoValueException('Could not resolve class dependency ' . $this->parameter->name)
-            };
+            return $this->matchValue($type, $args);
+        }
+        if ($args instanceof Closure) {
+            return $args->__invoke();
         }
         if (isset($args[$position]) && $args[$position] instanceof Closure) {
             return $args[$position]->__invoke();
         }
+
         if (is_array($args)) {
             $parametersTypes = $this->getClassConstructorParametersTypes();
             if (array_key_exists($name, $args)) {
@@ -43,13 +42,26 @@ class BuiltInDependencyResolver implements DependenciesResolverInterface
             } else {
                 if (count($parametersTypes) === 1 && $position === 0) {
                     return $args;
+                }
+                if (! isset($args[$position])) {
+                    return $this->matchValue($type, $args);
                 } else {
-                    return isset($args[$position]) ? $args[$position] : false;
+                    return isset($args[$position]) ? $args[$position] : [];
                 }
             }
         } else {
             return $args;
         }
+    }
+
+    private function matchValue(ReflectionNamedType $type, array $args) : mixed
+    {
+        return match (true) {
+            $this->parameter->allowsNull() => null,
+            ($this->parameter->isDefaultValueAvailable() || $this->parameter->isOptional()) && ! array_key_exists($this->parameter->getName(), $args) => $this->parameter->getDefaultValue(),
+            $type->getName() === 'string' => '',
+            default => throw new DependencyHasNoValueException('Could not resolve class dependency ' . $this->parameter->name)
+        };
     }
 
     private function getClassConstructorParametersTypes() : array

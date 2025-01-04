@@ -44,14 +44,14 @@ theme_builder:
 #=============================================================================
 session:
   session_name: "kngellSession"
-  idle_time: 600 # 10min idle
+  # idle_time: 600 # 10min idle
   cookie_lifetime: 0 #1600 session expires in 10min if left idle
   path: /
   domain: "localhost"
-  cookie_secure: On
-  cookie_httponly: On
-  cookie_samesite: lax
-  gc_maxlifetime: 1
+  cookie_secure: "0"
+  cookie_httponly: "0"
+  cookie_samesite:
+  gc_maxlifetime: 0
   gc_probability: 1
   gc_divisor: 100
   use_cookies: 1

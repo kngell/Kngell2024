@@ -20,7 +20,7 @@ final readonly class ContainerClassRegistrator
 
     private static function registerClass(string $abstract, mixed $concrete, string $function, App $app) : void
     {
-        if (is_array($concrete)) {
+        if (is_array($concrete) || $concrete instanceof Closure) {
             list($class, $args) = self::params($concrete, $abstract);
             $app->$function($abstract, $class, false, $args);
         } else {
@@ -28,8 +28,11 @@ final readonly class ContainerClassRegistrator
         }
     }
 
-    private static function params(array $concrete, string $abstract)
+    private static function params(array|Closure $concrete, string $abstract)
     {
+        if ($concrete instanceof Closure) {
+            return [$abstract, $concrete];
+        }
         if (count($concrete) === 1) {
             return [$abstract, $concrete[0]];
         }
@@ -46,6 +49,8 @@ final readonly class ContainerClassRegistrator
     private static function bindClasses() : array
     {
         return [
+            MailerInterface::class => Mailer::class,
+            EventManagerInterface::class => EventManager::class,
             MenuItemInterface::class => MenuItem::class,
             EntityManagerInterface::class => EntityManager::class,
             AbstractFactory::class => ConcreteFactory1::class,
@@ -64,6 +69,10 @@ final readonly class ContainerClassRegistrator
                 return YamlFile::get('database');
             }, 'mysql',
             ],
+            ListenerProviderInterface::class => [ListenerProvider::class, YamlFile::get('eventListener')],
+            MailerFacade::class => function () {
+                return YamlFile::get('email_settings');
+            },
 
         ];
     }
@@ -71,8 +80,9 @@ final readonly class ContainerClassRegistrator
     private static function singletonClasses(App $app) : array
     {
         return [
+            ValidatorInterface::class => Validator::class,
             DatabaseConnexionInterface::class => PDOConnexion::class,
-            UsersModel::class => UsersModel::class,
+            UserModel::class => UserModel::class,
             FlashInterface::class => Flash::class,
             TokenInterface::class => Token::class,
             ViewInterface::class => View::class,

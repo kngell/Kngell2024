@@ -1,0 +1,6 @@
+email:
+  display: Email
+  required: true
+  min: 4
+  max: 255
+  valid_email: true

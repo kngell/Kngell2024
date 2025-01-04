@@ -25,11 +25,13 @@ readonly class Assets
         return '';
     }
 
-    public function getJs(string $path) : string
+    public function getJs(string|null $path) : string
     {
-        $file = $this->getAssets($path, 'js');
-        if (! empty($file)) {
-            return str_replace('{{jsFile}}', $file, $this->jsTemplate);
+        if ($path !== null) {
+            $file = $this->getAssets($path, 'js');
+            if (! empty($file)) {
+                return str_replace('{{jsFile}}', $file, $this->jsTemplate);
+            }
         }
         return '';
     }

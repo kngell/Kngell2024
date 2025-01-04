@@ -57,7 +57,6 @@ class Authentication {
       },
     });
     const password = plugin.form.find("#password");
-    console.log(password);
     password.hideShowPassword({
       show: false,
       innerToggle: "focus",

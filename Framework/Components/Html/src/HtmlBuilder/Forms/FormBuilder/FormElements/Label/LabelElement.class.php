@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 class LabelElement extends AbstractHtmlElement
 {
-    protected string|null $content;
     protected string $for;
     protected string $formId;
 
@@ -12,6 +11,7 @@ class LabelElement extends AbstractHtmlElement
     {
         parent::__construct();
         $this->content = $content;
+        $this->tag = 'label';
     }
 
     // public function generate(): string

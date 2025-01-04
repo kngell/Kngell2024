@@ -3,7 +3,7 @@
 declare(strict_types=1);
 class AccountController extends Controller
 {
-    public function __construct(private UsersModel $user)
+    public function __construct(private UserModel $user)
     {
     }
 

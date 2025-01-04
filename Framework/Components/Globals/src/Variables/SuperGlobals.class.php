@@ -13,7 +13,7 @@ class SuperGlobals implements SuperGlobalsInterface
 
     public function __construct()
     {
-        $this->__get = filter_input_array(INPUT_GET, FILTER_SANITIZE_SPECIAL_CHARS) ?? [];
+        $this->__get = filter_input_array(INPUT_GET, FILTER_SANITIZE_URL) ?? [];
         $this->__post = filter_input_array(INPUT_POST, FILTER_SANITIZE_FULL_SPECIAL_CHARS) ?? [];
         $this->__cookies = filter_input_array(INPUT_COOKIE, FILTER_SANITIZE_SPECIAL_CHARS) ?? [];
         $this->__server = $_SERVER; //filter_input_array(INPUT_SERVER, FILTER_DEFAULT) ?? [];

@@ -12,7 +12,7 @@ class HtmlaElement extends AbstractHtmlComponent
     private string $rel;
     private string $target;
     private string $type;
-    private string $content;
+    private ?string $content;
 
     public function generate(): string
     {

@@ -24,10 +24,10 @@ class ErrorsController extends Controller
         return $this->render('404');
     }
 
-    public function e403() : string
+    public function restrictAccess() : string
     {
         $this->pageTitle('Errors');
         $this->setLayout('default');
-        return $this->render('403');
+        return $this->render('restricted');
     }
 }

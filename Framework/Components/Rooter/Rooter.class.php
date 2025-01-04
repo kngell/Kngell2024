@@ -23,13 +23,10 @@ class Rooter implements RooterInterface
         if ($route === null) {
             throw new PageNotFoundException("Page not Found with method {$request->getServer()->get('request_method')}");
         }
-
         $results = $this->routeDispatcher->dispatch($route, $url, $app, $params, $request);
-
         if (! empty($params) && array_key_exists('code', $params)) {
             $responseStatus = $this->getResponseStatus($params);
         }
-
         if ($results instanceof Response) {
             return $results;
         }

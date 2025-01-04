@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-interface EventListenerInterface
+interface EventListenerInterface_old
 {
     public function listenEvent(Event $event) : void;
 

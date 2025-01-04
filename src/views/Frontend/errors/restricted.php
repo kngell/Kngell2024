@@ -6,15 +6,18 @@ $this->start('head'); ?>
 <?php $this->start('body'); ?>
 <main id="main-site">
    <!-- Content -->
-   <h1>Page not found</h1>
-   <section id="notfound">
+   <section class="container" id="notfound">
       <div class="notfound">
-         <div class="notfound-404">
-            <h1>403</h1>
+         <div class="notfound-restricted">
+            <h3>Oops! Access restricted</h3>
          </div>
-         <h2>Oops! Access restricted</h2>
-         <p>You do not have access to this page. Please contact your admin</p>
-         <a href="/">Go To Homepage</a>
+         <h6>You do not have permissions to access to this page.<br> Please contact your admin(admin@kngell.com), <br>
+            <hr>Or <a href="/login">Log In
+            </a>
+            <hr>
+            Or
+            <a href="/"> Return to the homepage</a>
+         </h6>
       </div>
    </section>
    <!-- Fin Content -->

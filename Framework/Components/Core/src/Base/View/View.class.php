@@ -75,7 +75,7 @@ class View implements ViewInterface
         return $this->viewEnv->getCss($path);
     }
 
-    private function js(string $path) : string
+    private function js(string|null $path = null) : string
     {
         return $this->viewEnv->getJs($path);
     }

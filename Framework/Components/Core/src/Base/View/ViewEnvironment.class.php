@@ -36,7 +36,7 @@ class ViewEnvironment
         return $this->assets->getCss($path);
     }
 
-    public function getJs(string $path) : string
+    public function getJs(string|null $path) : string
     {
         return $this->assets->getJs($path);
     }

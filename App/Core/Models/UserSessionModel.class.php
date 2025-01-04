@@ -4,34 +4,40 @@ declare(strict_types=1);
 
 class UserSessionModel extends Model
 {
-    public function __construct(EntityManagerInterface $em, private TokenInterface $token, private SessionInterface $session)
+    public function __construct(EntityManagerInterface $em, private TokenInterface $token, private SessionInterface $session, private CookieInterface $cookie)
     {
         parent::__construct($em);
     }
 
-    public function rememberLogin(Users $user, CookieInterface $cookie) : array
+    public function rememberLogin(User $user) : array
     {
+        /** @var QueryResult */
         $result = $this->save([
             'token_hash' => $this->token->getRememberHash(),
             'user_id' => $user->getUserId(),
-            'expires_at' => date('Y-m-d H:i:s', $cookie->getExpiry()),
+            'expires_at' => date('Y-m-d H:i:s', $this->cookie->getExpiry()),
             'user_agent' => $this->session->uagent_no_version(),
         ]);
         return [$result, $this->token->getValue()];
     }
 
-    public function getByHash(string $hash) : Users|bool
+    public function getByHash(string $hash) : array|bool
     {
         $this->entityManager->createQueryBuilder()->select()
-            ->from('users')
-            ->innerJoin('user_session')
-            ->on('users.user_id', 'user_session.user_id')
+            ->innerJoin('user', '*')
+            ->on('user.user_id', 'user_session.user_id')
             ->where('user_session.token_hash', $hash)
             ->build();
         $qr = $this->entityManager->persist()->getResults();
         if ($qr->getQueryResult() && $qr->count() === 0) {
             return false;
         }
-        return $qr->getResults('class', 'Users')->single();
+        $results = $qr->getResults()->first();
+        return[(new User)->assign($results),  $this->hasExprired((new UserSession)->assign($results))];
+    }
+
+    public function hasExprired(UserSession $userSession) : bool
+    {
+        return strtotime($userSession->getExpiresAt()) < time();
     }
 }

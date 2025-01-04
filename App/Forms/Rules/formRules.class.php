@@ -52,7 +52,7 @@ class FormRules
         ];
     }
 
-    //Users datas
+    //User datas
     public static function users(bool $table_users = true)
     {
         return [

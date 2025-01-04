@@ -4,25 +4,10 @@ declare(strict_types=1);
 
 class HtmlBuilder extends AbstractHtmlElement
 {
-    protected string $content;
-    protected string $tag;
-
     public function __construct(TokenInterface $token, string $tag = '')
     {
         $this->tag = $tag;
         parent::__construct($token);
-    }
-
-    public function generate(): string
-    {
-        $results = [];
-        /** @var AbstractHtmlComponent $child */
-        foreach ($this->children as $child) {
-            $child->formErrors($this->formErrors);
-            $child->formValues($this->formValues);
-            $results[] = $child->generate();
-        }
-        return $this->begin() . implode(' ', $results) . $this->end();
     }
 
     public function form() : FormBuilder
@@ -33,9 +18,9 @@ class HtmlBuilder extends AbstractHtmlElement
     public function tag(string $tag) : self|HtmlaElement|HtmlTagElement
     {
         return match (true) {
-            in_array($tag, ['div', 'section', 'body', 'nav', 'ul', 'li']) => new self($this->token, $tag),
+            in_array($tag, ['div', 'section', 'body', 'nav', 'ul', 'li', 'dl']) => new self($this->token, $tag),
             $tag === 'a' => new HtmlaElement(),
-            in_array($tag, ['p', 'span']) || preg_match('~[0-9]+~', $tag) => new HtmlTagElement($tag),
+            in_array($tag, ['p', 'span', 'dd', 'dt']) || preg_match('~[0-9]+~', $tag) => new HtmlTagElement($tag),
         };
     }
 
@@ -76,10 +61,6 @@ class HtmlBuilder extends AbstractHtmlElement
         return $this;
     }
 
-    /**
-     * @param array $class
-     * @return HtmlDivElement
-     */
     public function class(array $class): self
     {
         $this->class = $class;
@@ -258,34 +239,5 @@ class HtmlBuilder extends AbstractHtmlElement
     {
         $this->translate = $translate;
         return $this;
-    }
-
-    private function begin() : string
-    {
-        $tag = '<' . $this->tag;
-        foreach ($this as $key => $value) {
-            if (in_array($key, ['content', 'tag', 'formErrors', 'formValues']) || is_object($value)) {
-                continue;
-            }
-            if (in_array(gettype($value), ['string', 'array'])) {
-                $tag .= $this->getTagAttribute($key, $value);
-            }
-        }
-        $tag .= '>';
-        if (isset($this->content)) {
-            $tag .= $this->content;
-        }
-        return $tag;
-    }
-
-    private function end() : string
-    {
-        return match ($this->tag) {
-            'div' => '</div>',
-            'section' => '</section>',
-            'nav' => '</nav>',
-            'ul' => '</ul>',
-            'li' => '</li>'
-        };
     }
 }

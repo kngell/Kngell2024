@@ -6,7 +6,7 @@ class NavbarHtmlElement extends AbstractNavbarHtmlElement
 {
     private array $menuItems;
 
-    public function __construct(private HtmlBuilder $builder, private UsersModel $users, private SessionInterface $session)
+    public function __construct(private HtmlBuilder $builder, private UserModel $user, private SessionInterface $session)
     {
         $this->menuItems = json_decode(file_get_contents(FileManager::get(APP, 'menu_acl.json')), true);
     }
@@ -19,7 +19,7 @@ class NavbarHtmlElement extends AbstractNavbarHtmlElement
             $nav->tag('nav')->class(self::NAVBAR_CLASS)
                 ->style(self::NAVBAR_STYLE)->add(
                     $nav->tag('div')->class(['container-fluid'])->add(
-                        $nav->tag('a')->class(['navbar-brand'])->href('#')->content('k\'nGELL'),
+                        $nav->tag('a')->class(['navbar-brand'])->href('/')->content('k\'nGELL'),
                         $nav->button('button')->class(['navbar-toggler'])->custom(self::BTN_CUSTOM)->add(
                             $nav->tag('span')->class(['navbar-toggler-icon'])
                         ),
@@ -33,10 +33,10 @@ class NavbarHtmlElement extends AbstractNavbarHtmlElement
 
     /**
      * @param array $menuItems
-     * @param Users|null $user
+     * @param User|null $user
      * @return AbstractHtmlComponent[]
      */
-    private function getNavElements(Users|null $user) : array
+    private function getNavElements(User|null $user) : array
     {
         $ulElements = [];
         $html = $this->builder;
@@ -61,7 +61,7 @@ class NavbarHtmlElement extends AbstractNavbarHtmlElement
      * @param array $acountMenuElements
      * @return AbstractHtmlComponent[]
      */
-    private function accountElements(Users|null $user, array $accountElements) : array
+    private function accountElements(User|null $user, array $accountElements) : array
     {
         $accountElts = [];
         $accountElements = $this->getAccountElements($user, $accountElements);
@@ -71,7 +71,7 @@ class NavbarHtmlElement extends AbstractNavbarHtmlElement
         return $accountElts;
     }
 
-    private function getAccountElements(Users|null $user = null, array $accountElements) : array
+    private function getAccountElements(User|null $user = null, array $accountElements) : array
     {
         if (! AuthService::getInstance()->isUserLoggedIn()) {
             return [

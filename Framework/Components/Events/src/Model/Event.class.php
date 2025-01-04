@@ -1,7 +1,7 @@
 <?php
 
 declare(strict_types=1);
-readonly class Event
+readonly class Event_old
 {
     private string $id;
     private array $metaData;

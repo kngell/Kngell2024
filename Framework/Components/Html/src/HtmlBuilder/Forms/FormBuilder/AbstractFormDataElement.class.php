@@ -7,11 +7,6 @@ abstract class AbstractFormDataElement extends AbstractHtmlComponent
     protected string $name;
     protected mixed $value;
 
-    public function __construct()
-    {
-        parent::__construct();
-    }
-
     /**
      * @param string $name
      * @return self

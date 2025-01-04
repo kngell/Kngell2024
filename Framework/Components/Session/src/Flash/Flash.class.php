@@ -86,7 +86,7 @@ class Flash implements FlashInterface
     private function formatMessage(array $flashMsg) : string
     {
         $flashMsg = ArrayUtils::first($flashMsg);
-        $msg = "<div id='message' class='alert alert-" . $flashMsg['type']->value . ' text-center' . "'>";
+        $msg = "<div id='message' class='alert alert-" . $flashMsg['type']->value . ' text-center' . "' role='alert'>";
         $msg .= $flashMsg['message'];
         $msg .= '</div>';
         return $msg;

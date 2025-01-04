@@ -20,7 +20,7 @@ class MenuItem implements MenuItemInterface
         return [];
     }
 
-    private function verifyAccount(array $menuItems, Users|null $user = null) : array
+    private function verifyAccount(array $menuItems, User|null $user = null) : array
     {
         if ($user === null) {
             return $menuItems;

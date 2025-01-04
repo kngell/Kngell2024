@@ -39,7 +39,7 @@ readonly class SignupForm extends AbstractTemplateForm
                 $form->input('password')->name('confirm_password')->id('confirm_password')->class(self::INPUT_CLASS)->placeholder('Confirm Password')->autocomplete('off'),
             ),
             $html->tag('div')->class(self::INPUT_BOX_CLASS)->add(
-                $form->button()->content('Sign Up')->class(['form-control', 'btn', 'btn-secondary'])
+                $form->button()->content('Sign Up')->class(self::BUTTON_CLASS)
             ),
         );
         return $form->generate();

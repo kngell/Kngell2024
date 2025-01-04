@@ -9,6 +9,7 @@ abstract class Controller
     protected TokenInterface $token;
     protected FlashInterface $flash;
     protected SessionInterface $session;
+    protected EventManagerInterface $eventManager;
     private ViewInterface $view;
 
     public function __call($name, $args)
@@ -48,6 +49,27 @@ abstract class Controller
     public function page() : array
     {
         return [];
+    }
+
+    /**
+     * @param EventManagerInterface $eventManager
+     * @return Controller
+     */
+    public function setEventManager(EventManagerInterface $eventManager): self
+    {
+        $this->eventManager = $eventManager;
+        return $this;
+    }
+
+    protected function form(AbstractFormCreator $frm, string $action, array|Entity|bool $formValues = [], array|Entity|bool $formErrors = []) : string
+    {
+        if ($this->session->exists('form')) {
+            $form = $this->session->get('form');
+            $this->session->delete('form');
+        } else {
+            $form = $frm->make($action, $formValues, $formErrors);
+        }
+        return $form;
     }
 
     /**

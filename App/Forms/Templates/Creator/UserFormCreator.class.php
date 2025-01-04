@@ -13,6 +13,9 @@ class UserFormCreator extends AbstractFormCreator
         return match (true) {
             StringUtils::strContainsArrayItem($action, ['auth-user', 'login-from-cookie']) => new LoginForm($this->builder),
             StringUtils::strContainsArrayItem($action, ['register']) => new SignupForm($this->builder),
+            StringUtils::strContainsArrayItem($action, ['forgot-pw']) => new ForgotPwForm($this->builder),
+            StringUtils::strContainsArrayItem($action, ['reset-pw']) => new ResetPwForm($this->builder),
+            StringUtils::strContainsArrayItem($action, ['save-profile']) => new ProfileForm($this->builder),
             default => null,
         };
     }

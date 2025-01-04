@@ -4,43 +4,57 @@ declare(strict_types=1);
 
 abstract class AuthController extends Controller
 {
-    protected SessionInterface $session;
-
-    public function __construct(protected UsersModel $users, protected UserSessionModel $userSession, protected CookieInterface $cookie, protected HashInterface $hash)
+    public function __construct(protected UserModel $user, protected UserSessionModel $userSession, protected CookieInterface $cookie, protected HashInterface $hash)
     {
     }
 
-    protected function authenticate(array $userData) : Users|bool
+    protected function authenticate(array $userData) : User|bool
     {
-        $user = $this->users->getByEmail($userData['email']);
-        if ($user && $this->hash->passwordCheck($userData['password'], $user->getPassword())) {
+        $user = $this->user->getByEmail($userData['email']);
+        if ($user && $this->hash->passwordCheck($userData['password'], $user->getPassword()) && $user->isActive()) {
             return $user;
         }
         return false;
     }
 
-    protected function loginUser(Users $user, array $userData = []) : bool
+    protected function loginUser(User $user, array $userData = []) : bool
     {
         try {
             if (! $this->session->exists(CURRENT_USER_SESSION_NAME)) {
-                $this->session->regenerate();
-                $this->session->set(CURRENT_USER_SESSION_NAME, $user->getUserId());
-                $this->flash->add('You have successfully logged In');
+                $this->loginUserInTheSession($user);
             }
+            $this->deleteOldTokenHash();
             if (array_key_exists('remember_me', $userData)) {
-                list($result, $token) = $this->userSession->rememberLogin($user, $this->cookie);
-                if ($result->getQueryResult() && $result->getLastInsertId()) {
-                    if ($this->cookie->exists(REMEMBER_ME_COOKIE_NAME)) {
-                        $old_cookie = $this->cookie->get(REMEMBER_ME_COOKIE_NAME);
-                        $this->cookie->delete(REMEMBER_ME_COOKIE_NAME);
-                        $r = $this->userSession->delete(['token_hash' => $old_cookie]);
-                    }
-                    $this->cookie->set($token, REMEMBER_ME_COOKIE_NAME);
-                }
+                $this->setNewTokenHash($user);
             }
             return true;
         } catch (Throwable $th) {
             return false;
         }
+    }
+
+    protected function setNewTokenHash(User $user) : void
+    {
+        list($result, $token) = $this->userSession->rememberLogin($user, $this->cookie);
+        if ($result->getQueryResult() && $result->getLastInsertId()) {
+            $this->cookie->set($token, REMEMBER_ME_COOKIE_NAME);
+        }
+    }
+
+    protected function deleteOldTokenHash() : QueryResult|null
+    {
+        if ($this->cookie->exists(REMEMBER_ME_COOKIE_NAME)) {
+            $old_cookie = $this->cookie->get(REMEMBER_ME_COOKIE_NAME);
+            $this->cookie->delete(REMEMBER_ME_COOKIE_NAME);
+            return $this->userSession->delete(['token_hash' => (new Token($old_cookie))->getRememberHash()]);
+        }
+        return null;
+    }
+
+    private function loginUserInTheSession(User $user) : void
+    {
+        $this->session->regenerate();
+        $this->session->set(CURRENT_USER_SESSION_NAME, $user->getUserId());
+        $this->flash->add('You have successfully logged In');
     }
 }

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-class Users extends Entity
+class User extends Entity
 {
     #[EntityFieldId]
     private int $userId;
@@ -12,16 +12,18 @@ class Users extends Entity
     private ?string $email;
     private ?string $password;
     private ?string $tokenExpire;
+    private ?string $passwordResetHash;
+    private ?string $paswwordResetExpiry;
+    private ?bool $active;
+    private ?string $activationHash;
     private ?string $gender;
     private ?int $groupId;
     private ?string $createdAt;
     private ?string $media;
-    private ?string $token;
     private ?string $phone;
     private ?bool $deleted;
     private ?string $acl;
     private ?bool $verified;
-    private ?bool $active;
 
     /**
      * @return int
@@ -224,24 +226,6 @@ class Users extends Entity
     /**
      * @return string|null
      */
-    public function getToken(): ?string
-    {
-        return $this->token;
-    }
-
-    /**
-     * @param string|null $token
-     * @return User
-     */
-    public function setToken(?string $token): self
-    {
-        $this->token = $token;
-        return $this;
-    }
-
-    /**
-     * @return string|null
-     */
     public function getPhone(): ?string
     {
         return $this->phone;
@@ -326,6 +310,61 @@ class Users extends Entity
     public function setActive(?bool $active): self
     {
         $this->active = $active;
+        return $this;
+    }
+
+    /**
+     * @return null|string
+     */
+    public function getPasswordResetHash(): ?string
+    {
+        return $this->passwordResetHash;
+    }
+
+    /**
+     * @param null|string $passwordResetHash
+     * @return User
+     */
+    public function setPasswordResetHash(?string $passwordResetHash): self
+    {
+        $this->passwordResetHash = $passwordResetHash;
+
+        return $this;
+    }
+
+    /**
+     * @return null|string
+     */
+    public function getPaswwordResetExpiry(): ?string
+    {
+        return $this->paswwordResetExpiry;
+    }
+
+    /**
+     * @param null|string $paswwordResetExpiry
+     * @return User
+     */
+    public function setPaswwordResetExpiry(?string $paswwordResetExpiry): self
+    {
+        $this->paswwordResetExpiry = $paswwordResetExpiry;
+        return $this;
+    }
+
+    /**
+     * @return null|string
+     */
+    public function getActivationHash(): ?string
+    {
+        return $this->activationHash;
+    }
+
+    /**
+     * @param null|string $activationHash
+     * @return User
+     */
+    public function setActivationHash(?string $activationHash): self
+    {
+        $this->activationHash = $activationHash;
         return $this;
     }
 }

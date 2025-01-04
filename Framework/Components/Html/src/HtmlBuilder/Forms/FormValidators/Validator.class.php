@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-final readonly class Validator
+final readonly class Validator implements ValidatorInterface
 {
     private array $inputRules;
     private AbstractValidatorCreator $validator;

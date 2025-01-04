@@ -6,7 +6,7 @@ $this->start('head'); ?>
 <?php $this->start('body'); ?>
 <main id="main-site">
    <!-- Content -->
-   <div class='container mb-3 w-50'>
+   <div class='container'>
       <h>Edit Post</h>
       <?= $editFrom ?>
       <p><a href="/post/<?=$id?>/show">Cancel</a></p>

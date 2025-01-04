@@ -7,7 +7,7 @@ $this->start('head'); ?>
 <main id="main-site">
    <!-- Content -->
 
-   <div class='container mb-3 w-50'>
+   <div class='container'>
       <h>Edit Product</h>
       <?= $editFrom ?>
       <p><a href="/products/<?=$product['id']?>/show">Cancel</a></p>

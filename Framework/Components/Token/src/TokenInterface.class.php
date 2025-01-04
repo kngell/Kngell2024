@@ -10,7 +10,7 @@ interface TokenInterface
 
     public function generate(int $length = CSRF_TOKEN_LENGHT, string $alphabet = '') : string;
 
-    public function validate(string $token = '', string $frm = '') : bool;
+    public function validate(array $data) : bool;
 
     public function urlSafeDecode(string $str) : string;
 

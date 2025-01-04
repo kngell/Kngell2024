@@ -1,7 +1,7 @@
 <?php
 
 declare(strict_types=1);
-class LoggedInUsersCheckMiddleware extends AbstractMiddleware implements MiddlewareInterface
+class RememberTokenCheckMiddleware extends AbstractMiddleware implements MiddlewareInterface
 {
     public function __construct(private SessionInterface $session, private FlashInterface $flash, private UserFormCreator $frm)
     {
@@ -20,8 +20,6 @@ class LoggedInUsersCheckMiddleware extends AbstractMiddleware implements Middlew
                 $form = $this->frm->make('auth-user', $userData);
                 $this->session->set('form', $form);
             }
-            $this->session->set(PREVIOUS_PAGE, $request->getServer()->get('request_uri'));
-            return $this->redirect('/login');
         }
         return $next->handle($request);
     }

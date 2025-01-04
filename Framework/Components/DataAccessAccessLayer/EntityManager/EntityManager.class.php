@@ -79,20 +79,7 @@ class EntityManager implements EntityManagerInterface
 
     public function assign(array $data) : self
     {
-        /** @var ReflectionProperty[] */
-        $attrs = $this->reflector->getProperties(ReflectionProperty::IS_PRIVATE);
-
-        foreach ($data as $key => $prop) {
-            $ok = array_filter($attrs, function ($attr) use ($key) {
-                return StringUtils::camelCase($key) === $attr->getName();
-            });
-            if ($ok) {
-                /** @var ReflectionProperty */
-                $property = ArrayUtils::first($ok);
-                $property->setAccessible(true);
-                $property->setValue($this->entity, $prop);
-            }
-        }
+        $this->entity->assign($data);
         return $this;
     }
 

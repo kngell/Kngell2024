@@ -6,9 +6,10 @@ $this->start('head'); ?>
 <?php $this->start('body'); ?>
 <main id="main-site">
    <!-- Content -->
-   <h1>Page not found</h1>
-   <section id="notfound">
+
+   <section class="container" id="notfound">
       <div class="notfound">
+         <h1>Page not found</h1>
          <div class="notfound-404">
             <h1>404</h1>
          </div>

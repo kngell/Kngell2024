@@ -4,9 +4,11 @@ declare(strict_types=1);
 abstract class AbstractHtmlElement extends AbstractHtmlComponent
 {
     protected CollectionInterface $children;
-    protected TokenInterface $token;
+    protected ?TokenInterface $token;
+    protected ?string $content;
+    protected string $tag;
 
-    public function __construct(TokenInterface $token)
+    public function __construct(?TokenInterface $token = null)
     {
         $this->children = new Collection();
         $this->token = $token;
@@ -54,45 +56,50 @@ abstract class AbstractHtmlElement extends AbstractHtmlComponent
         return true;
     }
 
-    private function frmName() : string
+    public function style(array $style): self
     {
-        return (new HiddenType)->name('frm_name')->value($this->name ?? '')->generate();
+        $this->style = $style;
+        return $this;
     }
 
     private function end() : string
     {
-        return '</form>';
+        $tag = '';
+        if (isset($this->content)) {
+            $tag .= $this->content;
+        }
+        return $tag . (string) '</' . $this->tag . '>';
+    }
+
+    private function frmName() : string
+    {
+        if ($this->tag !== 'form') {
+            return '';
+        }
+        return (new HiddenType)->name('frm_name')->value($this->name ?? '')->generate();
     }
 
     private function begin() : string
     {
-        $formBegin = '<form';
-        foreach ($this as $prop => $value) {
-            if ($prop !== 'formErrors' && $prop !== 'formValues') {
-                $formBegin .= match (true) {
-                    in_array(gettype($value), ['string', 'bool', 'boolean']) => ' ' . $this->property($prop, $value),
-                    is_array($value) => ' ' . $this->property($prop, implode(' ', $value)),
-                    default => ''
-                };
+        $tag = '<' . $this->tag;
+        foreach ($this as $key => $value) {
+            if (in_array($key, ['content', 'tag', 'formErrors', 'formValues', 'token']) || is_object($value)) {
+                continue;
             }
+            // if (in_array(gettype($value), ['string', 'array'])) {
+            $tag .= $this->getTagAttribute($key, $value);
+            // }
         }
-        return $formBegin . '>' . $this->csrftoken();
-    }
+        $tag .= '>';
 
-    private function property(string $prop, string|bool $value) : string
-    {
-        return match ($prop) {
-            'action' => $prop . '="/' . $value . '"',
-            'novalidate' => 'novalidate',
-            'acceptCharset' => 'accept-charset="' . $value . '"',
-            'enctype' => $prop . "='multipart/form-data'",
-            'class' => 'class="' . $value . '"',
-            default => $prop . '="' . $value . '"',
-        };
+        return $tag . $this->csrftoken();
     }
 
     private function csrftoken() : string
     {
+        if ($this->tag !== 'form') {
+            return '';
+        }
         return (new HiddenType)->name('csrfToken')->value($this->token->getCsrfHash(8, $this->name ?? ''))->generate();
     }
 

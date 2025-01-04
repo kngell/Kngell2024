@@ -6,7 +6,7 @@ $this->start('head'); ?>
 <?php $this->start('body'); ?>
 <main id="main-site">
    <!-- Content -->
-   <div class="container w-50">
+   <div class="container">
       <?=$message ?? ''?>
       <div style="text-align: right;">
          <a href="/post/new">New Post</a>

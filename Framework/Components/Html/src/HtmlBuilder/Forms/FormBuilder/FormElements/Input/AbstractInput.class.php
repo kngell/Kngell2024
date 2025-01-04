@@ -258,4 +258,14 @@ abstract class AbstractInput extends AbstractFormDataElement
         $this->title = $title;
         return $this;
     }
+
+    /**
+     * @param array $custom
+     * @return HtmlBuilder
+     */
+    public function custom(array $custom): self
+    {
+        $this->custom = $custom;
+        return $this;
+    }
 }
