@@ -52,7 +52,7 @@ session:
   cookie_httponly: "0"
   cookie_samesite:
   gc_maxlifetime: 0
-  gc_probability: 1
+  gc_probability: 0
   gc_divisor: 100
   use_cookies: 1
   use_only_cookies: 1

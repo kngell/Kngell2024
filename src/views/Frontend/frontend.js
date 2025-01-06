@@ -7,3 +7,5 @@ import "./designPattern/designPattern";
 import "./post/post";
 import "./category/category";
 import "./users/users";
+import "./training/training";
+import "./training1/training";

@@ -12,15 +12,14 @@
    <meta name="robots" content="index,follow">
    <meta name="csrftoken" content="<?=''?>" />
    <meta name="frm_name" content="<?=$this->getPageTitle()?>" />
-   <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon">
 
    <title>
       <?= $this->getPageTitle()?>
    </title>
    <!-- Main style -->
-   <?= $this->css('css/librairies/frontlib', 'css') ?? '' ?>
+   <?= $this->css('css/librairies/frontlib') ?? '' ?>
    <!-- Plugins css -->
-   <?= $this->css('css/plugins/homeplugins', 'css') ?? '' ?>
+   <?= $this->css('css/plugins/homeplugins') ?? '' ?>
    <!-- Main style -->
    <?= $this->css('css/main/main') ?? '' ?>
    <!-- CkEditor -->

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 class NativeSessionStorage extends AbstractSessionStorage implements SessionStorageInterface
 {
-    public function __construct(SessionEnvironment $sessionEnvironment, FilesSystemInterface $fileSyst, SuperGlobalsInterface $globals)
+    public function __construct(SessionEnvironment $sessionEnvironment, SuperGlobalsInterface $globals)
     {
-        parent::__construct($sessionEnvironment, $fileSyst, $globals);
+        parent::__construct($sessionEnvironment, $globals);
     }
 
     /**

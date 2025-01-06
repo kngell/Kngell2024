@@ -13,7 +13,7 @@ abstract class AbstractSessionStorage
      *
      * @param SessionEnvironment $sessionEnvironment
      */
-    public function __construct(protected SessionEnvironment $sessionEnvironment, protected FilesSystemInterface $fileSyst, private SuperGlobalsInterface $globals)
+    public function __construct(protected SessionEnvironment $sessionEnvironment, private SuperGlobalsInterface $globals)
     {
         $this->iniSet();
         // Destroy any existing sessions started with session.auto_start
@@ -22,7 +22,7 @@ abstract class AbstractSessionStorage
             session_destroy();
         }
         $this->start();
-        $this->cleanSessionPath();
+        // $this->cleanSessionPath();
     }
 
     /**
@@ -150,16 +150,16 @@ abstract class AbstractSessionStorage
         ];
     }
 
-    private function cleanSessionPath(): void
-    {
-        $fileList = $this->fileSyst->listAllFiles($this->sessionEnvironment->storagePath());
-        if ($fileList && is_array($fileList)) {
-            foreach ($fileList as $file) {
-                $sess = session_id();
-                if (str_replace('sess_', '', $file) !== session_id()) {
-                    $this->fileSyst->removeFile($this->sessionEnvironment->storagePath(), $file);
-                }
-            }
-        }
-    }
+    // private function cleanSessionPath(): void
+    // {
+    //     $fileList = $this->fileSyst->listAllFiles($this->sessionEnvironment->storagePath());
+    //     if ($fileList && is_array($fileList)) {
+    //         $sid = session_id();
+    //         foreach ($fileList as $file) {
+    //             if (str_replace('sess_', '', $file) !== session_id()) {
+    //                 $this->fileSyst->removeFile($this->sessionEnvironment->storagePath(), $file);
+    //             }
+    //         }
+    //     }
+    // }
 }

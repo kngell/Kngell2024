@@ -10,7 +10,9 @@
     "PostController": ["index", "show"],
     "SignupController": ["*"],
     "ForgotPasswordController": ["*"],
-    "AccountController": ["*"]
+    "AccountController": ["*"],
+    "TrainingController": ["*"],
+    "Training1Controller": ["*"]
   },
   "LoggedIn": {
     "denied": {
