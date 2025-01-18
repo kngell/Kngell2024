@@ -9,7 +9,7 @@ class LoginController extends AuthController
         UserSessionModel $userSession,
         CookieInterface $cookie,
         private UserFormCreator $frm,
-        private Validator $validator,
+        private ValidatorInterface $validator,
         private HtmlBuilder $html,
         HashInterface $hash,
     ) {

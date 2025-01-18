@@ -1,0 +1,36 @@
+@use 'css/admin/main/sass/abstracts' as *
+
+.k-btn
+   border: 0
+   border-radius: $default-border-radius
+   cursor: pointer
+   padding: $default-btn-padding
+   font-size: $btn-size
+   display: inline-flex
+   justify-content: center
+   align-items: center
+   text-align: center
+   @include transition
+   @each $current-style in $buttons
+      @if $current-style == default
+         background-color: button-bg-color($current-style)
+         color: button-text-color($current-style)
+         &:hover
+            background-color: var(--k-primary-color-600)
+      @else
+         &.k-btn-#{$current-style}
+            background-color: button-bg-color($current-style)
+            color: button-text-color($current-style)
+            &:hover
+               background-color: var(--k-#{$current-style}-color-300)
+   &.k-btn-sm,&.k-btn-square
+      padding: $default-btn-padding-sm
+   &.k-btn-square
+      width: calc( 2rem + $btn-size )
+   &.k-btn-link
+      padding: 0
+      text-decoration: underline
+      background-color: transparent
+      text-transform: uppercase
+      &:hover
+         background-color: transparent

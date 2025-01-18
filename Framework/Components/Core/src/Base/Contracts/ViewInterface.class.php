@@ -13,4 +13,10 @@ interface ViewInterface
     public function setLayout(string $layout) : void;
 
     public function addProperties(array $props) : void;
+
+    public function getLayout(): string;
+
+    public function setToken(TokenInterface $token) : void;
+
+    public function getPath() : string;
 }

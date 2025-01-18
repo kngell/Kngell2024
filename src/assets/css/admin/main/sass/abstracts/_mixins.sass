@@ -1,0 +1,107 @@
+@use 'sass:map'
+@use 'variables' as *
+
+//Transition
+@mixin transition($property: all, $duration: .3s, $delay: 0s, $easing-function: ease-out)
+   transition: $property $duration $delay $easing-function
+
+// box shadow
+@mixin boxShadow($x: 0,$y: 0, $blur: 0.15rem, $color: rgba(0,0,0,.14))
+   box-shadow: $x $y $blur $color
+
+// Custom scrollbar
+@mixin customScrollbar($width: 0.5rem, $height: 0.5rem, $bg-color: get-color("gray", 600))
+   scrollbar-width: thin
+   scrollbar-color: $bg-color transparent
+   &::-webkit-scrollbar-track
+      box-shadow: inset 0 0 0.2rem transparent
+      background: transparent
+      margin: 1.1rem
+   &::-webkit-scrollbar
+      height: $height
+      width: $width
+      background: transparent
+   &::-webkit-scrollbar-thumb
+      border-radius: 6rem
+      width: $width
+      background-color: $bg-color
+
+// Breakpoints
+@mixin respond($breakpoint)
+   @media screen and (min-width: map.get($breakpoints-up, $breakpoint))
+      @content
+
+// Creating grid column
+@mixin grid($total,$number)
+   flex: 0 0 calc( 100% / (#{$total} / #{$number}) )
+   max-width: calc( 100% / (#{$total} / #{$number}) )
+
+// Creating offset grid
+@mixin offset-grid($total-columns, $responsive)
+   @if $responsive
+      @each $break,$value in $containers
+         @include respond(#{$break})
+            @for $i from 1 through $total-columns
+               .k-offset-#{$break}-#{$i}
+                  @if $i == $total-columns
+                     margin-left: 0
+                     flex: 0 0 100%
+                     max-width: 100%
+                  @else
+                     margin-left: calc(100% / (#{$total-columns}/#{$i}))
+                     flex: 0 0 calc( 100% * (((#{$total-columns} - #{$i}) / #{$total-columns})))
+                     max-width: calc( 100% * (((#{$total-columns} - #{$i}) / #{$total-columns})))
+   @else
+      @for $i from 1 through $total-columns
+         .k-offset-#{$i}
+            @if $i == $total-columns
+               margin-left: 0
+               flex: 0 0 100%
+               max-width: 100%
+            @else
+               margin-left: calc(100% / (#{$total-columns}/#{$i}))
+               flex: 0 0 calc( 100% * ((#{$total-columns} - #{$i}) / #{$total-columns}))
+               max-width: calc( 100% * ((#{$total-columns} - #{$i}) / #{$total-columns}))
+
+//Looping trough property if it contains more than one
+@mixin loop-list-property($property,$value,$important)
+   @if type-of($property) == list
+      @each $current-property in $property
+         #{$current-property}: #{$value} if($important,!important,unquote(""))
+   @else
+      #{$property}: #{$value} if($important,!important,unquote(""))
+
+//Looping trough map
+@mixin loop-trough-map($map,$base-class: "u-",$suffix: null, $property: null, $responsive: true, $important: true)
+   @each $child, $value in $map
+      @if $value != null
+         @if $base-class == null
+            #{$child}
+               @include loop-list-property($property,$value,$important)
+         @else
+            .#{$base-class}#{$child}#{$suffix}
+               @include loop-list-property($property,$value,$important)
+   @if $responsive
+      @each $break,$value in $breakpoints-up
+         @include respond(#{$break})
+            @each $child, $value in $map
+               @if $value != null
+                  @if $base-class == null
+                     #{$child}
+                        @include loop-list-property($property,$value,$important)
+                  @else
+                     .#{$base-class}#{$child}#{$suffix}-#{$break}
+                        @include loop-list-property($property,$value,$important)
+
+//Loop trough complex map
+
+@mixin loop-trough-deep-map($deep-map)
+   @each $block, $children in $deep-map
+      @each $subBlock, $values in $children
+         $base-class: map.get($children,class)
+         $suffix: map.get($children,suffix)
+         $property: map.get($children,property)
+         $responsive: if(map-has-key($children,responsive),map.get($children, responsive),true)
+         $important: if(map-has-key($children,important),map.get($children, important),true)
+         @if type-of($values) == map and $values != null and $base-class != null
+            @include loop-trough-map($values ,$base-class,$suffix, $property, $responsive, $important)

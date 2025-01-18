@@ -1,0 +1,165 @@
+@use "sass:map"
+@use "partials/color_map_variable" as *
+
+:root
+  @each $block, $children in $e-colors
+    @each $child, $value in $children
+      $name: map-get($children, name)
+      @if type-of($value) ==map
+        @each $item, $val in $value
+          @if $item==main
+            --k-#{$name}-color: #{$val}
+          @else
+            --k-#{$name}-color-#{$item}: #{$val}
+  --heading-1: 2.8rem
+  --heading-2: 2.4rem
+  --heading-3: 2rem
+  --heading-4: 1.8rem
+  --heading-5: 1.6rem
+  --heading-6: 1.6rem
+
+@function get-color($color_name: "gray", $shade: main)
+  @each $block, $children in $e-colors
+    $name: map-get($children, name)
+    @if $name == $color_name or $block==$color_name
+      @each $child, $value in $children
+        @if type-of($value) == map
+          @each $item, $val in $value
+            @if $item == $shade
+              @return #{$val}
+
+/********* COLORS **********/
+
+// Background
+$global-bg-color: get-color("gray")
+/* Sidebar */
+$sidebar-bg-color: get-color("primary")
+$sidebar-menu-item-color: get-color("gray", 50)
+$sidebar-menu-item-hvr-bg-color: get-color("primary", 400)
+$sidebar-menu-item-active-brd-color: get-color("secondary")
+$sidebar-menu-title-clr: get-color("gray", 500)
+$sidebar-empl-of-month-bg-color: rgba(52, 66, 111, 0.8)
+/* Navbar */
+$navbar-bg-color: get-color("gray", 50)
+/* Card */
+$card-bg-color: get-color("gray", 50)
+/* Border */
+$border-color: get-color("gray", 300)
+/* Table */
+$tbl-header-bg-color: get-color("gray", 100)
+/* Typography */
+$global-text-color: get-color("primary", 600)
+$faded-text-color: get-color("gray", 500)
+$link-clr: get-color("secondary")
+/* Icon */
+$default-icon-color: get-color("primary", 600)
+$default-icon-hvr-bg-clr: get-color("gray", 600)
+/* Badges */
+$bdg-success-bg-color: get-color("success", 100)
+$bdg-success-text-color: get-color("success")
+$bdg-secondary-bg-color: get-color("secondary", 100)
+$bdg-secondary-text-color: get-color("secondary")
+$bdg-warn-bg-color: get-color("warn",100)
+$bdg-warn-text-color: get-color("warn")
+$bdg-danger-bg-color: get-color("danger", 100)
+$bdg-danger-text-color: get-color("danger")
+/* Form */
+$input-bg-color: get-color("gray")
+$input-border-color: get-color("primary")
+$textarea-bg-color: transparent
+$textarea-brdr-color: get-color("gray")
+/* Button */
+$btn-default-bg-color: get-color("primary", 400)
+$btn-default-text-color: get-color("gray", 50)
+$btn-primary-bg-color: get-color("primary", 100)
+$btn-primary-text-color: get-color("primary")
+$btn-secondary-bg-color: get-color("secondary", 100)
+$btn-secondary-text-color: get-color("secondary")
+$btn-success-bg-color: get-color("success", 100)
+$btn-success-text-color: get-color("success")
+$btn-warn-bg-color: get-color("warn", 100)
+$btn-warn-text-color: get-color("warn")
+$btn-danger-bg-color: get-color("danger", 100)
+$btn-danger-text-color: get-color("danger")
+
+/* ************** TYPOGRAPHY ************** */
+$base-font-size: 62.5%
+$heading-font-family: "Manrope", sans-serif
+$body-font-family: "Poppins", sans-serif
+$heading-1: 2.8rem
+$heading-2: 2.4rem
+$heading-3: 2rem
+$heading-4: 1.8rem
+$heading-5: 1.6rem
+$heading-6: 1.6rem
+$paragraph-size: 1.4rem
+$card-title: 1.6rem
+$small-text: 1.2rem
+$menu-item: 1.4rem
+$icon-size: 1.4rem
+$dropdown-item: 1.3rem
+$bdg-size: 1rem
+$btn-size: 1.4rem
+$heading-line-height: 1.4
+$default-line-height: 1.5
+$font-weight-regular: 400
+$font-weight-medium: 500
+$font-weight-bold: 700
+
+/* ************** SPACING ************** */
+$spacing-0: 0
+$spacing-xs: 0.8rem
+$spacing-sm: 1rem
+$spacing-md: 1.2rem
+$spacing-lg: 1.4rem
+$spacing-xl: 1.6rem
+$spacing-18: 1.8rem
+$spacing-20: 2rem
+
+/* ************** LAYOUT ************** */
+
+/* Container */
+$container-default: 90%
+$container-sm: 87.5rem
+$container-md: 121.5rem
+$container-lg: 131.5rem
+$container-xl: 156rem
+/* Break points */
+$breakpoint-sm: 553px
+$breakpoint-md: 901px
+$breakpoint-lg: 1281px
+$breakpoint-xl: 1440px
+
+/* Break points Map*/
+$breakpoints-up: (sm: $breakpoint-sm,md: $breakpoint-md,lg: $breakpoint-lg,xl: $breakpoint-xl)
+$default-gutter: 1.5rem
+$total-columns: 12
+
+/* Containers */
+$containers: (sm: $container-sm, md: $container-md, lg: $container-lg, xl: $container-xl)
+/* ************** COMPONENTS ************** */
+$default-border-radius: 0.4rem
+$default-btn-padding: 0.9rem 3rem
+$default-btn-padding-sm: 0.6rem 2rem
+$default-bdg-padding: 0.4rem 1.2rem
+$default-input-padding: 0.9rem 3rem
+$default-dropdown-width: 22.5rem
+$default-dropdown-max-height: 35rem
+
+/* ************** TYPOGRAPHY ************** */
+
+$font-sizes: (6: 0.6rem,8: 0.8rem,10: 1rem,12: 1.2rem,14: 1.4rem,16: 1.6rem,18: 1.8rem,20: 2rem,22: 2.2rem,24: 2.4rem,26: 2.6rem,28: 2.8rem,30: 3rem,32: 3.2rem,34: 3.4rem,36: 3.6rem,38: 3.8rem,40: 4rem,42: 4.2rem,44: 4.4rem,46: 4.6rem,48: 4.8rem,50: 5rem)
+
+$font-weights: (reg: $font-weight-regular,med: $font-weight-medium,bld: $font-weight-bold)
+
+/* ************** SPACINGS ************** */
+$spacings: (0: $spacing-0,8: $spacing-xs,10: $spacing-sm,12: $spacing-md,14: $spacing-lg,16: $spacing-xl,18: $spacing-18,20: $spacing-20)
+
+/* ************** COMPONENTS ************** */
+
+// ========= Buttons ============ //
+$buttons: default primary secondary success warn danger
+// ========= Badges ============ //
+$badges: secondary success warn danger
+// ========= Avatar ============ //
+$avatars: 30 35 40 45 50

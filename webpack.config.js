@@ -1,14 +1,14 @@
 const { merge } = require("webpack-merge");
 const { commonConfig } = require("./webpack/commonConfig");
 const { viewsConfig } = require("./webpack/viewsConfig");
-const { frontendAssetsConfig } = require("./webpack/fontendAssetConfig");
+const { assetsConfig } = require("./webpack/assetsConfig");
 
 module.exports = () => {
   switch (process.env.NODE_ENV) {
     case "development":
       return [
         merge(viewsConfig, commonConfig),
-        merge(frontendAssetsConfig, commonConfig),
+        merge(assetsConfig, commonConfig),
       ];
 
     case "production":

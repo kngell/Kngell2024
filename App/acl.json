@@ -12,7 +12,8 @@
     "ForgotPasswordController": ["*"],
     "AccountController": ["*"],
     "TrainingController": ["*"],
-    "Training1Controller": ["*"]
+    "Training1Controller": ["*"],
+    "DashboardController": ["*"]
   },
   "LoggedIn": {
     "denied": {

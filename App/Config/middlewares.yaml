@@ -5,4 +5,4 @@ crsfToken: CsrfTokenMiddleware
 requireLogin: RequireLoginMiddleware
 return_to: RememberPreviousPageMiddleware
 grantAccess: GrantAccessMiddleware
-remember: RememberTokenCheckMiddleware
+remember: RememberMeMiddleware

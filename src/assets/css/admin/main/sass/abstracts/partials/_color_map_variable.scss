@@ -1,0 +1,88 @@
+//Colors
+$e-colors: (
+  "primary": (
+    name: primary,
+    variations: (
+      main: #34426f,
+      100: #a9b0c2,
+      200: #a0a8bc,
+      300: #969fb5,
+      400: #2f3c65,
+      500: #181f34,
+      600: #161c2f,
+    ),
+  ),
+  "secondary": (
+    name: secondary,
+    variations: (
+      main: #7d83ff,
+      100: #bdbfff,
+      200: #c3c5ff,
+      300: #c8caff,
+      400: #414384,
+      500: #3b3d78,
+      600: #36376d,
+    ),
+  ),
+  "orange": (
+    name: "warn",
+    variations: (
+      main: #fd8b49,
+      100: #fdc4a1,
+      200: #fdc9aa,
+      300: #fdceb2,
+      400: #fda977,
+      500: #fda069,
+      600: #fd965a,
+    ),
+  ),
+  "green": (
+    name: "success",
+    variations: (
+      main: #5fab76,
+      100: #add4b8,
+      200: #b4d8be,
+      300: #bbdcc4,
+      400: #87c097,
+      500: #7bba8d,
+      600: #6eb382,
+    ),
+  ),
+  "blue": (
+    name: "info",
+    variations: (
+      main: #4a529d,
+      100: #9faac4,
+      200: #a8b2c9,
+      300: #b0b9ce,
+      400: #7184a9,
+      500: #6378a0,
+      600: #536b97,
+    ),
+  ),
+  "red": (
+    name: "danger",
+    variations: (
+      main: #c44f4f,
+      100: #c098a2,
+      200: #c6a1aa,
+      300: #cbaab2,
+      400: #a36978,
+      500: #9a5a6a,
+      600: #a85661,
+    ),
+  ),
+  "gray": (
+    name: "gray",
+    variations: (
+      main: #f3f3f9,
+      50: #fefefe,
+      100: #fafafa,
+      200: #f5f5fa,
+      300: #f7f7fa,
+      400: #dddde2,
+      500: #c9c9cd,
+      600: #9191a1,
+    ),
+  ),
+);

@@ -12,6 +12,7 @@ class View implements ViewInterface
     private string $_html;
     private string $_pageTitle = '';
     private string $_layout = 'default';
+    private string $_token = '';
     private array $properties = [];
 
     public function __construct(ViewEnvironment $viewEnv)
@@ -47,11 +48,34 @@ class View implements ViewInterface
         return $this->_pageTitle;
     }
 
+    public function getPath() : string
+    {
+        return $this->viewEnv->getAppPath();
+    }
+
     public function addProperties(array $props) : void
     {
         foreach ($props as $name => $prop) {
             $this->properties[$name] = $prop;
         }
+    }
+
+    /**
+     * @return string
+     */
+    public function getLayout(): string
+    {
+        return $this->_layout;
+    }
+
+    public function setToken(TokenInterface $token) : void
+    {
+        $this->_token = $token->getCsrfHash(8, $this->_pageTitle);
+    }
+
+    private function token() : string
+    {
+        return $this->_token;
     }
 
     private function renderViewContent(string $templatePath, $context) : string
@@ -70,7 +94,7 @@ class View implements ViewInterface
         return $this->content('html');
     }
 
-    private function css(string $path) : string
+    private function css(string|null $path = null) : string
     {
         return $this->viewEnv->getCss($path);
     }

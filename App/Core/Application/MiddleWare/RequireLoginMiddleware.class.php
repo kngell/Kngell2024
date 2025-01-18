@@ -12,8 +12,8 @@ class RequireLoginMiddleware extends AbstractMiddleware implements MiddlewareInt
         $session = $this->flash->getSession();
         if (! $session->exists(CURRENT_USER_SESSION_NAME)) {
             $this->flash->add('Please Login to access that page', FlashType::INFO);
-            $previous = $session->get(PREVIOUS_PAGE);
-            return $this->redirect($session->get(PREVIOUS_PAGE) ?? '/');
+            $session->set(PREVIOUS_PAGE, $request->getServer()->get('request_uri'));
+            return $this->redirect('/login');
         }
         return $next->handle($request, []);
     }

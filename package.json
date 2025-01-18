@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "cross-env NODE_ENV=development webpack",
     "watch": "cross-env NODE_ENV=development webpack -w",
     "prod": "webpack --mode production",
@@ -51,7 +50,9 @@
     "@fontsource/dancing-script": "^5.1.1",
     "@fontsource/josefin-sans": "^5.1.1",
     "@fontsource/lato": "^5.1.1",
+    "@fontsource/manrope": "^5.1.1",
     "@fontsource/nunito": "^5.1.1",
+    "@fontsource/poppins": "^5.1.1",
     "@fortawesome/fontawesome-free": "^6.7.2",
     "autoprefixer": "^10.4.20",
     "bootstrap": "^5.3.3",

@@ -81,7 +81,7 @@ readonly class RouteDispatcher
         if (isset($matches['middleware'])) {
             $middlewares = explode('|', $matches['middleware']);
         }
-        $middlewares = array_merge(self::GLOBAL_MIDDLEWARES, $middlewares ?? []);
+        $middlewares = array_merge($middlewares ?? [], self::GLOBAL_MIDDLEWARES);
         if (! empty($middlewares)) {
             return implode('|', $middlewares);
         }

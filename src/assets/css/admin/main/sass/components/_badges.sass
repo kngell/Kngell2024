@@ -1,0 +1,13 @@
+@use 'css/admin/main/sass/abstracts' as *
+
+.k-badge
+   border: 0
+   border-radius: $default-border-radius
+   padding: $default-bdg-padding
+   font-size: $bdg-size
+   text-align: center
+   display: inline-block
+   @each $current-style in $badges
+      &-#{$current-style}
+         background-color: badge-bg-color($current-style)
+         color: badge-text-color($current-style)

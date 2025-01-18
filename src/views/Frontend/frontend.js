@@ -1,4 +1,4 @@
-import "./layout/layout";
+import "../Layout/layout";
 import "./products/products";
 import "./home/home";
 import "./errors/errors";

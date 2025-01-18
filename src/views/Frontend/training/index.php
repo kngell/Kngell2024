@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 $this->start('head'); ?>
 <!-------Costum-------->
-<?= $this->css('path') ?>
+<?= $this->css('css/training/main') ?>
 <?php $this->end(); ?>
 <?php $this->start('body'); ?>
 

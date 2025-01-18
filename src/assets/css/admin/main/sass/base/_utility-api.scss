@@ -1,0 +1,261 @@
+@use "sass:map";
+@use "css/admin/main/sass/abstracts" as *;
+
+$u-utilities: (
+  // Overflow
+  "overflow":
+    (
+      class: u-overflow-,
+      property: overflow,
+      values: (
+        auto: auto,
+        visible: visible,
+        hidden: hidden,
+      ),
+    ),
+  // Text alignment
+  "text-alignment":
+    (
+      property: text-align,
+      class: u-text-align-,
+      values: (
+        left: left,
+        center: center,
+        right: right,
+        justify: justify,
+      ),
+    ),
+  // Text transform
+  "text-transform":
+    (
+      property: text-transform,
+      class: u-transform-,
+      responsive: false,
+      values: (
+        none: none,
+        lowercase: lowercase,
+        capitalize: capitalize,
+        uppercase: uppercase,
+      ),
+    ),
+  // Text style
+  "text-style":
+    (
+      property: font-style,
+      class: u-text-style-,
+      responsive: false,
+      values: (
+        normal: normal,
+        italic: italic,
+      ),
+    ),
+  // Text decoration
+  "text-decoration":
+    (
+      property: text-decoration,
+      class: u-decoration-,
+      responsive: false,
+      values: (
+        underline: underline,
+        line-through: line-through,
+      ),
+    ),
+  // Font sizes
+  "font-sizes":
+    (
+      property: font-size,
+      class: u-font-size-,
+      values: map.merge($font-sizes, $font-sizes),
+    ),
+  // Font weights
+  "font-weights":
+    (
+      property: font-weight,
+      responsive: false,
+      class: u-font-weight-,
+      values: map.merge($font-weights, $font-weights),
+    ),
+  // Flexbox and Block
+  "flexbox-block":
+    (
+      property: display,
+      class: u-display-,
+      values: (
+        block: block,
+        inline-block: inline-block,
+        flex: flex,
+        inline-flex: inline-flex,
+        none: none,
+      ),
+    ),
+  // Flexbox direction
+  "flexbox-direction":
+    (
+      property: flex-direction,
+      class: u-fdirection-,
+      values: (
+        row: row,
+        row-reverse: row-reverse,
+        column: column,
+        column-reverse: column-reverse,
+      ),
+    ),
+  // Flexbox - Justify content
+  "flexbox-justify":
+    (
+      property: justify-content,
+      class: u-justify-content-,
+      values: (
+        stretch: stretch,
+        start: flex-start,
+        end: flex-end,
+        evenly: space-evenly,
+        around: space-around,
+        between: space-between,
+        center: center,
+      ),
+    ),
+  // Flexbox - Align items
+  "flexbox-align":
+    (
+      property: align-items,
+      class: u-align-items-,
+      values: (
+        stretch: stretch,
+        start: flex-start,
+        end: flex-end,
+        center: center,
+      ),
+    ),
+  // Flexbox - Ordering
+  "flexbox-order":
+    (
+      property: order,
+      class: u-order-,
+      values: (
+        n-1: -1,
+        0: 0,
+        1: 1,
+        2: 2,
+        3: 3,
+        4: 4,
+      ),
+    ),
+  // Flexbox - Basis
+  "flexbox-basis":
+    (
+      property: flex,
+      class: u-flex-basis-,
+      values: (
+        1: 1,
+        2: 2,
+      ),
+    ),
+  // Flexbox - Basis - Auto
+  "flexbox-basis-auto":
+    (
+      property: flex,
+      class: u-flex-basis-,
+      values: (
+        auto: 0 0 auto,
+      ),
+    ),
+  // Margin - All around
+  "margin":
+    (
+      property: margin,
+      class: u-margin-,
+      values: map.merge($spacings, $spacings),
+    ),
+  // Margin - Top
+  "margin-top":
+    (
+      property: margin-top,
+      class: u-margin-t-,
+      values: map.merge($spacings, $spacings),
+    ),
+  // Margin - Right
+  "margin-right":
+    (
+      property: margin-right,
+      class: u-margin-r-,
+      values: map.merge($spacings, $spacings),
+    ),
+  // Margin - Bottom
+  "margin-bottom":
+    (
+      property: margin-bottom,
+      class: u-margin-b-,
+      values: map.merge($spacings, $spacings),
+    ),
+  // Margin - Left
+  "margin-left":
+    (
+      property: margin-left,
+      class: u-margin-l-,
+      values: map.merge($spacings, $spacings),
+    ),
+  // Margin - Left and Right
+  "margin-left-right":
+    (
+      property: margin-left margin-right,
+      class: u-margin-x-,
+      values: map.merge($spacings, $spacings),
+    ),
+  // Margin - Top and Bottom
+  "margin-top-bottom":
+    (
+      property: margin-top margin-bottom,
+      class: u-margin-y-,
+      values: map.merge($spacings, $spacings),
+    ),
+  // Padding - All around
+  "padding":
+    (
+      property: padding,
+      class: u-padding-,
+      values: map.merge($spacings, $spacings),
+    ),
+  // Padding - Top
+  "padding-top":
+    (
+      property: padding-top,
+      class: u-padding-t-,
+      values: map.merge($spacings, $spacings),
+    ),
+  // Padding - Right
+  "padding-right":
+    (
+      property: padding-right,
+      class: u-padding-r-,
+      values: map.merge($spacings, $spacings),
+    ),
+  // Padding - Bottom
+  "padding-bottom":
+    (
+      property: padding-bottom,
+      class: u-padding-b-,
+      values: map.merge($spacings, $spacings),
+    ),
+  // Padding - Left
+  "padding-left":
+    (
+      property: padding-left,
+      class: u-padding-l-,
+      values: map.merge($spacings, $spacings),
+    ),
+  // Padding - Left and Right
+  "padding-left-right":
+    (
+      property: padding-left padding-right,
+      class: u-padding-x-,
+      values: map.merge($spacings, $spacings),
+    ),
+  // Padding - Top and Bottom
+  "padding-top-bottom":
+    (
+      property: padding-top padding-bottom,
+      class: u-padding-y-,
+      values: map.merge($spacings, $spacings),
+    )
+);

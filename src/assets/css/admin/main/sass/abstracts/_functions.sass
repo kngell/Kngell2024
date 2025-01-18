@@ -1,0 +1,49 @@
+@use 'variables' as *
+
+@function button-bg-color($current-style)
+   @if $current-style=="default"
+      @return $btn-default-bg-color
+   @if $current-style=="primary"
+      @return $btn-primary-bg-color
+   @if $current-style=="secondary"
+      @return $btn-secondary-bg-color
+   @if $current-style=="success"
+      @return $btn-success-bg-color
+   @if $current-style=="warn"
+      @return $btn-warn-bg-color
+   @if $current-style=="danger"
+      @return $btn-danger-bg-color
+
+@function button-text-color($current-style)
+   @if $current-style=="default"
+      @return $btn-default-text-color
+   @if $current-style=="primary"
+      @return $btn-primary-text-color
+   @if $current-style=="secondary"
+      @return $btn-secondary-text-color
+   @if $current-style=="success"
+      @return $btn-success-text-color
+   @if $current-style=="warn"
+      @return $btn-warn-text-color
+   @if $current-style=="danger"
+      @return $btn-danger-text-color
+
+@function badge-bg-color($current-style)
+   @if $current-style=="secondary"
+      @return $bdg-secondary-bg-color
+   @if $current-style=="success"
+      @return $bdg-success-bg-color
+   @if $current-style=="warn"
+      @return $bdg-warn-bg-color
+   @if $current-style=="danger"
+      @return $bdg-danger-bg-color
+
+@function badge-text-color($current-style)
+   @if $current-style=="secondary"
+      @return $bdg-secondary-text-color
+   @if $current-style=="success"
+      @return $bdg-success-text-color
+   @if $current-style=="warn"
+      @return $bdg-warn-text-color
+   @if $current-style=="danger"
+      @return $bdg-danger-text-color

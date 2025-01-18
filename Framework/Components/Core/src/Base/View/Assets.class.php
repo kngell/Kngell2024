@@ -16,7 +16,7 @@ readonly class Assets
         $this->jsTemplate = file_get_contents(dirname(getcwd()) . '/App/Templates/Script/JsTagTemplate.php');
     }
 
-    public function getCss(string $path) : string
+    public function getCss(string|null $path = null) : string
     {
         $file = $this->getAssets($path, 'css');
         if (! empty($file)) {
@@ -36,10 +36,13 @@ readonly class Assets
         return '';
     }
 
-    private function getAssets(string $path, string $tag) : string
+    private function getAssets(string|null $path = null, string $tag) : string
     {
+        if ($path === null) {
+            return '';
+        }
         foreach ($this->assets as $key => $filePath) {
-            if ($key === $path) {
+            if ($key === $path && array_key_exists($tag, $filePath)) {
                 return $filePath[$tag];
             }
         }

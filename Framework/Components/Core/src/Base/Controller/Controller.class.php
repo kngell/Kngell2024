@@ -32,8 +32,7 @@ abstract class Controller
         if (count($pathParts) === 1) {
             $templatePath = strtolower(str_replace('Controller', '', $this::class) . DS . $templatePath);
         }
-        $context = array_merge($context, (new NavbarDecorator($this))->page(), ['message' => $this->flash->get()]);
-        return $this->view->render($templatePath, $context);
+        return $this->view->render($templatePath, $this->context($context));
     }
 
     public function redirect(string $url, bool $permanent = true) : Response
@@ -120,5 +119,14 @@ abstract class Controller
     protected function jsonResponse(string|object|array|bool $data = []) : JsonResponse
     {
         return new JsonResponse($data, HttpStatusCode::HTTP_OK, ['Content-Type' => 'application/json']);
+    }
+
+    private function context(array $context) : array
+    {
+        $this->view->setToken($this->token);
+        return match (true) {
+            $this->view->getPath() === 'Frontend' && $this->view->getLayout() === 'default' => array_merge($context, (new NavbarDecorator($this))->page(), ['message' => $this->flash->get()]),
+            default => $context,
+        };
     }
 }

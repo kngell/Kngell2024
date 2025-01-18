@@ -2,6 +2,6 @@ SMTPDebug: 0
 SMTPAuth: true
 SMTPSecure: PHPMailer::ENCRYPTION_SMTPS
 Username: admin@kngell.com
-Password: Akonoakono169&169
+Password: AkDak&1697845AKngell2df
 Host: smtp.hostinger.fr
 Port: 587

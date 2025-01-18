@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 class SignupController extends Controller
 {
-    public function __construct(private UserModel $user, private UserFormCreator $frm, private Validator $validator, private HashInterface $hash)
+    public function __construct(private UserModel $user, private UserFormCreator $frm, private ValidatorInterface $validator, private HashInterface $hash)
     {
     }
 

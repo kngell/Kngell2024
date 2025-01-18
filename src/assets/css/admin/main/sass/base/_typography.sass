@@ -1,0 +1,25 @@
+@use 'css/admin/main/sass/abstracts' as *
+
+@import "@fontsource/manrope/400.css"
+@import "@fontsource/manrope/500.css"
+@import "@fontsource/manrope/700.css"
+
+@import "@fontsource/poppins/400.css"
+@import "@fontsource/poppins/500.css"
+@import "@fontsource/poppins/700.css"
+
+h1,.kn-h1,
+h2,.kn-h2,
+h3,.kn-h3,
+h4,.kn-h4,
+h5,.kn-h5,
+h6,.kn-h6
+   font-family: $heading-font-family
+   color: inherit
+   font-weight: $font-weight-bold
+   line-height: $heading-line-height
+   margin: 0
+
+@for $i from 1 through 6
+   h#{$i},.kn-h#{$i}
+      font-size: var(--heading-#{$i})

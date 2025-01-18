@@ -1,0 +1,10 @@
+@use "sass:map"
+@use "css/admin/main/sass/abstracts" as *
+@use "utility-api" as *
+
+/* *************** UTILITIES *************/
+
+[class*=u-overflow-]
+   @include customScrollbar
+
+@include loop-trough-deep-map($u-utilities)
