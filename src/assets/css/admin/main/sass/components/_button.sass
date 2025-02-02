@@ -34,3 +34,14 @@
       text-transform: uppercase
       &:hover
          background-color: transparent
+.k-btn-icon
+   width: 3.5rem
+   height: 3.5rem
+   line-height: 3.5rem
+   border-radius: 50%
+   text-align: center
+   font-size: $icon-size
+   background-color: transparent
+   @include transition
+   &:hover,&:focus,&.k-btn-icon-static
+      background-color: $btn-icon-hvr-bg

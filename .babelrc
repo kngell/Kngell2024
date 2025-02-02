@@ -1,4 +1,13 @@
 {
-  "presets": ["@babel/preset-env"],
+  "presets": [
+    [
+      "@babel/preset-env",
+      {
+        "modules": "auto",
+        "useBuiltIns": "usage",
+        "corejs": "3.40.0"
+      }
+    ]
+  ],
   "plugins": ["@babel/plugin-transform-class-properties"]
 }

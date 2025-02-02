@@ -19,18 +19,18 @@
    flex-wrap: wrap
    margin-left: -$default-gutter
    margin-right: -$default-gutter
-   > [class*=k-flex-]
+   > [class*=k-col-]
       width: 100%
       max-width: 100%
       padding-right: $default-gutter
       padding-left: $default-gutter
    @for $i from 1 through $total-columns
-      .k-flex-#{$i}
+      .k-col-#{$i}
          @include grid($total-columns,$i)
    @each $break, $value in $containers
       @include respond(#{$break})
          @for $i from 1 through $total-columns
-            .k-flex-#{$break}-#{$i}
+            .k-col-#{$break}-#{$i}
                @include grid($total-columns,$i)
 // offset columns - non responsive
 @include offset-grid($total-columns,false)

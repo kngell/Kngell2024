@@ -9,10 +9,10 @@
 @mixin boxShadow($x: 0,$y: 0, $blur: 0.15rem, $color: rgba(0,0,0,.14))
    box-shadow: $x $y $blur $color
 
-// Custom scrollbar
+// Custom scroll bar
 @mixin customScrollbar($width: 0.5rem, $height: 0.5rem, $bg-color: get-color("gray", 600))
-   scrollbar-width: thin
-   scrollbar-color: $bg-color transparent
+   // scrollbar-width: thin
+   // scrollbar-color: $bg-color transparent
    &::-webkit-scrollbar-track
       box-shadow: inset 0 0 0.2rem transparent
       background: transparent

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use PhpCsFixer\Config;
 use PhpCsFixer\Finder;
 
+
 $rules = [
     'array_syntax' => ['syntax' => 'short'],
     'array_indentation' => true,

@@ -2,6 +2,7 @@ const { merge } = require("webpack-merge");
 const { commonConfig } = require("./webpack/commonConfig");
 const { viewsConfig } = require("./webpack/viewsConfig");
 const { assetsConfig } = require("./webpack/assetsConfig");
+require("dotenv").config();
 
 module.exports = () => {
   switch (process.env.NODE_ENV) {

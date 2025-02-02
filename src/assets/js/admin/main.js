@@ -1,33 +1,33 @@
-const dropdown = () => {
-  const _variables = {
-    main: "k-dropdown",
-    menu: "k-dropdown__menu",
-    target: "data-dropdown-target",
-    active: "k-active",
-  };
-  const dropDown = [...document.querySelectorAll(`.${_variables.main}`)];
-  document.addEventListener("click", (e) => {
-    const target = e.target.closest(`.${_variables.main}`);
-    const targetedMenu = e.target.closest(`.${_variables.menu}`);
-    if (!target || targetedMenu) return;
-    const targetId = target
-      .querySelector(`[${_variables.target}]`)
-      .getAttribute(_variables.target);
-    const activeMenu = document.querySelector(`#${targetId}`);
-    const nonTargeted = dropDown.map((drop) => {
-      const nonActiveId = drop
-        .querySelector(`[${_variables.target}]`)
-        .getAttribute(_variables.target);
-      const nonActive = document.querySelector(`#${nonActiveId}`);
-      return nonActive;
-    });
-    const filterExceptActive = nonTargeted.filter(
-      (target) => target !== activeMenu
-    );
-    filterExceptActive.forEach((drop) =>
-      drop.classList.remove(_variables.active)
-    );
-    if (activeMenu) activeMenu.classList.toggle(_variables.active);
+import Dropdown from "./components/_dropdown";
+import Sidebar from "./components/_sidebar";
+import ProgressBar from "./components/_progress_bar";
+import BarChart from "./components/_bar_chart";
+import DoughnutChart from "./components/_doughnutChart";
+import SubscriptionReminderModal from "./components/_subscription_reminder_modal";
+
+class Main {
+  constructor() {
+    this._init();
+  }
+  _init() {
+    //Dropdown
+    new Dropdown().handle();
+    // Sidebar
+    new Sidebar().handle();
+    // Proress bar
+    new ProgressBar().update();
+    // Charts
+    new BarChart().update();
+    new DoughnutChart().update();
+    // Subscription Reminder Modal
+    new SubscriptionReminderModal();
+  }
+}
+
+if (document.readyState !== "loading") {
+  new Main();
+} else {
+  document.addEventListener("DOMContentLoaded", () => {
+    new Main();
   });
-};
-dropdown();
+}

@@ -4,7 +4,12 @@
   "parserOptions": {
     "ecmaVersion": "latest",
     "sourceType": "module",
-    "requireConfigFile": false
+    "requireConfigFile": false,
+    "ecmaFeatures": {
+      "jsx": true,
+      "js": true,
+      "experimentalObjectRestSpread": true
+    }
   },
   "env": {
     "node": true,

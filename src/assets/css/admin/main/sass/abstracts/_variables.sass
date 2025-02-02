@@ -17,6 +17,8 @@
   --heading-4: 1.8rem
   --heading-5: 1.6rem
   --heading-6: 1.6rem
+  --default-dropdown-width: 22.5rem
+  --default-sidebar-nav-width: 25rem
 
 @function get-color($color_name: "gray", $shade: main)
   @each $block, $children in $e-colors
@@ -35,9 +37,9 @@ $global-bg-color: get-color("gray")
 /* Sidebar */
 $sidebar-bg-color: get-color("primary")
 $sidebar-menu-item-color: get-color("gray", 50)
-$sidebar-menu-item-hvr-bg-color: get-color("primary", 400)
-$sidebar-menu-item-active-brd-color: get-color("secondary")
-$sidebar-menu-title-clr: get-color("gray", 500)
+$sidebar-menu-item-hover-bg-color: get-color("primary", 400)
+$sidebar-menu-item-active-border-color: get-color("secondary")
+$sidebar-menu-title-color: get-color("gray", 500)
 $sidebar-empl-of-month-bg-color: rgba(52, 66, 111, 0.8)
 /* Navbar */
 $navbar-bg-color: get-color("gray", 50)
@@ -145,6 +147,10 @@ $default-bdg-padding: 0.4rem 1.2rem
 $default-input-padding: 0.9rem 3rem
 $default-dropdown-width: 22.5rem
 $default-dropdown-max-height: 35rem
+//navbar
+$default-navbar-height: 6rem
+$default-sidebar-nav-width: 25rem
+$btn-icon-hvr-bg: get-color("gray")
 
 /* ************** TYPOGRAPHY ************** */
 
