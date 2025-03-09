@@ -1,0 +1,121 @@
+@use "sass:map";
+:root {
+  //Typography
+  --heading-1: 6.2rem;
+  --heading-2: 4.8rem;
+  --heading-3: 4rem;
+  --heading-4: 3.2rem;
+  --heading-5: 2.4rem;
+  --heading-6: 2rem;
+}
+
+/* 
+---------- TYPOGRAPHY ----------
+
+FONT-SIZE: 12px / 16px / 20px / 24px / 32px / 48px / 64px 
+FONT-WEIGHT: 400 / 700
+LINE-HEIGHT: 1.5 / 1.2
+LETTER-SPACING: 0 / -2px
+FONT-FAMILY: "poppins", sans-serif;
+
+*/
+// Navbar
+$navbar-height: 10rem;
+//Default
+$default-font-family: "poppins", sans-serif;
+$paragraph-font-size: 2rem;
+$small-text-size: 1.2rem;
+$link-font-size: 1.6rem;
+$heading-font-weight: 700;
+$paragraph-font-weight: 400;
+$heading-line-height: 1.2;
+$paragraph-line-height: 1.5;
+$heading-letter-spacing: -0.2rem;
+$paragraph-letter-spacing: 0;
+
+//Button
+$button-font-size: 1.6rem;
+$button-font-weight: 400;
+$button-padding-y: 1.5rem;
+$button-padding-x: 3rem;
+
+// Highlight
+$highlight-padding-y: 0.5rem;
+$highlight-padding-x: 1rem;
+
+// CTA Card
+$cta-card-padding-y: 10rem;
+$cta-card-padding-x: 20rem;
+/* 
+
+--------- COLORS ---------
+PRIMARY
+base : #339af0 (sky blue
+tint: #d0ebff (artic)
+shade: #1c7ed6 (deep sea)
+
+SECONDARY
+base: #9775fa (lavender)
+tint: #e5dbff (monlight iris)
+shade: #7048e8 (Velvet Night)
+
+TERTIARY
+base: #ff922b (Pumpkin)
+tint: #ffe8cc (Dawn)
+Shade: #f76707 (Lava)
+
+GRAYSCALE
+base: #495057 (Slate)
+tint: #f1f3f5 (Pebble)
+shade: #212529 (Graphite)
+
+*/
+$white: #fff;
+$black: #000;
+$primary-color: #339af0;
+$primary-tint-color: #d0ebff;
+$primary-shade-color: #1c7ed6;
+
+$secondary-color: #9775fa;
+$secondary-tint-color: #e5dbff;
+$secondary-shade-color: #7048c8;
+
+$tertiary-color: #ff922b;
+$tertiary-tint-color: #ffe8cc;
+$tertiary-shade-color: #f76707;
+
+$grayscale-color: #495057;
+$grayscale-tint-color: #f1f3f5;
+$grayscale-shade-color: #212529;
+
+/* --------- BORDER RADIUS --------- */
+
+$button-border-radius: 0.8rem;
+$card-border-radius: 2rem;
+$highlight-border-radius: 0.4rem;
+
+/* --------- SPACING SYSTEM --------- */
+$margins: (
+  0: 0,
+  5: 0.5rem,
+  10: 1rem,
+  15: 1.5rem,
+  20: 2rem,
+  25: 2.5rem,
+  30: 3rem,
+  40: 4rem,
+  50: 5rem,
+  60: 6rem,
+  70: 7rem,
+  80: 8rem,
+  90: 9rem,
+  100: 10rem,
+  125: 12.5rem,
+  150: 15rem,
+  200: 20rem,
+  250: 25rem,
+  300: 30rem,
+  400: 40rem,
+  500: 50rem,
+);
+$navbar-margin-bottom: map-get($margins, 200);

@@ -1,0 +1,35 @@
+@use "css/training/html/scss/abstracts/variables" as *;
+
+/*------------ Navbar ----------- */
+// .header {
+//   height: 100vh;
+//   min-height: 800px;
+// }
+
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: $navbar-height;
+  &__connexion-btn {
+    display: flex;
+    gap: 2rem;
+  }
+}
+
+/*------------ Hero Section ----------- */
+.hero-section {
+  height: calc(100vh - #{$navbar-height});
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  .hero-heading {
+    text-align: center;
+  }
+  &__btns-container {
+    display: flex;
+    gap: 2rem;
+  }
+}

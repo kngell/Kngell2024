@@ -1,0 +1,29 @@
+@use "css/training/html/scss/abstracts/variables" as *;
+
+/* ---------- Features Section ----------  */
+.features-section {
+  &__heading2 {
+    text-align: center;
+  }
+  &__img {
+    max-width: 400px;
+    width: 100%;
+  }
+}
+
+/*------------ CTA Section ----------- */
+.cta-section {
+  display: flex;
+  justify-content: center;
+}
+.cta-card {
+  text-align: center;
+  background-color: $primary-color;
+  width: 100%;
+  max-width: 1000px;
+  padding: $cta-card-padding-y $cta-card-padding-x;
+  border-radius: $card-border-radius;
+}
+.small-text {
+  font-size: $small-text-size;
+}

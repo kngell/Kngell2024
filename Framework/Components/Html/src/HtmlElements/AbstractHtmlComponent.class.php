@@ -77,7 +77,7 @@ abstract class AbstractHtmlComponent
     {
         $tag = '<' . $tag;
         foreach ($tagAttrs as $attr => $value) {
-            if (in_array($attr, ['content', 'tag', 'formErrors', 'formValues', 'token']) || is_object($value)) {
+            if (in_array($attr, ['content', 'tag', 'formErrors', 'formValues', 'token', 'position']) || is_object($value)) {
                 continue;
             }
 

@@ -124,6 +124,12 @@ abstract class Controller
     private function context(array $context) : array
     {
         $this->view->setToken($this->token);
+        if ($this::class === 'DashboardController') {
+            $this->setLayout('admin');
+        }
+        if (str_starts_with($this::class, 'Ecommerce')) {
+            $this->setLayout('ecommerce');
+        }
         return match (true) {
             $this->view->getPath() === 'Frontend' && $this->view->getLayout() === 'default' => array_merge($context, (new NavbarDecorator($this))->page(), ['message' => $this->flash->get()]),
             default => $context,

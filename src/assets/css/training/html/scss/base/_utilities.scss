@@ -1,0 +1,29 @@
+@use "css/training/html/scss/abstracts/variables" as *;
+
+/* ---------- UTILITIES ----------  */
+
+@each $margin, $value in $margins {
+  .m#{$margin} {
+    margin: $value;
+  }
+  .mt#{$margin} {
+    margin-top: $value;
+  }
+  .mr#{$margin} {
+    margin-right: $value;
+  }
+  .mb#{$margin} {
+    margin-bottom: $value;
+  }
+  .ml#{$margin} {
+    margin-left: $value;
+  }
+  .mx#{$margin} {
+    margin-left: $value;
+    margin-right: $value;
+  }
+  .my#{$margin} {
+    margin-top: $value;
+    margin-bottom: $value;
+  }
+}

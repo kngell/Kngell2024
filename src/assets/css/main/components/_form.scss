@@ -1,0 +1,20 @@
+@use "css/main/abstracts" as *;
+
+.form-container {
+  width: 100%;
+  padding: 1rem;
+  background-color: $form-bg-color;
+}
+form {
+  width: 100%;
+}
+.input-container {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: stretch;
+  column-gap: 1rem;
+  .input-box {
+    flex: 1;
+  }
+}

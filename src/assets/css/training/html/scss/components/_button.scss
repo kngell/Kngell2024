@@ -1,0 +1,66 @@
+@use "css/training/html/scss/abstracts/variables" as *;
+
+/* ---------- BUTTONS ----------  */
+.btn {
+  font-weight: $button-font-weight;
+  font-size: $button-font-size;
+  text-decoration: none;
+  padding: $button-padding-y $button-padding-x;
+  border-radius: $button-border-radius;
+  &-primary {
+    &:link,
+    &:visited {
+      color: $white;
+      background-color: $primary-color;
+      border: 2px solid $primary-color;
+    }
+    &:hover,
+    &:active {
+      color: $white;
+      background-color: $primary-shade-color;
+      border: 2px solid $primary-shade-color;
+    }
+    &-outline {
+      &:link,
+      &:visited {
+        color: $primary-color;
+        background-color: $white;
+        border: 2px solid $primary-color;
+      }
+      &:hover,
+      &:active {
+        color: $primary-shade-color;
+        background-color: $white;
+        border: 2px solid $primary-shade-color;
+      }
+    }
+  }
+  &-secondary {
+    &:link,
+    &:visited {
+      color: $white;
+      background-color: $secondary-color;
+      border: 2px solid $secondary-color;
+    }
+    &:hover,
+    &:active {
+      color: $white;
+      background-color: $secondary-shade-color;
+      border: 2px solid $secondary-shade-color;
+    }
+  }
+  &-tertiary {
+    &:link,
+    &:visited {
+      color: $white;
+      background-color: $tertiary-color;
+      border: 2px solid $tertiary-color;
+    }
+    &:hover,
+    &:active {
+      color: $white;
+      background-color: $tertiary-shade-color;
+      border: 2px solid $tertiary-shade-color;
+    }
+  }
+}

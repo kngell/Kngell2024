@@ -11,9 +11,13 @@
     "SignupController": ["*"],
     "ForgotPasswordController": ["*"],
     "AccountController": ["*"],
-    "TrainingController": ["*"],
+    "Sass2Controller": ["*"],
     "Training1Controller": ["*"],
-    "DashboardController": ["*"]
+    "DashboardController": ["*"],
+    "EcommerceController": ["*"],
+    "FreeCodeCampController": ["*"],
+    "HtmlController": ["*"],
+    "PratiqueController": ["*"]
   },
   "LoggedIn": {
     "denied": {

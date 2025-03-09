@@ -1,0 +1,17 @@
+@use "css/main/abstracts" as *;
+
+*:focus {
+  outline: none;
+  box-shadow: none;
+}
+html {
+  font-size: $base-font-size;
+  height: 100%;
+}
+body {
+  box-sizing: border-box;
+  font-family: $body-font-family;
+  width: 100%;
+  min-height: 100%;
+  font-size: $paragraph-size;
+}

@@ -1,0 +1,17 @@
+@use "css/training/html/scss/abstracts/variables" as *;
+
+/* ---------- HIGHLIGHT ----------  */
+.highlight {
+  color: $white;
+  padding: $highlight-padding-y $highlight-padding-y;
+  border-radius: $highlight-border-radius;
+  &-primary {
+    background-color: $primary-color;
+  }
+  &-secondary {
+    background-color: $secondary-color;
+  }
+  &-tertiary {
+    background-color: $tertiary-color;
+  }
+}

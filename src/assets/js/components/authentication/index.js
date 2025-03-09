@@ -1,6 +1,6 @@
 import $ from "jquery";
 import "jquery-validation";
-import "hideshowpassword";
+// import "hideshowpassword";
 
 class Authentication {
   constructor(element) {
@@ -56,11 +56,11 @@ class Authentication {
         first_name: "First Name is required",
       },
     });
-    const password = plugin.form.find("#password");
-    password.hideShowPassword({
-      show: false,
-      innerToggle: "focus",
-    });
+    // const password = plugin.form.find("#password");
+    // password.hideShowPassword({
+    //   show: false,
+    //   innerToggle: "focus",
+    // });
   };
 }
 new Authentication($("#main-site"))._init();

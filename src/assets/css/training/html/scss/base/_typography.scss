@@ -1,0 +1,26 @@
+@use "css/training/html/scss/abstracts/variables" as *;
+
+/* ---------- TYPOGRAPHY ----------  */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: $heading-font-weight;
+  line-height: $heading-line-height;
+  letter-spacing: $heading-letter-spacing;
+}
+@for $i from 1 through 6 {
+  h#{$i} {
+    font-size: var(--heading-#{$i});
+  }
+}
+
+p {
+  font-size: $paragraph-font-size;
+}
+a {
+  font-size: $link-font-size;
+}

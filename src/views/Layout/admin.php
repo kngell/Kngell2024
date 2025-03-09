@@ -1,8 +1,8 @@
 <?php declare(strict_types=1);
-require_once 'inc/admin/header.php'; ?>
+require_once 'inc/admin/head.php'; ?>
 
-<!----------------Navbar-------------------->
-<?= $navComponent ?? ''?>
+<!----------------Header-------------------->
+<?php require_once 'inc/admin/header.php'; ?>
 <!----------------xNavbar-------------------->
 <!----------------Sidenavbar-------------------->
 <?= $sideNavComponent ?? ''?>
@@ -10,4 +10,5 @@ require_once 'inc/admin/header.php'; ?>
 <!----------------Body----------------------->
 <?= $this->content('body'); ?>
 <!----------------xBody---------------------->
+<?php require_once 'inc/admin/modal.php'; ?>
 <?php require_once 'inc/admin/footer.php';

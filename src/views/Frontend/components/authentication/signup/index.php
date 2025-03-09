@@ -10,7 +10,9 @@ $this->start('head'); ?>
       <div class="row">
          <!-- Register Form -->
          <?=$message ?? '' ?>
-         <?=$authForm ?? '' ?>
+         <div class="form-container register-frm-box">
+            <?=$authForm ?? '' ?>
+         </div>
       </div>
    </div>
    <!-- Fin Content -->

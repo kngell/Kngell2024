@@ -1,0 +1,28 @@
+@use "css/training/html/scss/abstracts/variables" as *;
+
+/* ---------- BASE ----------  */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+html {
+  font-size: 62.5%;
+}
+body {
+  font-family: $default-font-family;
+  font-weight: $paragraph-font-weight;
+  line-height: $paragraph-line-height;
+  color: $grayscale-color;
+}
+a {
+  text-decoration: none;
+  display: inline-block;
+}
+span {
+  display: inline-block;
+}
+ul {
+  list-style: none;
+}

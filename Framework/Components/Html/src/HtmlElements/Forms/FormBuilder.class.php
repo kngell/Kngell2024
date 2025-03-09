@@ -50,15 +50,12 @@ class FormBuilder extends AbstractHtmlElement
      */
     public function input(string $type) : AbstractInput
     {
-        return match (strtolower($type)) {
-            'text' => new TextType(),
-            'radio' => new RadioType(),
-            'hidden' => new HiddenType(),
-            'email' => new EmailType(),
-            'password' => new PasswordType(),
-            'checkbox' => new CheckBoxType(),
-            'submit' => new SubmitType()
-        };
+        $inputType = ucfirst(strtolower($type)) . 'Type';
+        try {
+            return new $inputType();
+        } catch (Throwable $th) {
+            throw new FormElementNotFound($inputType);
+        }
     }
 
     /**

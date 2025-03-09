@@ -1,0 +1,42 @@
+@use "css/main/abstracts" as *;
+
+@import "@fontsource/manrope/400.css";
+@import "@fontsource/manrope/500.css";
+@import "@fontsource/manrope/700.css";
+
+@import "@fontsource/poppins/100.css";
+@import "@fontsource/poppins/400.css";
+@import "@fontsource/poppins/500.css";
+@import "@fontsource/poppins/600.css";
+@import "@fontsource/poppins/700.css";
+@import "@fontsource/poppins/800.css";
+
+h1,
+.k-h1,
+h2,
+.k-h2,
+h3,
+.k-h3,
+h4,
+.k-h4,
+h5,
+.k-h5,
+h6,
+.k-h6 {
+  font-family: $heading-font-family;
+  color: inherit;
+  line-height: $heading-line-height;
+  margin: 0;
+}
+
+@for $i from 1 through 6 {
+  h#{$i},
+  .k-h#{$i} {
+    font-size: var(--heading-#{$i});
+    font-weight: var(--heading-font-weight-#{$i});
+  }
+}
+h6,
+.k-h6 {
+  color: #d8d8d8;
+}

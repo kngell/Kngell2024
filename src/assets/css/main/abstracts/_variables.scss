@@ -1,0 +1,14 @@
+@use "sass:map";
+@use "partials/color_map_variable" as *;
+
+/********* COLORS **********/
+
+/* ************** TYPOGRAPHY ************** */
+$base-font-size: 62.5%;
+$body-font-family: "Poppins", sans-serif;
+$heading-font-family: "Manrope", sans-serif;
+$font-weight-bold: 700;
+$heading-line-height: 1.4;
+$paragraph-size: 1.4rem;
+$input-color: #d8d8d8;
+$form-bg-color: white;
