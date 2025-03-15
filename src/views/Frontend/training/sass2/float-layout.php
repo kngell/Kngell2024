@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 $this->start('head'); ?>
 <!-------Costum-------->
-<?= $this->css('css/training/sass2/main') ?>
+<?= $this->css('css/training/sass2/old-layout/main') ?>
 <?php $this->end(); ?>
 <?php $this->start('body'); ?>
 <main id="main-site">

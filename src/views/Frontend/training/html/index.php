@@ -98,12 +98,7 @@ $this->start('head'); ?>
    </footer>
 </div>
 
-
-
-
-
 <!-- Fin Content -->
-
 
 <?php $this->end(); ?>
 <?php $this->start('footer') ?>

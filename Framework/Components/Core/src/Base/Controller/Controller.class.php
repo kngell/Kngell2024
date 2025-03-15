@@ -11,6 +11,7 @@ abstract class Controller
     protected SessionInterface $session;
     protected EventManagerInterface $eventManager;
     private ViewInterface $view;
+    private string $layout;
 
     public function __call($name, $args)
     {
@@ -99,11 +100,6 @@ abstract class Controller
         $this->view->addProperties($props);
     }
 
-    protected function setLayout(string $layout) : void
-    {
-        $this->view->setLayout($layout);
-    }
-
     protected function response(string $template, array $data = []) : Response
     {
         return new Response(
@@ -124,6 +120,9 @@ abstract class Controller
     private function context(array $context) : array
     {
         $this->view->setToken($this->token);
+        if (isset($this->layout)) {
+            $this->view->setLayout($this->layout);
+        }
         if ($this::class === 'DashboardController') {
             $this->setLayout('admin');
         }

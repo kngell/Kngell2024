@@ -14,6 +14,7 @@ class View implements ViewInterface
     private string $_layout = 'default';
     private string $_token = '';
     private array $properties = [];
+    private string $favicon;
 
     public function __construct(ViewEnvironment $viewEnv)
     {
@@ -46,6 +47,14 @@ class View implements ViewInterface
     public function getPageTitle() : string
     {
         return $this->_pageTitle;
+    }
+
+    public function favicon() : string
+    {
+        if (isset($this->favicon)) {
+            return $this->favicon;
+        }
+        return '';
     }
 
     public function getPath() : string

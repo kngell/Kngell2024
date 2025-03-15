@@ -1,0 +1,18 @@
+@use 'css/training/sass2/flexbox/abstracts' as *
+
+/*------- Button -------*/
+.btn-inline
+   display: inline-block
+   border: none
+   color: var(--color-primary)
+   background-color: transparent
+   font-size: inherit
+   border-bottom: 1px solid currentColor
+   padding-bottom: 2px
+   cursor: pointer
+   transition: all .2s
+   &:hover
+      color: var(--color-gray-dark-1)
+   &:focus
+      outline: none
+      animation: pulsate 1s infinite

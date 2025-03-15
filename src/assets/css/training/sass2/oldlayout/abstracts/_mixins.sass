@@ -1,0 +1,45 @@
+@mixin clearfix()
+   &::after
+      content: ''
+      display: table
+      clear: both
+
+@mixin abs-center()
+   position: absolute
+   top: 50%
+   left: 50%
+   transform: translate(-50%,-50%)
+
+@mixin flex-center()
+   display: flex
+   justify-content: center
+   align-items: center
+
+/*------- Media query manager -------*/
+/* 0 - 600px    : phones
+ 600px - 900px  : tablet and portrait
+ 900px - 1200px : tablet and landscapes
+ 1200px - 1800px: normal style applied
+ 1800px +       : big desktop 
+ 1em - 16px */
+
+/* $breakpoint arguments choices */
+/* - phone
+ - tab-port
+ - tab-land
+ - big-desktop 
+ ORDER --> Base + Typography > general layout + grid > pages > components */
+
+@mixin respond($breakpoint)
+   @if $breakpoint == phone
+      @media screen and ( max-width: 37.5em ) //600px
+         @content
+   @if $breakpoint == tab-port
+      @media screen and ( max-width: 56.23em ) // 900px
+         @content
+   @if $breakpoint == tab-land
+      @media screen and ( max-width: 75em ) // 1200px
+         @content
+   @if $breakpoint == big-desk
+      @media screen and ( min-width: 112.5 ) // 1800px
+         @content

@@ -1,0 +1,29 @@
+
+@use 'colors' as *
+/*-------------- COLORS --------------*/
+
+//   --color-primary: #eb2f64;
+//   --color-primary-light: #ff3366;
+//   --color-primary-dark: #ba265d;
+//   --color-gray-light-1: #faf9f9;
+//   --color-gray-light-2: #f4f2f2;
+//   --color-gray-light-3: #f0eeee;
+//   --color-gray-light-4: #ccc;
+//   --color-gray-dark-1: #333;
+//   --color-gray-dark-2: #777;
+//   --color-gray-dark-3: #999;
+
+:root
+   @each $block, $children in $colors
+      @each $child, $value in $children
+         $name: map-get($children, name)
+         @if type-of($value)==map
+            @each $item, $val in $value
+               @if $item==main
+                  --color-#{$name}: #{$val}
+               @else
+                  --color-#{$name}-#{$item}: #{$val}
+
+/*------- BOX SHADOW -------*/
+
+$box-shadow-dark: 0 2rem 6rem rgba(0,0,0,.3)

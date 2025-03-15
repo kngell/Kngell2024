@@ -82,4 +82,9 @@ trait ControllerGettersAndSetters
         $this->eventManager = $eventManager;
         return $this;
     }
+
+    protected function setLayout(string $layout) : void
+    {
+        $this->layout = $layout;
+    }
 }
