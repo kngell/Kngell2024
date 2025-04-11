@@ -7,10 +7,13 @@
         </div>
      </div>
   </footer>
+  <!-- Runtime Webpack -->
+  <?= $this->js('runtime') ?>
   <!-- Librairies -->
+  <?= $this->js('commons/frontend/vendors') ?>
   <?= $this->js('js/librairies/adminlib') ?>
   <!-- Common vendor -->
-  <?= $this->js('commons/client/commonVendor', 'js') ?>
+  <?= $this->js('commons/client/commonVendor') ?>
   <!-- Custom Common Modules  -->
   <?= $this->js('commons/admin/commonCustomModules', 'js') ?>
   <!-- Plugins -->

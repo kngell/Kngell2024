@@ -20,7 +20,7 @@ class HtmlBuilder extends AbstractHtmlElement
         return match (true) {
             in_array($tag, ['div', 'section', 'body', 'nav', 'ul', 'li', 'dl']) => new self($this->token, $tag),
             $tag === 'a' => new HtmlaElement(),
-            in_array($tag, ['p', 'span', 'dd', 'dt']) || preg_match('~[0-9]+~', $tag) => new HtmlTagElement($tag),
+            in_array($tag, ['p', 'span', 'dd', 'dt', 'img']) || preg_match('~[0-9]+~', $tag) => new HtmlTagElement($tag),
         };
     }
 
@@ -61,9 +61,13 @@ class HtmlBuilder extends AbstractHtmlElement
         return $this;
     }
 
+    /**
+     * @param array $class
+     * @return HtmlBuilder
+     */
     public function class(array $class): self
     {
-        $this->class = $class;
+        $this->class = array_merge($this->class, $class);
         return $this;
     }
 
@@ -229,7 +233,7 @@ class HtmlBuilder extends AbstractHtmlElement
         return $this;
     }
 
-    public function tabindex(string $tabindex): self
+    public function tabindex(int $tabindex): self
     {
         $this->tabindex = $tabindex;
         return $this;

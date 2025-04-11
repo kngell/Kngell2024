@@ -17,7 +17,11 @@ class HtmlTagElement extends AbstractHtmlComponent
         if (isset($this->content)) {
             $tag .= $this->content;
         }
-        return $tag . '</' . $this->tag . '>';
+        $end = '';
+        if (! in_array($this->tag, ['img', 'input', 'br', 'hr', 'meta', 'link', 'base', 'area', 'col', 'embed', 'param', 'source'])) {
+            $end = '</' . $this->tag . '>';
+        }
+        return $tag . $end;
     }
 
     /**
@@ -37,6 +41,26 @@ class HtmlTagElement extends AbstractHtmlComponent
     public function accesskey(string $accesskey): self
     {
         $this->accesskey = $accesskey;
+        return $this;
+    }
+
+    /**
+     * @param string $src
+     * @return HtmlTagElement
+     */
+    public function src(string $src) : self
+    {
+        $this->src = $src;
+        return $this;
+    }
+
+    /**
+     * @param string $alt
+     * @return HtmlTagElement
+     */
+    public function alt(string $alt) : self
+    {
+        $this->alt = $alt;
         return $this;
     }
 
@@ -181,10 +205,10 @@ class HtmlTagElement extends AbstractHtmlComponent
     }
 
     /**
-     * @param string $tabindex
+     * @param int $tabindex
      * @return HtmlTagElement
      */
-    public function tabindex(string $tabindex): self
+    public function tabindex(int $tabindex): self
     {
         $this->tabindex = $tabindex;
         return $this;

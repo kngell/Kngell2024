@@ -14,7 +14,7 @@ class View implements ViewInterface
     private string $_layout = 'default';
     private string $_token = '';
     private array $properties = [];
-    private string $favicon;
+    // private string $favicon;
 
     public function __construct(ViewEnvironment $viewEnv)
     {
@@ -46,16 +46,19 @@ class View implements ViewInterface
 
     public function getPageTitle() : string
     {
-        return $this->_pageTitle;
-    }
-
-    public function favicon() : string
-    {
-        if (isset($this->favicon)) {
-            return $this->favicon;
+        if (! empty($this->_pageTitle)) {
+            return '<title>' . $this->_pageTitle . '</title>';
         }
         return '';
     }
+
+    // public function favicon() : string
+    // {
+    //     if (isset($this->favicon)) {
+    //         return $this->favicon;
+    //     }
+    //     return '';
+    // }
 
     public function getPath() : string
     {
@@ -90,12 +93,9 @@ class View implements ViewInterface
     private function renderViewContent(string $templatePath, $context) : string
     {
         extract($context, EXTR_SKIP);
-        // foreach ($context as $key => $value) {
-        //     $$key = $value;
-        // }
         require_once $templatePath;
-        $layout = $this->viewEnv->getLayout($this->_layout);
-        if ($layout) {
+        $layout = $this->viewEnv->getLayoutPath() . DS . $this->_layout . '.php';
+        if (! empty($layout)) {
             $this->start('html');
             require_once $layout;
             $this->end();

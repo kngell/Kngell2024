@@ -6,3 +6,4 @@ requireLogin: RequireLoginMiddleware
 return_to: RememberPreviousPageMiddleware
 grantAccess: GrantAccessMiddleware
 remember: RememberMeMiddleware
+xss: XSSProtectionMiddleware

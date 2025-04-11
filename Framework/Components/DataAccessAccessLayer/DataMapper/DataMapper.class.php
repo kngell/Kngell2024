@@ -18,91 +18,10 @@ class DataMapper extends AbstractDataMapper
     public function persist(string $sql = '', array $parameters = [], bool $isSearch = false) : self
     {
         try {
-            return isset($parameters[0]) && $parameters[0] == 'all' ? $this->prepare($sql)->execute() : $this->prepare($sql)->bindParameters($parameters, $isSearch)->execute();
+            return $this->prepare($sql)->bindParameters($parameters, $isSearch)->execute();
         } catch (Throwable $th) {
             throw $th;
         }
-    }
-
-    public function bindParameters(array $parameters = [], bool $isSearch = false) : bool|self
-    {
-        $type = ($isSearch === false) ? $this->bindArrayValues($parameters) : $this->biendSearchValues($parameters);
-        if ($type) {
-            return $this;
-        }
-
-        return false;
-    }
-
-    /**
-     * @param string $sql
-     * @return DataMapper
-     */
-    public function prepare(string $sql) : self
-    {
-        $this->_query = $this->_con->open()->prepare($sql);
-        return $this;
-    }
-
-    /**
-     * @param string $param
-     * @param mixed $value
-     * @param int|null $type
-     * @return DataMapper
-     * @throws DataMapperExceptions
-     */
-    public function bindValues(string $param, mixed $value, int|null $type = null) : self
-    {
-        try {
-            $this->_query->bindValue($param, $value, $type === null ? $this->valueType($value) : $type);
-            return $this;
-        } catch (Throwable $ex) {
-            throw new DataMapperExceptions($ex->getMessage(), $ex->getCode());
-        }
-    }
-
-    /**
-     * @param array $fields
-     * @return PDOStatement
-     * @throws DataMapperExceptions
-     */
-    public function bindArrayValues(array $fields) : PDOStatement
-    {
-        if ($this->isArray($fields)) {
-            foreach ($fields as $key => $value) {
-                $this->_query->bindValue(':' . $key, $value, $this->valueType($value));
-            }
-        }
-        return $this->_query;
-    }
-
-    /**
-     * @param array $fields
-     * @return DataMapper
-     * @throws DataMapperExceptions
-     */
-    public function biendSearchValues(array $fields = []) : self
-    {
-        $this->isArray($fields);
-        foreach ($fields as $key => $value) {
-            $this->_query->bindValue(':' . $key, '%' . $value . '%', $this->valueType($value));
-        }
-        return $this;
-    }
-
-    /**
-     * @return DataMapper
-     * @throws PDOException
-     * @throws DataMapperExceptions
-     */
-    public function execute(): self
-    {
-        if ($this->_query) {
-            $this->queryResult = $this->_query->execute();
-        } else {
-            throw new DataMapperExceptions('An error occures during query execution');
-        }
-        return $this;
     }
 
     /**
@@ -121,6 +40,86 @@ class DataMapper extends AbstractDataMapper
             return true;
         }
         return false;
+    }
+
+    /**
+     * @return DataMapper
+     * @throws PDOException
+     * @throws DataMapperExceptions
+     */
+    private function execute(): self
+    {
+        if ($this->_query) {
+            $this->queryResult = $this->_query->execute();
+        } else {
+            throw new DataMapperExceptions('An error occures during query execution');
+        }
+        return $this;
+    }
+
+    /**
+     * @param array $fields
+     * @return DataMapper
+     * @throws DataMapperExceptions
+     */
+    private function bindSearchValues(array $fields = []) : self
+    {
+        $this->isArray($fields);
+        foreach ($fields as $key => $value) {
+            $this->_query->bindValue(':' . $key, '%' . $value . '%', $this->valueType($value));
+        }
+        return $this;
+    }
+
+    /**
+     * @param array $fields
+     * @return PDOStatement
+     * @throws DataMapperExceptions
+     */
+    private function bindArrayValues(array $fields) : PDOStatement
+    {
+        if ($this->isArray($fields)) {
+            foreach ($fields as $key => $value) {
+                $this->_query->bindValue(':' . $key, $value, $this->valueType($value));
+            }
+        }
+        return $this->_query;
+    }
+
+    private function bindParameters(array $parameters = [], bool $isSearch = false) : bool|self
+    {
+        $type = ($isSearch === false) ? $this->bindArrayValues($parameters) : $this->bindSearchValues($parameters);
+        if ($type) {
+            return $this;
+        }
+        return false;
+    }
+
+    /**
+     * @param string $param
+     * @param mixed $value
+     * @param int|null $type
+     * @return DataMapper
+     * @throws DataMapperExceptions
+     */
+    private function bindValues(string $param, mixed $value, int|null $type = null) : self
+    {
+        try {
+            $this->_query->bindValue($param, $value, $type === null ? $this->valueType($value) : $type);
+            return $this;
+        } catch (Throwable $ex) {
+            throw new DataMapperExceptions($ex->getMessage(), $ex->getCode());
+        }
+    }
+
+    /**
+     * @param string $sql
+     * @return DataMapper
+     */
+    private function prepare(string $sql) : self
+    {
+        $this->_query = $this->_con->open()->prepare($sql);
+        return $this;
     }
 
     private function valueType(mixed $value) : int

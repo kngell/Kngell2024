@@ -6,13 +6,13 @@ abstract class AbstractHtmlComponent
 {
     protected AbstractHtmlComponent|null $parent;
     protected string $accesskey;
-    protected array $class;
+    protected array $class = [];
     protected string $contenteditable;
     protected string $data;
     protected string $dir;
     protected string $draggable;
     protected string $enterkeyhint;
-    protected string $hidden;
+    protected bool $hidden;
     protected string $id;
     protected string $inert;
     protected string $inputmode;
@@ -20,11 +20,12 @@ abstract class AbstractHtmlComponent
     protected string $popover;
     protected string $spellcheck;
     protected array $style;
-    protected string $tabindex;
+    protected int $tabindex;
     protected string $title;
     protected string $translate;
     protected array $custom;
     protected string $align;
+    protected string $accept;
     protected string $onclick;
     protected string $ondblclick;
     protected string $onmousedown;
@@ -38,6 +39,8 @@ abstract class AbstractHtmlComponent
     protected array $formErrors = [];
     protected array $formValues = [];
     protected ?string $content;
+    protected string $src;
+    protected string $alt;
 
     public function setParent(?self $parent)
     {

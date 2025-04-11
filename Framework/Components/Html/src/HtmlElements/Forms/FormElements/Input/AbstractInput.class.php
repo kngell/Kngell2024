@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 abstract class AbstractInput extends AbstractFormDataElement
 {
-    private const array ATTR_VALUES_TYPE = ['string', 'bool', 'boolean', 'array', 'integer'];
+    // private const array ATTR_VALUES_TYPE = ['string', 'bool', 'boolean', 'array', 'integer'];
     private const string TAG = 'input';
     protected bool $readonly;
     protected bool $disabled;
@@ -55,6 +55,16 @@ abstract class AbstractInput extends AbstractFormDataElement
     }
 
     /**
+     * @param bool $hidden
+     * @return AbstractInput
+     */
+    public function hidden(bool $hidden): self
+    {
+        $this->hidden = $hidden;
+        return $this;
+    }
+
+    /**
      * @param int $size
      * @return AbstractInput
      */
@@ -71,6 +81,16 @@ abstract class AbstractInput extends AbstractFormDataElement
     public function maxlength(int $maxlength): self
     {
         $this->maxlength = $maxlength;
+        return $this;
+    }
+
+    /**
+     * @param string $accept
+     * @return AbstractInput
+     */
+    public function accept(string $accept): self
+    {
+        $this->accept = $accept;
         return $this;
     }
 
@@ -210,7 +230,7 @@ abstract class AbstractInput extends AbstractFormDataElement
      */
     public function class(array $class): self
     {
-        $this->class = $class;
+        $this->class = array_merge($this->class, $class);
         return $this;
     }
 

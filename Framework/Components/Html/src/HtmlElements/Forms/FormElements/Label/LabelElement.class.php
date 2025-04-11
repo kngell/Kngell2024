@@ -82,7 +82,7 @@ class LabelElement extends AbstractHtmlElement
      */
     public function class(array $class): self
     {
-        $this->class = $class;
+        $this->class = array_merge($this->class, $class);
         return $this;
     }
 }

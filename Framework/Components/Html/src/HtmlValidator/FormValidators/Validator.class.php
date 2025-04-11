@@ -7,6 +7,7 @@ final readonly class Validator implements ValidatorInterface
     private array $inputRules;
     private AbstractValidatorCreator $validator;
     private array $inputFields;
+    private string $media;
 
     public function validate(array $inputFields, string $rules, ?Model $model = null) : array|bool
     {

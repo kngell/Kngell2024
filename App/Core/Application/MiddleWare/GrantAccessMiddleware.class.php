@@ -8,7 +8,7 @@ class GrantAccessMiddleware extends AbstractMiddleware implements MiddlewareInte
 
     public function __construct(private RouteInfo $route, private SessionInterface $session, private AclGroupModel $aclGroup)
     {
-        $this->acl = json_decode(file_get_contents(FileManager::get(APP, 'acl.json')), true);
+        $this->acl = json_decode(file_get_contents(dirname(getcwd()) . '/App/acl.json'), true);
     }
 
     public function process(Request $request, RequestHandlerInterface $next): Response|string

@@ -121,10 +121,12 @@ class Collection implements CollectionInterface
 
     public function min()
     {
+        return new static(min($this->items));
     }
 
     public function max()
     {
+        return new static(max($this->items));
     }
 
     /**

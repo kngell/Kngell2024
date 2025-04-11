@@ -87,6 +87,8 @@
 /_dev_error:
   controller: errors
   method: index
+/{controller}/cms-show/{img:[\w-]+.(?:png|jpg)}:
+  method: cms-show
 /{controller}/new/{form:\d+}:
   method: new
 /{controller}/show/{id:\d+}:
@@ -95,7 +97,7 @@
   method: show
 /{controller}/create:
   method: create
-  middleware: trim|user
+  middleware: trim
   httpMethod: post
 /{controller}/handleForm:
   method: handleForm

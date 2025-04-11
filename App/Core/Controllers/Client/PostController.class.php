@@ -47,6 +47,7 @@ class PostController extends Controller
             $this->flash->add('The post has been create successfully');
             return $this->redirect("/post/{$insert->getLastInsertId()}/show");
         }
+        return $this->response('new', ['form' => $this->frm->make('post/create')]);
     }
 
     public function show(string $id) : string

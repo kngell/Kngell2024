@@ -1,5 +1,7 @@
 import $ from "jquery";
 import "jquery-validation";
+import "img/upload_avatar.png";
+import "img/avatar.png";
 // import "hideshowpassword";
 
 class Authentication {

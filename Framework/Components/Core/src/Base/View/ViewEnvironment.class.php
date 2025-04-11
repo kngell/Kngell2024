@@ -5,20 +5,18 @@ declare(strict_types=1);
 class ViewEnvironment
 {
     private const string VIEW_DIRECTORY = VIEW;
-    private string $layout;
     private string $appPath;
     private Assets $assets;
 
     public function __construct(string $appPath, Assets $assets)
     {
-        $this->layout = APP . 'Views/Layout';
         $this->assets = $assets;
         $this->appPath = $appPath;
     }
 
-    public function getLayout(string $layout) : string
+    public function getLayoutPath() : string
     {
-        return $this->layout . DS . $layout . '.php';
+        return self::VIEW_DIRECTORY . 'Layout';
     }
 
     public function getFile(string $fileName) : string|bool

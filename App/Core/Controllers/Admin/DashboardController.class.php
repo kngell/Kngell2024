@@ -6,8 +6,7 @@ class DashboardController extends Controller
 {
     public function __construct()
     {
-        // $this->setLayout('admin');
-        // $this->handleCors();
+        $this->setLayout('admin');
     }
 
     public function index() : string
@@ -22,14 +21,8 @@ class DashboardController extends Controller
         return $this->render('ecommerce', $this->active(__FUNCTION__));
     }
 
-    // private function handleCors(): void
-    // {
-    //     header('Access-Control-Allow-Origin: *');
-    //     header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-    //     header('Access-Control-Allow-Headers: Content-Type, Authorization');
-    // }
     private function active(string $function) : array
     {
-        return [$function . 'Active' => 'k-active'];
+        return [$function => 'k-active'];
     }
 }

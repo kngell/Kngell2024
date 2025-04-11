@@ -7,9 +7,7 @@
    <?= $this->css('css/freecodecamp/main') ?? '' ?>
    <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon">
    <?= $this->content('head'); ?>
-   <title>
-      <?= $this->getPageTitle()?>
-   </title>
+   <?= $this->getPageTitle()?>
 </head>
 
 <body>

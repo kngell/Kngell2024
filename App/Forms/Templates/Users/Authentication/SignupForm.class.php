@@ -13,7 +13,10 @@ readonly class SignupForm extends AbstractTemplateForm
         $html = $this->builder;
         $formValues = $this->formValues($formValues);
         $form = $html->form()->formValues($formValues)->formErrors($formErrors);
-        $form->action($action)->name('register-form')->id('register-form')->method('post')->role('form')->add(
+        $form->action($action)->name('register-form')->id('register-form')->method('post')->role('form')->enctype('multipart/form-data')->add(
+            $form->tag('div')->class(self::INPUT_BOX_CLASS)->add(
+                $form->input('file')->name('profile-input')->id('profile-input')->class(self::INPUT_CLASS)->class(['profile-input'])->autocomplete('off')->hidden(true),
+            ),
             $html->tag('div')->class(['input-container'])->add(
                 $html->tag('div')->class(self::INPUT_BOX_CLASS)->add(
                     $form->input('text')->name('first_name')->id('first_name')->class(self::INPUT_CLASS)->autocomplete('off')->autofocus(true),

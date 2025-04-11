@@ -14,18 +14,12 @@
       content="K'nGELL is a consultancy agency spcialized in a supply chain, logistics and production flows improvement with the help of lean and six sigma tactics and strategies">
    <meta name="csrftoken" content="<?= $this->token()?>" />
    <meta name="frm_name" content="<?=$this->getPageTitle()?>" />
-
-   <title>
-      <?= $this->getPageTitle()?>
-   </title>
-   <!-- Main style -->
-   <?= $this->css('css/librairies/frontlib') ?? '' ?>
-   <!-- Plugins css -->
-   <?= $this->css('css/plugins/homeplugins') ?? '' ?>
+   <?= $this->getPageTitle()?>
+   <!-- Vendors -->
+   <?= $this->css('commons/frontend/vendors') ?>
+   <?= $this->css('css/librairies/frontlib') ?>
    <!-- Main style -->
    <?= $this->css('css/main/main') ?? '' ?>
-   <!-- CkEditor -->
-   <?= $this->css('css/ckeditor/ckeditor', 'css') ?? '' ?>
    <link rel="shortcut icon" href="data:," />
    <?= $this->content('head'); ?>
 </head>

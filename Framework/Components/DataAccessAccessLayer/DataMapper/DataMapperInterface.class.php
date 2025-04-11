@@ -4,14 +4,6 @@ declare(strict_types=1);
 
 interface DataMapperInterface
 {
-    public function prepare(string $sql) : self;
-
-    public function bindValues(string $param, mixed $value, int|null $type = null) : self;
-
-    public function biendSearchValues(array $fields = []) : self;
-
-    public function execute(): self;
-
     public function getQueryStatement(): PDOStatement;
 
     public function getQueryResult(): bool;

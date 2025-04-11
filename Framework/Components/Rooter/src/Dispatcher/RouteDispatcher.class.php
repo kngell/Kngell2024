@@ -85,7 +85,7 @@ readonly class RouteDispatcher
         if (! empty($middlewares)) {
             return implode('|', $middlewares);
         }
-        return [];
+        return '';
     }
 
     /**

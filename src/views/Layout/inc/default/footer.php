@@ -71,12 +71,11 @@
   </footer>
   <!-- End footer -->
   <?= $jv_script_from_php ?? ''?>
-  <!-- Librairies -->
-  <?= $this->js('js/librairies/frontlib', 'js') ?>
-  <!-- Common vendor -->
-  <?= $this->js('commons/client/commonVendor', 'js') ?>
-  <!-- Custom Common Modules  -->
-  <?= $this->js('commons/client/commonCustomModules', 'js') ?>
+  <!-- Runtime Webpack -->
+  <?= $this->js('runtime') ?>
+  <!-- FrontLib -->
+  <?= $this->js('commons/frontend/vendors') ?>
+  <?= $this->js('js/librairies/frontlib') ?>
   <!-- Plugins -->
   <?= $this->js('js/plugins/homeplugins', 'js') ?>
   <!-- Mainjs -->

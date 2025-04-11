@@ -1,0 +1,37 @@
+@use 'css/training/pratique/dairy/abstracts' as *
+
+/*----------------------- NAVIGATION ----------------------*/
+.nav
+   display: flex
+   justify-content: space-between
+   align-items: center
+   height: 4.8rem
+   .nav-brand
+      display: flex
+      flex-direction: column
+      justify-content: center
+      align-items: center
+      height: 100%
+      &__logo
+         display: flex
+         justify-content: center
+         align-items: center
+         text-decoration: none
+         height: 100%
+         color: $color-white
+         gap: .25rem
+         &--img
+            width: 3.6rem
+            height: 4.8rem
+            fill: currentColor
+            color: $color-secondary
+         &--text
+            color: $color-white
+            margin-bottom: 0
+      &:hover .nav-brand__logo--img
+         color: $color-nav-brand-hover
+   .nav-form
+      display: flex
+      flex-direction: columns
+      justify-content: center
+      align-items: center

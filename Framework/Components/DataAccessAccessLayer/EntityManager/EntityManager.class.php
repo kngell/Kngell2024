@@ -48,7 +48,6 @@ class EntityManager implements EntityManagerInterface
         if (null !== $entityName) {
             if ($entityName instanceof Entity) {
                 $entityName = $entityName::class;
-                $this->entity = $entityName;
             }
 
             if (isset($this->repositories[$entityName])) {

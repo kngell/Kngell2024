@@ -40,12 +40,12 @@
                   </a>
                   <ul class="k-dropdown__menu" id="submenu">
                      <li><a href="/dashboard/index"
-                           class="k-header__sublink u-display-block u-padding-x-20 u-padding-y-10 <?= $indexActive ?? '' ?>">
+                           class="k-header__sublink u-display-block u-padding-x-20 u-padding-y-10 <?= $index ?? '' ?>">
                            Projects
                         </a>
                      </li>
                      <li><a href="/dashboard/ecommerce"
-                           class="k-header__sublink u-display-block u-padding-x-20 u-padding-y-10 <?= $ecommerceActive ?? '' ?>">
+                           class="k-header__sublink u-display-block u-padding-x-20 u-padding-y-10 <?= $ecommerce ?? '' ?>">
                            E-Commerce
                         </a>
                      </li>

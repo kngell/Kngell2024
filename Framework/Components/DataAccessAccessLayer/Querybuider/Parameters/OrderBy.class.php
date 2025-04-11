@@ -63,6 +63,7 @@ class OrderBy extends MainQuery
         if (count($columns) === 2 && in_array(strtolower($columns[1]), ['asc', 'desc'])) {
             return [$columns[0], strtoupper($columns[1])];
         }
+        return [];
     }
 
     private function normalizeColumn(array $columns) : array

@@ -10,7 +10,7 @@ class ImageManager implements FilesManagerInterface
     private string $img;
     private array $imgInfos;
     private array $imgAry;
-    private array $allowType = ['JPG', 'PNG', 'JPEG', 'GIF', 'PDF', 'DOC', 'DOCX'];
+    private array $allowType = ['JPG', 'PNG', 'JPEG', 'GIF', 'BMP', 'WEBP'];
     private $targetDir = IMAGE_ROOT;
     private string $imgExt;
     private int $imgType;

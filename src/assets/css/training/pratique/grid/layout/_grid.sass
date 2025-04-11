@@ -1,0 +1,32 @@
+@use 'css/training/pratique/grid/abstracts' as *
+
+/* ---------------------- GRID LAYOUT ----------------------*/
+.grid-container
+   min-block-size: 100vh
+   min-block-size: 100dvh
+   display: grid
+   grid-template-columns: 8rem 1fr
+   grid-template-rows: auto 1fr auto
+   grid-template-areas: "sidebar header" "sidebar main" "footer footer"
+   transition: grid-template-columns 0.3s ease-in-out
+   &.grid-container--expanded
+      grid-template-columns: 20rem 1fr
+
+   &__header
+      grid-area: header
+   &__sidebar
+      grid-area: sidebar
+      position: relative
+      .btn-resize
+         position: absolute
+         inset: 7.2rem -1.2rem auto auto
+         width: 2.4rem
+         aspect-ratio: 1
+         background-color: #fff
+         border: transparent
+         border-radius: 50%
+         cursor: pointer
+   &__main
+      grid-area: main
+   &__footer
+      grid-area: footer

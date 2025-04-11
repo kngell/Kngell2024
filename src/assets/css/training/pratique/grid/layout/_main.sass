@@ -1,0 +1,12 @@
+@use 'css/training/pratique/grid/abstracts' as *
+
+/*----------------------- MAIN ----------------------*/
+.grid-container
+   &__main
+      background-color: #fff
+      padding: 1.25rem
+      box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1)
+      display: grid
+      gap: 1rem
+      @media screen and (min-width: 48rem)
+         grid-template-columns: repeat(4, 1fr)

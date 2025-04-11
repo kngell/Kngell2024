@@ -5,7 +5,7 @@ class FileMap
 {
     private const array FILE_KEYS = ['error', 'name', 'size', 'tmp_name', 'type'];
     /**
-     * @var array<string,UploadedFile|UploadedFile[]>
+     * @var array<string,FileUpload|FileUpload[]>
      */
     private array $files;
 
@@ -17,9 +17,9 @@ class FileMap
     /**
      * Get the value of files.
      *
-     * @return  array<string,UploadedFile|UploadedFile[]>
+     * @return  array<string,FileUpload|FileUpload[]>
      */
-    public function getFiles()
+    public function all()
     {
         return $this->files;
     }
@@ -32,9 +32,9 @@ class FileMap
     /**
      * @param string $name
      * @param int|null $index
-     * @return UploadedFile[]|UploadedFile|null
+     * @return FileUpload[]|FileUpload|null
      */
-    public function getFile(string $name, int|null $index) : array|UploadedFile|null
+    public function getFile(string $name, int|null $index) : array|FileUpload|null
     {
         if (! $this->hasFile($name)) {
             return null;
@@ -62,13 +62,13 @@ class FileMap
         }
     }
 
-    private function sanitizeSingleFile(array $file) : UploadedFile
+    private function sanitizeSingleFile(array $file) : FileUpload
     {
-        return new UploadedFile(
+        return new FileUpload(
             $file['tmp_name'],
             $file['name'],
             $file['type'],
-            $file['error']
+            (int) $file['error']
         );
     }
 

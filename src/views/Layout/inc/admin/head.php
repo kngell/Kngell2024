@@ -10,12 +10,11 @@
    <meta name="robots" content="index,follow">
    <meta name="csrftoken" content="<?= $this->token()?>" />
    <meta name="frm_name" content="<?=$this->getPageTitle()?>" />
-   <title>
-      <?= $this->getPageTitle()?>
-   </title>
+   <?= $this->getPageTitle()?>
    <link href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet">
    <link rel="shortcut icon" href="data:," type="image/x-icon" />
    <!-- Main style -->
+   <?= $this->css('commons/frontend/vendors') ?>
    <?= $this->css('css/librairies/adminlib') ?? '' ?>
    <!-- Plugins css -->
    <?= $this->css('css/plugins/homeplugins') ?? '' ?>

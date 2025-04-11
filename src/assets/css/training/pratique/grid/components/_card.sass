@@ -1,0 +1,38 @@
+@use 'css/training/pratique/grid/abstracts/variables' as *
+
+/* ---------------------- CARD ----------------------*/
+.card
+   padding: 1.6rem
+   min-block-size: 11.2rem
+   background-color: #fff
+   border-radius: 0.5rem
+   @media screen and (min-width: 48rem)
+      grid-column: span 2
+   &.card-1
+      background-image: linear-gradient(62deg, #fbab7e 0%, #f7ce68 100%)
+      @media screen and (min-width: 48rem)
+         // grid-row-start: 1
+         // grid-row-end: 2
+         // grid-row: 1 / 2
+         // grid-column-start: 1
+         // grid-column-end: 5
+         // grid-column: 1 / 5
+         //grid-row-start grig-column-start grid-row-end grid-column-end
+         // grid-area: 1 / 1 / 2 / 5
+         // grid-area: span 1 / span 4
+         grid-column: span 4
+   &.card-2,&.card-3
+      @media screen and (min-width: 62rem)
+         grid-area: auto
+   &.card-4
+      @media screen and (min-width: 62rem)
+         grid-area: 3 / 1 / 4 / 2
+   &.card-5
+      @media screen and (min-width: 62rem)
+         grid-area: 3 / 2 / 4 / 3
+   &.card-6, &.card-7
+      @media screen and (min-width: 62rem)
+         grid-area: span 2 /auto
+   &.card-10, &.card-11, &.card-12, &.card-13
+      @media screen and (min-width: 62rem)
+         grid-column: auto

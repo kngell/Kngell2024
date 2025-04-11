@@ -10,7 +10,7 @@ class LogoutController extends AuthController
             $this->session->invalidate();
         }
         $result = $this->deleteOldTokenHash();
-        if ($result->getQueryResult() && $result->rowCount()) {
+        if ($result && $result->getQueryResult() && $result->rowCount()) {
             $this->setNewTokenHash(AuthService::currentUser());
         }
         return $this->redirect($previousPage ?? '/');

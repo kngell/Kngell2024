@@ -91,7 +91,7 @@ class FormBuilder extends AbstractHtmlElement
         return new ButtonElement($type);
     }
 
-    public function tag(string $tag) : HtmlBuilder|HtmlaElement|HtmlTagElement
+    public function tag(string $tag) : HtmlBuilder|HtmlaElement|HtmlTagElement|self
     {
         return (new HtmlBuilder($this->token))->tag($tag);
     }
@@ -290,7 +290,7 @@ class FormBuilder extends AbstractHtmlElement
         return $this;
     }
 
-    public function tabindex(string $tabindex): self
+    public function tabindex(int $tabindex): self
     {
         $this->tabindex = $tabindex;
         return $this;

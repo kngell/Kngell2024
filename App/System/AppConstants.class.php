@@ -22,6 +22,7 @@ final readonly class AppConstants
         defined('CONFIG_PATH') or define('CONFIG_PATH', ROOT_DIR . DS . 'App' . DS . 'Config');
         defined('CACHE_DIR') or define('CACHE_DIR', ROOT_DIR . DS . 'Cache' . DS);
         defined('LOG_DIR') or define('LOG_DIR', ROOT_DIR . DS . 'Temp' . DS . 'Log');
+        defined('UPLOAD_DIR') or define('UPLOAD_DIR', ROOT_DIR . DS . 'Upload' . DS);
         defined('APP') or define('APP', ROOT_DIR . DS . 'App' . DS);
         defined('VIEW') or define('VIEW', ROOT_DIR . DS . 'App' . DS . 'Views' . DS);
         defined('SCRIPT') or define('SCRIPT', dirname($_SERVER['SCRIPT_NAME']));
