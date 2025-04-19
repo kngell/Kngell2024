@@ -83,8 +83,51 @@ trait ControllerGettersAndSetters
         return $this;
     }
 
+    /**
+     * @return HtmlBuilder
+     */
+    public function getBuilder(): HtmlBuilder
+    {
+        return $this->builder;
+    }
+
+    /**
+     * @param HtmlBuilder $builder
+     * @return Controller
+     */
+    public function setBuilder(HtmlBuilder $builder): self
+    {
+        $this->builder = $builder;
+        return $this;
+    }
+
+    /**
+     * @return TokenInterface
+     */
+    public function getToken(): TokenInterface
+    {
+        return $this->token;
+    }
+
+    /**
+     * @return Model
+     */
+    public function getCurrentModel(): Model
+    {
+        return $this->currentModel;
+    }
+
     protected function setLayout(string $layout) : void
     {
         $this->layout = $layout;
+    }
+
+    /**
+     * @param Model $model
+     * @return void
+     */
+    protected function currentModel(Model $model) : void
+    {
+        $this->currentModel = $model;
     }
 }

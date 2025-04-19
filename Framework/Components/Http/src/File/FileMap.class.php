@@ -46,6 +46,14 @@ class FileMap
         return $value;
     }
 
+    public function getName() : string|null
+    {
+        if (! empty($this->files)) {
+            return key($this->files);
+        }
+        return null;
+    }
+
     private function sanitizeFiles(array $files)
     {
         $this->files = [];

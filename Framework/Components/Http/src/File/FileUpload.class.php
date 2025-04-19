@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 class FileUpload extends FileInformation
 {
+    private const string UPLOAD_DIR_SRC = SRC . 'assets' . DS . 'img' . DS . 'Upload' . DS;
     private readonly string $originalName;
     private readonly string $mimeType;
     private ErrorFile $uploadError;
@@ -52,24 +53,27 @@ class FileUpload extends FileInformation
         return ArrayUtils::first($extension);
     }
 
-    public function move(string $directory, string|null $name) : FileInformation
+    public function move(string $directory, string|null $name = null) : self
     {
         if (! $this->isValid()) {
             throw new FileException($this->getUploadedErrorMessage());
         }
         $index = 1;
+        $name = $name ?? $this->getOriginalName();
         $targetFile = $this->getTargetedFile($directory, $name);
         while (file_exists($targetFile->getPathname())) {
-            $targetFile = $this->getTargetedFile($directory, $name . "_{$index}");
+            $targetFile = $this->getTargetedFile($directory, $this->originalName($name, $index));
             $index++;
         }
-        $move = move_uploaded_file($this->getPathname(), $targetFile->getPathname());
+        $manager = new ImageManager($this->getPathname(), $targetFile->getPathname());
+        $move = $manager->resize();
         if (! $move) {
             $erroMsg = strip_tags(error_get_last()['message']);
             throw new FileException("Could not move file {$this->getPathname()} to {$targetFile->getPathname()} ({$erroMsg})");
         }
-        @chmod($targetFile->getPathname(), 0666 & ~umask());
-        return $targetFile;
+        // @chmod($targetFile->getPathname(), 0666 & ~umask());
+        //$targetFile;
+        return $this->getTargetedFile(UPLOAD_DIR . DS . 'images' . DS, $targetFile->getBasename());
     }
 
     public function getUploadedErrorMessage() : string
@@ -91,12 +95,23 @@ class FileUpload extends FileInformation
         return $this->uploadError;
     }
 
-    private function originalName(string $originalName) : string
+    private function copyToSrc(FileInformation $targetFile) : void
     {
-        $pathInfo = pathinfo($originalName);
-        $base = $pathInfo['filename'];
-        $base = preg_replace("/[^\w-]/", '_', $base);
-        return $base . '.' . $pathInfo['extension'];
+        $dir = self::UPLOAD_DIR_SRC;
+        if (FileManager::createDir($dir)) {
+            copy($targetFile->getPathname(), $dir . $targetFile->getBasename());
+        }
+    }
+
+    private function originalName(string $originalName, int|null $index = null) : string
+    {
+        if (! empty($originalName)) {
+            $pathInfo = pathinfo($originalName);
+            $base = $index ? $pathInfo['filename'] . '_' . $index : $pathInfo['filename'];
+            $base = preg_replace("/[^\w-]/", '_', $base);
+            return $base . '.' . $pathInfo['extension'];
+        }
+        return '';
     }
 
     private function erroMessage(string $errMsg) : string

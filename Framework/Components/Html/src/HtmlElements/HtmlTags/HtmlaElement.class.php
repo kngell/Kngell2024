@@ -1,7 +1,7 @@
 <?php
 
 declare(strict_types=1);
-class HtmlaElement extends AbstractHtmlComponent
+class HtmlaElement extends AbstractHtmlElement
 {
     private const string TAG = 'a';
     private string $attributionsrc;
@@ -20,7 +20,11 @@ class HtmlaElement extends AbstractHtmlComponent
         if (isset($this->content)) {
             $tag .= $this->content;
         }
-        return $tag . '</a>';
+        $children = '';
+        while ($this->children->count()) {
+            $children .= $this->children->pop()->generate();
+        }
+        return $tag . $children . '</a>';
     }
 
     /**
@@ -125,11 +129,13 @@ class HtmlaElement extends AbstractHtmlComponent
 
     /**
      * @param string $content
+     * @param bool $contentUp
      * @return HtmlaElement
      */
-    public function content(string $content): self
+    public function content(string $content, bool $contentUp = true): self
     {
         $this->content = $content;
+        $this->contentUp = $contentUp;
         return $this;
     }
 
@@ -144,10 +150,10 @@ class HtmlaElement extends AbstractHtmlComponent
     }
 
     /**
-     * @param array $class
+     * @param string ...$class
      * @return HtmlaElement
      */
-    public function class(array $class): self
+    public function class(string ...$class): self
     {
         $this->class = $class;
         return $this;
@@ -204,10 +210,10 @@ class HtmlaElement extends AbstractHtmlComponent
     }
 
     /**
-     * @param string $hidden
+     * @param bool $hidden
      * @return HtmlaElement
      */
-    public function hidden(string $hidden): self
+    public function hidden(bool $hidden): self
     {
         $this->hidden = $hidden;
         return $this;
@@ -284,10 +290,10 @@ class HtmlaElement extends AbstractHtmlComponent
     }
 
     /**
-     * @param string $tabindex
+     * @param int $tabindex
      * @return HtmlaElement
      */
-    public function tabindex(string $tabindex): self
+    public function tabindex(int $tabindex): self
     {
         $this->tabindex = $tabindex;
         return $this;

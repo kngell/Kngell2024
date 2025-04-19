@@ -45,10 +45,10 @@ class HtmlTagElement extends AbstractHtmlComponent
     }
 
     /**
-     * @param string $src
+     * @param string|null $src
      * @return HtmlTagElement
      */
-    public function src(string $src) : self
+    public function src(string|null $src) : self
     {
         $this->src = $src;
         return $this;
@@ -65,10 +65,10 @@ class HtmlTagElement extends AbstractHtmlComponent
     }
 
     /**
-     * @param array $class
+     * @param string ...$class
      * @return HtmlTagElement
      */
-    public function class(array $class): self
+    public function class(string ...$class): self
     {
         $this->class = $class;
         return $this;
@@ -125,10 +125,10 @@ class HtmlTagElement extends AbstractHtmlComponent
     }
 
     /**
-     * @param string $hidden
+     * @param bool $hidden
      * @return HtmlTagElement
      */
-    public function hidden(string $hidden): self
+    public function hidden(bool $hidden): self
     {
         $this->hidden = $hidden;
         return $this;

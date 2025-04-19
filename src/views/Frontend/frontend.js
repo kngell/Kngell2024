@@ -6,6 +6,6 @@ import "./components/component";
 import "./designPattern/designPattern";
 import "./ecommerce/ecommerce";
 import "./post/post";
-import "./users/users";
+import "./user/users";
 import "./training/training";
 import "./training1/training";

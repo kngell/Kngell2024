@@ -7,7 +7,7 @@ $this->start('head'); ?>
 <!-- Content -->
 <div class="container">
    <header class="header">
-      <img src="../../../../assets/img/training/trillo/logo.png" alt="Logo" class="logo">
+      <img src="../../../../assets/img/training/trillo/logotrillo.png" alt="Logo" class="logo">
       <form action="#" class="search-box">
          <input type="text" class="search-box__input" placeholder="search hotels">
          <button class="search-box__button">

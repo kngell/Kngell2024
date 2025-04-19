@@ -67,6 +67,10 @@ abstract class AbstractFormDataElement extends AbstractHtmlComponent
     private function imputVal(string $name) : mixed
     {
         if (! str_contains($name, 'password')) {
+            if (is_string($this->formValues[$name]) && DateTimeImmutable::createFromFormat('Y-m-d H:i:s', $this->formValues[$name])) {
+                $date = new DateTimeImmutable($this->formValues[$name]);
+                return $date->format('Y-m-d');
+            }
             return $this->formValues[$name];
         }
         return '';

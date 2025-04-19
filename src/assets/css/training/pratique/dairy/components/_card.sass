@@ -2,15 +2,55 @@
 
 /* ---------------------- CARD ----------------------*/
 .card
-   display: flex
-   justify-content: center
-   align-items: center
-   height: 20rem
-   gap: 2rem
-   &-header
-      &__img-container
-         &--img
-            width: 100%
-   &-body
-      h4
+   @include vertical-center
+   gap: 1rem
+   padding: 0
+   border-radius: 8px
+   box-shadow: 0 .5rem 1rem rgba(0,0,0,.2)
+   background-color: $color-gray-light
+   overflow: hidden
+   @media screen and (min-width: 48rem)
+      flex-direction: row
+      justify-content: flex-start
+      align-items: stretch
+   &__img-container
+      display: flex
+      justify-content: center
+      align-items: stretch
+      @media screen and (min-width: 62rem)
+         max-width: 26rem
+      &--img
+         width: 100%
+         object-fit: cover
+         border-radius: 8px
+         box-shadow: 0 0rem .5rem rgba(0,0,0,.1)
+   &-text
+      height: 100%
+      padding: 1rem 1rem
+      &__head
+         &--time
+            font-size: 1.2rem
+            font-weight: 600
+            color: $color-time
+            text-transform: uppercase
+            margin: 0
+         &--title
+            margin: 0
+            color: $color-primary
+            font-size: 2.5rem
+            &::after
+               content: ""
+               display: block
+               width: 20%
+               height: .15rem
+               padding: 0
+               background-color: $color-secondary
+               margin-top: 1rem
+               margin-bottom: 1rem
+      &__paragraph
          color: $color-primary
+         line-height: 1.33em
+         padding-bottom: 1rem
+
+   &:not(:last-child)
+      margin-bottom: 1.5rem

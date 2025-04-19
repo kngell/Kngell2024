@@ -9,12 +9,13 @@ class PostModel extends Model
         parent::__construct($em);
     }
 
-    public function getRecent(int $limit) : QueryResult
+    public function getPaginatedPost(int $limit, int $offset) : QueryResult
     {
         $this->entityManager->createQueryBuilder()
             ->select()
             ->OrderBy('created_at', 'DESC')
             ->limit($limit)
+            ->offset($offset)
             ->build();
         return $this->entityManager->persist()->getResults();
     }

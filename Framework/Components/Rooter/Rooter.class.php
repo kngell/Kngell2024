@@ -33,8 +33,7 @@ class Rooter implements RooterInterface
         return $this->routeResponseGenerator->generate(
             $route->getResponseBody(),
             isset($responseStatus) ? $responseStatus : $route->getResponseStatus(),
-            $results,
-            $app->getResponse()
+            $results
         );
     }
 

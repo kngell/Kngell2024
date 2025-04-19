@@ -200,10 +200,10 @@ class TextAreaElement extends AbstractFormDataElement
     }
 
     /**
-     * @param array $class
+     * @param string ...$class
      * @return TextAreaElement
      */
-    public function class(array $class): self
+    public function class(string ...$class): self
     {
         $this->class = $class;
         return $this;

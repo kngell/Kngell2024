@@ -96,6 +96,11 @@ class FormBuilder extends AbstractHtmlElement
         return (new HtmlBuilder($this->token))->tag($tag);
     }
 
+    public function htmlBlock() : HtmlBlockElement
+    {
+        return new HtmlBlockElement();
+    }
+
     /**
      * @param string $action
      * @return FormBuilder
@@ -242,7 +247,7 @@ class FormBuilder extends AbstractHtmlElement
         return $this;
     }
 
-    public function hidden(string $hidden): self
+    public function hidden(bool $hidden): self
     {
         $this->hidden = $hidden;
         return $this;
@@ -302,7 +307,11 @@ class FormBuilder extends AbstractHtmlElement
         return $this;
     }
 
-    public function class(array $class): self
+    /**
+     * @param string ...$class
+     * @return FormBuilder
+     */
+    public function class(string ...$class): self
     {
         $this->class = $class;
         return $this;

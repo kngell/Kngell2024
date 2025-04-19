@@ -12,7 +12,7 @@ final readonly class EditPostForm extends AbstractPostForm
     {
         $formValues = $this->formValues($formValues);
         $form = $this->builder->form()->formValues($formValues)->formErrors($formErrors);
-        $form->action($action)->method('post')->add(
+        $form->action($action)->method('POST')->enctype('multipart/form-data')->add(
             $form->input('hidden')->name('post_id'),
             ...$this->formElements($form)
         );

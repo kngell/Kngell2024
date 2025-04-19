@@ -75,4 +75,23 @@ class PratiqueController extends Controller
         $this->pageTitle('php Dairy App');
         return $this->render('dairy_app');
     }
+
+    public function dairyNew() : string
+    {
+        $this->pageTitle('New entrie');
+        return $this->render('dairy_app_new');
+    }
+
+    public function dairyAdd() : string
+    {
+        $this->pageTitle('Dairy Add');
+        $data = $this->request->getPost()->getAll();
+        return $this->render('dairy_app_new');
+    }
+
+    public function table() : string
+    {
+        $this->pageTitle('Table');
+        return $this->render('table');
+    }
 }

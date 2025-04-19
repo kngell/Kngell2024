@@ -94,6 +94,7 @@ final readonly class ContainerClassRegistrator
             HashInterface::class => [Hash::class, function () use ($app) {
                 return $app->getAppConfig()->getConfig()['security'];
             }],
+            FileUploadInterface::class => ImagesUpload::class,
         ];
     }
 }

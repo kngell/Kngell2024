@@ -11,11 +11,23 @@ class Post extends Entity
     private ?string $author;
     private ?int $commentCount;
     private ?string $media;
+    #[DateField]
     private ?string $createdAt;
+    #[DateField]
     private ?string $updatedAt;
     private ?int $userId;
     private ?bool $status;
     private ?bool $deleted;
+
+    public function __construct()
+    {
+        // $date = new DateTimeImmutable();
+        // if (isset($this->postId)) {
+        //     $this->setUpdatedAt($date->format(self::DATE_FORMAT));
+        // } else {
+        //     ! isset($this->createdAt) ? $this->setCreatedAt($date->format(self::DATE_FORMAT)) : '';
+        // }
+    }
 
     /**
      * @return int

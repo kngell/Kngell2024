@@ -6,3 +6,5 @@ import "./grid.php";
 import "./cms.php";
 import "./cms_show.php";
 import "./dairy_app.php";
+import "./dairy_app_new.php";
+import "./table.php";

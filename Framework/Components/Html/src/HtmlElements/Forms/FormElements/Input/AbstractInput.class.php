@@ -225,10 +225,10 @@ abstract class AbstractInput extends AbstractFormDataElement
     }
 
     /**
-     * @param array $class
+     * @param string ...$class
      * @return AbstractInput
      */
-    public function class(array $class): self
+    public function class(string ...$class): self
     {
         $this->class = array_merge($this->class, $class);
         return $this;

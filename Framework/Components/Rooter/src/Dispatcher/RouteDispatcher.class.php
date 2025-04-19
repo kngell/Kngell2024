@@ -36,7 +36,7 @@ readonly class RouteDispatcher
     {
         try {
             $arguments = ! empty($params) ? $params : $this->routeArgumentGenerator->generate($route, $request);
-            $controllerObject = $this->controller($route, $app);
+            $controllerObject = $this->controller($route, $app, $request);
             $app->bind('Route', null, false, [
                 $route->getController(),
                 $route->getMethod(),
@@ -91,25 +91,27 @@ readonly class RouteDispatcher
     /**
      * @param RouteInfo $route
      * @param App $app
+     * @param Request $request
      * @return Controller
      * @throws BindingResolutionException
      * @throws ReflectionException
      * @throws DependencyHasNoDefaultValueException
      */
-    private function controller(RouteInfo $route, App $app) : Controller
+    private function controller(RouteInfo $route, App $app, Request $request) : Controller
     {
         $path = $this->controlllerPath(
             $route->getMethod()->getDeclaringClass()->getFileName()
         );
         $app->bind(ViewEnvironment::class, null, false, $path);
         return $app->get($route->getController())
-            ->setRequest($app->getRequest())
+            ->setRequest($request)
             ->setView($app->get(ViewInterface::class))
             ->setresponse($app->getResponse())
             ->setToken($app->get(TokenInterface::class))
             ->setFlash($app->get(FlashInterface::class))
             ->setSession($app->getSession())
-            ->setEventManager($app->get(EventManagerInterface::class));
+            ->setEventManager($app->get(EventManagerInterface::class))
+            ->setBuilder($app->get(HtmlBuilder::class));
     }
 
     private function controlllerPath(string $path) : string

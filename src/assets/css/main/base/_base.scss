@@ -1,18 +1,24 @@
 @use "css/main/abstracts" as *;
 
+*,
+*::after,
+*::before {
+  margin: 0;
+  padding: 0;
+  box-sizing: inherit;
+}
+
 *:focus {
   outline: none;
   box-shadow: none;
 }
 html {
   font-size: $base-font-size;
-  height: 100%;
 }
 body {
   box-sizing: border-box;
   font-family: $body-font-family;
-  width: 100%;
-  min-height: 100%;
   font-size: $paragraph-size;
-  background-color: #fafafa;
+  line-height: 1.7;
+  font-weight: 400;
 }

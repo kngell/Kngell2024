@@ -12,7 +12,7 @@ final readonly class InsertPostForm extends AbstractPostForm
     {
         $formValues = $this->formValues($formValues);
         $form = $this->builder->form()->formValues($formValues)->formErrors($formErrors);
-        $form->action($action)->method('post')->add(
+        $form->action($action)->method('POST')->enctype('multipart/form-data')->add(
             ...$this->formElements($form)
         );
         return $form->generate();

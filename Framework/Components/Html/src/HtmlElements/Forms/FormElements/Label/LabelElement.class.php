@@ -38,11 +38,13 @@ class LabelElement extends AbstractHtmlElement
 
     /**
      * @param string $content
+     * @param bool $contentUp
      * @return LabelElement
      */
-    public function content(string $content): self
+    public function content(string $content, bool $contentUp = true): self
     {
         $this->content = $content;
+        $this->contentUp = $contentUp;
         return $this;
     }
 
@@ -77,12 +79,18 @@ class LabelElement extends AbstractHtmlElement
     }
 
     /**
-     * @param array $class
+     * @param string ...$class
      * @return LabelElement
      */
-    public function class(array $class): self
+    public function class(string ...$class): self
     {
         $this->class = array_merge($this->class, $class);
+        return $this;
+    }
+
+    public function title(string $title): self
+    {
+        $this->title = $title;
         return $this;
     }
 }

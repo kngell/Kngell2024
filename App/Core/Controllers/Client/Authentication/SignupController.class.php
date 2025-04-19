@@ -59,6 +59,7 @@ class SignupController extends Controller
         if ($result) {
             return $this->redirect('/signup/account-activated');
         }
+        return $this->redirect('');
     }
 
     public function accountActivated() : string

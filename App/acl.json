@@ -7,7 +7,7 @@
     "LogoutController": ["*"],
     "ErrorsController": ["*"],
     "LoginController": ["*"],
-    "PostController": ["index", "show"],
+    "PostController": ["index", "show", "dairy", "dairyAdd", "dairyNew"],
     "SignupController": ["*"],
     "ForgotPasswordController": ["*"],
     "AccountController": ["*"],
@@ -17,7 +17,8 @@
     "EcommerceController": ["*"],
     "FreeCodeCampController": ["*"],
     "HtmlController": ["*"],
-    "PratiqueController": ["*"]
+    "PratiqueController": ["*"],
+    "UserController": ["*"]
   },
   "LoggedIn": {
     "denied": {

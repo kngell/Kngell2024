@@ -25,3 +25,4 @@
 </head>
 
 <body id="body">
+   <div class="layout-container">

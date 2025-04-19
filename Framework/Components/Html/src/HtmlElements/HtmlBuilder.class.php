@@ -15,13 +15,41 @@ class HtmlBuilder extends AbstractHtmlElement
         return new FormBuilder($this->token);
     }
 
+    /**
+     * @param string $type
+     * @return AbstractInput
+     */
+    public function input(string $type) : AbstractInput
+    {
+        $inputType = ucfirst(strtolower($type)) . 'Type';
+        try {
+            return new $inputType();
+        } catch (Throwable $th) {
+            throw new FormElementNotFound($inputType);
+        }
+    }
+
+    /**
+     * @param string|null $message
+     * @return LabelElement
+     */
+    public function label(string|null $message = null) : LabelElement
+    {
+        return new LabelElement($message);
+    }
+
     public function tag(string $tag) : self|HtmlaElement|HtmlTagElement
     {
         return match (true) {
-            in_array($tag, ['div', 'section', 'body', 'nav', 'ul', 'li', 'dl']) => new self($this->token, $tag),
+            in_array($tag, ['div', 'section', 'body', 'nav', 'ul', 'li', 'dl', 'table', 'thead', 'tbody', 'tr', 'td', 'span', 'th']) => new self($this->token, $tag),
             $tag === 'a' => new HtmlaElement(),
-            in_array($tag, ['p', 'span', 'dd', 'dt', 'img']) || preg_match('~[0-9]+~', $tag) => new HtmlTagElement($tag),
+            in_array($tag, ['p', 'dd', 'dt', 'img', 'i']) || preg_match('~[0-9]+~', $tag) => new HtmlTagElement($tag),
         };
+    }
+
+    public function htmlBlock() : self|HtmlBlockElement
+    {
+        return new HtmlBlockElement();
     }
 
     public function button(string $type = '') : ButtonElement
@@ -62,10 +90,10 @@ class HtmlBuilder extends AbstractHtmlElement
     }
 
     /**
-     * @param array $class
+     * @param string ...$class
      * @return HtmlBuilder
      */
-    public function class(array $class): self
+    public function class(string ...$class): self
     {
         $this->class = array_merge($this->class, $class);
         return $this;
@@ -143,9 +171,15 @@ class HtmlBuilder extends AbstractHtmlElement
         return $this;
     }
 
-    public function content(string $content): self
+    /**
+     * @param string $content
+     * @param bool $contentUp
+     * @return HtmlBuilder
+     */
+    public function content(string $content, bool $contentUp = true): self
     {
         $this->content = $content;
+        $this->contentUp = $contentUp;
         return $this;
     }
 
@@ -185,7 +219,7 @@ class HtmlBuilder extends AbstractHtmlElement
         return $this;
     }
 
-    public function hidden(string $hidden): self
+    public function hidden(bool $hidden): self
     {
         $this->hidden = $hidden;
         return $this;

@@ -64,10 +64,10 @@ class ButtonElement extends AbstractHtmlElement
     }
 
     /**
-     * @param array $class
+     * @param string ...$class
      * @return ButtonElement
      */
-    public function class(array $class): self
+    public function class(string ...$class): self
     {
         $this->class = $class;
         return $this;
@@ -204,16 +204,14 @@ class ButtonElement extends AbstractHtmlElement
     }
 
     /**
-     * Set the value of content.
-     *
      * @param string $content
-     *
-     * @return self
+     * @param bool $contentUp
+     * @return ButtonElement
      */
-    public function content(string $content): self
+    public function content(string $content, bool $contentUp = true): self
     {
         $this->content = $content;
-
+        $this->contentUp = $contentUp;
         return $this;
     }
 

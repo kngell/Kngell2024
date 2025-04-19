@@ -18,9 +18,22 @@ abstract readonly class AbstractTemplateForm implements FormTemplateInterface
     protected function formValues(array|Entity|bool $formValues) : array
     {
         return match (true) {
-            $formValues instanceof Entity => $formValues->toOriginalArray(),
+            $formValues instanceof Entity => $this->parseDates($formValues->toOriginalArray()),
             is_bool($formValues) => [],
-            default => $formValues
+            default => $formValues,
         };
+    }
+
+    protected function parseDates(array $formValues) : array
+    {
+        $formVals = [];
+        foreach ($formValues as $key => $value) {
+            if (is_string($value) && DateTimeImmutable::createFromFormat('Y-m-d H:i:s', $value)) {
+                $date = new DateTimeImmutable($value);
+                $formVals[$key] = $date->format('Y-M-d');
+            }
+            $formVals[$key] = $value;
+        }
+        return $formVals;
     }
 }

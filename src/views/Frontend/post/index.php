@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 $this->start('head'); ?>
 <!-------Costum-------->
-<?= $this->css('path') ?>
+<?= $this->css('css/client/post/main') ?>
 <?php $this->end(); ?>
 <?php $this->start('body'); ?>
 <main id="main-site">
@@ -13,8 +13,8 @@ $this->start('head'); ?>
          <a href="/post-category/new">New Category</a>
       </div>
       <h1>Admin Post</h1>
-      <h5>Total Posts : <?= $total?></h5>
       <?= $posts?>
+      <?= $links?>
    </div>
    <!-- Fin Content -->
 

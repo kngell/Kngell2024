@@ -110,10 +110,10 @@ class RouteMatcher
         $route = trim($route, DS);
         $segments = explode(DS, $route);
         $segments = array_map(function (string $segment) : string {
-            if (preg_match("#^\{([a-z][a-z0-9]*)\}$#", $segment, $matches)) {
+            if (preg_match("#^\{([a-zA-Z][a-zA-Z0-9]*)\}$#", $segment, $matches)) {
                 return '(?<' . $matches[1] . '>[^/]*)';
             }
-            if (preg_match("#^\{([a-z][a-z0-9]*):(.+)\}$#", $segment, $matches)) {
+            if (preg_match("#^\{([a-zA-Z][a-zA-Z0-9]*):(.+)\}$#", $segment, $matches)) {
                 return '(?<' . $matches[1] . '>' . $matches[2] . ')';
             }
             return $segment;

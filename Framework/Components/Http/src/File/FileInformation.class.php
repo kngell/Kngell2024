@@ -12,7 +12,7 @@ class FileInformation extends SplFileInfo
         // }
     }
 
-    public function getContent() : string
+    protected function getContent() : string
     {
         $content = file_get_contents($this->getPathname());
         if ($content === false) {
@@ -21,14 +21,24 @@ class FileInformation extends SplFileInfo
         return $content;
     }
 
-    public function getTargetedFile(string $directory, string|null $name) : self
+    protected function getTargetedFile(string $directory, string|null $name) : self
     {
-        FileSystemUtils::createDir($directory);
+        FileManager::createDir($directory);
         if (! is_writable($directory)) {
             throw new FileException("Unable to write into directory {$directory}.");
         }
         $fileName = StringUtils::isBlanc($name) ? $this->getBasename() : $name;
-        $targetPath = $directory . DS . $fileName;
+        $targetPath = $directory . $fileName;
         return new self($targetPath);
+    }
+
+    protected function hasTargetedFile(string $directory, string|null $name) : self|bool
+    {
+        $fileName = StringUtils::isBlanc($name) ? $this->getBasename() : $name;
+        $targetPath = $directory . $fileName;
+        if (file_exists($targetPath)) {
+            return new self($targetPath);
+        }
+        return false;
     }
 }

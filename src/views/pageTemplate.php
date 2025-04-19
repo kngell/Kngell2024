@@ -4,7 +4,7 @@ $this->start('head'); ?>
 <?= $this->css('path') ?>
 <?php $this->end(); ?>
 <?php $this->start('body'); ?>
-<main id="main-site">
+<main class="main" id="main">
    <!-- Content -->
 
 

@@ -1,0 +1,37 @@
+@use 'css/training/pratique/dairy/abstracts' as *
+
+/* ---------------------- PAGINATION ----------------------*/
+.pagination
+   grid-area: pagination
+   list-style-type: none
+   display: flex
+   justify-content: center
+   padding: 2rem 1rem
+   margin-top: 2rem
+   margin-right: 0
+   margin-bottom: 2rem
+   gap: 1rem
+   @media screen and (min-width: 62rem)
+      justify-content: flex-end
+      margin-right: 1.6rem
+   &__link
+      @include horizontal-center
+      text-decoration: none
+      font-weight: 700
+      color: $color-gray
+      border: 2px solid $color-primary
+      width: 4rem
+      height: 4rem
+      border-radius: 8px
+      transition: all .3s ease
+      &:hover
+         color: $color-white
+         background-color: $color-time
+         border: 2px solid $color-time
+      &.pagination__link--active
+         color: $color-time
+         border: 3px solid $color-time
+      &.pagination__link--previous, &.pagination__link--next
+         color: $color-white
+         background-color: $color-time
+         border: 3px solid $color-time

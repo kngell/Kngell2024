@@ -83,7 +83,8 @@
 /save-profile:
   controller: profile
   method: update
-  httpMethod: post
+/{controller}/index/{currentPage:\d+}:
+  method: index
 /_dev_error:
   controller: errors
   method: index

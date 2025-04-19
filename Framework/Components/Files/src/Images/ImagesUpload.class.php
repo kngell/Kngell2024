@@ -1,12 +1,14 @@
 <?php
 
+//Todo : renamming user files
 declare(strict_types=1);
 
 final class ImagesUpload implements FileUploadInterface
 {
     private const array ALLOWED_TYPE = ['JPG', 'PNG', 'JPEG', 'GIF', 'BMP', 'WEBP', 'TIFF'];
-    private const string IMG_UPLOAD_DIR = UPLOAD_DIR . 'images' . DS;
+    private const string IMG_UPLOAD_DIR = SRC . 'assets' . DS . 'img' . DS . 'Upload' . DS . 'images' . DS; //UPLOAD_DIR;
     private const int MAX_IMG_SIZE = 5242880; // 5MB
+    private const string FILE_NAME = 'uploadedFiles';
     /**
      * @var FileMap
      */
@@ -14,24 +16,29 @@ final class ImagesUpload implements FileUploadInterface
 
     private array $imgErrors = [];
     private string|null $mediaPaths = null;
+    private string|null $name;
 
     public function __construct(Request $request)
     {
         $this->files = $request->getFiles();
+        $this->name = $this->files->getName();
     }
 
-    public function proceed(bool $uploadRequired = false): array
+    public function proceed(bool $uploadRequired = false): void
     {
-        if ($this->files->hasFile('image')) {
-            $files = $this->files->all();
-            $this->validate($files, $uploadRequired);
-            if (empty($this->imgErrors)) {
-                $this->save($files);
+        try {
+            if ($this->files->hasFile($this->name)) {
+                $files = $this->files->all();
+                $this->validate($files, $uploadRequired);
+                if (empty($this->imgErrors) && ! empty($files)) {
+                    $this->save($files);
+                }
+            } else {
+                $this->imgErrors[self::FILE_NAME][] = 'Cannot upload image! Is file_uploads enabled in php.ini?';
             }
-        } else {
-            $this->imgErrors['image'][] = 'Cannot upload image! Is file_uploads enabled in php.ini?';
+        } catch (Throwable $th) {
+            throw $th;
         }
-        return [$this->imgErrors, $this->mediaPaths];
     }
 
     /**
@@ -57,16 +64,20 @@ final class ImagesUpload implements FileUploadInterface
     {
         $paths = [];
         foreach ($files as $fileUpload) {
-            $target = $fileUpload->move(self::IMG_UPLOAD_DIR, $fileUpload->getOriginalName());
+            $target = $fileUpload->move(self::IMG_UPLOAD_DIR);
             $paths[] = $target->getPathname();
         }
         $this->mediaPaths = serialize($paths);
     }
 
-    private function validate(array $files, bool $uploadRequired) : void
+    private function validate(array &$files, bool $uploadRequired) : void
     {
         /** @var FileUpload $fileUpload */
         foreach ($files as $fileInput => $fileUpload) {
+            if (empty($fileUpload->getOriginalName())) {
+                unset($files[$fileInput]);
+                continue;
+            }
             if (! in_array(strtoupper($fileUpload->getOriginalExtension()), self::ALLOWED_TYPE)) {
                 $fileUpload->SetError(ErrorFile::UPLOAD_ERR_FILE_TYPE);
             }

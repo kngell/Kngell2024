@@ -22,11 +22,13 @@ final readonly class AppConstants
         defined('CONFIG_PATH') or define('CONFIG_PATH', ROOT_DIR . DS . 'App' . DS . 'Config');
         defined('CACHE_DIR') or define('CACHE_DIR', ROOT_DIR . DS . 'Cache' . DS);
         defined('LOG_DIR') or define('LOG_DIR', ROOT_DIR . DS . 'Temp' . DS . 'Log');
-        defined('UPLOAD_DIR') or define('UPLOAD_DIR', ROOT_DIR . DS . 'Upload' . DS);
         defined('APP') or define('APP', ROOT_DIR . DS . 'App' . DS);
         defined('VIEW') or define('VIEW', ROOT_DIR . DS . 'App' . DS . 'Views' . DS);
+        defined('SRC') or define('SRC', ROOT_DIR . DS . 'src' . DS);
         defined('SCRIPT') or define('SCRIPT', dirname($_SERVER['SCRIPT_NAME']));
         defined('IMG') or define('IMG', SCRIPT . DS . 'assets' . DS . 'img' . DS);
+        defined('UPLOAD_DIR') or define('UPLOAD_DIR', ROOT_DIR . DS . 'public' . DS . 'assets' . DS . 'img' . DS . 'Upload' . DS);
+        defined('FILES') or define('FILES', ROOT_DIR . IMG . 'Upload' . DS);
         defined('COMPONENTS') or define('COMPONENTS', ROOT_DIR . DS . 'Framework' . DS . 'Components' . DS);
         // -----------------------------------------------------------------------
         // VISITORS, LOGIN & REGISTRATION

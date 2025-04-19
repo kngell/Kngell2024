@@ -38,15 +38,7 @@ final readonly class StringUtils
         }
         return false;
     }
-    // public static function studlyCaps(string $str) : string
-    // {
-    //     return str_replace('-', '', ucwords(strtolower($str), '-'));
-    // }
 
-    // public static function camelCase(string $str) : string
-    // {
-    //     return lcfirst(str_replace('-', '', ucwords(strtolower($str), '-')));
-    // }
     public static function camelCase(string $string) : string
     {
         return lcfirst(self::studlyCaps($string));
@@ -60,6 +52,11 @@ final readonly class StringUtils
     public static function StudlyCapsToUnderscore($value)
     {
         return strtolower(self::CapsToUnderscore($value, '_'));
+    }
+
+    public static function camelCaseToSnakeCase(string $input): string
+    {
+        return strtolower(preg_replace('/[A-Z]/', '_$0', lcfirst($input)));
     }
 
     private static function CapsToUnderscore($value, $separator = ' ')

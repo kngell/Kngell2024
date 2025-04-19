@@ -1,33 +1,42 @@
 <?php
 
 declare(strict_types=1);
-class BlogPostHTMLElement
+
+class BlogPostHTMLElement extends AbstractHtml
 {
     /** @var Post[] */
     private array $posts;
     private array $wrapperClass = ['card'];
     private array $wrapperStyle = ['margin-top: 20px'];
 
+    private Paginator $paginator;
+    private HtmlBuilder $builder;
+
+    //private TokenInterface $token, private HtmlBuilder $builder
     /**
-     * @param Post[] $posts
-     * @param null|TemplatePathsInterface $paths
+     * @param array $posts
+     * @param HtmlBuilder $builder
      * @return void
      */
-    public function __construct(array $posts, private TokenInterface $token, private HtmlBuilder $builder)
+    public function __construct(array $posts, HtmlBuilder $builder)
     {
         $this->posts = $posts;
+        $this->builder = $builder;
     }
 
     public function display(): string
     {
         $html = $this->builder;
-        $posts = [];
+        $postsHtml = [];
+        /** @var Post $post */
         foreach ($this->posts as $post) {
-            $form = $this->builder->form($this->token);
-            $posts[] = $html->tag('div')->class($this->wrapperClass)->style($this->wrapperStyle)->add(
+            $form = $html->form();
+            $postsHtml[] = $html->tag('div')->class($this->wrapperClass)->style($this->wrapperStyle)->add(
                 $html->tag('div')->class(['card-body'])->add(
                     $html->tag('h3')->content($this->htmlDecode($post->getTitle(), ENT_QUOTES)),
                     $html->tag('p')->content($this->getContentOverview($this->htmlDecode($post->getTitle()))),
+                    $html->tag('p')->content('Publié le ' . $this->createdAt($post)),
+                    $html->tag('img')->src($this->media($post->getMedia())),
                     $html->tag('a')->href("/post/show/{$post->getPostId()}")->class(['btn btn-primary'])->content('Show Post'),
                     $html->tag('a')->href("/post/edit/{$post->getPostId()}")->class(['btn btn-info'])->content('Edit Post'),
                     $form->action('post/delete')->method('post')->style(['display: inline-block'])->add(
@@ -37,7 +46,16 @@ class BlogPostHTMLElement
                 )
             )->generate();
         }
-        return implode(' ', $posts);
+        return implode(' ', $postsHtml);
+    }
+
+    private function createdAt(Post $post) : string
+    {
+        $date = new DateTimeImmutable($post->getCreatedAt());
+        // $dateExploded = explode('-', $post->getCreatedAt());
+        // $timestamp = mktime(12, 0, 0, (int) $dateExploded[1], (int) $dateExploded[2], (int) $dateExploded[0]);
+        // $timestamp2 = $date->getTimestamp();
+        return $date->format('d-m-Y') . ' à ' . $date->format('h:m');
     }
 
     private function getContentOverview(string $content):string

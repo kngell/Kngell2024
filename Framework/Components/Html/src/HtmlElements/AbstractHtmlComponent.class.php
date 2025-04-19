@@ -39,8 +39,9 @@ abstract class AbstractHtmlComponent
     protected array $formErrors = [];
     protected array $formValues = [];
     protected ?string $content;
-    protected string $src;
+    protected string|null $src;
     protected string $alt;
+    protected bool $contentUp = true;
 
     public function setParent(?self $parent)
     {
@@ -54,6 +55,7 @@ abstract class AbstractHtmlComponent
 
     public function add(self|null ...$htmlelements) : self
     {
+        $h = $htmlelements;
         return $this;
     }
 
@@ -80,7 +82,7 @@ abstract class AbstractHtmlComponent
     {
         $tag = '<' . $tag;
         foreach ($tagAttrs as $attr => $value) {
-            if (in_array($attr, ['content', 'tag', 'formErrors', 'formValues', 'token', 'position']) || is_object($value)) {
+            if (in_array($attr, ['content', 'contentUp', 'tag', 'formErrors', 'formValues', 'token', 'position', 'htmlBlock']) || is_object($value)) {
                 continue;
             }
 
@@ -89,7 +91,7 @@ abstract class AbstractHtmlComponent
         return $tag .= '>';
     }
 
-    private function tagAttribute(string $key, string|array|bool|int $value) : string
+    private function tagAttribute(string $key, string|array|bool|int|null $value) : string
     {
         if ($this instanceof CheckBoxType && $key === 'value' && $value === 'on') {
             return 'checked';
@@ -99,10 +101,10 @@ abstract class AbstractHtmlComponent
             $key === 'acceptCharset' => ' accept-charset="' . $value . '"',
             is_bool($value) => ' ' . $key,
             is_array($value) && $key === 'custom' => $this->customAttr($value),
-            is_array($value) && $key === 'style' => " $key='" . implode('; ', $value) . "'",
-            is_array($value) => " $key='" . implode(' ', $value) . "'",
+            is_array($value) && $key === 'style' => ! empty($value) ? " $key='" . implode('; ', $value) . "'" : '',
+            is_array($value) => ! empty($value) ? " $key='" . implode(' ', $value) . "'" : '',
 
-            default => " $key='" . $value . "'",
+            default => ! empty($value) ? " $key='" . $value . "'" : '',
         };
     }
 
@@ -110,7 +112,7 @@ abstract class AbstractHtmlComponent
     {
         $attrStr = '';
         foreach ($Attrs as $key => $attr) {
-            $attrStr .= "$key ='" . $attr . "'";
+            $attrStr .= ! empty($attr) ? "$key ='" . $attr . "'" : '';
         }
         return $attrStr;
     }

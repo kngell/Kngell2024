@@ -10,8 +10,10 @@ abstract class Controller
     protected FlashInterface $flash;
     protected SessionInterface $session;
     protected EventManagerInterface $eventManager;
+    protected HtmlBuilder $builder;
     private ViewInterface $view;
     private string $layout;
+    private Model|null $currentModel;
 
     public function __call($name, $args)
     {
@@ -59,6 +61,14 @@ abstract class Controller
     {
         $this->eventManager = $eventManager;
         return $this;
+    }
+
+    protected function deleteFiles(string $dir) : void
+    {
+        $files = FileManager::dirFilePaths($dir);
+        foreach ($files as $file) {
+            FileManager::deleteFile($file);
+        }
     }
 
     protected function form(AbstractFormCreator $frm, string $action, array|Entity|bool $formValues = [], array|Entity|bool $formErrors = []) : string
@@ -130,7 +140,7 @@ abstract class Controller
             $this->setLayout('ecommerce');
         }
         return match (true) {
-            $this->view->getPath() === 'Frontend' && $this->view->getLayout() === 'default' => array_merge($context, (new NavbarDecorator($this))->page(), ['message' => $this->flash->get()]),
+            $this->view->getPath() === 'Frontend' && $this->view->getLayout() === 'default' => array_merge($context, ['message' => $this->flash->get()], (new NavbarDecorator($this))->page()),
             default => $context,
         };
     }

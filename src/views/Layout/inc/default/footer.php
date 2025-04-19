@@ -2,7 +2,7 @@
   <!-- Comments -->
   <?= $comments ?? ''?>
   <!-- End Comments -->
-  <footer id="footer" class="mt-5 pt-5 pb-3">
+  <footer id="footer" class="footer mt-5 pt-5 pb-3">
      <div class="container">
         <div class="row mx-auto mt-5">
            <div class="footer-item col-lg-3 col-md-6 col-12">
@@ -69,6 +69,7 @@
 
      </div>
   </footer>
+  </div>
   <!-- End footer -->
   <?= $jv_script_from_php ?? ''?>
   <!-- Runtime Webpack -->

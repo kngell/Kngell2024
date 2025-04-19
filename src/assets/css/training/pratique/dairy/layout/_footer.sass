@@ -3,4 +3,20 @@
 /*----------------------- FOOTER ----------------------*/
 .footer
    grid-area: footer
-   background-color: blue
+   background-color: $color-primary
+   padding: 3rem 0
+   &__heading
+      color: $color-white
+   &__description
+      color: $color-secondary
+      line-height: 1.33
+      max-width: 50%
+   &::after
+      content: ""
+      display: block
+      width: 7.5rem
+      height: 0.125rem
+      background-color: $color-white
+      margin: 0 auto
+      margin-top: 2.5rem
+      opacity: .5

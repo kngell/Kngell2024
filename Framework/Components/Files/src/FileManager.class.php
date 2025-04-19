@@ -79,8 +79,12 @@ class FileManager
 
     public static function createDir(string $dir) : bool
     {
-        if (! is_dir($dir)) {
-            return mkdir($dir, 0777, true);
+        if (is_dir($dir)) {
+            return true;
+        } else {
+            mkdir($dir, 0777, true);
+            chmod($dir, 0777); // Add write permissions
+            return true;
         }
         return false;
     }

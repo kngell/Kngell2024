@@ -3,7 +3,20 @@
 /* ---------------------- GRID LAYOUT ----------------------*/
 .dairy-layout
    display: grid
-   grid-template-columns: 1fr
-   grid-template-rows: auto 1fr auto
-   min-block-size: 100dvh
-   grid-template-areas: "header" "main" "footer"
+   grid-template-columns: 1fr 1fr
+   grid-template-rows: auto auto 1fr auto auto auto
+   grid-template-areas: "header header" "sidebar-left sidebar-left" "main main" "sidebar-right sidebar-right" "pagination pagination" "footer footer"
+
+   // @media screen and (min-width: 36rem)
+   //    grid-template-columns: 1fr 1fr
+   //    grid-template-rows: auto auto 1fr auto auto
+   //    grid-template-areas: "header header" "sidebar-left sidebar-left" "main main" "sidebar-right sidebar-right" "footer footer"
+   // @media screen and (min-width: 48rem)
+   //    grid-template-columns: 1fr 2fr 2fr 1fr
+   //    grid-template-rows: auto 1fr auto auto
+   //    grid-template-areas: "header header header header" "sidebar-left main main sidebar-right" "sidebar-left pagination pagination sidebar-right" "footer footer footer footer"
+   @media screen and (min-width: 62rem)
+      grid-template-columns: 1fr 48rem 48rem 1fr
+      grid-template-rows: auto 1fr auto auto
+      grid-template-areas: "header header header header" "sidebar-left main main sidebar-right" "sidebar-left pagination pagination sidebar-right" "footer footer footer footer"
+      min-block-size: 100vh

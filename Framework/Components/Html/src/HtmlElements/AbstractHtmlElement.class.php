@@ -22,7 +22,8 @@ abstract class AbstractHtmlElement extends AbstractHtmlComponent
             $child->formValues($this->formValues);
             $results[] = $child->generate();
         }
-        return $this->begin() . $this->frmName() . implode(' ', $results) . $this->end();
+        [$begin,$end] = $this->getContentcontext();
+        return $begin . $this->frmName() . implode(' ', $results) . $end;
     }
 
     /**
@@ -59,6 +60,32 @@ abstract class AbstractHtmlElement extends AbstractHtmlComponent
     {
         $this->style = $style;
         return $this;
+    }
+
+    /**
+     * @return string[]
+     */
+    private function getContentcontext() : array
+    {
+        if (isset($this->content)) {
+            if ($this->contentUp) {
+                $begin = $this->begin();
+                if (! empty($this->content)) {
+                    $begin .= $this->content;
+                }
+                $this->content = '';
+                $end = $this->end();
+            } else {
+                $end = $this->end();
+                $this->content = '';
+                $begin = $this->begin();
+            }
+        } else {
+            $begin = $this->begin();
+            $end = $this->end();
+        }
+
+        return [$begin, $end];
     }
 
     private function end() : string

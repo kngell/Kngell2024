@@ -15,17 +15,21 @@ class NavbarHtmlElement extends AbstractNavbarHtmlElement
     {
         $nav = $this->builder;
         $user = AuthService::getInstance()->getCurrentLoggedInUser();
-        return $nav->tag('div')->class(['container'])->add(
-            $nav->tag('nav')->class(self::NAVBAR_CLASS)
+        return $nav->tag('div')->class('container')->add(
+            $nav->tag('nav')->class(...self::NAVBAR_CLASS)
                 ->style(self::NAVBAR_STYLE)->add(
-                    $nav->tag('div')->class(['container-fluid'])->add(
-                        $nav->tag('a')->class(['navbar-brand'])->href('/')->content('k\'nGELL'),
-                        $nav->button('button')->class(['navbar-toggler'])->custom(self::BTN_CUSTOM)->add(
-                            $nav->tag('span')->class(['navbar-toggler-icon'])
+                    $nav->tag('div')->class('nav__brand')->add(
+                        $nav->tag('a')->class('nav__brand--link')->href('/')->add(
+                            $nav->tag('img')->src($this->logo())->class('nav__brand--img')
                         ),
-                        $nav->tag('div')->class(['collapse navbar-collapse'])->id('navbarSupportedContent')->add(
-                            ...$this->getNavElements($user)
-                        )
+                        $nav->button('button')->class('nav__brand--btn')->custom(self::BTN_CUSTOM)->add(
+                            $nav->tag('span')->class('nav__brand--icon-container')->add(
+                                $nav->tag('i')->class('fa-solid fa-bars')
+                            )
+                        ),
+                    ),
+                    $nav->tag('div')->class('nav__menu')->add(
+                        ...$this->getNavElements($user)
                     )
                 )
         )->generate();
@@ -40,16 +44,16 @@ class NavbarHtmlElement extends AbstractNavbarHtmlElement
     {
         $ulElements = [];
         $html = $this->builder;
-        $ul = $html->tag('ul')->class(['navbar-nav', 'me-auto', 'mb-2', 'mb-lg-0']);
+        $ul = $html->tag('ul')->class('nav__menu-list');
         foreach ($this->menuItems as $menuItem => $link) {
-            $class = $menuItem === array_key_first($this->menuItems) ? ['nav-link', 'active'] : ['nav-link'];
+            $class = $menuItem === array_key_first($this->menuItems) ? ['nav__menu-list--link', 'active'] : ['nav__menu-list--link'];
             if (is_array($link) && $menuItem === 'Account') {
-                $accountElements = $this->builder->tag('div')->add(
+                $accountElements = $this->builder->tag('div')->class('nav_menu-list--connexion')->add(
                     ...$this->accountElements($user, $link),
                 );
             } else {
-                $ulElements[] = $html->tag('li')->class(['nav-item'])->add(
-                    $html->tag('a')->class($class)->href($link)->content($menuItem)->custom(['aria-current' => 'page'])
+                $ulElements[] = $html->tag('li')->class('nav__menu-list-item')->add(
+                    $html->tag('a')->class(...$class)->href($link)->content($menuItem)->custom(['aria-current' => 'page'])
                 );
             }
         }

@@ -15,7 +15,7 @@ app:
 settings:
   default_charset: UTF-8
   default_locale: fr
-  default_timezone: Europe/Amsterdam
+  default_timezone: Europe/Paris
   favicon: ""
   apple_icon: ""
   secret_key: ""

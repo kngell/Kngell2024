@@ -3,8 +3,16 @@
 declare(strict_types=1);
 class ProfileController extends Controller
 {
-    public function __construct(private UserFormCreator $frm, private ValidatorInterface $validator, private UserModel $user, private HashInterface $hash)
+    public function __construct(private UserFormCreator $frm, private ValidatorInterface $validator, private UserModel $user, private HashInterface $hash, private FileUploadInterface $imgUpload)
     {
+        $this->currentModel($user);
+    }
+
+    public function index() : string
+    {
+        $this->pageTitle('All Users');
+        $users = new UserListDecorator($this);
+        return $this->render('index', $users->page());
     }
 
     public function show() : string
@@ -34,11 +42,14 @@ class ProfileController extends Controller
         $data = $this->request->getPost()->getAll();
         $data = $this->checkPassword($data);
         $errors = $this->validator->validate($data, 'profile', $this->user);
+        $this->imgUpload->proceed(false);
+        $errors = array_merge($errors, $this->imgUpload->getErrors());
         $form = $this->form($this->frm, 'save-profile', $data, $errors);
         if ($errors) {
             $this->session->set('form', $form);
             return $this->redirect('/profile/edit');
         }
+        null !== $this->imgUpload->getMediaPaths() ? $data['media'] = $this->imgUpload->getMediaPaths() : '';
         $result = $this->user->updatUser($data, $this->hash);
         if ($result->getQueryResult() && $result->rowCount()) {
             $this->flash->add('Changes saved!');

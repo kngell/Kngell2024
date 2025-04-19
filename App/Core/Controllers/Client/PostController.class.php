@@ -4,21 +4,17 @@ declare(strict_types=1);
 
 class PostController extends Controller
 {
-    public function __construct(private PostModel $post, private PostFormCreator $frm, private Validator $validator, private HtmlBuilder $html)
+    private const int RECORDS_PER_PAGE = 2;
+
+    public function __construct(private PostModel $post, private PostFormCreator $frm, private Validator $validator, private FileUploadInterface $imgUpload)
     {
+        $this->currentModel($this->post);
     }
 
-    public function index() : Response
+    public function index(int|null $currentPage = null) : Response
     {
-        $posts = $this->post->all()->getResults('class')->all();
-        $postHtmlObj = new BlogPostHTMLElement($posts, $this->token, $this->html);
-        return $this->response(
-            'index',
-            [
-                'posts' => $postHtmlObj->display(),
-                'total' => $this->post->getTotal(),
-            ]
-        );
+        $blogPost = new BlogPostDecorator($this, self::RECORDS_PER_PAGE, $currentPage);
+        return $this->response('index', $blogPost->page());
     }
 
     public function new(string|null $form = null) : Response
@@ -34,14 +30,17 @@ class PostController extends Controller
     public function create() : Response
     {
         $data = $this->request->getPost()->getAll();
-        $results = $this->validator->validate($data, 'postRules');
-        if (! empty($results)) {
-            $form = $this->frm->make('post/create', [], $results);
+        $errors = $this->validator->validate($data, 'postRules');
+        $this->imgUpload->proceed(false);
+        $errors = array_merge($errors, $this->imgUpload->getErrors());
+        if (! empty($errors)) {
+            $form = $this->frm->make('post/create', [], $errors);
             if (! $this->session->exists('form')) {
                 $this->session->set('form', $form);
             }
             return $this->redirect('/post/new');
         }
+        null !== $this->imgUpload->getMediaPaths() ? $data['media'] = $this->imgUpload->getMediaPaths() : '';
         $insert = $this->post->save($data);
         if ($insert->getQueryResult()) {
             $this->flash->add('The post has been create successfully');
@@ -54,7 +53,7 @@ class PostController extends Controller
     {
         $this->pageTitle('Show');
         $post = $this->post->getPost($id);
-        return $this->render('show', ['post' => $post, 'messgae' => $this->flash->get()]);
+        return $this->render('show', ['post' => $post, 'message' => $this->flash->get()]);
     }
 
     public function edit(string $id, string|null $form = null) : string
@@ -71,15 +70,19 @@ class PostController extends Controller
     {
         $data = $this->request->getPost()->getAll();
         $errors = $this->validator->validate($data, 'postRules');
+        $this->imgUpload->proceed(false);
+        $errors = array_merge($errors, $this->imgUpload->getErrors());
         if (! empty($errors)) {
             $form = $this->frm->make("post/update/{$id}", $data, $errors);
             return $this->edit($id, $form);
         }
+        null !== $this->imgUpload->getMediaPaths() ? $data['media'] = $this->imgUpload->getMediaPaths() : '';
         $update = $this->post->save($data);
         if ($update->getQueryResult()) {
             $this->flash->add('Post updated sucessfully');
             return $this->redirect("/post/{$id}/show");
         }
+        return $this->index();
     }
 
     public function delete(string|null $id = null) : string
