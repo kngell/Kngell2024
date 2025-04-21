@@ -53,7 +53,7 @@ class FileUpload extends FileInformation
         return ArrayUtils::first($extension);
     }
 
-    public function move(string $directory, string|null $name = null) : self
+    public function move(string $directory, string|null $name = null) : FileInformation
     {
         if (! $this->isValid()) {
             throw new FileException($this->getUploadedErrorMessage());

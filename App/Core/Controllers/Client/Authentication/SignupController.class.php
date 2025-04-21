@@ -6,6 +6,7 @@ class SignupController extends Controller
 {
     public function __construct(private UserModel $user, private UserFormCreator $frm, private ValidatorInterface $validator, private HashInterface $hash, private ImagesUpload $imgUpload)
     {
+        $this->currentModel($user);
     }
 
     public function index() : string
@@ -30,8 +31,8 @@ class SignupController extends Controller
     {
         $data = $this->request->getPost()->getAll();
         $errors = $this->validator->validate($data, 'register', $this->user);
-        [$imgErrors,$imgPath] = $this->imgUpload->proceed(false);
-        $errors = array_merge($errors, $imgErrors);
+        $this->imgUpload->proceed(false);
+        $errors = array_merge($errors, $this->imgUpload->getErrors());
         $form = $this->frm->make('register', $data, $errors);
         if (! $this->session->exists('form')) {
             $this->session->set('form', $form);
@@ -41,7 +42,7 @@ class SignupController extends Controller
             return $this->redirect(DS . 'signup');
         }
         $data['password'] = $this->hash->password($data['password']);
-        $data['media'] = $imgPath;
+        $this->imgUpload->getMediaPaths() !== null ? $data['media'] = $this->imgUpload->getMediaPaths() : '';
         $result = $this->user->saveRegisteredUser($data, $this->token);
         if ($result->getQueryResult() && $result->getLastInsertId()) {
             $logIn = "<a href='/login'> Log In</a>";

@@ -12,7 +12,7 @@ class NavbarDecorator extends AbstractHtmlDecorator
     public function page(): array
     {
         /** @var NavbarHtmlElement */
-        $navElements = App::diget(NavbarHtmlElement::class);
+        $navElements = new NavbarHtmlElement($this->controller->getBuilder(), $this->controller->getSession(), $this->controller->getRequest());
         return ['navComponent' => $navElements->display()];
     }
 }

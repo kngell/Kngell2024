@@ -3,6 +3,10 @@
 declare(strict_types=1);
 class ErrorsController extends Controller
 {
+    public function __construct()
+    {
+    }
+
     public function index(array $data) : String
     {
         $this->pageTitle('Errors');

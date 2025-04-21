@@ -1,6 +1,9 @@
 {
   "Home": "/",
-  "Posts": "/post/index",
+  "Services": "/service",
+  "Blog": "/post/index",
+  "About": "/about",
+  "Contact": "/contact",
   "Account": {
     "My Account": "",
     "Profile": "/profile/show",

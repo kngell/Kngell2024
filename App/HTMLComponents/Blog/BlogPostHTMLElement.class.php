@@ -31,17 +31,17 @@ class BlogPostHTMLElement extends AbstractHtml
         /** @var Post $post */
         foreach ($this->posts as $post) {
             $form = $html->form();
-            $postsHtml[] = $html->tag('div')->class($this->wrapperClass)->style($this->wrapperStyle)->add(
-                $html->tag('div')->class(['card-body'])->add(
+            $postsHtml[] = $html->tag('div')->class(...$this->wrapperClass)->style($this->wrapperStyle)->add(
+                $html->tag('div')->class('card-body')->add(
                     $html->tag('h3')->content($this->htmlDecode($post->getTitle(), ENT_QUOTES)),
                     $html->tag('p')->content($this->getContentOverview($this->htmlDecode($post->getTitle()))),
                     $html->tag('p')->content('Publié le ' . $this->createdAt($post)),
                     $html->tag('img')->src($this->media($post->getMedia())),
-                    $html->tag('a')->href("/post/show/{$post->getPostId()}")->class(['btn btn-primary'])->content('Show Post'),
-                    $html->tag('a')->href("/post/edit/{$post->getPostId()}")->class(['btn btn-info'])->content('Edit Post'),
+                    $html->tag('a')->href("/post/show/{$post->getPostId()}")->class('btn btn-primary')->content('Show Post'),
+                    $html->tag('a')->href("/post/edit/{$post->getPostId()}")->class('btn btn-info')->content('Edit Post'),
                     $form->action('post/delete')->method('post')->style(['display: inline-block'])->add(
                         $form->input('hidden')->name('post_id')->value($post->getPostId()),
-                        $form->button()->type('submit')->class(['btn btn-danger'])->content('Delete')
+                        $form->button()->type('submit')->class('btn btn-danger')->content('Delete')
                     )
                 )
             )->generate();

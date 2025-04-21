@@ -3,3 +3,4 @@ title:
   required: true
   min: 2
   max: 150
+  stripTag: true

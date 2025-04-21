@@ -136,4 +136,14 @@ readonly class Request
     {
         return $this->rawContent;
     }
+
+    public function isGet() : bool
+    {
+        return $this->getMethod() === HttpMethod::GET;
+    }
+
+    public function isPost() : bool
+    {
+        return $this->getMethod() === HttpMethod::POST;
+    }
 }

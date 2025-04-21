@@ -6,6 +6,7 @@ class HomeController extends Controller
 {
     public function __construct(private UserModel $user, private TestFormCreator $frm, private Validator $validator)
     {
+        $this->currentModel($user);
     }
 
     public function index() : string

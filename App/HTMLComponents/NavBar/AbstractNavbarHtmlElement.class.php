@@ -11,17 +11,19 @@ abstract class AbstractNavbarHtmlElement implements HtmlComponentsInterface
     protected const array BTN_CUSTOM = [
     ];
 
-    protected const string LOGO = ROOT_DIR . SCRIPT . DS . 'assets' . DS . 'img' . DS . 'logo.png';
-    protected const string LOGO_SOURCE = SRC . 'assets' . DS . 'img' . DS . 'logo.png';
+    protected const string FILE_TO_SEARCH = ROOT_DIR . SCRIPT . DS . 'assets' . DS . 'img' . DS;
+    protected const string SOURCE_FILE = SRC . 'assets' . DS . 'img' . DS;
 
-    protected function logo() : string
+    protected function file(string $file) : string
     {
         $copy = false;
-        if (! file_exists(self::LOGO)) {
-            $copy = FileManager::copyFile(self::LOGO_SOURCE, self::LOGO);
+        $file_to_search = self::FILE_TO_SEARCH . $file;
+        $source = self::SOURCE_FILE . $file;
+        if (! file_exists($file_to_search)) {
+            $copy = FileManager::copyFile($source, $file_to_search);
         } else {
-            return str_replace(ROOT_DIR, '', self::LOGO);
+            return str_replace(ROOT_DIR, '', $file_to_search);
         }
-        return $copy ? str_replace(ROOT_DIR, '', self::LOGO) : '#';
+        return $copy ? str_replace(ROOT_DIR, '', $file_to_search) : '#';
     }
 }

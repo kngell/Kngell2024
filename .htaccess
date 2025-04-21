@@ -1,13 +1,31 @@
 
-<IfModule mod_rewrite.c>
-    RewriteEngine on
-    # RewriteCond %{THE_REQUEST} /public/([^\s?]*) [NC]
-    # RewriteRule ^ %1 [L,NE,R=302]
-    # RewriteRule ^((?!public/).*)$ public/$1 [L,NC]
-    # RewriteRule ^(.*)$ /public/index.php?url=$1 [QSA,L]
-    RewriteRule ^(.*)$ public/$1 [QSA,L]
-</IfModule>
+# <IfModule mod_rewrite.c>
+#     RewriteEngine on
+#     # RewriteCond %{THE_REQUEST} /public/([^\s?]*) [NC]
+#     # RewriteRule ^ %1 [L,NE,R=302]
+#     # RewriteRule ^((?!public/).*)$ public/$1 [L,NC]
+#     # RewriteRule ^(.*)$ /public/index.php?url=$1 [QSA,L]
+#     RewriteRule ^(.*)$ public/$1 [QSA,L]
+# </IfModule>
 
+<IfModule mod_rewrite.c>
+    # Enable rewrite engine
+    RewriteEngine on
+
+    # Base directory
+    RewriteBase /
+
+    # Redirect all requests to the public folder
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteRule ^(.*)$ /public/$1 [L]
+
+    # Optional: If you want to redirect without changing the URL in the browser
+    # RewriteRule ^(.*)$ /public/$1 [L]
+
+    # Optional: If you want to force the use of index.php
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^(.*)$ /public/index.php?url=$1 [QSA,L]
+</IfModule>
 
 <IfModule mod_headers.c>
   <FilesMatch "\.(ttf|ttc|otf|eot|woff|woff2|svg)$”>

@@ -6,6 +6,7 @@ abstract class AuthController extends Controller
 {
     public function __construct(protected UserModel $user, protected UserSessionModel $userSession, protected CookieInterface $cookie, protected HashInterface $hash)
     {
+        $this->currentModel($user);
     }
 
     protected function authenticate(array $userData) : User|bool

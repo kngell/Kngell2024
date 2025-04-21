@@ -62,6 +62,18 @@ abstract class AbstractHtmlElement extends AbstractHtmlComponent
         return $this;
     }
 
+    protected function tagContentContext(string $tag, string $content): string
+    {
+        if (isset($this->content)) {
+            if ($this->contentUp) {
+                return $tag . $this->content . $content;
+            } else {
+                return $tag . $content . $this->content;
+            }
+        }
+        return $tag . $content;
+    }
+
     /**
      * @return string[]
      */

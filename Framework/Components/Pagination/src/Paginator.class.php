@@ -36,7 +36,7 @@ class Paginator
     {
         $html = $this->builder;
         $links = $this->totalPages > 1 ? $this->paginationLinks() : [];
-        return $html->tag('ul')->class(['pagination'])->add(
+        return $html->tag('ul')->class('pagination')->add(
             ...$links
         )->generate();
     }
@@ -69,8 +69,8 @@ class Paginator
         $array = [];
         $html = $this->builder;
         if ($this->currentPage > 1) {
-            $array[] = $html->tag('li')->class(self::LIST_CLASS)->add(
-                $html->tag('a')->class(self::PREV_CLASS)->href($this->previousPage())->content(self::ICON_PREV)
+            $array[] = $html->tag('li')->class(...self::LIST_CLASS)->add(
+                $html->tag('a')->class(...self::PREV_CLASS)->href($this->previousPage())->content(self::ICON_PREV)
             );
         }
         for ($i = 0; $i < $this->totalPages; $i++) {
@@ -78,13 +78,13 @@ class Paginator
             if ($i + 1 === $this->currentPage) {
                 $classLink = self::ACTIVE_CLASS;
             }
-            $array[] = $html->tag('li')->class(self::LINK_CLASS)->add(
-                $html->tag('a')->class($classLink)->href('/post/index/' . strval($i + 1))->content(strval($i + 1))
+            $array[] = $html->tag('li')->class(...self::LINK_CLASS)->add(
+                $html->tag('a')->class(...$classLink)->href('/post/index/' . strval($i + 1))->content(strval($i + 1))
             );
         }
         if ($this->currentPage < $this->totalPages) {
-            $array[] = $html->tag('li')->class(self::LINK_CLASS)->add(
-                $html->tag('a')->class(self::NEXT_CLASS)->href($this->nextPage())->content(self::ICON_NEXT)
+            $array[] = $html->tag('li')->class(...self::LINK_CLASS)->add(
+                $html->tag('a')->class(...self::NEXT_CLASS)->href($this->nextPage())->content(self::ICON_NEXT)
             );
         }
 

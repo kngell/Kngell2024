@@ -7,12 +7,15 @@ abstract class AbstractHtml implements HtmlComponentsInterface
 
     protected function media(string|null $media) : string
     {
+        $m = StringUtils::is_serialized($media);
         if (null !== $media) {
-            $mediaArray = unserialize($media);
-            if (! empty($mediaArray)) {
+            if (StringUtils::is_serialized($media)) {
+                $mediaArray = unserialize($media);
                 $file = $mediaArray[0];
                 $file = preg_replace('/([^:])(\/{2,})/', '$1/', $file);
                 return str_replace(ROOT_DIR, '', $file);
+            } else {
+                return $media;
             }
         }
 

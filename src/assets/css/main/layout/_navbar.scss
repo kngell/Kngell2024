@@ -2,35 +2,35 @@
 
 /* ----------------- NAVIGATION ----------------*/
 
-.nav {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
-  &__brand {
-    background-color: green;
-    width: 20rem;
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-    &--link {
-      display: flex;
-    }
-    &--img {
-      width: 10rem;
-    }
-  }
-  &__menu {
-    background-color: red;
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    &-list {
-      list-style-type: none;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-  }
-}
+// .nav {
+//   display: flex;
+//   justify-content: space-between;
+//   align-items: center;
+//   gap: 1rem;
+//   // &__brand {
+//   //   background-color: green;
+//   //   width: 20rem;
+//   //   display: flex;
+//   //   justify-content: flex-start;
+//   //   align-items: center;
+//   //   &--link {
+//   //     display: flex;
+//   //   }
+//   //   &--img {
+//   //     width: 10rem;
+//   //   }
+//   // }
+//   &__menu {
+//     background-color: red;
+//     width: 100%;
+//     display: flex;
+//     justify-content: space-between;
+//     align-items: center;
+//     &-list {
+//       list-style-type: none;
+//       display: flex;
+//       justify-content: center;
+//       align-items: center;
+//     }
+//   }
+// }

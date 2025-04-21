@@ -17,14 +17,14 @@ class HtmlaElement extends AbstractHtmlElement
     public function generate(): string
     {
         $tag = $this->getTagAttributes(get_object_vars($this), self::TAG);
-        if (isset($this->content)) {
-            $tag .= $this->content;
-        }
+        // if (isset($this->content)) {
+        //     $tag .= $this->content;
+        // }
         $children = '';
         while ($this->children->count()) {
             $children .= $this->children->pop()->generate();
         }
-        return $tag . $children . '</a>';
+        return $this->tagContentContext($tag, $children) . '</a>';
     }
 
     /**

@@ -74,6 +74,14 @@ trait ControllerGettersAndSetters
     }
 
     /**
+     * @return SessionInterface
+     */
+    public function getSession(): SessionInterface
+    {
+        return $this->session;
+    }
+
+    /**
      * @param EventManagerInterface $eventManager
      * @return Controller
      */

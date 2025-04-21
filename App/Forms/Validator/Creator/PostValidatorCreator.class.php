@@ -14,6 +14,7 @@ class PostValidatorCreator extends AbstractValidatorCreator
             'required' => new RequiredValidator($display, $inputValue, $ruleValue),
             'min' => new MinValidator($display, $inputValue, $ruleValue),
             'max' => new MaxValidator($display, $inputValue, $ruleValue),
+            'stripTag' => new StriptagValidator($display, $inputValue, $ruleValue),
             default => null
         };
     }

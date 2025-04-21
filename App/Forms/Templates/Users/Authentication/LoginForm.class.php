@@ -30,6 +30,9 @@ readonly class LoginForm extends AbstractTemplateForm
             ),
             $html->tag('div')->class('text-center')->add(
                 $html->tag('a')->href('/forgot')->class('forgot-password')->content('Forgot Password?')
+            ),
+            $html->tag('div')->class('text-center')->add(
+                $html->tag('a')->href('/signup')->class('register')->content('Create a new Account')
             )
         );
         return $form->generate();

@@ -84,7 +84,7 @@ class User extends Entity
      */
     public function getUserName(): ?string
     {
-        return $this->userName;
+        return $this->userName ?? null;
     }
 
     /**

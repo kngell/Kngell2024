@@ -23,4 +23,10 @@ class HtmlBlockElement extends AbstractHtmlComponent
         $this->htmlBlock = file_get_contents($htmlBlockPth);
         return $this;
     }
+
+    public function content(string $htmlContent) : self
+    {
+        $this->htmlBlock = $htmlContent;
+        return $this;
+    }
 }

@@ -4,10 +4,10 @@ $this->start('head'); ?>
 <?= $this->css('css/client/post/main') ?>
 <?php $this->end(); ?>
 <?php $this->start('body'); ?>
-<main id="main-site">
+<main id="main" class="main">
    <!-- Content -->
    <div class='container'>
-      <h>Edit Post</h>
+      <h1>Edit Post</h1>
       <?= $editFrom ?>
       <p><a href="/post/<?=$id?>/show">Cancel</a></p>
    </div>
@@ -18,6 +18,6 @@ $this->start('head'); ?>
 <?php $this->end(); ?>
 <?php $this->start('footer') ?>
 <!----------custom--------->
-<?= $this->js('js/frontend/posts/new') ?>
+<?= $this->js('js/frontend/training/image/dropzone') ?>
 
 <?php $this->end();
