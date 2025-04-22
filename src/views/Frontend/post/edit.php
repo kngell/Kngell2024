@@ -12,6 +12,7 @@ $this->start('head'); ?>
       <p><a href="/post/<?=$id?>/show">Cancel</a></p>
    </div>
 
+
    <!-- Fin Content -->
 
 </main>
