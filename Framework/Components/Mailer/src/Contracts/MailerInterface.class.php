@@ -92,9 +92,9 @@ interface MailerInterface
     public function attachments(mixed $args = null) : self;
 
     /**
-     * @return bool
+     * @return bool|string
      */
-    public function send(): bool;
+    public function send(): bool|string;
 
     public function charset(string $hset) : self;
 }

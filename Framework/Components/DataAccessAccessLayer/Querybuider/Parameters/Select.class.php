@@ -71,7 +71,7 @@ class Select extends MainQuery
         $function = $parts[0];
         preg_match('#\((.*?)\)#', $column, $match);
         $newColumn = $match[1];
-        return strtoupper($function) . '(' . $alias . '.' . $newColumn . ')' . $AS;
+        return strtoupper($function) . '(' . $alias . '.' . $newColumn . ')' . ' AS ' . $AS;
     }
 
     private function as(string $column) : array

@@ -103,20 +103,21 @@ class whereConditionRule extends AbstractConditionRules
             while (in_array($stmt, array_keys($this->parameters))) {
                 $stmt = $tblh->getToken()->generate(2, self::PARAM_SUFIX);
             }
-            $right = ':' . $stmt . '_' . $this->conditionLeft($condition['left']);
-            $this->parameters[$stmt . '_' . $this->conditionLeft($condition['left'])] = $condition['right'];
+            $right = ':' . $stmt . '_' . $this->conditionLeft($condition['left'], $tblh);
+            $this->parameters[$stmt . '_' . $this->conditionLeft($condition['left'], $tblh)] = $condition['right'];
         } else {
             list($table2, $column2) = $tblh->mapTableColumn($condition['right']);
             list($table2, $alias2) = $tblh->get($table2, $this->tableAlias, $this->aliasCheck);
             $alias2 = ! empty($alias2) ? $alias2 . '.' : '';
-            $right = $alias2 . $column2;
+            $right = is_string($column2) ? $alias2 . $column2 : $column2;
         }
         return  $alias1 . $column1 . ' ' . $condition['operator'] . ' ' . $right;
     }
 
-    private function conditionLeft(string $strCondition) : string
+    private function conditionLeft(string $strCondition, TablesAliasHelper $tblh) : string
     {
-        $parts = explode('.', $strCondition);
+        $sep = $tblh->separator($strCondition);
+        $parts = explode($sep, $strCondition);
         if (count($parts) === 2) {
             return $parts[1];
         }

@@ -32,6 +32,9 @@
 /_500_error:
   controller: errors
   method: e_500
+/_client_error:
+  controller: errors
+  method: client-error
 /_restrict:
   controller: errors
   method: restrict-access

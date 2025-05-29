@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 abstract class AbstractDataMapper implements DataMapperInterface
 {
-    protected DatabaseConnexionInterface $_con;
+    protected DatabaseConnectionInterface $_con;
     protected PDOStatement $_query;
 
-    public function __construct(DatabaseConnexionInterface $_con)
+    public function __construct(DatabaseConnectionInterface $_con)
     {
         $this->_con = $_con;
     }
@@ -27,7 +27,7 @@ abstract class AbstractDataMapper implements DataMapperInterface
         return $this->_con->rollback();
     }
 
-    public function getConnexion() : DatabaseConnexionInterface
+    public function getConnexion() : DatabaseConnectionInterface
     {
         return $this->_con;
     }

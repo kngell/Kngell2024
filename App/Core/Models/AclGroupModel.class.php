@@ -9,7 +9,7 @@ class AclGroupModel extends Model
         parent::__construct($em);
     }
 
-    public function acl(User $user) : array
+    public function getUserAuthorization(User $user) : array
     {
         $aclGroup = $this->getUserAclGroup($user);
         $response = [];

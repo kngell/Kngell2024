@@ -20,6 +20,29 @@ class UserModel extends Model
         return $user->getResults('class')->single();
     }
 
+    public function loginAttempts(string $email) : User|null
+    {
+        $this->entityManager->createQueryBuilder()->select()
+            ->leftJoin('login_attempts', 'COUNT(la_id) as login_attempts', 'timestamp as login_attempts_timestamp')
+            ->on(
+                'user|user_id',
+                'login_attempts|user_id',
+                'login_attempts|timestamp',
+                '>=',
+                time() - 60 * 60
+            )
+            ->where('user|email', $email)
+            ->groupBy('user|user_id')
+            ->orderBy('login_attempts|timestamp', 'DESC')
+            ->build();
+        $results = $this->entityManager->persist()->getResults();
+        $user = $results->getResults('class')->first();
+        if ($user) {
+            return $user;
+        }
+        return null;
+    }
+
     public function getByEmail(string $email) : User|bool
     {
         $user = $this->all(['email' => $email]);
@@ -37,7 +60,7 @@ class UserModel extends Model
         return parent::save($data);
     }
 
-    public function updatUser(array $data, HashInterface $hash) : QueryResult
+    public function updateUser(array $data, HashInterface $hash) : QueryResult
     {
         if (array_key_exists('password', $data)) {
             $data['password'] = $hash->password($data['password']);
@@ -54,7 +77,7 @@ class UserModel extends Model
             $result = $this->save([
                 'password_reset_hash' => $token->getRememberHash(),
                 'user_id' => $user->getUserId(),
-                'paswword_reset_expiry' => date('Y-m-d H:i:s', time() + self::RESET_PW_EXPIRY),
+                'password_reset_expiry' => date('Y-m-d H:i:s', time() + self::RESET_PW_EXPIRY),
             ]);
             if ($result->getQueryResult() && $result->rowCount()) {
                 return ['token' => $user_token, 'user' => $user];
@@ -77,7 +100,7 @@ class UserModel extends Model
         /** @var User */
         $user = $results->getResults('class')->single();
         if ($user) {
-            if (strtotime($user->getPaswwordResetExpiry()) > time()) {
+            if (strtotime($user->getPasswordResetExpiry()) > time()) {
                 return $user;
             }
         }
@@ -90,11 +113,12 @@ class UserModel extends Model
             'user_id' => $user->getUserId(),
             'password' => $hash->password($userData['password']),
             'password_reset_hash' => null,
-            'paswword_reset_expiry' => null,
+            'password_reset_expiry' => null,
         ]);
         if ($result->getQueryResult() && $result->rowCount()) {
             return true;
         }
+        return false;
     }
 
     public function activateAccount(string $token) : bool

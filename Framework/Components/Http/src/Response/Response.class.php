@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 class Response
 {
+    protected const array ALLOW_ACCESS = [
+        'Access-Control-Allow-Origin' => 'https://localhost',
+    ];
     protected HeaderMap $headers;
     protected CookiesMap $cookies;
     protected string $content;
@@ -19,7 +22,7 @@ class Response
     ) {
         $this->content = $content;
         $this->statusCode = $statusCode;
-        $this->headers = HeaderMap::createFromArray($headers);
+        $this->headers = HeaderMap::createFromArray(array_merge($headers, self::ALLOW_ACCESS));
         $this->cookies = new CookiesMap($cookies);
         $this->protocolVersion = $protocolVersion;
     }

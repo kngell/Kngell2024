@@ -8,7 +8,7 @@ use JMS\Serializer\Exception\UnsupportedFormatException;
 
 readonly class RouteDispatcher
 {
-    private const array GLOBAL_MIDDLEWARES = ['return_to', 'grantAccess']; //'return_to',
+    private const array GLOBAL_MIDDLEWARES = ['previousPage', 'grantAccess']; //'return_to',
 
     public function __construct(
         private RouteArgumentGenerator $routeArgumentGenerator,
@@ -81,7 +81,7 @@ readonly class RouteDispatcher
         if (isset($matches['middleware'])) {
             $middlewares = explode('|', $matches['middleware']);
         }
-        $middlewares = array_merge($middlewares ?? [], self::GLOBAL_MIDDLEWARES);
+        $middlewares = array_merge(self::GLOBAL_MIDDLEWARES, $middlewares ?? []);
         if (! empty($middlewares)) {
             return implode('|', $middlewares);
         }

@@ -22,8 +22,8 @@ abstract class AbstractNavbarHtmlElement implements HtmlComponentsInterface
         if (! file_exists($file_to_search)) {
             $copy = FileManager::copyFile($source, $file_to_search);
         } else {
-            return str_replace(ROOT_DIR, '', $file_to_search);
+            return str_replace(ROOT_DIR, HOST, $file_to_search);
         }
-        return $copy ? str_replace(ROOT_DIR, '', $file_to_search) : '#';
+        return $copy ? str_replace(ROOT_DIR, HOST, $file_to_search) : '#';
     }
 }

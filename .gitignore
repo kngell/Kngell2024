@@ -8,4 +8,6 @@
 /session_dir/
 /Temp/
 /.temp_cache/
+/App/System/AppConstants.class.php
+/.env
 

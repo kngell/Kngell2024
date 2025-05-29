@@ -168,10 +168,10 @@ class Mailer extends AbstractMailer
     }
 
     /**
-     * @return bool
+     * @return bool|string
      * @throws MailerException
      */
-    public function send(): bool
+    public function send(): bool|string
     {
         try {
             if (! $rs = $this->transporterObject->send()) {
@@ -214,12 +214,13 @@ class Mailer extends AbstractMailer
     protected function defaultOrEnv(string $param): mixed
     {
         $this->isValid($param);
-        if (isset($this->setting[$param]) && $this->setting[$param] !== '' && ! isset($_ENV[$param])) {
-            return $this->setting[$param];
-        }
+        // if (isset($this->setting[$param]) && $this->setting[$param] !== '' && ! isset($_ENV[$param])) {
+        //     return $this->setting[$param];
+        // }
         if (isset($_ENV[$param]) && empty($this->setting[$param])) {
             return $_ENV[$param];
         }
+        return $this->setting[$param];
     }
 
     /**

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 class FileUpload extends FileInformation
 {
-    private const string UPLOAD_DIR_SRC = SRC . 'assets' . DS . 'img' . DS . 'Upload' . DS;
     private readonly string $originalName;
     private readonly string $mimeType;
     private ErrorFile $uploadError;
@@ -72,8 +71,7 @@ class FileUpload extends FileInformation
             throw new FileException("Could not move file {$this->getPathname()} to {$targetFile->getPathname()} ({$erroMsg})");
         }
         // @chmod($targetFile->getPathname(), 0666 & ~umask());
-        //$targetFile;
-        return $this->getTargetedFile(UPLOAD_DIR . DS . 'images' . DS, $targetFile->getBasename());
+        return $targetFile;
     }
 
     public function getUploadedErrorMessage() : string
@@ -93,14 +91,6 @@ class FileUpload extends FileInformation
     public function getError() : ErrorFile
     {
         return $this->uploadError;
-    }
-
-    private function copyToSrc(FileInformation $targetFile) : void
-    {
-        $dir = self::UPLOAD_DIR_SRC;
-        if (FileManager::createDir($dir)) {
-            copy($targetFile->getPathname(), $dir . $targetFile->getBasename());
-        }
     }
 
     private function originalName(string $originalName, int|null $index = null) : string

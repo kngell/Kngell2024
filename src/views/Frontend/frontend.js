@@ -9,3 +9,4 @@ import "./post/post";
 import "./user/users";
 import "./training/training";
 import "./training1/training";
+import "./payments/payments";

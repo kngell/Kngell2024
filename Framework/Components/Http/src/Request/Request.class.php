@@ -146,4 +146,9 @@ readonly class Request
     {
         return $this->getMethod() === HttpMethod::POST;
     }
+
+    public function get(string $key) : mixed
+    {
+        return $this->getServer()->get($key) ?? $this->getQuery()->get($key) ?? $this->getPost()->get($key) ?? $this->getCookies()->get($key);
+    }
 }

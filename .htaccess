@@ -1,13 +1,5 @@
 
-# <IfModule mod_rewrite.c>
-#     RewriteEngine on
-#     # RewriteCond %{THE_REQUEST} /public/([^\s?]*) [NC]
-#     # RewriteRule ^ %1 [L,NE,R=302]
-#     # RewriteRule ^((?!public/).*)$ public/$1 [L,NC]
-#     # RewriteRule ^(.*)$ /public/index.php?url=$1 [QSA,L]
-#     RewriteRule ^(.*)$ public/$1 [QSA,L]
-# </IfModule>
-
+# This .htaccess file is used to redirect all requests to the public folder
 <IfModule mod_rewrite.c>
     # Enable rewrite engine
     RewriteEngine on
@@ -23,15 +15,15 @@
     # RewriteRule ^(.*)$ /public/$1 [L]
 
     # Optional: If you want to force the use of index.php
-    RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteRule ^(.*)$ /public/index.php?url=$1 [QSA,L]
+    # RewriteCond %{REQUEST_FILENAME} !-f
+    # RewriteRule ^(.*)$ /public/index.php?url=$1 [QSA,L]
 </IfModule>
 
-<IfModule mod_headers.c>
-  <FilesMatch "\.(ttf|ttc|otf|eot|woff|woff2|svg)$”>
-    Header set Access-Control-Allow-Origin “*”
-  </FilesMatch>
-</IfModule>
+# <IfModule mod_headers.c>
+#   <FilesMatch "\.(ttf|ttc|otf|eot|woff|woff2|svg)$”>
+#     Header set Access-Control-Allow-Origin “*”
+#   </FilesMatch>
+# </IfModule>
 
 
 

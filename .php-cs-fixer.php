@@ -5,7 +5,6 @@ declare(strict_types=1);
 use PhpCsFixer\Config;
 use PhpCsFixer\Finder;
 
-
 $rules = [
     'array_syntax' => ['syntax' => 'short'],
     'array_indentation' => true,
@@ -107,6 +106,15 @@ $rules = [
             'throw',
             'use',
             'use_trait',
+            'break',
+            'case',
+            'continue',
+            'curly_brace_block',
+            'default',
+            'parenthesis_brace_block',
+            'return',
+            'square_brace_block',
+            'switch',
         ],
     ],
     'no_blank_lines_after_class_opening' => true,
@@ -202,4 +210,6 @@ $config = new Config();
 return $config->setFinder($finder)
     ->setRules($rules)
     ->setRiskyAllowed(true)
-    ->setUsingCache(true);
+    ->setUsingCache(true)
+    ->setIndent('    ')
+    ->setLineEnding("\n");

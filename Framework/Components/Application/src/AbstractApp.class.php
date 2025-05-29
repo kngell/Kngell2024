@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 abstract class AbstractApp extends Container
 {
     use AppGettersAndSetter;

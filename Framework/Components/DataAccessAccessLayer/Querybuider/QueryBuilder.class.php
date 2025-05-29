@@ -152,7 +152,7 @@ class QueryBuilder
         return $this->join($table, $columns);
     }
 
-    public function on(array|string ...$conditions): self
+    public function on(array|string|int ...$conditions): self
     {
         ! isset($this->on) ? $this->on = new QueryStatement : '';
         if (! isset($this->join)) {

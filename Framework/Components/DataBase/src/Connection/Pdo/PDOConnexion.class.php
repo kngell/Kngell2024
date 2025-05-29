@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-class PDOConnexion implements DatabaseConnexionInterface
+class PDOConnection implements DatabaseConnectionInterface
 {
     /**
      * @var array

@@ -10,7 +10,7 @@ interface EntityManagerInterface
 
     public function table() : string;
 
-    public function getConnection() : DatabaseConnexionInterface;
+    public function getConnection() : DatabaseConnectionInterface;
 
     public function getTableAliasHelper(): TablesAliasHelper;
 

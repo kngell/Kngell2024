@@ -21,9 +21,9 @@ class QueryResult
 
     public function getResults(string|array|null $params = null, string|null $className = null): self
     {
-        list($mode, $className, $constructorAgrs) = $this->params($params, $className);
-        $mode = $this->returType($mode);
-        $this->fetchMode($mode, $className, $constructorAgrs);
+        list($mode, $className, $constructorArgs) = $this->params($params, $className);
+        $mode = $this->returnType($mode);
+        $this->fetchMode($mode, $className, $constructorArgs);
         $this->rowCount = $this->_query->rowCount();
         return $this;
     }
@@ -114,7 +114,7 @@ class QueryResult
         }
     }
 
-    private function returType(string|null $type) : int
+    private function returnType(string|null $type) : int
     {
         return match ($type) {
             'object' => PDO::FETCH_OBJ,

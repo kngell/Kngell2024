@@ -7,18 +7,6 @@ class FileInformation extends SplFileInfo
     public function __construct(string $path)
     {
         parent::__construct($path);
-        // if (! $this->isFile()) {
-        //     throw new FileException("The file '{$path}' does not exist or is not a file.");
-        // }
-    }
-
-    protected function getContent() : string
-    {
-        $content = file_get_contents($this->getPathname());
-        if ($content === false) {
-            throw new FileException("Could not get the content of the file : '{$this->getPathname()}'");
-        }
-        return $content;
     }
 
     protected function getTargetedFile(string $directory, string|null $name) : self
@@ -30,6 +18,15 @@ class FileInformation extends SplFileInfo
         $fileName = StringUtils::isBlanc($name) ? $this->getBasename() : $name;
         $targetPath = $directory . $fileName;
         return new self($targetPath);
+    }
+
+    protected function getContent() : string
+    {
+        $content = file_get_contents($this->getPathname());
+        if ($content === false) {
+            throw new FileException("Could not get the content of the file : '{$this->getPathname()}'");
+        }
+        return $content;
     }
 
     protected function hasTargetedFile(string $directory, string|null $name) : self|bool

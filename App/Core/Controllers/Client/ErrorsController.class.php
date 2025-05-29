@@ -28,6 +28,13 @@ class ErrorsController extends Controller
         return $this->render('404');
     }
 
+    public function clientError() : string
+    {
+        $this->pageTitle('Errors');
+        $this->setLayout('default');
+        return $this->render('client-error');
+    }
+
     public function restrictAccess() : string
     {
         $this->pageTitle('Errors');

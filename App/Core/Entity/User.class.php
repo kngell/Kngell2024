@@ -13,7 +13,7 @@ class User extends Entity
     private ?string $password;
     private ?string $tokenExpire;
     private ?string $passwordResetHash;
-    private ?string $paswwordResetExpiry;
+    private ?string $passwordResetExpiry;
     private ?bool $active;
     private ?string $activationHash;
     private ?string $gender;
@@ -24,6 +24,7 @@ class User extends Entity
     private ?bool $deleted;
     private ?string $acl;
     private ?bool $verified;
+    private ?int $loginAttempts;
 
     /**
      * @return int
@@ -335,18 +336,18 @@ class User extends Entity
     /**
      * @return null|string
      */
-    public function getPaswwordResetExpiry(): ?string
+    public function getPasswordResetExpiry(): ?string
     {
-        return $this->paswwordResetExpiry;
+        return $this->passwordResetExpiry;
     }
 
     /**
-     * @param null|string $paswwordResetExpiry
+     * @param null|string $passwordResetExpiry
      * @return User
      */
-    public function setPaswwordResetExpiry(?string $paswwordResetExpiry): self
+    public function setPasswordResetExpiry(?string $passwordResetExpiry): self
     {
-        $this->paswwordResetExpiry = $paswwordResetExpiry;
+        $this->passwordResetExpiry = $passwordResetExpiry;
         return $this;
     }
 
@@ -365,6 +366,25 @@ class User extends Entity
     public function setActivationHash(?string $activationHash): self
     {
         $this->activationHash = $activationHash;
+        return $this;
+    }
+
+    /**
+     * @return null|int
+     */
+    public function getLoginAttempts(): ?int
+    {
+        return $this->loginAttempts;
+    }
+
+    /**
+     * @param null|int $loginAttempts
+     * @return User
+     */
+    public function setLoginAttempts(?int $loginAttempts): self
+    {
+        $this->loginAttempts = $loginAttempts;
+
         return $this;
     }
 }

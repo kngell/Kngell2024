@@ -33,7 +33,7 @@ class EntityManager implements EntityManagerInterface
         $this->mapper->rollback();
     }
 
-    public function getConnection() : DatabaseConnexionInterface
+    public function getConnection() : DatabaseConnectionInterface
     {
         return $this->mapper->getConnexion();
     }

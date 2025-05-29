@@ -3,7 +3,7 @@ trim: ChangeRequestExampleMiddleware
 deny: RedirectExampleMiddleware
 crsfToken: CsrfTokenMiddleware
 requireLogin: RequireLoginMiddleware
-return_to: RememberPreviousPageMiddleware
-grantAccess: GrantAccessMiddleware
+previousPage: RememberPreviousPageMiddleware
+grantAccess: GrantControllerAccessMiddleware
 remember: RememberMeMiddleware
 xss: XSSProtectionMiddleware

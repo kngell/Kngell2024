@@ -44,15 +44,22 @@ final class TablesAliasHelper
         return array_values($condition);
     }
 
-    public function mapTableColumn(string $str, array $tables = []) : array
+    public function mapTableColumn(string|int $str, array $tables = []) : array
     {
-        $parts = explode('.', $str);
-        if (count($parts) === 2) {
-            $tableColumn = $parts[0];
-            $column = $parts[1];
-        } elseif (count($parts) === 1) {
-            $column = $parts[0];
+        if (is_string($str)) {
+            $separator = $this->separator($str);
+            $parts = explode($separator, $str);
+            if (count($parts) === 2) {
+                $tableColumn = $parts[0];
+                $column = $parts[1];
+            } elseif (count($parts) === 1) {
+                $column = $parts[0];
+            }
+        } else {
+            $tableColumn = '';
+            $column = $str;
         }
+
         $tables = [];
         foreach ($this->tables as $table => $columns) {
             $columns = ArrayUtils::flattenArrayRecursive($columns);
@@ -108,6 +115,11 @@ final class TablesAliasHelper
         $this->conditionIndex = $conditionIndex;
 
         return $this;
+    }
+
+    public function separator(string $str) : string
+    {
+        return strpos($str, '|') !== false ? '|' : '.';
     }
 
     protected function getTableAndAlias(string $table, $tableAlias) : string|bool

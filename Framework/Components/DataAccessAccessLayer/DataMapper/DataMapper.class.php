@@ -7,10 +7,10 @@ class DataMapper extends AbstractDataMapper
     private bool $queryResult;
 
     /**
-     * @param DatabaseConnexionInterface $_con
+     * @param DatabaseConnectionInterface $_con
      * @return void
      */
-    public function __construct(DatabaseConnexionInterface $_con)
+    public function __construct(DatabaseConnectionInterface $_con)
     {
         parent::__construct($_con);
     }

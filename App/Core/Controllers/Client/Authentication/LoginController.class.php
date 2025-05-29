@@ -12,8 +12,9 @@ class LoginController extends AuthController
         private ValidatorInterface $validator,
         private HtmlBuilder $html,
         HashInterface $hash,
+        LoginAttemptsModel $loginAttempts
     ) {
-        parent::__construct($users, $userSession, $cookie, $hash);
+        parent::__construct($users, $userSession, $cookie, $hash, $loginAttempts);
     }
 
     public function before() : void
@@ -37,24 +38,17 @@ class LoginController extends AuthController
 
     public function authenticateUser() : Response
     {
-        [$userData, $errors] = $this->userData();
+        [$userData, $errors] = $this->validateUserData();
         if (! empty($errors)) {
             $this->flash->add('Fields Errors... Please check.', FlashType::WARNING);
-            return $this->redirect(DS . 'login');
         }
-        $user = $this->authenticate($userData);
-        if (! $user) {
-            $this->flash->add('The authentication failed! Please create an account.', FlashType::WARNING);
-            return $this->redirect('/login');
+        if (! $this->isUserAuthenticated($userData)) {
+            return new RedirectResponse('/login');
         }
-        if (! $this->loginUser($user, $userData)) {
-            $this->flash->add('Login failed! Please try again', FlashType::WARNING);
-            return $this->redirect('/login');
-        }
-        return $this->redirect($this->session->get(PREVIOUS_PAGE) ?? '/');
+        return new RedirectResponse($this->getRedirectUrl() ?? '/');
     }
 
-    private function userData() : array
+    private function validateUserData() : array
     {
         $userData = $this->request->getPost()->getAll();
         $errors = $this->validator->validate($userData, 'login', $this->user);

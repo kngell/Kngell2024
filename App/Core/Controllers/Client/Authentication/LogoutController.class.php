@@ -6,7 +6,7 @@ class LogoutController extends AuthController
     public function index() : Response
     {
         if ($this->session->exists(CURRENT_USER_SESSION_NAME)) {
-            $previousPage = $this->session->get(PREVIOUS_PAGE);
+            $previousPage = $this->getRedirectUrl();
             $this->session->invalidate();
         }
         $result = $this->deleteOldTokenHash();

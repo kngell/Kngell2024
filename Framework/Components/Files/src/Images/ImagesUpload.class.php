@@ -6,7 +6,7 @@ declare(strict_types=1);
 final class ImagesUpload implements FileUploadInterface
 {
     private const array ALLOWED_TYPE = ['JPG', 'PNG', 'JPEG', 'GIF', 'BMP', 'WEBP', 'TIFF'];
-    private const string IMG_UPLOAD_DIR = SRC . 'assets' . DS . 'img' . DS . 'Upload' . DS . 'images' . DS; //UPLOAD_DIR;
+    private const string IMG_UPLOAD_DIR = SRC . 'Upload' . DS . 'images' . DS; //UPLOAD_DIR;
     private const int MAX_IMG_SIZE = 5242880; // 5MB
     private const string FILE_NAME = 'uploadedFiles';
     /**
@@ -65,7 +65,7 @@ final class ImagesUpload implements FileUploadInterface
         $paths = [];
         foreach ($files as $fileUpload) {
             $target = $fileUpload->move(self::IMG_UPLOAD_DIR);
-            $paths[] = $target->getPathname();
+            $paths[] = str_replace(SRC, SCRIPT . DS, $target->getPathname());
         }
         $this->mediaPaths = serialize($paths);
     }

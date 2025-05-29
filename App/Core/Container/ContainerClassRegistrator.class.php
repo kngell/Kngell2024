@@ -58,7 +58,6 @@ final readonly class ContainerClassRegistrator
             CacheStorageInterface::class => NativeCacheStorage::class,
             CacheInterface::class => Cache::class,
             FilesSystemInterface::class => FileSystem::class,
-            SuperGlobalsInterface::class => SuperGlobals::class,
             CookieStoreInterface::class => NativeCookieStore::class,
             CookieInterface::class => Cookie::class,
             RouteDispatcher::class => [false,
@@ -80,8 +79,11 @@ final readonly class ContainerClassRegistrator
     private static function singletonClasses(App $app) : array
     {
         return [
+            SuperGlobalsInterface::class => SuperGlobals::class,
+            Request::class => Request::class,
             ValidatorInterface::class => Validator::class,
-            DatabaseConnexionInterface::class => PDOConnexion::class,
+            PaymentGatewayInterface::class => PayPalGateway::class,
+            DatabaseConnectionInterface::class => PDOConnection::class,
             UserModel::class => UserModel::class,
             FlashInterface::class => Flash::class,
             TokenInterface::class => Token::class,

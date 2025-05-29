@@ -27,7 +27,7 @@ final readonly class AppConstants
         defined('SRC') or define('SRC', ROOT_DIR . DS . 'src' . DS);
         defined('SCRIPT') or define('SCRIPT', dirname($_SERVER['SCRIPT_NAME']));
         defined('IMG') or define('IMG', SCRIPT . DS . 'assets' . DS . 'img' . DS);
-        defined('UPLOAD_DIR') or define('UPLOAD_DIR', ROOT_DIR . DS . 'public' . DS . 'assets' . DS . 'img' . DS . 'Upload' . DS);
+        defined('UPLOAD_DIR') or define('UPLOAD_DIR', ROOT_DIR . DS . 'public' . DS . 'Upload' . DS);
         defined('FILES') or define('FILES', ROOT_DIR . IMG . 'Upload' . DS);
         defined('COMPONENTS') or define('COMPONENTS', ROOT_DIR . DS . 'Framework' . DS . 'Components' . DS);
         // -----------------------------------------------------------------------
@@ -36,19 +36,24 @@ final readonly class AppConstants
         defined('VISITOR_COOKIE_NAME') or define('VISITOR_COOKIE_NAME', 'gcx_kngell_eshop01_visitor');
         defined('COOKIE_EXPIRY') or define('COOKIE_EXPIRY', 60 * 60 * 24 * 30);
         defined('CURRENT_USER_SESSION_NAME') or define('CURRENT_USER_SESSION_NAME', 'user_kngell_xfh');
-        defined('REMEMBER_ME_COOKIE_NAME') or define('REMEMBER_ME_COOKIE_NAME', 'remeber_token');
-        //-----------------------------------------------------------------------
+        defined('REMEMBER_ME_COOKIE_NAME') or define('REMEMBER_ME_COOKIE_NAME', 'remember_token');
+        defined('MAX_LOGIN_ATTEMPTS') or define('MAX_LOGIN_ATTEMPTS', 5);
+        //-----------------------------
         // Form
-        // -----------------------------------------------------------------------
+        // ----------------------------------------------------
         defined('CSRF_TOKEN_SECRET') or define('CSRF_TOKEN_SECRET', 'WwO932iIyaOLCKqMJ5wBKziOygkaTcSp');
         defined('CSRF_TOKEN_LENGHT') or define('CSRF_TOKEN_LENGHT', 32);
         defined('CSRF_TOKEN_LIFETIME') or define('CSRF_TOKEN_LIFETIME', 60 * 30);
         defined('TOKEN_NAME') or define('TOKEN_NAME', 'token');
 
-        //-----------------------------------------------------------------------
+        //----------------------------------------------
         // URLs
-        // -----------------------------------------------------------------------
+        // ---------------------------------------------
         defined('PREVIOUS_PAGE') or define('PREVIOUS_PAGE', 'urlwwww1213212');
         defined('CURRENT_PAGE') or define('CURRENT_PAGE', 'urlcccccc');
+        //----------------------------------------------
+        // Host
+        // ---------------------------------------------
+        defined('HOST') or define('HOST', 'https://localhost:3003');
     }
 }

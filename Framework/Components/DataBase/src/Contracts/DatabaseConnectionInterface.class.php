@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-interface DatabaseConnexionInterface
+interface DatabaseConnectionInterface
 {
     /**
      * DataBase open

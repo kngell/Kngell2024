@@ -91,6 +91,7 @@ class Dropzone {
       this.dropzoneBeforeUpload.style.display = "none";
       this.dropzoneAfterUpload.style.display = "block";
     };
+    console.log(files);
     reader.readAsDataURL(files[0]);
   };
 }

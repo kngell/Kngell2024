@@ -1,10 +1,10 @@
 {
   "Guest": {
     "denied": {
-      "AdminController": ["*"]
+      "AdminController": ["*"],
+      "LogoutController": ["*"]
     },
     "HomeController": ["*"],
-    "LogoutController": ["*"],
     "ErrorsController": ["*"],
     "LoginController": ["*"],
     "PostController": ["index", "show", "dairy", "dairyAdd", "dairyNew"],
@@ -18,7 +18,8 @@
     "FreeCodeCampController": ["*"],
     "HtmlController": ["*"],
     "PratiqueController": ["*"],
-    "UserController": ["*"]
+    "UserController": ["*"],
+    "PaymentsController": ["*"]
   },
   "LoggedIn": {
     "denied": {

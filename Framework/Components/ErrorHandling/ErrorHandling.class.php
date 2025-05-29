@@ -56,15 +56,18 @@ class ErrorHandling
     public static function exceptionHandle(Exception $exception) : void
     {
         static::buildStackTrace($exception);
+
         if ($exception instanceof PageNotFoundException) {
             $code = 404;
             $route = '/_404_error';
         } else {
             $code = $exception->getCode();
-            if ($code != 404) {
+            // Ensure code is a valid HTTP status code (100-599)
+            if ($code < 100 || $code > 599) {
                 $code = 500;
             }
-            $route = '/_500_error';
+            // Use 4xx for client errors, 5xx for server errors
+            $route = ($code >= 400 && $code < 500) ? '/_client_error' : '/_500_error';
         }
         http_response_code($code);
         if (self::isMode()['mode'] == 'dev' && self::isMode()['mode'] != 'prod') {
@@ -107,7 +110,7 @@ class ErrorHandling
         );
     }
 
-    private static function buildStackTrace($exception)
+    private static function buildStackTrace(Exception $exception) : void
     {
         static::$trace[] = [
             'file' => $exception->getFile(),

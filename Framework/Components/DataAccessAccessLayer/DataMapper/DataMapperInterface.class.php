@@ -18,5 +18,5 @@ interface DataMapperInterface
 
     public function rollback() : bool;
 
-    public function getConnexion() : DatabaseConnexionInterface;
+    public function getConnexion() : DatabaseConnectionInterface;
 }
