@@ -93,6 +93,7 @@ class View implements ViewInterface
     private function renderViewContent(string $templatePath, $context) : string
     {
         extract($context, EXTR_SKIP);
+        require_once APP . 'Functions' . DS . 'functions.php';
         require_once $templatePath;
         $layout = $this->viewEnv->getLayoutPath() . DS . $this->_layout . '.php';
         if (! empty($layout)) {

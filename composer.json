@@ -16,7 +16,9 @@
     "symfony/cache": "^7.2",
     "brick/money": "dev-master",
     "phpmailer/phpmailer": "dev-master",
-    "symfony/dotenv": "7.3.x-dev"
+    "symfony/dotenv": "7.3.x-dev",
+    "stripe/stripe-php": "^17.4@beta",
+    "paypal/paypal-server-sdk": "dev-main"
   },
   "require-dev": {
     "symfony/var-dumper": "^7.1",

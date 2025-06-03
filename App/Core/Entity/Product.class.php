@@ -6,8 +6,10 @@ class Product extends Entity
 {
     #[EntityFieldId(name: 'id')]
     private int $id;
-    private string $name;
-    private string $description;
+    private ?string $name;
+    private ?string $description;
+    private ?string $price;
+    private ?string $media;
 
     /**
      * @return int
@@ -24,42 +26,83 @@ class Product extends Entity
     public function setId(int $id): self
     {
         $this->id = $id;
+
         return $this;
     }
 
     /**
-     * @return string
+     * @return null|string
      */
-    public function getName(): string
+    public function getName(): ?string
     {
         return $this->name;
     }
 
     /**
-     * @param string $name
+     * @param null|string $name
      * @return Product
      */
-    public function setName(string $name): self
+    public function setName(?string $name): self
     {
         $this->name = $name;
+
         return $this;
     }
 
     /**
-     * @return string
+     * @return null|string
      */
-    public function getDescription(): string
+    public function getDescription(): ?string
     {
         return $this->description;
     }
 
     /**
-     * @param string $description
+     * @param null|string $description
      * @return Product
      */
-    public function setDescription(string $description): self
+    public function setDescription(?string $description): self
     {
         $this->description = $description;
+
+        return $this;
+    }
+
+    /**
+     * @return null|string
+     */
+    public function getPrice(): ?string
+    {
+        return $this->price;
+    }
+
+    /**
+     * @param null|string $price
+     * @return Product
+     */
+    public function setPrice(?string $price): self
+    {
+        $this->price = $price;
+
+        return $this;
+    }
+
+    /**
+     * @return null|string
+     */
+    public function getMedia(): ?string
+    {
+        return $this->media;
+    }
+
+    /**
+     * @param null|string $media
+     * @return Product
+     */
+    public function setMedia(?string $media): self
+    {
+        $this->media = $media;
+
         return $this;
     }
 }

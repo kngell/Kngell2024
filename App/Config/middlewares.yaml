@@ -7,3 +7,5 @@ previousPage: RememberPreviousPageMiddleware
 grantAccess: GrantControllerAccessMiddleware
 remember: RememberMeMiddleware
 xss: XSSProtectionMiddleware
+getUserCartFromCookie: GetUserCartFromCookieMiddleware
+selectPaymentType: SelectPaymentTypeMiddleware

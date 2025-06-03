@@ -10,3 +10,4 @@ import "./user/users";
 import "./training/training";
 import "./training1/training";
 import "./payments/payments";
+import "./api/api";

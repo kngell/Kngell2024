@@ -28,6 +28,11 @@ class QueryResult
         return $this;
     }
 
+    public function isEmpty() : bool
+    {
+        return $this->_query->rowCount() === 0;
+    }
+
     public function count() : mixed
     {
         $this->returnType = 'count';

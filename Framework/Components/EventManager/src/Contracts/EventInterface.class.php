@@ -12,9 +12,9 @@ interface EventInterface
 
     public function setObject(?object $object): self;
 
-    public function setResults(?object $results): self;
+    public function setResults(mixed $results): self;
 
-    public function getResults(): ?object;
+    public function getResults(): mixed;
 
     public function getParams(): mixed;
 }

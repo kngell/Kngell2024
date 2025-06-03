@@ -154,13 +154,15 @@ class QueryBuilder
 
     public function on(array|string|int ...$conditions): self
     {
-        ! isset($this->on) ? $this->on = new QueryStatement : '';
+        // ! isset($this->on) ? $this->on = new QueryStatement : '';
+        $on = new QueryStatement;
         if (! isset($this->join)) {
             throw new BadQueryRequestException('No joined table defined for On conditions');
         }
         $method = __FUNCTION__;
-        $this->on->add(new Conditions($this->entityManager, new self($this->entityManager), $this->tables, $conditions));
-        $this->on->getChildren()->last()->setMethod($method);
+        $on->add(new Conditions($this->entityManager, new self($this->entityManager), $this->tables, $conditions));
+        $on->getChildren()->last()->setMethod($method);
+        $this->join->add($on);
         return $this;
     }
 

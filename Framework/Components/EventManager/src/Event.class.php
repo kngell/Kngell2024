@@ -7,7 +7,7 @@ abstract class Event implements EventInterface
     protected mixed $params = [];
     private ?object $object = null;
     private string $name = '';
-    private ?object $results = null;
+    private mixed $results = null;
 
     public function __construct(?Object $object = null, string $name = '')
     {
@@ -29,18 +29,18 @@ abstract class Event implements EventInterface
     }
 
     /**
-     * @return null|object
+     * @return mixed
      */
-    public function getResults(): ?object
+    public function getResults(): mixed
     {
         return $this->results;
     }
 
     /**
-     * @param null|object $results
+     * @param mixed $results
      * @return EventInterface
      */
-    public function setResults(?object $results): self
+    public function setResults(mixed $results): self
     {
         $this->results = $results;
         return $this;

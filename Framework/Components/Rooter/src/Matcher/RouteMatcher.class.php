@@ -13,7 +13,7 @@ class RouteMatcher
      * @param array $routes
      * @return void
      */
-    public function __construct(RouteCollector $routeCollector)
+    public function __construct(RouteCollector $routeCollector, private SessionInterface $session)
     {
         $this->routes = $routeCollector->getRoutes();
     }

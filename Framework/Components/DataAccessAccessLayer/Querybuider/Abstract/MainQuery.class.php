@@ -268,6 +268,9 @@ abstract class MainQuery
         }
         if (str_contains(strtolower($method), 'or')) {
             return ' OR ';
+        }
+        if (str_contains(strtolower($method), 'on')) {
+            return 'ON';
         } else {
             return 'AND ';
         }

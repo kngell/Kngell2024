@@ -35,6 +35,10 @@ abstract class Model
     {
         if (is_array($data)) {
             $this->entityManager->assign($data);
+        } elseif ($data instanceof Entity) {
+            $this->entityManager->setEntity($data);
+        } else {
+            throw new DataAccessLayerException('No Data to save!');
         }
         if ($this->entityManager->isEntityKeyInitialized()) {
             return $this->update();
@@ -59,20 +63,20 @@ abstract class Model
         return $this->entityManager->persist()->getResults();
     }
 
-    public function showColumns(string|null $tableName = null) : QueryResult
+    public function getTableColumns(string $tableName) : string
+    {
+        $result = $this->showColumns($tableName);
+        $colums = array_column($result->all(), 'Field');
+        return StringUtils::camelCase('$' . implode(', $', $colums) . ';');
+    }
+
+    private function showColumns(string|null $tableName = null) : QueryResult
     {
         if ($tableName === null) {
             $tableName = strtolower($this->entityManager->getEntity()::class);
         }
         $this->entityManager->getRepository()->showColumns($tableName);
         return $this->entityManager->persist()->getResults();
-    }
-
-    public function getTableColumns(string $tableName) : string
-    {
-        $result = $this->showColumns($tableName);
-        $colums = array_column($result->all(), 'Field');
-        return StringUtils::camelCase('$' . implode('; $', $colums));
     }
 
     private function conditions(Entity|array|string|int $params = []) : array

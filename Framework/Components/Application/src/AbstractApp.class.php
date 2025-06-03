@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Symfony\Component\Dotenv\Dotenv;
+
 abstract class AbstractApp extends Container
 {
     use AppGettersAndSetter;
@@ -11,6 +13,7 @@ abstract class AbstractApp extends Container
     protected Response $response;
     protected SessionInterface $session;
     protected CookieInterface $cookie;
+    protected CacheInterface $cache;
     protected RooterInterface $rooter;
 
     public function app(): App
@@ -70,7 +73,6 @@ abstract class AbstractApp extends Container
 
     protected function createAppProperties() : void
     {
-        $this->appConfig = AppConfig::getInstance()->setup();
         $this->rooter = $this->get(RooterInterface::class);
         $this->request = $this->get(Request::class);
         $this->response = $this->get(Response::class);
@@ -100,6 +102,7 @@ abstract class AbstractApp extends Container
         $settings = $this->appConfig->getConfig()['settings'];
         ini_set('default_charset', $settings['default_charset']);
         date_default_timezone_set($settings['default_timezone']);
+        (new Dotenv())->load(dirname(getcwd()) . DS . '.env');
     }
 
     protected function loadErrorHandlers(): void
@@ -115,7 +118,7 @@ abstract class AbstractApp extends Container
         if ($this->app()->isCacheGlobal() === true) {
             GlobalManager::set($this->app()->getGlobalCacheKey(), $cache);
         }
-        return $cache;
+        return $this->cache = $cache;
     }
 
     /**

@@ -20,6 +20,7 @@ class YamlFile
                 return Yaml::parseFile(filename: $file);
             }
         }
+        return [];
     }
 
     public static function parsef(string $file, string $keytoReturn) : array

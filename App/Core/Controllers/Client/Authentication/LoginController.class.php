@@ -7,14 +7,13 @@ class LoginController extends AuthController
     public function __construct(
         UserModel $users,
         UserSessionModel $userSession,
-        CookieInterface $cookie,
         private UserFormCreator $frm,
         private ValidatorInterface $validator,
         private HtmlBuilder $html,
         HashInterface $hash,
         LoginAttemptsModel $loginAttempts
     ) {
-        parent::__construct($users, $userSession, $cookie, $hash, $loginAttempts);
+        parent::__construct($users, $userSession, $hash, $loginAttempts);
     }
 
     public function before() : void
@@ -45,6 +44,7 @@ class LoginController extends AuthController
         if (! $this->isUserAuthenticated($userData)) {
             return new RedirectResponse('/login');
         }
+        $eventResult = $this->eventManager->notify(LoginEvent::class, $this);
         return new RedirectResponse($this->getRedirectUrl() ?? '/');
     }
 

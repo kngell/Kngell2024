@@ -16,6 +16,11 @@ class PayPalGateway implements PaymentGatewayInterface
         $this->response = $this->connectWithGuzzle();
     }
 
+    public function isSuccess(): bool
+    {
+        return true;
+    }
+
     public function pay(float $amount, string $currency): string
     {
         return "Payment of $amount $currency processed through PayPal.";

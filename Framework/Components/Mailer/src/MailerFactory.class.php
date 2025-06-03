@@ -2,8 +2,6 @@
 
 declare(strict_types=1);
 
-use Symfony\Component\Dotenv\Dotenv;
-
 class MailerFactory
 {
     /** @var array|null */
@@ -35,7 +33,6 @@ class MailerFactory
         return App::diGet(MailerInterface::class, [
             'transporterObject' => $transporterObject,
             'settings' => $this->settings,
-            'dotEnvString' => Dotenv::class,
         ]);
     }
 }

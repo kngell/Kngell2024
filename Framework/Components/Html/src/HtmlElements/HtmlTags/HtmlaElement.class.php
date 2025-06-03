@@ -159,6 +159,12 @@ class HtmlaElement extends AbstractHtmlElement
         return $this;
     }
 
+    public function role(string $role): self
+    {
+        $this->role = $role;
+        return $this;
+    }
+
     /**
      * @param string $contenteditable
      * @return HtmlaElement

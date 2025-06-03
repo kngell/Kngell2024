@@ -18,13 +18,9 @@ class Mailer extends AbstractMailer
      *
      * @param PHPMailer $transporterObject
      * @param array|null $settings
-     * @param string|null $dotEnvString
      */
-    public function __construct(PHPMailer $transporterObject, ?array $settings = null, ?string $dotEnvString = null)
+    public function __construct(PHPMailer $transporterObject, ?array $settings = null)
     {
-        if ($dotEnvString !== null) {
-            (new $dotEnvString())->load(ROOT_DIR . '/.env');
-        }
         $this->transporterObject = $transporterObject;
         if (is_array($settings) && count($settings) > 0) {
             $this->setSettings($settings);

@@ -55,6 +55,26 @@ abstract class AbstractInput extends AbstractFormDataElement
     }
 
     /**
+     * @param string $alt
+     * @return AbstractInput
+     */
+    public function alt(string $alt) : self
+    {
+        $this->alt = $alt;
+        return $this;
+    }
+
+    /**
+     * @param string $src
+     * @return AbstractInput
+     */
+    public function src(string $src) : self
+    {
+        $this->src = $src;
+        return $this;
+    }
+
+    /**
      * @param bool $hidden
      * @return AbstractInput
      */

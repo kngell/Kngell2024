@@ -1,0 +1,21 @@
+@use 'css/training/paypal/abstracts/variables' as *
+
+/* ---------------------- CARD ----------------------*/
+
+.card-group
+   width: 100%
+   gap: 8rem
+   .card
+      width: 100%
+      height: 100%
+      display: flex
+      flex-direction: column
+      justify-content: space-between
+      padding: 2rem
+      border-radius: 1rem
+      background-color: $white
+      box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1)
+      transition: all 0.3s ease-in-out
+
+      &:hover
+         box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.15)

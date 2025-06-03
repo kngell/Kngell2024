@@ -14,6 +14,7 @@ class NativeCookieStore extends AbstractCookieStore
         if ($this->exists($name)) {
             return $this->gv->cookies($name);
         }
+        return '';
     }
 
     /**

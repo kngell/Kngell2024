@@ -18,6 +18,9 @@ class Select extends MainQuery
         $columns = $this->columns;
         if (ArrayUtils::isMultidimentional($columns)) {
             $columns = ArrayUtils::flattenArrayRecursive($this->columns);
+            if (empty($columns)) {
+                $columns = ['*'];
+            }
         }
         $newColumns = '';
         foreach ($columns as $key => $column) {
@@ -71,6 +74,11 @@ class Select extends MainQuery
         $function = $parts[0];
         preg_match('#\((.*?)\)#', $column, $match);
         $newColumn = $match[1];
+        if (! empty($alias) && (str_contains($newColumn, '.') || str_contains($newColumn, '|'))) {
+            $tblh = $this->em->getTableAliasHelper();
+            $newColumn = explode($tblh->separator($newColumn), $newColumn);
+            $newColumn = $newColumn[1];
+        }
         return strtoupper($function) . '(' . $alias . '.' . $newColumn . ')' . ' AS ' . $AS;
     }
 

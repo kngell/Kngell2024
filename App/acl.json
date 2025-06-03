@@ -19,7 +19,11 @@
     "HtmlController": ["*"],
     "PratiqueController": ["*"],
     "UserController": ["*"],
-    "PaymentsController": ["*"]
+    "PaymentsController": ["*"],
+    "ApiController": ["*"],
+    "PaypalController": ["*"],
+    "CartController": ["*"],
+    "CheckoutController": ["*"]
   },
   "LoggedIn": {
     "denied": {

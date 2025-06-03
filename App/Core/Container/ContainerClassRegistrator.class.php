@@ -49,17 +49,14 @@ final readonly class ContainerClassRegistrator
     private static function bindClasses() : array
     {
         return [
+            ApiGatewayInterface::class => CurlApiGateway::class,
             MailerInterface::class => Mailer::class,
             EventManagerInterface::class => EventManager::class,
             MenuItemInterface::class => MenuItem::class,
             EntityManagerInterface::class => EntityManager::class,
             AbstractFactory::class => ConcreteFactory1::class,
             RooterInterface::class => Rooter::class,
-            CacheStorageInterface::class => NativeCacheStorage::class,
-            CacheInterface::class => Cache::class,
             FilesSystemInterface::class => FileSystem::class,
-            CookieStoreInterface::class => NativeCookieStore::class,
-            CookieInterface::class => Cookie::class,
             RouteDispatcher::class => [false,
                 function () {
                     return YamlFile::get('middlewares');
@@ -72,7 +69,6 @@ final readonly class ContainerClassRegistrator
             MailerFacade::class => function () {
                 return YamlFile::get('email_settings');
             },
-
         ];
     }
 
@@ -82,7 +78,6 @@ final readonly class ContainerClassRegistrator
             SuperGlobalsInterface::class => SuperGlobals::class,
             Request::class => Request::class,
             ValidatorInterface::class => Validator::class,
-            PaymentGatewayInterface::class => PayPalGateway::class,
             DatabaseConnectionInterface::class => PDOConnection::class,
             UserModel::class => UserModel::class,
             FlashInterface::class => Flash::class,
@@ -92,6 +87,10 @@ final readonly class ContainerClassRegistrator
             SessionEnvironment::class => SessionEnvironment::class,
             SessionStorageInterface::class => NativeSessionStorage::class,
             SessionInterface::class => Session::class,
+            CacheStorageInterface::class => NativeCacheStorage::class,
+            CacheInterface::class => Cache::class,
+            CookieStoreInterface::class => NativeCookieStore::class,
+            CookieInterface::class => Cookie::class,
             DataMapperInterface::class => DataMapper::class,
             HashInterface::class => [Hash::class, function () use ($app) {
                 return $app->getAppConfig()->getConfig()['security'];

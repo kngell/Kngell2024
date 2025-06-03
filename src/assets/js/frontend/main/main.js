@@ -1,5 +1,8 @@
 import "js/frontend/home/index";
 import Dropzone from "js/frontend/main/components/dropzone";
+import ImportFiles from "js/frontend/main/components/_importFiles";
+import emptyCart from "src/assets/img/empty_cart.png";
+import UserCart from "js/frontend/main/components/_userCart";
 
 class Main {
   constructor() {
@@ -11,6 +14,8 @@ class Main {
     if (dropzone !== null) {
       new Dropzone(dropzone);
     }
+    //Manage User cart
+    // new UserCart();
   }
 }
 

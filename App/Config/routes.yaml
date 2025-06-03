@@ -18,6 +18,12 @@
   controller: products
   method: index
   httpMethod: get
+
+/create-payment:
+  controller: payments
+  method: pay
+  httpMethod: post
+  middleware: requireLogin
 /:
   controller: home
   method: index
@@ -38,11 +44,16 @@
 /_restrict:
   controller: errors
   method: restrict-access
+/api:
+  controller: api
+  method: index
+  httpMethod: get
+
 /login:
   controller: login
   method: index
   httpMethod: get
-  middleware: remember
+
 /signup:
   controller: signup
   method: index
@@ -128,8 +139,11 @@
   method: destroy
   httpMethod: post
   middleware: requireLogin
+/restore-cart:
+  controller: cart
+  method: restore-user-cart
+  httpMethod: post
 /admin/{controller}/{method}:
 /{controller}/{method}:
   # /{controller}/{id:\d+}/{method}:
   # /{controller}/{method}/{id:\d+}:
-

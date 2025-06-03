@@ -11,13 +11,14 @@ class App extends AbstractApp
 
     public function boot() : self
     {
-        $this->createAppProperties();
+        $this->appConfig = AppConfig::getInstance()->setup();
         $this->loadErrorHandlers();
         $this->loadSession();
         $this->phpVersion();
         $this->loadEnvironment();
         $this->loadCache();
         $this->loadCookies();
+        $this->createAppProperties();
         return $this;
     }
 

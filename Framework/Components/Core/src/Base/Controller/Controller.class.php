@@ -9,6 +9,8 @@ abstract class Controller
     protected TokenInterface $token;
     protected FlashInterface $flash;
     protected SessionInterface $session;
+    protected CacheInterface $cache;
+    protected CookieInterface $cookie;
     protected EventManagerInterface $eventManager;
     protected HtmlBuilder $builder;
     private ViewInterface $view;
@@ -54,6 +56,28 @@ abstract class Controller
     }
 
     /**
+     * @param string $modelName
+     * @return Model
+     * @throws BindingResolutionException
+     * @throws ReflectionException
+     * @throws DependencyHasNoDefaultValueException
+     * @throws BaseInvalidArgumentException
+     */
+    public function getModel(string $modelName) : Model
+    {
+        if (! class_exists($modelName)) {
+            throw new BaseInvalidArgumentException("Model $modelName does not exist.");
+        }
+        if (! is_subclass_of($modelName, Model::class)) {
+            throw new BaseInvalidArgumentException("Model $modelName must extend Model.");
+        }
+        if (isset($this->currentModel) && $this->currentModel !== null && get_class($this->currentModel) === $modelName) {
+            return $this->currentModel;
+        }
+        return App::diget($modelName);
+    }
+
+    /**
      * @param EventManagerInterface $eventManager
      * @return Controller
      */
@@ -61,6 +85,16 @@ abstract class Controller
     {
         $this->eventManager = $eventManager;
         return $this;
+    }
+
+    protected function getRedirectUrl() : string|null
+    {
+        if ($this->session->exists('current_url')) {
+            $previousUrl = $this->session->get('current_url');
+            $this->session->delete('current_url');
+            return $previousUrl;
+        }
+        return $this->session->get('previous_url');
     }
 
     protected function deleteFiles(string $dir) : void
@@ -140,7 +174,7 @@ abstract class Controller
             $this->setLayout('ecommerce');
         }
         return match (true) {
-            $this->view->getPath() === 'Frontend' && $this->view->getLayout() === 'default' => array_merge($context, ['message' => $this->flash->get()], (new NavbarDecorator($this))->page()),
+            $this->view->getLayout() === 'default' => array_merge($context, ['message' => $this->flash->get()], (new NavbarDecorator($this))->page()),
             default => $context,
         };
     }

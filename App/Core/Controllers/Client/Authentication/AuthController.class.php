@@ -7,11 +7,18 @@ abstract class AuthController extends Controller
     public function __construct(
         protected UserModel $user,
         protected UserSessionModel $userSession,
-        protected CookieInterface $cookie,
         protected HashInterface $hash,
         protected LoginAttemptsModel $loginAttempts
     ) {
         $this->currentModel($user);
+    }
+
+    /**
+     * Get the value of userSession.
+     */
+    public function getUserSession(): UserSessionModel
+    {
+        return $this->userSession;
     }
 
     protected function isUserAuthenticated(array $userData) : bool
@@ -47,16 +54,6 @@ abstract class AuthController extends Controller
         }
     }
 
-    protected function getRedirectUrl() : string|null
-    {
-        if ($this->session->exists('current_url')) {
-            $previousUrl = $this->session->get('current_url');
-            $this->session->delete('current_url');
-            return $previousUrl;
-        }
-        return $this->session->get('previous_url');
-    }
-
     protected function loginUser(User $user, array $userData = []) : bool
     {
         try {
@@ -89,7 +86,6 @@ abstract class AuthController extends Controller
         $userAttemptModel = $this->loginAttempts->delete(
             [
                 'user_id' => $user->getUserId(),
-
             ]
         );
     }

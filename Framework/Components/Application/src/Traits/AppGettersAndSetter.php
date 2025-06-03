@@ -46,4 +46,12 @@ trait AppGettersAndSetter
     {
         return $this->cookie;
     }
+
+    /**
+     * @return CacheInterface
+     */
+    public function getCache(): CacheInterface
+    {
+        return $this->cache;
+    }
 }

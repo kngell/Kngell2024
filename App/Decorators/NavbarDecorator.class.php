@@ -12,7 +12,11 @@ class NavbarDecorator extends AbstractHtmlDecorator
     public function page(): array
     {
         /** @var NavbarHtmlElement */
-        $navElements = new NavbarHtmlElement($this->controller->getBuilder(), $this->controller->getSession(), $this->controller->getRequest());
+        $navElements = new NavbarHtmlElement(
+            $this->builder,
+            $this->session,
+            $this->request
+        );
         return ['navComponent' => $navElements->display()];
     }
 }

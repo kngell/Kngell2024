@@ -125,6 +125,42 @@ trait ControllerGettersAndSetters
         return $this->currentModel;
     }
 
+    /**
+     * @return CacheInterface
+     */
+    public function getCache(): CacheInterface
+    {
+        return $this->cache;
+    }
+
+    /**
+     * @param CacheInterface $cache
+     * @return Controller
+     */
+    public function setCache(CacheInterface $cache): self
+    {
+        $this->cache = $cache;
+        return $this;
+    }
+
+    /**
+     * @return CookieInterface
+     */
+    public function getCookie(): CookieInterface
+    {
+        return $this->cookie;
+    }
+
+    /**
+     * @param CookieInterface $cookie
+     * @return Controller
+     */
+    public function setCookie(CookieInterface $cookie): self
+    {
+        $this->cookie = $cookie;
+        return $this;
+    }
+
     protected function setLayout(string $layout) : void
     {
         $this->layout = $layout;

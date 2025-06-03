@@ -4,3 +4,14 @@ ResetPwEvent:
 RegisterEvent:
 - callback: BasicEmailListener
   priority: 1
+LoginEvent:
+- callback: MergeSessionAndDatabaseUserCartListener
+  priority: 1
+LogoutEvent:
+- callback: DefineNewTokenHashListener
+  priority: 2
+- callback: SaveUserCartIntoLocalStorageListener
+  priority: 1
+PaymentEvent:
+- callback: ClearUserCartListener
+  priority: 1

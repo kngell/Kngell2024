@@ -15,7 +15,7 @@ abstract class AbstractHtml implements HtmlComponentsInterface
                 $file = preg_replace('/([^:])(\/{2,})/', '$1/', $file);
                 return HOST . $file;
             } else {
-                return HOST . $media;
+                return ! str_contains($media, 'http') ? HOST . DS . $media : $media;
             }
         }
 

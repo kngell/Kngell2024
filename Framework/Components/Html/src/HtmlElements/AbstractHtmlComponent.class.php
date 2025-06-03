@@ -42,6 +42,7 @@ abstract class AbstractHtmlComponent
     protected string|null $src;
     protected string $alt;
     protected bool $contentUp = true;
+    protected string $role;
 
     public function setParent(?self $parent)
     {

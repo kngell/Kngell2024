@@ -8,7 +8,10 @@ use JMS\Serializer\Exception\UnsupportedFormatException;
 
 readonly class RouteDispatcher
 {
-    private const array GLOBAL_MIDDLEWARES = ['previousPage', 'grantAccess']; //'return_to',
+    private const array GLOBAL_MIDDLEWARES = [
+        'previousPage',
+        'grantAccess',
+    ];
 
     public function __construct(
         private RouteArgumentGenerator $routeArgumentGenerator,
@@ -36,7 +39,6 @@ readonly class RouteDispatcher
     {
         try {
             $arguments = ! empty($params) ? $params : $this->routeArgumentGenerator->generate($route, $request);
-            $controllerObject = $this->controller($route, $app, $request);
             $app->bind('Route', null, false, [
                 $route->getController(),
                 $route->getMethod(),
@@ -45,7 +47,7 @@ readonly class RouteDispatcher
                 $this->middlewares($route, $app),
                 $app->get(ControllerRequest::class, [
                     $route,
-                    $controllerObject,
+                    $this->controller($route, $app, $request),
                     $arguments,
                     $url,
                 ]),
@@ -67,7 +69,7 @@ readonly class RouteDispatcher
             if (! array_key_exists($value, $this->middlewares)) {
                 throw new UnexpectedValueException("Middleware $value not found in the configuration route settings");
             }
-            if (in_array($value, ['grantAccess'])) {
+            if (in_array($value, ['grantAccess', 'requireLogin'])) {
                 $value = $app->get($this->middlewares[$value], [$route]);
             } else {
                 $value = $app->get($this->middlewares[$value]);
@@ -88,6 +90,17 @@ readonly class RouteDispatcher
         return '';
     }
 
+    private function BindpaymentGateway(App $app) : void
+    {
+        $request = $app->getRequest();
+        if ($request->get('request_uri') === '/create-payment') {
+            if ($request->getPost()->get('payment_type') === 'paypal') {
+                $app->bind(PaymentGatewayInterface::class, PaypalPaymentGateway::class);
+                $app->bind(ApiClientInterface::class, PaypalApiClient::class);
+            }
+        }
+    }
+
     /**
      * @param RouteInfo $route
      * @param App $app
@@ -99,6 +112,7 @@ readonly class RouteDispatcher
      */
     private function controller(RouteInfo $route, App $app, Request $request) : Controller
     {
+        $this->BindpaymentGateway($app);
         $path = $this->controlllerPath(
             $route->getMethod()->getDeclaringClass()->getFileName()
         );
@@ -111,7 +125,9 @@ readonly class RouteDispatcher
             ->setFlash($app->get(FlashInterface::class))
             ->setSession($app->getSession())
             ->setEventManager($app->get(EventManagerInterface::class))
-            ->setBuilder($app->get(HtmlBuilder::class));
+            ->setBuilder($app->get(HtmlBuilder::class))
+            ->setCache($app->getCache())
+            ->setCookie($app->getCookie());
     }
 
     private function controlllerPath(string $path) : string
