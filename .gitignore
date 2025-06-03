@@ -1,13 +1,24 @@
+# Node, Composer, and build artifacts
 /node_modules/
-/dist/
 /vendor/
-/.vscode/
+/dist/
 /public/
-/App/Views/
 /webpack/
+
+# IDE/editor settings
+.vscode/
+
+# Application runtime and cache
 /session_dir/
 /Temp/
 /.temp_cache/
+
+# Sensitive files
+.env
 /App/System/AppConstants.class.php
-/.env
+
+# View templates (if generated or sensitive)
+# If /App/Views/ contains only templates, you may want to track them. 
+# If they are generated or contain secrets, keep this line.
+#/App/Views/
 
