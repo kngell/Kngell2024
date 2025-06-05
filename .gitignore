@@ -1,7 +1,7 @@
 # Node, Composer, and build artifacts
 /node_modules/
 /vendor/
-/dist/
+/Temp/
 /public/
 /webpack/
 
@@ -20,5 +20,5 @@
 # View templates (if generated or sensitive)
 # If /App/Views/ contains only templates, you may want to track them. 
 # If they are generated or contain secrets, keep this line.
-#/App/Views/
-
+/App/Views/
+/App/acl.json

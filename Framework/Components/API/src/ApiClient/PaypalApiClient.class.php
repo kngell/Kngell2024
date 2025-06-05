@@ -24,18 +24,15 @@ class PaypalApiClient implements ApiClientInterface
 
     public function get(string $url = '', array $params = []): mixed
     {
+        $data = array_merge(['headers' => $this->headers], $params);
+        $this->response = $this->client->get($url, $data);
+        return json_decode($this->response->getBody()->getContents(), true);
     }
 
-    public function post(string $url = '', array $data = []): array
+    public function post(string $url = '', array $params = []): array
     {
-        if (empty($data)) {
-            return [];
-        }
-        $this->response = $this->client->post($url, [
-            'headers' => $this->headers,
-            'json' => $data,
-        ]);
-
+        $data = array_merge(['headers' => $this->headers], $params);
+        $this->response = $this->client->post($url, $data);
         return json_decode($this->response->getBody()->getContents(), true);
     }
 
@@ -77,18 +74,19 @@ class PaypalApiClient implements ApiClientInterface
         return $data['access_token'] ?? '';
     }
 
-    public function createOrder(array $orderData): array
+    /**
+     * Get the value of client.
+     */
+    public function getClient(): Client
     {
-        $accessToken = $this->getAccessToken();
+        return $this->client;
+    }
 
-        $this->response = $this->client->post('/v2/checkout/orders', [
-            'headers' => [
-                'Authorization' => 'Bearer ' . $accessToken,
-                'Content-Type' => 'application/json',
-            ],
-            'json' => $orderData,
-        ]);
-
-        return json_decode($this->response->getBody()->getContents(), true);
+    /**
+     * Get the value of response.
+     */
+    public function getResponse(): ResponseInterface
+    {
+        return $this->response;
     }
 }

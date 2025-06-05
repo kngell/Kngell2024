@@ -1,0 +1,14 @@
+import "./jquery.nicescroll.min";
+import "moment";
+import "./stisla";
+import "./jscolor";
+// import "./bootstrap-tagsinput.min";
+import "./select2.full.min";
+import "./jquery.dataTables.min";
+import "datatables.net-bs";
+import "./iziToast.min";
+// import "./fontawesome-iconpicker.min";
+import "./air-datepicker.min";
+import "./tinymce/tinymce.min";
+import "./bootstrap4-toggle.min";
+// import "./custom";

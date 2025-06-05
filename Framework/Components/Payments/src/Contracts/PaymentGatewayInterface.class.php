@@ -10,7 +10,5 @@ interface PaymentGatewayInterface
 
     public function getTransactionDetails(string $transactionId): array;
 
-    public function getResponse(): mixed;
-
-    public function isSuccess() : bool;
+    public function capturePayment(string $orderId): array;
 }

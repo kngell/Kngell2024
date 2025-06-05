@@ -1,5 +1,8 @@
 
 # This .htaccess file is used to redirect all requests to the public folder
+# Disable directory listing for all folders
+Options -Indexes
+
 <IfModule mod_rewrite.c>
     # Enable rewrite engine
     RewriteEngine on

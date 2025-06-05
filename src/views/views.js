@@ -1,3 +1,3 @@
 import "./Frontend/frontend";
-import "./Admin/admin";
+import "./Backend/backend";
 import "./Layout/layout";

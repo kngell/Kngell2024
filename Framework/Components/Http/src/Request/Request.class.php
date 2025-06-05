@@ -149,6 +149,18 @@ readonly class Request
 
     public function get(string $key) : mixed
     {
-        return $this->getServer()->get($key) ?? $this->getQuery()->get($key) ?? $this->getPost()->get($key) ?? $this->getCookies()->get($key);
+        if ($this->getServer()->get($key)) {
+            return $this->getServer()->get($key);
+        }
+        if ($this->getQuery()->get($key)) {
+            return $this->getQuery()->get($key);
+        }
+        if ($this->getPost()->get($key)) {
+            return $this->getPost()->get($key);
+        }
+        if ($this->getCookies()->get($key)) {
+            return $this->getCookies()->get($key);
+        }
+        return null;
     }
 }

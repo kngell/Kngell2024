@@ -1,0 +1,36 @@
+@use 'css/backend/main/abstracts' as *
+/*--------------- BASE ------------------*/
+*,
+*::after,
+*::before
+   margin: 0
+   padding: 0
+   box-sizing: inherit
+
+html
+   font-size: $base-font-size //this define what one rem is
+   height: 100%
+
+body
+   box-sizing: border-box
+   font-family: $body-font-family
+   width: 100%
+   min-height: 100%
+   background-color: $global-bg-color
+   color: $global-text-color
+   font-weight: $font-weight-regular
+   line-height: $default-line-height
+   overflow-x: hidden
+   font-size: $paragraph-size
+
+img
+   max-width: 100%
+   height: auto
+   display: block
+   object-fit: cover
+
+a,i,span
+   display: inline-block
+a
+   color: $global-text-color
+   @include transition

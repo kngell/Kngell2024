@@ -1,0 +1,12 @@
+@use "css/frontend/main/abstracts" as *;
+
+/*-------------- PROFILE UPLOAD --------------*/
+
+.profile-upload-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+}

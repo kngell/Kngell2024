@@ -10,9 +10,9 @@ class PaypalPaymentGateway implements PaymentGatewayInterface
         'landing_page' => 'LOGIN',
         'user_action' => 'PAY_NOW',
         'payment_method_preference' => 'UNRESTRICTED',
-        'return_url' => HOST . '/payments/complete-order',
-        'cancel_url' => HOST . '/paypal/product',
-        'brand_name' => 'K\'nGELL Shopping',
+        'return_url' => HOST . '/payments/paypal-success-order',
+        'cancel_url' => HOST . '/checkout/index',
+        'brand_name' => 'K\'nGELL Shoppy',
     ];
     private float $totalItemPrice = 0;
     private float $taxTotal = 0;
@@ -33,15 +33,10 @@ class PaypalPaymentGateway implements PaymentGatewayInterface
         $this->description = $description;
     }
 
-    public function isSuccess(): bool
-    {
-        return true;
-    }
-
     public function pay(array $cartItems, string $currency): string
     {
         $orderData = $this->orderData($cartItems, $currency);
-        $orderLinks = $this->client->post('/v2/checkout/orders', $orderData);
+        $orderLinks = $this->client->post('/v2/checkout/orders', ['json' => $orderData]);
         foreach ($orderLinks['links'] as $link) {
             if ($link['rel'] === 'payer-action') {
                 return $link['href'];
@@ -55,8 +50,33 @@ class PaypalPaymentGateway implements PaymentGatewayInterface
         return '';
     }
 
-    public function getTransactionDetails(string $transactionId): array
+    public function capturePayment(string $orderId): array
     {
+        // Capture the payment
+        return $this->client->post(
+            '/v2/checkout/orders/' . $orderId . '/capture',
+        );
+    }
+
+    // public function getTransactionDetails(string $orderId): array
+    // {
+    //     $accessToken = $this->client->getAccessToken();
+    //     $response = $this->client->get(
+    //         '/v2/checkout/orders/' . $orderId,
+    //         [],
+    //         [
+    //             'headers' => [
+    //                 'Authorization' => 'Bearer ' . $accessToken,
+    //                 'Content-Type' => 'application/json',
+    //             ]
+    //         ]
+    //     );
+    //     return json_decode($response->getBody()->getContents(), true);
+    // }
+    public function getTransactionDetails(string $orderId): array
+    {
+        $response = $this->client->get('/v2/checkout/orders/' . $orderId);
+
         return [];
     }
 

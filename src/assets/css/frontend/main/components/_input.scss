@@ -1,0 +1,40 @@
+@use "css/frontend/main/abstracts" as *;
+/*------------------------ INPUT --------------------------*/
+// Input styling
+.input-box {
+  position: relative;
+  width: 100%;
+  &__input {
+    width: 100%;
+    padding: 1rem;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    font-size: 1.4rem;
+    border-radius: 0.5rem;
+    outline: none;
+    color: $input-color;
+    &:focus,
+    &:active {
+      outline: none;
+      box-shadow: none;
+      & ~ label {
+        color: #101010;
+        opacity: 1;
+        transform: translateX(1rem) translateY(-0.7rem);
+        font-size: 0.75em;
+        padding: 0 1rem;
+        border-radius: 5px;
+        background-color: $form-bg-color;
+      }
+    }
+  }
+  &__label {
+    position: absolute;
+    top: 0;
+    left: 0;
+    padding: 1rem;
+    pointer-events: none;
+    font-size: 1.4rem;
+    color: rgba(0, 0, 0, 0.2);
+    transition: 0.3s all;
+  }
+}

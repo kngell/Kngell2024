@@ -76,11 +76,11 @@
   <?= $this->js('runtime') ?>
   <!-- FrontLib -->
   <?= $this->js('commons/frontend/vendors') ?>
-  <?= $this->js('js/librairies/frontlib') ?>
+  <?= $this->js('js/librairies/frontend/lib') ?>
   <!-- Plugins -->
   <?= $this->js('js/plugins/homeplugins', 'js') ?>
   <!-- Mainjs -->
-  <?= $this->js('js/frontend/main/main', 'js')?>
+  <?= $this->js('js/frontend/main/main')?>
   <!-- Custom -->
   <?= $this->content('footer'); ?>
   </body>

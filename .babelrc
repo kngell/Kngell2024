@@ -7,6 +7,6 @@
         "corejs": "3.42.0"
       }
     ]
-  ]
-  // "plugins": ["@babel/plugin-transform-class-properties"]
+  ],
+  "plugins": ["@babel/plugin-transform-class-properties"]
 }

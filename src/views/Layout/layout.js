@@ -20,7 +20,6 @@ import "./inc/freecodecamp/footer.php";
 import "./admin.php";
 import "./inc/admin/head.php";
 import "./inc/admin/header.php";
-import "./inc/admin/modal.php";
 import "./inc/admin/footer.php";
 //Ecommerce
 import "./ecommerce.php";

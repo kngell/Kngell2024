@@ -4,6 +4,7 @@
   "description": "",
   "scripts": {
     "dev": "webpack --mode development",
+    "postdev": "sudo chown -R www-data:$USER ~/projects/kngell-ecom/public && sudo chmod -R g+w ~/projects/kngell-ecom/public",
     "watch": "webpack --mode development -w",
     "prod": "webpack --mode production",
     "serve": "webpack serve",
@@ -19,7 +20,6 @@
     "@babel/preset-env": "^7.27.2",
     "@eslint/eslintrc": "^3.3.1",
     "@eslint/js": "^9.27.0",
-    "assets-webpack-plugin": "^7.1.1",
     "autoprefixer": "^10.4.21",
     "babel-loader": "^10.0.0",
     "clean-webpack-plugin": "^4.0.0",
@@ -45,7 +45,9 @@
     "webpack": "^5.99.9",
     "webpack-cli": "^6.0.1",
     "webpack-dev-server": "^5.2.1",
+    "webpack-manifest-plugin": "^5.0.1",
     "webpack-merge": "^6.0.1",
+    "webpack-nano": "^1.1.1",
     "webpack-remove-empty-scripts": "^1.1.1"
   },
   "dependencies": {
@@ -62,9 +64,12 @@
     "chart.js": "^4.4.9",
     "ckeditor5": "^45.1.0",
     "core-js": "^3.42.0",
+    "datatables.net-bs": "^2.3.1",
     "hideshowpassword": "^2.2.0",
     "jquery": "^3.7.1",
     "jquery-validation": "^1.21.0",
-    "sass-reset": "^1.0.4"
+    "moment": "^2.30.1",
+    "sass-reset": "^1.0.4",
+    "summernote": "^0.9.1"
   }
 }

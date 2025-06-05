@@ -90,11 +90,12 @@ readonly class RouteDispatcher
         return '';
     }
 
-    private function BindpaymentGateway(App $app) : void
+    private function bindpaymentGateway(App $app) : void
     {
         $request = $app->getRequest();
-        if ($request->get('request_uri') === '/create-payment') {
-            if ($request->getPost()->get('payment_type') === 'paypal') {
+        $uri = $request->get('request_uri');
+        if ($uri === '/create-payment' || str_starts_with($uri, '/payments')) {
+            if ($request->getPost()->get('payment_type') === 'paypal' || str_contains($uri, 'paypal')) {
                 $app->bind(PaymentGatewayInterface::class, PaypalPaymentGateway::class);
                 $app->bind(ApiClientInterface::class, PaypalApiClient::class);
             }
@@ -112,7 +113,7 @@ readonly class RouteDispatcher
      */
     private function controller(RouteInfo $route, App $app, Request $request) : Controller
     {
-        $this->BindpaymentGateway($app);
+        $this->bindpaymentGateway($app);
         $path = $this->controlllerPath(
             $route->getMethod()->getDeclaringClass()->getFileName()
         );
@@ -136,7 +137,7 @@ readonly class RouteDispatcher
             return 'Frontend';
         }
         if (str_contains($path, 'Admin')) {
-            return 'Admin';
+            return 'Backend';
         } else {
             return '';
         }

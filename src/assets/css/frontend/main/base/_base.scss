@@ -1,0 +1,25 @@
+@use "css/frontend/main/abstracts" as *;
+/*------------------------ BASE --------------------------*/
+
+*,
+*::after,
+*::before {
+  margin: 0;
+  padding: 0;
+  box-sizing: inherit;
+}
+
+*:focus {
+  outline: none;
+  box-shadow: none;
+}
+html {
+  font-size: $base-font-size;
+}
+body {
+  box-sizing: border-box;
+  font-family: $body-font-family;
+  font-size: $paragraph-size;
+  line-height: 1.7;
+  font-weight: 400;
+}

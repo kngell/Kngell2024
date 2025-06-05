@@ -10,5 +10,4 @@ require_once 'inc/admin/head.php'; ?>
 <!----------------Body----------------------->
 <?= $this->content('body'); ?>
 <!----------------xBody---------------------->
-<?php require_once 'inc/admin/modal.php'; ?>
 <?php require_once 'inc/admin/footer.php';

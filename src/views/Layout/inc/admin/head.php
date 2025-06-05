@@ -11,15 +11,14 @@
    <meta name="csrftoken" content="<?= $this->token()?>" />
    <meta name="frm_name" content="<?=$this->getPageTitle()?>" />
    <?= $this->getPageTitle()?>
-   <link href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet">
    <link rel="shortcut icon" href="data:," type="image/x-icon" />
    <!-- Main style -->
    <?= $this->css('commons/frontend/vendors') ?>
-   <?= $this->css('css/librairies/adminlib') ?? '' ?>
+   <?= $this->css('css/librairies/backend/lib') ?? '' ?>
    <!-- Plugins css -->
    <?= $this->css('css/plugins/homeplugins') ?? '' ?>
    <!-- Main style -->
-   <?= $this->css('css/admin/main/main') ?? '' ?>
+   <?= $this->css('css/backend/main/main') ?? '' ?>
    <!-- CkEditor -->
    <?= $this->css('css/ckeditor/ckeditor', 'css') ?? '' ?>
    <?= $this->content('head'); ?>

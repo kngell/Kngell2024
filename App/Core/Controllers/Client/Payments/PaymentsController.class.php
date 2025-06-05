@@ -19,6 +19,23 @@ class PaymentsController extends Controller
             return new RedirectResponse($paymentLink);
         }
         $this->eventManager->notify(PaymentEvent::class, $this);
-        return $this->render('payment-success');
+        return $this->render('payment-paypal-fail');
+    }
+
+    public function paypalSuccessOrder() : string
+    {
+        $this->pageTitle('Complete order');
+        $query = $this->request->getQuery();
+        $res = $this->payment->capturePayment($query->get('token'));
+
+        // $transaction = $res['purchase_units'][0]['payments']['captures'][0] ?? null;
+        // if ($transaction) {
+        //     $transactionId = $transaction['id'];
+        //     $status = $transaction['status'];
+        //     $amount = $transaction['amount']['value'];
+        //     $currency = $transaction['amount']['currency_code'];
+        //     $payerEmail = $res['payer']['email_address'] ?? null;
+        // }
+        return $this->render('paypal-success-order');
     }
 }

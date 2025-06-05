@@ -11,7 +11,7 @@
   <?= $this->js('runtime') ?>
   <!-- Librairies -->
   <?= $this->js('commons/frontend/vendors') ?>
-  <?= $this->js('js/librairies/adminlib') ?>
+  <?= $this->js('js/librairies/backend/lib') ?>
   <!-- Common vendor -->
   <?= $this->js('commons/client/commonVendor') ?>
   <!-- Custom Common Modules  -->
@@ -19,7 +19,7 @@
   <!-- Plugins -->
   <?= $this->js('js/plugins/homeplugins', 'js') ?>
   <!-- Mainjs -->
-  <?= $this->js('js/admin/main')?>
+  <?= $this->js('js/backend/main/main')?>
   <!-- Custom -->
   <?= $this->content('footer'); ?>
   </body>

@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Psr\Http\Message\ResponseInterface;
+
 interface ApiClientInterface
 {
     /**
@@ -36,5 +38,5 @@ interface ApiClientInterface
 
     public function getResponseHeaders(): array;
 
-    public function getAccessToken() : string;
+    public function getResponse(): ResponseInterface;
 }

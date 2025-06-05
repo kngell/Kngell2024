@@ -21,7 +21,8 @@ class UserCartItemDecorator extends AbstractHtmlDecorator
 
     public function page(): array
     {
-        if ($this->request->get('request_uri') === '/checkout/index') {
+        $uri = $this->request->get('url');
+        if (str_contains($uri, 'checkout/index')) {
             return array_merge(
                 $this->controller->page(),
                 ['checkoutHtmlelement' => $this->userCart->getCheckoutHtmlElement(),
@@ -30,7 +31,7 @@ class UserCartItemDecorator extends AbstractHtmlDecorator
                 ]
             );
         }
-        if ($this->request->get('request_uri') === '/cart/index') {
+        if (str_contains($uri, 'cart/index')) {
             return array_merge(
                 $this->controller->page(),
                 ['userCart' => $this->userCart->display(),

@@ -1,0 +1,9 @@
+@use "css/frontend/main/abstracts" as *;
+/*------------------------ FORM --------------------------*/
+
+form {
+  width: 100%;
+  .form-check {
+    position: relative;
+  }
+}

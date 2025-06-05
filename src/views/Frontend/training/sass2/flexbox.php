@@ -30,7 +30,7 @@ $this->start('head'); ?>
             <span class="user-nav__box-notification">13</span>
          </div>
          <div class="user-nav__user">
-            <img src="../../../../assets/img/admin/user-f-1.jpg" alt="User Photo" class="user-nav__user-photo">
+            <img src="../../../../assets/img/admin/user.jpg" alt="User Photo" class="user-nav__user-photo">
             <span class="user-nav__user-name">Assomo Jehu</span>
          </div>
       </nav>

@@ -18,7 +18,7 @@ readonly class Assets
 
     public function getCss(string|null $path = null) : string
     {
-        $file = $this->getAssets($path, 'css');
+        $file = $this->getAssets($path);
         if (! empty($file)) {
             return str_replace('{{cssFile}}', $file, $this->cssTemplate);
         }
@@ -28,7 +28,7 @@ readonly class Assets
     public function getJs(string|null $path) : string
     {
         if ($path !== null) {
-            $file = $this->getAssets($path, 'js');
+            $file = $this->getAssets($path);
             if (! empty($file)) {
                 return str_replace('{{jsFile}}', $file, $this->jsTemplate);
             }
@@ -36,15 +36,10 @@ readonly class Assets
         return '';
     }
 
-    private function getAssets(string|null $path = null, string $tag) : string
+    private function getAssets(string|null $path = null) : string
     {
-        if ($path === null) {
-            return '';
-        }
-        foreach ($this->assets as $key => $filePath) {
-            if ($key === $path && array_key_exists($tag, $filePath)) {
-                return $filePath[$tag];
-            }
+        if (array_key_exists($path, $this->assets)) {
+            return $this->assets[$path];
         }
         return '';
     }
