@@ -2,7 +2,11 @@
   "Guest": {
     "denied": {
       "AdminController": ["*"],
-      "LogoutController": ["*"]
+      "LogoutController": ["*"],
+      "DashboardController": ["*"],
+      "ProfileController": ["*"],
+      "PaymentsController": ["process", "success", "cancel"],
+      "CheckoutController": ["process", "complete"]
     },
     "HomeController": ["*"],
     "ErrorsController": ["*"],
@@ -10,44 +14,108 @@
     "PostController": ["index", "show", "dairy", "dairyAdd", "dairyNew"],
     "SignupController": ["*"],
     "ForgotPasswordController": ["*"],
-    "AccountController": ["*"],
+    "AccountController": ["register", "activate"],
     "Sass2Controller": ["*"],
     "Training1Controller": ["*"],
-    "DashboardController": ["*"],
-    "EcommerceController": ["*"],
+    "EcommerceController": ["index", "show", "category"],
     "FreeCodeCampController": ["*"],
     "HtmlController": ["*"],
     "PratiqueController": ["*"],
-    "UserController": ["*"],
-    "PaymentsController": ["*"],
-    "ApiController": ["*"],
-    "PaypalController": ["*"],
-    "CartController": ["*"],
-    "CheckoutController": ["*"]
+    "UserController": ["index", "show"],
+    "PaymentsController": ["index", "methods"],
+    "ApiController": ["public"],
+    "PaypalController": ["webhook"],
+    "CartController": ["view", "add", "remove", "count"],
+    "CheckoutController": ["index", "calculate"]
   },
   "LoggedIn": {
     "denied": {
       "LoginController": ["*"],
-      "SignupController": ["*"]
+      "SignupController": ["*"],
+      "AdminController": ["*"]
     },
     "PostController": ["*"],
-    "ProfileController": ["*"]
+    "ProfileController": ["*"],
+    "AccountController": ["*"],
+    "CartController": ["*"],
+    "CheckoutController": ["*"],
+    "PaymentsController": ["*"],
+    "PaypalController": ["*"],
+    "UserController": ["show", "profile", "edit"],
+    "ApiController": ["user"]
   },
   "admin": {
-    "denied": {}
+    "denied": {},
+    "AdminController": ["*"],
+    "DashboardController": ["*"],
+    "UserController": ["*"],
+    "PostController": ["*"],
+    "ProfileController": ["*"],
+    "AccountController": ["*"],
+    "CartController": ["*"],
+    "CheckoutController": ["*"],
+    "PaymentsController": ["*"],
+    "PaypalController": ["*"],
+    "EcommerceController": ["*"],
+    "ApiController": ["*"]
   },
   "user": {
-    "denied": {},
-    "AdminController": ["*"]
+    "denied": {
+      "AdminController": ["*"]
+    },
+    "PostController": ["index", "show", "create", "edit", "update", "delete"],
+    "ProfileController": ["*"],
+    "AccountController": ["*"],
+    "UserController": ["show", "profile", "edit", "update"],
+    "CartController": ["*"],
+    "CheckoutController": ["*"],
+    "PaymentsController": ["*"],
+    "PaypalController": ["*"],
+    "EcommerceController": ["*"],
+    "ApiController": ["user"]
   },
   "customer": {
-    "denied": {}
+    "denied": {
+      "AdminController": ["*"],
+      "DashboardController": ["*"]
+    },
+    "EcommerceController": ["*"],
+    "CartController": ["*"],
+    "CheckoutController": ["*"],
+    "PaymentsController": ["*"],
+    "PaypalController": ["*"],
+    "ProfileController": ["*"],
+    "AccountController": ["*"],
+    "UserController": ["show", "profile", "edit", "update"],
+    "PostController": ["index", "show"],
+    "ApiController": ["customer"]
   },
   "vendor": {
-    "denied": {}
+    "denied": {
+      "AdminController": ["*"]
+    },
+    "EcommerceController": ["*"],
+    "ProductController": ["*"],
+    "CartController": ["*"],
+    "CheckoutController": ["*"],
+    "PaymentsController": ["*"],
+    "PaypalController": ["*"],
+    "ProfileController": ["*"],
+    "AccountController": ["*"],
+    "UserController": ["show", "profile", "edit", "update"],
+    "PostController": ["*"],
+    "ApiController": ["vendor"],
+    "DashboardController": ["vendor"]
   },
   "assoc": {
-    "denied": {},
-    "UsersassocController": ["*"]
+    "denied": {
+      "AdminController": ["*"]
+    },
+    "UsersassocController": ["*"],
+    "ProfileController": ["*"],
+    "AccountController": ["*"],
+    "UserController": ["show", "profile", "edit", "update"],
+    "PostController": ["index", "show"],
+    "ApiController": ["assoc"]
   }
 }

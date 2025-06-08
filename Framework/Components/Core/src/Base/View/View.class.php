@@ -14,6 +14,7 @@ class View implements ViewInterface
     private string $_layout = 'default';
     private string $_token = '';
     private array $properties = [];
+    private Request $request;
     // private string $favicon;
 
     public function __construct(ViewEnvironment $viewEnv)
@@ -83,6 +84,11 @@ class View implements ViewInterface
     public function setToken(TokenInterface $token) : void
     {
         $this->_token = $token->getCsrfHash(8, $this->_pageTitle);
+    }
+
+    public function setRequest(Request $request): void
+    {
+        $this->request = $request;
     }
 
     private function token() : string

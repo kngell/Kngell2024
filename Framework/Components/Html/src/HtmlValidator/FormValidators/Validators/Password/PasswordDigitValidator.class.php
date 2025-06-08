@@ -15,6 +15,6 @@ class PasswordDigitValidator extends AbstractValidator
         if (! preg_match("/\d/", $this->inputValue)) {
             return $this->erroMessage(sprintf(self::ERROR_MESSAGE, $this->display));
         }
-        return true;
+        return false;
     }
 }

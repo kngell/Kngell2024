@@ -59,6 +59,11 @@ final readonly class StringUtils
         return strtolower(preg_replace('/[A-Z]/', '_$0', lcfirst($input)));
     }
 
+    public static function camelCaseToDashCase(string $input): string
+    {
+        return strtolower(preg_replace('/[A-Z]/', '-$0', lcfirst($input)));
+    }
+
     public static function is_serialized($data, $strict = true) : bool
     {
         // If it isn't a string, it isn't serialized.

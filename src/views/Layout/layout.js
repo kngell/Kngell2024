@@ -1,5 +1,6 @@
 //Defaul
 import "./default.php";
+import "./inc/default/head.php";
 import "./inc/default/header.php";
 import "./inc/default/footer.php";
 //Email
@@ -20,6 +21,7 @@ import "./inc/freecodecamp/footer.php";
 import "./admin.php";
 import "./inc/admin/head.php";
 import "./inc/admin/header.php";
+import "./inc/admin/sidebar.php";
 import "./inc/admin/footer.php";
 //Ecommerce
 import "./ecommerce.php";

@@ -1,31 +1,32 @@
-<header>
-   <div id="app">
-      <div class="main-wrapper">
-         <div class="navbar-bg"></div>
-         <nav class="navbar navbar-expand-lg main-navbar">
-            <form class="form-inline mr-auto">
-               <ul class="navbar-nav mr-3">
-                  <li><a href="#" data-toggle="sidebar" class="nav-link nav-link-lg"><i class="fa-solidfa-bars"></i></a>
-                  </li>
-               </ul>
-            </form>
-            <ul class="navbar-nav navbar-right justify-content-end rightsidetop">
-               <li class="nav-link">
-                  <a href="" target="_blank" class="btn btn-warning">Front End</a>
-               </li>
-               <li class="nav-item dropdown">
-                  <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
-                     aria-expanded="false">
-                     <img alt="image" src="../../../../assets/img/admin/user.jpg" class="rounded-circle-custom">
-                  </a>
-                  <ul class="dropdown-menu dropdown-menu-end">
-                     <li><a class="dropdown-item" href="profile.html"><i class="far fa-user"></i> Edit Profile</a></li>
-                     <li><a class="dropdown-item" href="login.html"><i class="fa-solidfa-sign-out-alt"></i> Logout</a>
-                     </li>
-                  </ul>
-               </li>
-            </ul>
-         </nav>
-      </div>
-   </div>
-</header>
+ <div id="app">
+    <div class="main-wrapper">
+       <header>
+          <div class="navbar-bg"></div>
+          <nav class="navbar navbar-expand-lg main-navbar">
+             <form class="form-inline row mr-auto">
+                <ul class="navbar-nav mr-3">
+                   <li><a href="#" data-toggle="sidebar" class="nav-link nav-link-lg"><i
+                            class="fa-solid fa-bars"></i></a>
+                   </li>
+                </ul>
+             </form>
+             <ul class="navbar-nav navbar-right justify-content-end rightsidetop">
+                <li class="nav-link">
+                   <a href="/" class="btn btn-warning">Front End</a>
+                </li>
+                <?=$navComponent ?? '' ?>
+                <!-- <li class="nav-item dropdown">
+                   <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                      aria-expanded="false">
+                      <img alt="image" src="../../../../assets/img/admin/user.jpg" class="rounded-circle-custom">
+                   </a>
+                   <ul class="dropdown-menu dropdown-menu-end">
+                      <li><a class="dropdown-item" href="profile.html"><i class="far fa-user"></i> Edit Profile</a></li>
+                      <li><a class="dropdown-item" href="/logout"><i class="fa-solidfa-sign-out-alt"></i> Logout</a>
+                      </li>
+                   </ul>
+                </li> -->
+             </ul>
+          </nav>
+
+       </header>

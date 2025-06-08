@@ -14,7 +14,7 @@
    <link rel="shortcut icon" href="data:," type="image/x-icon" />
    <!-- Main style -->
    <?= $this->css('commons/frontend/vendors') ?>
-   <?= $this->css('css/librairies/backend/lib') ?? '' ?>
+   <?= $this->css('css/librairies/librairy') ?? '' ?>
    <!-- Plugins css -->
    <?= $this->css('css/plugins/homeplugins') ?? '' ?>
    <!-- Main style -->

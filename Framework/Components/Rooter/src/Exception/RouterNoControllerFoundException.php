@@ -1,6 +1,7 @@
 <?php
+
 /*
- * This file is part of the MagmaCore package.
+ * This file is part of the K'nGELL package.
  *
  * (c) Ricardo Miller <ricardomiller@lava-studio.co.uk>
  *

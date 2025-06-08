@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 class SignupController extends Controller
 {
+    use ValidationTrait;
+
     public function __construct(private UserModel $user, private UserFormCreator $frm, private ValidatorInterface $validator, private HashInterface $hash, private ImagesUpload $imgUpload)
     {
         $this->currentModel($user);
@@ -30,27 +32,38 @@ class SignupController extends Controller
     public function register() : Response
     {
         $data = $this->request->getPost()->getAll();
-        $errors = $this->validator->validate($data, 'register', $this->user);
+
+        // Process image upload
         $this->imgUpload->proceed(false);
-        $errors = array_merge($errors, $this->imgUpload->getErrors());
-        $form = $this->frm->make('register', $data, $errors);
-        if (! $this->session->exists('form')) {
-            $this->session->set('form', $form);
-        }
-        if (! empty($errors)) {
-            $this->flash->add('Fields Errors... Please check.', FlashType::WARNING);
+        $imageErrors = $this->imgUpload->getErrors();
+
+        // Validate form data with image upload errors
+        $validationResult = $this->validateFormData($data, 'register', $this->user, $imageErrors);
+
+        // Check for validation errors and redirect if any
+        if ($validationResult->hasErrors() || ! empty($imageErrors)) {
             return $this->redirect(DS . 'signup');
         }
-        $data['password'] = $this->hash->password($data['password']);
-        $this->imgUpload->getMediaPaths() !== null ? $data['media'] = $this->imgUpload->getMediaPaths() : '';
-        $result = $this->user->saveRegisteredUser($data, $this->token);
+
+        // Use validated data for security
+        $validatedData = $validationResult->getValidatedData();
+        $validatedData['password'] = $this->hash->password($validatedData['password']);
+
+        // Add image paths if available
+        if ($this->imgUpload->getMediaPaths() !== null) {
+            $validatedData['media'] = $this->imgUpload->getMediaPaths();
+        }
+
+        // Save user
+        $result = $this->user->saveRegisteredUser($validatedData, $this->token);
         if ($result->getQueryResult() && $result->getLastInsertId()) {
             $logIn = "<a href='/login'> Log In</a>";
-            $this->flash->add('Congratulations!!! You have been registerd successfully. you can now ' . $logIn);
-            // $res = $this->notifyEmail($data);
+            $this->flash->add('Congratulations!!! You have been registered successfully. You can now ' . $logIn);
+            // $res = $this->notifyEmail($validatedData);
             return $this->redirect(DS . 'signup' . DS . 'success-singup');
         }
-        $this->flash->add('An error occures when saving data. Please try again', FlashType::DANGER);
+
+        $this->flash->add('An error occurred when saving data. Please try again', FlashType::DANGER);
         return $this->redirect(DS . 'signup');
     }
 
@@ -72,8 +85,7 @@ class SignupController extends Controller
     private function notifyEmail(array $params) : ?object
     {
         $this->setLayout('email');
-        $host = $this->request->getServer()->get('http_host');
-        $url = 'https://' . $host . '/signup/activate/' . $this->token->getValue();
+        $url = HOST . '/signup/activate/' . $this->token->getValue();
         $html = $this->render('activation_email', ['url' => $url]);
         return $this->eventManager->notify(new RegisterEvent(
             [

@@ -76,7 +76,7 @@
   <?= $this->js('runtime') ?>
   <!-- FrontLib -->
   <?= $this->js('commons/frontend/vendors') ?>
-  <?= $this->js('js/librairies/frontend/lib') ?>
+  <?= $this->js('js/librairies/librairy') ?>
   <!-- Plugins -->
   <?= $this->js('js/plugins/homeplugins', 'js') ?>
   <!-- Mainjs -->

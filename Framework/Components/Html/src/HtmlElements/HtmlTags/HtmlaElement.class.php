@@ -17,9 +17,6 @@ class HtmlaElement extends AbstractHtmlElement
     public function generate(): string
     {
         $tag = $this->getTagAttributes(get_object_vars($this), self::TAG);
-        // if (isset($this->content)) {
-        //     $tag .= $this->content;
-        // }
         $children = '';
         while ($this->children->count()) {
             $children .= $this->children->pop()->generate();
@@ -332,6 +329,39 @@ class HtmlaElement extends AbstractHtmlElement
     public function href(string $href): self
     {
         $this->href = $href;
+        return $this;
+    }
+
+    /**
+     * @param string $dataBsToggle
+     * @return HtmlaElement
+     */
+    public function dataBsToggle(string $dataBsToggle): self
+    {
+        $this->dataBsToggle = $dataBsToggle;
+
+        return $this;
+    }
+
+    /**
+     * @param bool $ariaHaspopup
+     * @return HtmlaElement
+     */
+    public function ariaHaspopup(bool $ariaHaspopup): self
+    {
+        $this->ariaHaspopup = $ariaHaspopup;
+
+        return $this;
+    }
+
+    /**
+     * @param bool $ariaExpanded
+     * @return HtmlaElement
+     */
+    public function ariaExpanded(bool $ariaExpanded): self
+    {
+        $this->ariaExpanded = $ariaExpanded;
+
         return $this;
     }
 }

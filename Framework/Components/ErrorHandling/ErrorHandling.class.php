@@ -49,11 +49,11 @@ class ErrorHandling
     /**
      * Exception handler.
      *
-     * @param Exception $exception The exception
+     * @param Throwable $exception The exception
      * @return void
      * @throws Exception
      */
-    public static function exceptionHandle(Exception $exception) : void
+    public static function exceptionHandle(Throwable $exception) : void
     {
         static::buildStackTrace($exception);
 
@@ -110,7 +110,7 @@ class ErrorHandling
         );
     }
 
-    private static function buildStackTrace(Exception $exception) : void
+    private static function buildStackTrace(Throwable $exception) : void
     {
         static::$trace[] = [
             'file' => $exception->getFile(),

@@ -5,13 +5,17 @@ class App extends AbstractApp
 {
     public function __construct()
     {
+        // Initialize Container properties since we can't call parent::__construct()
+        $this->resolutionContext = new ResolutionContext();
+        $this->registerCoreBindings();
+
         AppConstants::enable();
+        $this->appConfig = AppConfig::getInstance()->setup();
         ContainerClassRegistrator::register($this);
     }
 
     public function boot() : self
     {
-        $this->appConfig = AppConfig::getInstance()->setup();
         $this->loadErrorHandlers();
         $this->loadSession();
         $this->phpVersion();

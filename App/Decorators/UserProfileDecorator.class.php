@@ -11,7 +11,7 @@ class UserProfileDecorator extends AbstractHtmlDecorator
 
     public function page(): array
     {
-        $userProfile = App::diget(UserProfileHtmlElement::class);
+        $userProfile = new UserProfileHtmlElement($this->builder);
         return array_merge(
             ['userProfile' => $userProfile->display()],
             $this->controller->page()

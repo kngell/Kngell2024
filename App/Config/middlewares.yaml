@@ -9,3 +9,4 @@ remember: RememberMeMiddleware
 xss: XSSProtectionMiddleware
 getUserCartFromCookie: GetUserCartFromCookieMiddleware
 selectPaymentType: SelectPaymentTypeMiddleware
+auth: AuthMiddleware

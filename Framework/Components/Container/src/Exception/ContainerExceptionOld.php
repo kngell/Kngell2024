@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Psr\Container\ContainerExceptionInterface;
 
 /** PSR-11 Container */
-class ContainerException extends Exception implements ContainerExceptionInterface
+class ContainerExceptionOld extends Exception implements ContainerExceptionInterface
 {
     public function __construct(string $message, int $code = 0, ?Throwable $previous = null)
     {

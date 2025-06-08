@@ -19,6 +19,6 @@ abstract class AbstractHtml implements HtmlComponentsInterface
             }
         }
 
-        return '';
+        return HOST . DS . 'public' . DS . 'Upload' . DS . 'images' . DS . 'default.png';
     }
 }

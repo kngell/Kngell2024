@@ -164,18 +164,18 @@ abstract class Controller
     private function context(array $context) : array
     {
         $this->view->setToken($this->token);
+        $this->view->setRequest($this->request);
         if (isset($this->layout)) {
             $this->view->setLayout($this->layout);
-        }
-        if ($this::class === 'DashboardController') {
-            $this->setLayout('admin');
         }
         if (str_starts_with($this::class, 'Ecommerce')) {
             $this->setLayout('ecommerce');
         }
-        return match (true) {
-            $this->view->getLayout() === 'default' => array_merge($context, ['message' => $this->flash->get()], (new NavbarDecorator($this))->page()),
-            default => $context,
+        $navbar = match (true) {
+            $this->view->getLayout() === 'default' => DefaultNavbarDecorator::class,
+            $this->view->getLayout() === 'admin' => AdminNavbarDecorator::class,
+            default => '',
         };
+        return array_merge($context, ['message' => $this->flash->get()], ! empty($navbar) ? (new $navbar($this))->page() : []);
     }
 }

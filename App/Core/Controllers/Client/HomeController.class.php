@@ -1,7 +1,6 @@
 <?php
 
 declare(strict_types=1);
-
 class HomeController extends Controller
 {
     public function __construct(private UserModel $user, private TestFormCreator $frm, private Validator $validator)
@@ -15,37 +14,28 @@ class HomeController extends Controller
         return $this->render('index');
     }
 
-    // public function form() : string
+    // public function handleForm() : Response
     // {
-    //     if ($this->session->exists('form')) {
-    //         $form = $this->session->get(('form'));
-    //         $this->session->delete('form');
-    //     } else {
-    //         $form = $this->frm->make('home/handleForm');
-    //     }
-    //     $flash = $this->flash->get();
-    //     if (! empty($flash)) {
-    //         $flash = ArrayUtils::first($flash);
-    //         $message = '<h5>' . $flash['message'] . '</h5>';
-    //         $form = $message . $form;
-    //     }
-    //     $this->pageTitle('Learning Forms');
-    //     return $this->render('form', [
-    //         'form' => $form,
-    //     ]);
-    // }
+    //     $userData = $this->request->getPost()->getAll();
 
-    public function handleForm() : Response
-    {
-        $data = $this->request->getPost()->getAll();
-        $results = $this->validator->validate($data, 'login', $this->user);
-        $form = $this->frm->make('home/handleForm', $data, $results);
-        if (! $this->session->exists('form')) {
-            $this->session->set('form', $form);
-        }
-        if ($this->token->validate($data['csrfToken'], $data['frm_name']) && empty($results)) {
-            $this->flash->add('Form Submitted Sucessfully', FlashType::SUCCESS);
-        }
-        return $this->redirect('/home/form');
-    }
+    //     // Validate user data
+    //     $validationResult = $this->validateFormData($userData, 'login', $this->user);
+
+    //     // Check for validation errors
+    //     if ($validationResult->hasErrors()) {
+    //         return new RedirectResponse('/');
+    //     }
+
+    //     // Use validated data for authentication
+    //     $validatedData = $validationResult->getValidatedData();
+
+    //     $form = $this->frm->make('home/handleForm', $userData, $validationResult);
+    //     if (! $this->session->exists('form')) {
+    //         $this->session->set('form', $form);
+    //     }
+    //     if ($this->token->validate($userData['csrfToken'], $userData['frm_name']) && empty($results)) {
+    //         $this->flash->add('Form Submitted Sucessfully', FlashType::SUCCESS);
+    //     }
+    //     return $this->redirect('/home/form');
+    // }
 }

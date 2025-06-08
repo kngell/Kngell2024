@@ -15,6 +15,6 @@ class PasswordSpecialcharValidator extends AbstractValidator
         if (! preg_match("/\W/", $this->inputValue)) {
             return $this->erroMessage(sprintf(self::ERROR_MESSAGE, $this->display));
         }
-        return true;
+        return false;
     }
 }

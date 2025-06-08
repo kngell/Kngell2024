@@ -7,9 +7,13 @@ class Hash implements HashInterface
     private array $config;
     private string $cipherMethod = '';
 
-    public function __construct(array $config)
+    public function __construct(array|Closure $config)
     {
-        $this->config = $config;
+        if ($config instanceof Closure) {
+            $this->config = call_user_func($config);
+        } else {
+            $this->config = $config;
+        }
     }
 
     public function password(string $password): string

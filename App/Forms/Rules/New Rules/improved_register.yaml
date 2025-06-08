@@ -1,0 +1,87 @@
+# Improved registration form validation rules
+# Demonstrates new validation capabilities
+
+terms:
+  required: true
+  display: Terms and Conditions
+
+first_name:
+  required: true
+  min: 2
+  max: 50
+  display: First Name
+
+last_name:
+  required: true
+  min: 2
+  max: 50
+  display: Last Name
+
+user_name:
+  required: true
+  min: 3
+  max: 30
+  display: Username
+  # Could add custom username validator here
+
+email:
+  display: Email
+  required: true
+  min: 5
+  max: 254
+  valid_email: strict # Use strict validation with DNS check
+  unique: user
+
+phone:
+  display: Phone Number
+  phone: international # Use international phone format
+  # phone: us  # Alternative: US format only
+
+date_of_birth:
+  display: Date of Birth
+  date:
+    format: 'Y-m-d'
+    min: '1900-01-01'
+    max: 'today -13 years' # Must be at least 13 years old
+
+password:
+  display: Password
+  required: true
+  min: 8
+  max: 128
+  letter_number: 1
+  capital_letter: 1
+  small_letter: 1
+  digit: 1
+  specialchar: 1
+  white_space: 0
+
+confirm_password:
+  display: Confirm Password
+  required: true
+  min: 8
+  max: 128
+  letter_number: 1
+  capital_letter: 1
+  small_letter: 1
+  digit: 1
+  specialchar: 1
+  white_space: 0
+  match: password
+
+# Optional fields for profile completion
+website:
+  display: Website
+  url: true # URL validator
+
+bio:
+  display: Bio
+  max: 500
+
+profile_image:
+  display: Profile Image
+  image:
+    max_size: '2MB'
+    allowed_types: [ 'jpg', 'jpeg', 'png', 'gif' ]
+    max_width: 1000
+    max_height: 1000

@@ -8,5 +8,10 @@ $autoload = ROOT_DIR . '/vendor/autoload.php';
 if (is_file($autoload)) {
     $autoload = require_once $autoload;
 }
-$app = App::getInstance();
-$app->boot()->run();
+
+try {
+    $app = App::getInstance();
+    $app->boot()->run();
+} catch (Throwable $e) {
+    ErrorHandling::exceptionHandle($e);
+}

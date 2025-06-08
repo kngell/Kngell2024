@@ -22,3 +22,4 @@
 # If they are generated or contain secrets, keep this line.
 /App/Views/
 /App/acl.json
+/App/Config/

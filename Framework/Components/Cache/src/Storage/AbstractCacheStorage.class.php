@@ -1,7 +1,6 @@
 <?php
 
 declare(strict_types=1);
-use DirectoryIterator;
 
 abstract class AbstractCacheStorage implements IterableStorageInterface
 {
@@ -230,10 +229,10 @@ abstract class AbstractCacheStorage implements IterableStorageInterface
      */
     protected function verifyCacheDirectory(): void
     {
-        if (!is_dir($this->cacheDirectory) && !is_link($this->cacheDirectory)) {
+        if (! is_dir($this->cacheDirectory) && ! is_link($this->cacheDirectory)) {
             throw new CacheException('The cache directory "' . $this->cacheDirectory . '" does not exist.', 1203965199);
         }
-        if (!is_writable($this->cacheDirectory)) {
+        if (! is_writable($this->cacheDirectory)) {
             throw new CacheException('The cache directory "' . $this->cacheDirectory . '" is not writable.', 1203965200);
         }
     }

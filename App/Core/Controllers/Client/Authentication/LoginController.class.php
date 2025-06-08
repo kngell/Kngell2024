@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 class LoginController extends AuthController
 {
+    use ValidationTrait;
+
     public function __construct(
         UserModel $users,
         UserSessionModel $userSession,
@@ -24,7 +26,7 @@ class LoginController extends AuthController
     public function index() : string
     {
         $this->pageTitle('Login');
-        if ($this->session->exists('form')) {
+        if ($this->session->exists('form') && ! empty($this->session->get('form'))) {
             $form = $this->session->get('form');
             $this->session->delete('form');
         } else {
@@ -37,25 +39,24 @@ class LoginController extends AuthController
 
     public function authenticateUser() : Response
     {
-        [$userData, $errors] = $this->validateUserData();
-        if (! empty($errors)) {
-            $this->flash->add('Fields Errors... Please check.', FlashType::WARNING);
-        }
-        if (! $this->isUserAuthenticated($userData)) {
+        $userData = $this->request->getPost()->getAll();
+
+        // Validate user data
+        $validationResult = $this->validateFormData($userData, 'login', $this->user);
+
+        // Check for validation errors
+        if ($validationResult->hasErrors()) {
             return new RedirectResponse('/login');
         }
+
+        // Use validated data for authentication
+        $validatedData = $validationResult->getValidatedData();
+
+        if (! $this->isUserAuthenticated($validatedData)) {
+            return new RedirectResponse('/login');
+        }
+
         $eventResult = $this->eventManager->notify(LoginEvent::class, $this);
         return new RedirectResponse($this->getRedirectUrl() ?? '/');
-    }
-
-    private function validateUserData() : array
-    {
-        $userData = $this->request->getPost()->getAll();
-        $errors = $this->validator->validate($userData, 'login', $this->user);
-        $form = $this->frm->make('auth-user', $userData, $errors);
-        if (! $this->session->exists('form')) {
-            $this->session->set('form', $form);
-        }
-        return [$userData, $errors];
     }
 }

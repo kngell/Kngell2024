@@ -3,9 +3,7 @@
   "js/backend/main/main": "https://localhost:3003/public/assets/js/backend/main/main.js",
   "css/frontend/main/main": "https://localhost:3003/public/assets/css/frontend/main/main.css",
   "css/backend/main/main": "https://localhost:3003/public/assets/css/backend/main/main.css",
-  "css/librairies/frontend/lib": "https://localhost:3003/public/assets/css/librairies/frontend/lib.css",
-  "js/librairies/frontend/lib": "https://localhost:3003/public/assets/js/librairies/frontend/lib.js",
-  "css/librairies/backend/lib": "https://localhost:3003/public/assets/css/librairies/backend/lib.css",
-  "js/librairies/backend/lib": "https://localhost:3003/public/assets/js/librairies/backend/lib.js",
+  "css/librairies/librairy": "https://localhost:3003/public/assets/css/librairies/librairy.css",
+  "js/librairies/librairy": "https://localhost:3003/public/assets/js/librairies/librairy.js",
   "runtime": "https://localhost:3003/public/assets/runtime.js"
 }

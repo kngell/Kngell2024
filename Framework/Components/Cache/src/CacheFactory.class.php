@@ -7,8 +7,9 @@ class CacheFactory
     private ContainerInterface $container;
     private NativeCacheStorage $storage;
 
-    public function __construct(private CacheEnvironmentConfigurations $cacheEnvConfig)
+    public function __construct(private CacheEnvironmentConfigurations $cacheEnvConfig, ?ContainerInterface $container = null)
     {
+        $this->container = $container ?? App::getInstance();
     }
 
     /**
@@ -31,11 +32,7 @@ class CacheFactory
         if (! $storageObject instanceof CacheStorageInterface) {
             throw new cacheInvalidArgumentException('"' . $this->storage::class . '" is not a valid cache storage object.', 0);
         }
-        $cacheObject = $this->container->get(CacheInterface::class, [
-            'cacheIdentifier' => $cacheIdentifier,
-            'storage' => $storageObject,
-            'options' => $options,
-        ]);
+        $cacheObject = new Cache($cacheIdentifier, $storageObject, $options);
         if (! $cacheObject instanceof CacheInterface) {
             throw new cacheInvalidArgumentException('"' . $cacheObject::class . '" is not a valid cache storage object.', 0);
         }

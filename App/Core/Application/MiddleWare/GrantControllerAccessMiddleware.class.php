@@ -15,7 +15,7 @@ class GrantControllerAccessMiddleware implements MiddlewareInterface
     {
         $current_user_acls = ['Guest'];
         // get User Acls group if they exists
-        [$current_user_acls,$user] = $this->loggedInUserAcls($current_user_acls);
+        [$current_user_acls,$user] = $this->getUserAcls($current_user_acls);
         // Check access granted
         $results = $this->checkAccessGranted($current_user_acls, $request, $user);
 
@@ -38,12 +38,19 @@ class GrantControllerAccessMiddleware implements MiddlewareInterface
             if (! array_key_exists($this->route->getController(), $this->acl[$level])) {
                 continue;
             }
+            if (array_key_exists('middleware', $this->route->getRouteParams())) {
+                $middlewares = $this->route->getRouteParams()['middleware'];
+                if (str_contains($middlewares, 'requireLogin')) {
+                    return true;
+                }
+            }
 
+            // Check if the controller and method are allowed for this ACL level
             $allowedMethods = $this->acl[$level][$this->route->getController()];
 
             if (in_array($this->route->getMethod()->getName(), $allowedMethods) || in_array('*', $allowedMethods)) {
                 $grantAccess = true;
-                break;
+                break; // Access granted, no need to check other levels
             }
         }
         return $this->checkDeniedAccess($current_user_acls, $request, $user, $grantAccess);
@@ -51,14 +58,18 @@ class GrantControllerAccessMiddleware implements MiddlewareInterface
 
     private function checkDeniedAccess(array $current_user_acls, Request $request, ?User $user, bool $grantAccess) : bool|Response
     {
-        foreach ($current_user_acls as $level) {
-            $denied = $this->getDeniedControllers($level);
-            if (empty($denied) || ! $grantAccess) {
-                continue;
-            }
-            if (array_key_exists($this->route->getController(), $denied)) {
-                if (in_array($this->route->getMethod()->getName(), $denied[$this->route->getController()]) || in_array('*', $denied[$this->route->getController()])) {
-                    $grantAccess = false;
+        // Only check denied access if access was initially granted
+        if ($grantAccess) {
+            foreach ($current_user_acls as $level) {
+                $denied = $this->getDeniedControllers($level);
+                if (empty($denied)) {
+                    continue;
+                }
+                if (array_key_exists($this->route->getController(), $denied)) {
+                    if (in_array($this->route->getMethod()->getName(), $denied[$this->route->getController()]) || in_array('*', $denied[$this->route->getController()])) {
+                        $grantAccess = false;
+                        break; // Access denied, no need to check other levels
+                    }
                 }
             }
         }
@@ -79,6 +90,10 @@ class GrantControllerAccessMiddleware implements MiddlewareInterface
         if (str_contains($request->get('request_uri'), '/edit')) {
             return true;
         }
+        // Allow access to login page
+        if (str_contains($request->get('request_uri'), '/login')) {
+            return true;
+        }
         return false;
     }
 
@@ -90,7 +105,7 @@ class GrantControllerAccessMiddleware implements MiddlewareInterface
         return [];
     }
 
-    private function loggedInUserAcls(array $current_user_acls) : array
+    private function getUserAcls(array $current_user_acls) : array
     {
         if ($this->session->exists(CURRENT_USER_SESSION_NAME)) {
             $current_user_acls[] = 'LoggedIn';

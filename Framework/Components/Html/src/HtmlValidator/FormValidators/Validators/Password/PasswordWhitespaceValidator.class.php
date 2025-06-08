@@ -15,6 +15,6 @@ class PasswordWhitespaceValidator extends AbstractValidator
         if (preg_match("/\s/", $this->inputValue)) {
             return $this->erroMessage(sprintf(self::ERROR_MESSAGE, $this->display));
         }
-        return true;
+        return false;
     }
 }

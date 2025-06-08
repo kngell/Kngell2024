@@ -43,6 +43,9 @@ abstract class AbstractHtmlComponent
     protected string $alt;
     protected bool $contentUp = true;
     protected string $role;
+    protected string $dataBsToggle;
+    protected bool $ariaHaspopup;
+    protected bool $ariaExpanded;
 
     public function setParent(?self $parent)
     {
@@ -99,13 +102,12 @@ abstract class AbstractHtmlComponent
         }
         return match (true) {
             $key === 'action' => ' ' . $key . '="/' . $value . '"',
-            $key === 'acceptCharset' => ' accept-charset="' . $value . '"',
+            // $key === 'acceptCharset' => ' accept-charset="' . $value . '"',
             is_bool($value) => ' ' . $key,
             is_array($value) && $key === 'custom' => $this->customAttr($value),
             is_array($value) && $key === 'style' => ! empty($value) ? " $key='" . implode('; ', $value) . "'" : '',
             is_array($value) => ! empty($value) ? " $key='" . implode(' ', $value) . "'" : '',
-
-            default => ! empty($value) ? " $key='" . $value . "'" : '',
+            default => ! empty($value) ? ' ' . StringUtils::camelCaseToDashCase($key) . "='" . $value . "'" : '',
         };
     }
 

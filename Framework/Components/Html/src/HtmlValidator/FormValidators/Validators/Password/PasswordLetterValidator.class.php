@@ -14,8 +14,7 @@ class PasswordLetterValidator extends AbstractValidator
     {
         if (preg_match('/.*[a-z]+.*/i', $this->inputValue) == 0) {
             return $this->erroMessage(sprintf(self::ERROR_MESSAGE, $this->display));
-            return true;
         }
-        return true;
+        return false;
     }
 }

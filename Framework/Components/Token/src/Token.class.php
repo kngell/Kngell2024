@@ -36,6 +36,7 @@ class Token extends RandomStringGenerator implements TokenInterface
 
     public function validate(array $data) : bool
     {
+        $frm = $data['frm_name'];
         $separator = ! empty($frm) ? $frm : '|';
         $part = explode($separator, $this->urlSafeDecode($data['csrfToken'] ?? ''));
         if (count($part) === 3) {

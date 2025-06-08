@@ -10,18 +10,21 @@ interface ContainerInterface
      * @param string $abstract
      * @param Closure|string|null $concrete
      * @param bool $shared
-     * @return void
+     * @param mixed $parameters
+     * @return self
      */
-    public function bind(string $abstract, Closure | string | null $concrete = null, bool $shared = false): self;
+    public function bind(string $abstract, Closure | string | null $concrete = null, bool $shared = false, mixed $parameters = []): self;
 
     /**
      * Make a unique instance of a class or Closure
      * ----------------------------------------------------.
      * @param string $abstract
      * @param Closure|string|null $concrete
+     * @param bool $shared
+     * @param mixed $args
      * @return self
      */
-    public function singleton(string $abstract, Closure | string | null $concrete = null): self;
+    public function singleton(string $abstract, Closure | string | null $concrete = null, bool $shared = true, mixed $args = []): self;
 
     /**
      * Create a container instance with existing instance

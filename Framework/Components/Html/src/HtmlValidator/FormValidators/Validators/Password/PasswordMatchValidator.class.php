@@ -15,7 +15,7 @@ class PasswordMatchValidator extends AbstractValidator
         if ($this->password() !== $this->inputValue) {
             return $this->erroMessage(sprintf(self::ERROR_MESSAGE, $this->display));
         }
-        return true;
+        return false;
     }
 
     private function password() : string

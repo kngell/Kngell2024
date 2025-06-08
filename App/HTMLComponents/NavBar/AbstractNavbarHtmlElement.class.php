@@ -1,7 +1,7 @@
 <?php
 
 declare(strict_types=1);
-abstract class AbstractNavbarHtmlElement implements HtmlComponentsInterface
+abstract class AbstractNavbarHtmlElement extends AbstractHtml implements HtmlComponentsInterface
 {
     protected const array NAVBAR_CLASS = [
         'nav',

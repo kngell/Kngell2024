@@ -18,5 +18,7 @@ interface ViewInterface
 
     public function setToken(TokenInterface $token) : void;
 
+    public function setRequest(Request $request) : void;
+
     public function getPath() : string;
 }

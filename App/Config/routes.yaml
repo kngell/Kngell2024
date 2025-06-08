@@ -144,6 +144,7 @@
   method: restore-user-cart
   httpMethod: post
 /admin/{controller}/{method}:
+  middleware: requireLogin
 /{controller}/{method}:
   # /{controller}/{id:\d+}/{method}:
   # /{controller}/{method}/{id:\d+}:

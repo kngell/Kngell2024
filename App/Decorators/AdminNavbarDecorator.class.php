@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-class NavbarDecorator extends AbstractHtmlDecorator
+class AdminNavbarDecorator extends AbstractHtmlDecorator
 {
     public function __construct(Controller $controller)
     {
@@ -11,8 +11,8 @@ class NavbarDecorator extends AbstractHtmlDecorator
 
     public function page(): array
     {
-        /** @var NavbarHtmlElement */
-        $navElements = new NavbarHtmlElement(
+        /** @var AdminNavbarHtmlElement */
+        $navElements = new AdminNavbarHtmlElement(
             $this->builder,
             $this->session,
             $this->request

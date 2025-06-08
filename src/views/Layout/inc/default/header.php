@@ -17,7 +17,7 @@
    <?= $this->getPageTitle()?>
    <!-- Vendors -->
    <?= $this->css('commons/frontend/vendors') ?>
-   <?= $this->css('css/librairies/frontend/lib') ?>
+   <?= $this->css('css/librairies/librairy') ?>
    <!-- Main style -->
    <?= $this->css('css/frontend/main/main') ?? '' ?>
    <link rel="shortcut icon" href="data:," />

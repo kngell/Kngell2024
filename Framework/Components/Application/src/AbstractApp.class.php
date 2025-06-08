@@ -21,9 +21,44 @@ abstract class AbstractApp extends Container
         return self::getInstance();
     }
 
+    /**
+     * Static method for dependency injection - get service from container.
+     */
     public static function diGet(string $class, array $args = []): mixed
     {
-        return self::getInstance()->get($class, $args);
+        return self::getInstance()->resolve($class, $args);
+    }
+
+    /**
+     * Static method to call methods with dependency injection.
+     */
+    public static function diCall(callable|array|string $callback, array $parameters = []): mixed
+    {
+        return self::getInstance()->call($callback, $parameters);
+    }
+
+    /**
+     * Static method to check if service exists in container.
+     */
+    public static function diHas(string $class): bool
+    {
+        return self::getInstance()->has($class);
+    }
+
+    /**
+     * Static method to bind services to container.
+     */
+    public static function diBind(string $abstract, mixed $concrete = null, bool $shared = false): ContainerInterface
+    {
+        return self::getInstance()->bind($abstract, $concrete, $shared);
+    }
+
+    /**
+     * Static method to bind singletons to container.
+     */
+    public static function diSingleton(string $abstract, mixed $concrete = null): ContainerInterface
+    {
+        return self::getInstance()->singleton($abstract, $concrete);
     }
 
     /**
@@ -71,16 +106,33 @@ abstract class AbstractApp extends Container
         return $this->appConfig;
     }
 
-    protected function createAppProperties() : void
+    protected function createAppProperties(): void
     {
-        $this->rooter = $this->get(RooterInterface::class);
-        $this->request = $this->get(Request::class);
-        $this->response = $this->get(Response::class);
+        // Use the new resolve method for better performance and error handling
+        $this->rooter = $this->resolve(RooterInterface::class);
+        $this->request = $this->resolve(Request::class);
+        $this->response = $this->resolve(Response::class);
+
+        // Set up application-wide parameters
+        $this->setGlobalParameters([
+            'app.name' => $this->appConfig->getConfig()['app']['app_name'] ?? 'Application',
+            'app.version' => $this->appConfig->getConfig()['app']['app_version'] ?? '1.0.0',
+            'app.debug' => $this->appConfig->getConfig()['app']['debug'] ?? false,
+            'app.environment' => $this->appConfig->getConfig()['app']['environment'] ?? 'production',
+        ]);
+
+        // Create aliases for commonly used services
+        $this->alias(Request::class, 'request');
+        $this->alias(Response::class, 'response');
+        $this->alias(RooterInterface::class, 'router');
+        $this->alias(SessionInterface::class, 'session');
+        $this->alias(CacheInterface::class, 'cache');
+        $this->alias(CookieInterface::class, 'cookie');
     }
 
     /**
      * Compare PHP version with the core version ensuring the correct version of
-     * PHP and MagmaCore framework is being used at all time in sync.
+     * PHP and K'nGELL framework is being used at all time in sync.
      *
      * @return void
      */
@@ -102,7 +154,7 @@ abstract class AbstractApp extends Container
         $settings = $this->appConfig->getConfig()['settings'];
         ini_set('default_charset', $settings['default_charset']);
         date_default_timezone_set($settings['default_timezone']);
-        (new Dotenv())->load(dirname(getcwd()) . DS . '.env');
+        (new Dotenv())->load(ROOT_DIR . DS . '.env');
     }
 
     protected function loadErrorHandlers(): void
@@ -114,10 +166,21 @@ abstract class AbstractApp extends Container
 
     protected function loadCache(): CacheInterface
     {
-        $cache = $this->get(CacheFacade::class)->create($this->appConfig->getCacheIdentifier(), $this->appConfig->getCache());
+        // Use factory binding for cache creation
+        $this->factory(CacheInterface::class, function ($container) {
+            $cacheFacade = $container->resolve(CacheFacade::class);
+            return $cacheFacade->create(
+                $this->appConfig->getCacheIdentifier(),
+                $this->appConfig->getCache()
+            );
+        });
+
+        $cache = $this->resolve(CacheInterface::class);
+
         if ($this->app()->isCacheGlobal() === true) {
             GlobalManager::set($this->app()->getGlobalCacheKey(), $cache);
         }
+
         return $this->cache = $cache;
     }
 
@@ -131,14 +194,24 @@ abstract class AbstractApp extends Container
         return $this->appConfig->isCacheGlobal();
     }
 
-    protected function loadSession(): Object
+    protected function loadSession(): SessionInterface
     {
-        $this->bindParams(SessionEnvironment::class, $this->appConfig->getSession());
+        // Set global parameters for session configuration
+        $this->setGlobalParameters([
+            'sessionConfig' => $this->appConfig->getSession(),
+            'sessionIdentifier' => $this->appConfig->getSession()['session_name'],
+        ]);
+
+        // Bind session storage without specifying parameter names
         $this->bind(SessionStorageInterface::class, $this->appConfig->getSessionDriver());
-        $this->session = $this->get(SessionInterface::class, [$this->appConfig->getSession()['session_name']]);
+
+        // Resolve Session
+        $this->session = $this->resolve(SessionInterface::class);
+
         if ($this->isSessionGlobal() === true) {
             GlobalManager::set($this->app()->getGlobalSessionKey(), $this->session);
         }
+
         return $this->session;
     }
 
@@ -155,6 +228,6 @@ abstract class AbstractApp extends Container
     protected function loadCookies()
     {
         $this->bindParams(CookieEnvironment::class, $this->appConfig->getCookie());
-        return $this->cookie = $this->get(CookieInterface::class);
+        return $this->cookie = $this->resolve(CookieInterface::class);
     }
 }

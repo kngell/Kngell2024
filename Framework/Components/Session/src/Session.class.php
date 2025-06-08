@@ -20,7 +20,7 @@ class Session implements SessionInterface
      */
     public function __construct(string|null $sessionIdentifier = null, ?SessionStorageInterface $storage = null)
     {
-        if ($this->isSessionKeyValid($sessionIdentifier) === false) {
+        if ($sessionIdentifier !== null && $this->isSessionKeyValid($sessionIdentifier) === false) {
             throw new SessionInvalidArgumentException($sessionIdentifier . ' is not a valid session name');
         }
         $this->sessionIdentifier = $sessionIdentifier;
