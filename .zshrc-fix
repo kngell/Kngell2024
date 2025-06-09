@@ -1,0 +1,8 @@
+# Fix for zsh prompt
+# Add this to your ~/.zshrc
+
+# Set a proper prompt
+PROMPT='%n@%m:%~$ '
+
+# Or if you prefer a more colorful prompt:
+# PROMPT='%F{green}%n@%m%f:%F{blue}%~%f$ '

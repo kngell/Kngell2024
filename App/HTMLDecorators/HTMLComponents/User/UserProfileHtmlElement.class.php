@@ -10,13 +10,13 @@ class UserProfileHtmlElement extends AbstractHtml
     public function display(): string
     {
         /** @var User */
-        $user = AuthService::currentUser();
+        $user = App::getInstance()->resolve('current.user');
         $html = $this->builder;
         $form = $this->builder->form();
         return $form->method('post')->action('dashboard/edit-prodile')->autocomplete('off')->add(
             $html->tag('div')->class('row')->add(
                 $html->tag('div')->class('col-md-3')->add(
-                    $html->tag('img')->src($this->media($user->getMedia()))->class('profile-photo w_100_p'),
+                    $html->tag('img')->src($this->media($user ? $user->getMedia() : '#'))->class('profile-photo w_100_p'),
                     $form->input('file')->class('mt_10')->name('media')
                 ),
                 $html->tag('div')->class('col-md-9')->add(

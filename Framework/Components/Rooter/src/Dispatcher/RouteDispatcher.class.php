@@ -6,13 +6,21 @@ readonly class RouteDispatcher
 {
     private const GLOBAL_MIDDLEWARES = [
         'previousPage',
+        'auth',
         'grantAccess',
         'crsfToken',
     ];
 
+    /**
+     * Defines the order of middleware execution.
+     *
+     * Note: 'auth' must come first since other auth-related
+     * middlewares depend on it to set the user in the container.
+     */
     private const MIDDLEWARE_ORDER = [
-        'requireLogin',
-        'grantAccess',
+        'auth',           // Authentication (must be first)
+        'requireLogin',   // Login enforcement
+        'grantAccess',    // Authorization
     ];
 
     public function __construct(
@@ -75,10 +83,17 @@ readonly class RouteDispatcher
 
     /**
      * Resolves and instantiates all middlewares for the route.
+     *
+     * Ensures proper dependency injection and ordering to respect
+     * the new authentication/authorization flow.
      */
     private function resolveMiddlewares(RouteInfo $route, App $app): array
     {
+        // Get middleware names in the correct execution order
         $middlewareNames = $this->getOrderedMiddlewares($route);
+
+        // Ensure auth middleware is always first if other auth-related middlewares are present
+        $this->ensureAuthMiddlewareFirst($middlewareNames);
 
         return array_map(function ($name) use ($app, $route) {
             if (! array_key_exists($name, $this->middlewares)) {
@@ -88,7 +103,7 @@ readonly class RouteDispatcher
             $middlewareClass = $this->middlewares[$name];
 
             // Use contextual binding for middlewares that need route information
-            if (in_array($name, ['grantAccess', 'requireLogin'], true)) {
+            if (in_array($name, ['auth', 'grantAccess', 'requireLogin'], true)) {
                 // Create a factory binding for this specific middleware instance
                 $factoryKey = "middleware.{$name}.{$route->getController()}";
 
@@ -102,6 +117,35 @@ readonly class RouteDispatcher
             // For regular middlewares, use standard resolution
             return $app->resolve($middlewareClass);
         }, $middlewareNames);
+    }
+
+    /**
+     * Ensures the auth middleware is always processed first if authentication-related
+     * middlewares are present in the middleware chain.
+     */
+    private function ensureAuthMiddlewareFirst(array &$middlewareNames): void
+    {
+        // If we have requireLogin or grantAccess but no auth, add auth first
+        $hasAuthRelatedMiddleware = in_array('requireLogin', $middlewareNames) ||
+                                   in_array('grantAccess', $middlewareNames);
+
+        $hasAuthMiddleware = in_array('auth', $middlewareNames);
+
+        if ($hasAuthRelatedMiddleware && ! $hasAuthMiddleware) {
+            // Add auth middleware at the beginning
+            array_unshift($middlewareNames, 'auth');
+        } elseif ($hasAuthMiddleware && $hasAuthRelatedMiddleware) {
+            // If auth middleware exists but is not first, move it to the front
+            $authIndex = array_search('auth', $middlewareNames);
+            if ($authIndex > 0) {
+                // Remove auth from its current position
+                unset($middlewareNames[$authIndex]);
+                // Re-index the array
+                $middlewareNames = array_values($middlewareNames);
+                // Add auth at the beginning
+                array_unshift($middlewareNames, 'auth');
+            }
+        }
     }
 
     /**

@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 class ProductsController extends Controller
 {
     private ProductModel $product;
@@ -12,14 +13,10 @@ class ProductsController extends Controller
 
     public function index() : string
     {
-        $products = $this->product->all();
-        $total = $this->product->getTotal();
         $this->pageTitle('Products');
-        return $this->render('products/index', [
-            'products' => $products->getResults()->all(),
-            'total' => $total,
-
-        ]);
+        $products = new ProductsDecorator($this);
+        $products = new UserCartItemDecorator($products);
+        return $this->render('products/index', $products->page());
     }
 
     public function show(string $id) : string

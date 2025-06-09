@@ -74,4 +74,70 @@ class Token extends RandomStringGenerator implements TokenInterface
     {
         return hash_hmac('sha256', $this->token, CSRF_TOKEN_SECRET);
     }
+
+    /**
+     * Verify an authentication token.
+     *
+     * This method verifies if the provided token is valid and not expired.
+     * Format of token: [hash].[token].[expiry]
+     *
+     * @param string $authToken The authentication token to verify
+     * @return bool True if token is valid, false otherwise
+     */
+    public function verify(string $authToken): bool
+    {
+        try {
+            // Split the token parts
+            $parts = explode('.', $this->urlSafeDecode($authToken));
+
+            if (count($parts) !== 3) {
+                return false; // Invalid token format
+            }
+
+            [$receivedHash, $tokenValue, $expiry] = $parts;
+
+            // Check if token has expired
+            if ((int) $expiry < time()) {
+                return false; // Token expired
+            }
+
+            // Create a new token with the extracted value
+            $this->token = $tokenValue;
+
+            // Compute the expected hash
+            $expectedHash = hash_hmac('sha256', $tokenValue . $expiry, CSRF_TOKEN_SECRET, true);
+
+            // Verify hash matches
+            return hash_equals($expectedHash, $receivedHash);
+        } catch (Exception $e) {
+            // Any exception means verification failed
+            return false;
+        }
+    }
+
+    /**
+     * Generate an authentication token for API usage.
+     *
+     * @param int $expiry Expiration time in seconds from now (default: 1 hour)
+     * @return string The encoded authentication token
+     */
+    public function generateAuthToken(int $expiry = 3600): string
+    {
+        // Generate token if not already set
+        if (empty($this->token)) {
+            $this->token = $this->generate();
+        }
+
+        // Calculate expiration time
+        $expiryTime = time() + $expiry;
+
+        // Create a hash of the token and expiry time
+        $hash = hash_hmac('sha256', $this->token . $expiryTime, CSRF_TOKEN_SECRET, true);
+
+        // Combine hash, token, and expiry into a single string
+        $tokenData = $hash . '.' . $this->token . '.' . $expiryTime;
+
+        // Return URL-safe encoded token
+        return $this->urlSafeEncode($tokenData);
+    }
 }

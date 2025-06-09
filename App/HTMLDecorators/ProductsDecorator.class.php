@@ -12,7 +12,7 @@ class ProductsDecorator extends AbstractHtmlDecorator
     public function page(): array
     {
         /** @var ProductModel */
-        $model = $this->controller->getCurrentModel();
+        $model = $this->getModel(ProductModel::class);
         $products = $model->getProducts();
         $productList = new ProductsHtmlElement($products, $this->builder);
         return array_merge(

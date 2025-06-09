@@ -161,6 +161,11 @@ readonly class Request
         if ($this->getCookies()->get($key)) {
             return $this->getCookies()->get($key);
         }
+        $key = ucfirst(strtolower($key));
+        if ($this->getHeaders()->get($key)) {
+            return $this->getCookies()->get($key);
+        }
+
         return null;
     }
 }

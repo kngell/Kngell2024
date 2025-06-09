@@ -150,7 +150,7 @@ class Container implements ContainerInterface
         $abstract = $this->getAlias($abstract);
 
         // Return existing singleton instance
-        if (isset($this->instances[$abstract])) {
+        if (array_key_exists($abstract, $this->instances)) {
             return $this->instances[$abstract];
         }
 

@@ -211,7 +211,7 @@ class User extends Entity
      */
     public function getMedia(): ?string
     {
-        return $this->media;
+        return $this->media ?? null;
     }
 
     /**

@@ -77,7 +77,6 @@ class UserCartItemDecorator extends AbstractHtmlDecorator
             return $this->userCartItems = $userItems;
         }
         // Logic to get the user-specific item count from the cart
-        $s = $_SESSION;
         if ($this->session->exists('cart')) {
             $cartItems = $this->session->get('cart');
             $this->nbItems = count($cartItems);

@@ -2,159 +2,181 @@
 
 declare(strict_types=1);
 
+/**
+ * GrantControllerAccessMiddleware - Handles authorization based on ACL.
+ *
+ * This middleware is responsible for:
+ * 1. Determining user ACL groups
+ * 2. Checking if user has permission to access specific controllers and methods
+ * 3. Redirecting or denying access when appropriate
+ */
 class GrantControllerAccessMiddleware implements MiddlewareInterface
 {
     private array $acl;
 
-    public function __construct(private RouteInfo $route, private SessionInterface $session, private AclGroupModel $aclGroup, private FlashInterface $flash)
-    {
+    public function __construct(
+        private RouteInfo $route,
+        private SessionInterface $session,
+        private AclGroupModel $aclGroup,
+        private FlashInterface $flash
+    ) {
         $this->acl = json_decode(file_get_contents(APP . 'acl.json'), true);
     }
 
     public function process(Request $request, RequestHandlerInterface $next): Response|string
     {
-        $current_user_acls = ['Guest'];
-        // get User Acls group if they exists
-        [$current_user_acls,$user] = $this->getUserAcls($current_user_acls);
-        // Check access granted
-        $results = $this->checkAccessGranted($current_user_acls, $request, $user);
+        // Get current user from container (set by AuthMiddleware)
+        $user = App::getInstance()->resolve('current.user');
 
-        if ($results instanceof Response) {
-            return $results;
+        // Determine user's ACL groups
+        $userAcls = $this->determineUserAcls($user);
+
+        // Check if access is granted
+        $accessStatus = $this->evaluateAccess($userAcls, $request, $user);
+
+        if ($accessStatus instanceof Response) {
+            return $accessStatus;
         }
-        if (is_bool($results) && ! $results) {
+
+        if ($accessStatus === false) {
             return new RedirectResponse('/_restrict');
         }
+
         return $next->handle($request);
     }
 
-    private function checkAccessGranted(array $current_user_acls, Request $request, ?User $user) : bool|Response
+    /**
+     * Determine all ACL groups applicable to the current user.
+     */
+    private function determineUserAcls(?User $user): array
     {
-        $grantAccess = false;
-        foreach ($current_user_acls as $level) {
+        // Start with Guest role by default
+        $userAcls = ['Guest'];
+
+        if ($user) {
+            // Add LoggedIn role for all authenticated users
+            $userAcls[] = 'LoggedIn';
+
+            // Add user-specific roles from database
+            $aclGroups = $this->aclGroup->getUserAuthorization($user);
+            foreach ($aclGroups as $group) {
+                $userAcls[] = $group;
+            }
+        }
+
+        return $userAcls;
+    }
+
+    /**
+     * Evaluate if user has access to the requested controller/method.
+     */
+    private function evaluateAccess(array $userAcls, Request $request, ?User $user): bool|Response
+    {
+        // Check allowed access first
+        $accessGranted = $this->checkAllowedAccess($userAcls);
+
+        // If access is granted, check if it's explicitly denied
+        if ($accessGranted) {
+            $accessGranted = ! $this->checkExplicitlyDenied($userAcls);
+        }
+
+        // Handle special cases for access decision
+        return $accessGranted ? true : $this->handleAccessDenied($request, $user);
+    }
+
+    /**
+     * Check if user has explicitly allowed access based on ACL.
+     */
+    private function checkAllowedAccess(array $userAcls): bool
+    {
+        $controller = $this->route->getController();
+        $method = $this->route->getMethod()->getName();
+
+        // If requireLogin middleware is specified, we defer access control to it
+        if (isset($this->route->getRouteParams()['middleware']) &&
+            str_contains($this->route->getRouteParams()['middleware'], 'requireLogin')) {
+            return true;
+        }
+
+        // Check if any of the user's ACL groups allow access
+        $allowAccess = false;
+        foreach ($userAcls as $level) {
             if (! array_key_exists($level, $this->acl)) {
+                $allowAccess = true;
+            }
+            if (! array_key_exists($controller, $this->acl[$level])) {
+                $allowAccess = true;
                 continue;
             }
-            if (! array_key_exists($this->route->getController(), $this->acl[$level])) {
+
+            $allowedMethods = $this->acl[$level][$controller];
+            if (in_array($method, $allowedMethods) || in_array('*', $allowedMethods)) {
+                $allowAccess = true;
+            }
+        }
+
+        return $allowAccess;
+    }
+
+    /**
+     * Check if access is explicitly denied based on ACL.
+     */
+    private function checkExplicitlyDenied(array $userAcls): bool
+    {
+        $controller = $this->route->getController();
+        $method = $this->route->getMethod()->getName();
+        $accessDenied = true;
+
+        foreach ($userAcls as $level) {
+            $denied = $this->getDeniedControllers($level);
+            if (empty($denid) || ! array_key_exists($controller, $denied)) {
+                $accessDenied = false;
                 continue;
             }
-            if (array_key_exists('middleware', $this->route->getRouteParams())) {
-                $middlewares = $this->route->getRouteParams()['middleware'];
-                if (str_contains($middlewares, 'requireLogin')) {
-                    return true;
-                }
-            }
 
-            // Check if the controller and method are allowed for this ACL level
-            $allowedMethods = $this->acl[$level][$this->route->getController()];
-
-            if (in_array($this->route->getMethod()->getName(), $allowedMethods) || in_array('*', $allowedMethods)) {
-                $grantAccess = true;
-                break; // Access granted, no need to check other levels
+            if (array_key_exists($method, $denied[$controller]) || in_array('*', $denied[$controller])) {
+                $accessDenied = true; // Access explicitly denied
             }
         }
-        return $this->checkDeniedAccess($current_user_acls, $request, $user, $grantAccess);
+
+        return $accessDenied;
     }
 
-    private function checkDeniedAccess(array $current_user_acls, Request $request, ?User $user, bool $grantAccess) : bool|Response
+    /**
+     * Handle denied access with special cases.
+     */
+    private function handleAccessDenied(Request $request, ?User $user): bool|Response
     {
-        // Only check denied access if access was initially granted
-        if ($grantAccess) {
-            foreach ($current_user_acls as $level) {
-                $denied = $this->getDeniedControllers($level);
-                if (empty($denied)) {
-                    continue;
-                }
-                if (array_key_exists($this->route->getController(), $denied)) {
-                    if (in_array($this->route->getMethod()->getName(), $denied[$this->route->getController()]) || in_array('*', $denied[$this->route->getController()])) {
-                        $grantAccess = false;
-                        break; // Access denied, no need to check other levels
-                    }
-                }
-            }
-        }
-        return $grantAccess ? true : $this->handleDeniedAccess($request, $user);
-    }
+        $requestUri = $request->getRequestedUri();
 
-    private function handleDeniedAccess(Request $request, ?User $user) : bool|Response
-    {
-        if ($user && $request->get('request_uri') === '/login') {
+        // Special case: Authenticated user on login page should be redirected
+        if ($user && $requestUri === '/login') {
             $previousUrl = $this->session->get('previous_url');
             $this->session->delete('previous_url');
-            return new RedirectResponse($previousUrl);
+            return new RedirectResponse($previousUrl ?? '/');
         }
-        if ($user && $request->get('request_uri') === '/logout') {
+
+        // Always allow logout for authenticated users
+        if ($user && $requestUri === '/logout') {
             return true;
         }
-        // Allow access to edit pages
-        if (str_contains($request->get('request_uri'), '/edit')) {
+
+        // Always allow access to login and edit pages
+        if (str_contains($requestUri, '/login') || str_contains($requestUri, '/edit')) {
             return true;
         }
-        // Allow access to login page
-        if (str_contains($request->get('request_uri'), '/login')) {
-            return true;
-        }
+
         return false;
     }
 
-    private function getDeniedControllers(string $level) : array
+    /**
+     * Get list of explicitly denied controllers for an ACL level.
+     */
+    private function getDeniedControllers(string $level): array
     {
-        if (array_key_exists($level, $this->acl) && array_key_exists('denied', $this->acl[$level])) {
+        if (isset($this->acl[$level]['denied'])) {
             return $this->acl[$level]['denied'];
         }
         return [];
     }
-
-    private function getUserAcls(array $current_user_acls) : array
-    {
-        if ($this->session->exists(CURRENT_USER_SESSION_NAME)) {
-            $current_user_acls[] = 'LoggedIn';
-            $user = AuthService::currentUser();
-            $aclGroup = $this->aclGroup->getUserAuthorization($user);
-            foreach ($aclGroup as $a) {
-                $current_user_acls[] = $a;
-            }
-        }
-        return [$current_user_acls, $user ?? null];
-    }
-    // private function menuItem(User|null $user) : array
-    // {
-    //     $menuItems = json_decode(file_get_contents(FileManager::get(APP, 'menu_acl.json')), true);
-    //     $menuItems = $this->verifyAccount($menuItems, $user);
-    //     $menuAry = [];
-    //     foreach ($menuItems as $menuItem => $link) {
-    //         if (is_array($link)) {
-    //             $subMenu = [];
-    //             foreach ($link as $subItem => $subLink) {
-    //                 if ($subItem == 'separator' && ! empty($subMenu)) {
-    //                     $subMenu[$subItem] = '';
-    //                     continue;
-    //                 }
-    //                 if ($finalVal = $this->getlink($subLink)) {
-    //                     $subMenu[$subItem] = $finalVal;
-    //                 }
-    //             }
-    //             if (! empty($subMenu)) {
-    //                 $menuAry[$menuItem] = $subMenu;
-    //             }
-    //         } else {
-    //             if ($finalVal = $this->getlink($link)) {
-    //                 $menuAry[$menuItem] = $finalVal;
-    //             }
-    //         }
-    //     }
-    //     return $menuAry;
-    // }
-
-    // private function getLink(string $link) : bool|string
-    // {
-    //     if (preg_match('/https?:\/\//', $link) == 1) {
-    //         return $link;
-    //     } else {
-    //         if ($this->grantAccess()) {
-    //             return $link;
-    //         }
-    //         return false;
-    //     }
-    // }
 }

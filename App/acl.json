@@ -25,7 +25,6 @@
     "PaymentsController": ["index", "methods"],
     "ApiController": ["public"],
     "PaypalController": ["webhook"],
-    "CartController": ["view", "add", "remove", "count"],
     "CheckoutController": ["index", "calculate"]
   },
   "LoggedIn": {

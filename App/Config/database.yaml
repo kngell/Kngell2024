@@ -4,6 +4,6 @@ driver:
     dbUser: user001
     dbPass: kngell169kngellBT170kngell&169
   pgsql:
-    dsn: mysql:host=localhost;dbname=kngellshopping;charset=utf8mb4
+    dsn: mysql:host=localhost;dbname=kngell_shopping;charset=utf8mb4
     dbUser: root
     dbPass: ""

@@ -1,6 +1,6 @@
 {
   "Home": "/",
-  "Shop": "/paypal/product",
+  "Shop": "/products/index",
   "Blog": "/post/index",
   "About": "/about",
   "Contact": "/contact",

@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+use DateTimeImmutable;
+use Framework\Components\Container\Attributes\Inject;
+use User;
+
 class BlogPostHTMLElement extends AbstractHtml
 {
     /** @var Post[] */
@@ -12,7 +16,6 @@ class BlogPostHTMLElement extends AbstractHtml
     private Paginator $paginator;
     private HtmlBuilder $builder;
 
-    //private TokenInterface $token, private HtmlBuilder $builder
     /**
      * @param array $posts
      * @param HtmlBuilder $builder
@@ -24,7 +27,8 @@ class BlogPostHTMLElement extends AbstractHtml
         $this->builder = $builder;
     }
 
-    public function display(): string
+    #[Inject]
+    public function display(#[Inject('current.user')] ?User $currentUser = null): string
     {
         $html = $this->builder;
         $postsHtml = [];
@@ -34,7 +38,7 @@ class BlogPostHTMLElement extends AbstractHtml
             $postsHtml[] = $html->tag('div')->class(...$this->wrapperClass)->style($this->wrapperStyle)->add(
                 $html->tag('div')->class('card-body')->add(
                     $html->tag('h3')->content($this->htmlDecode($post->getTitle(), ENT_QUOTES)),
-                    $html->tag('p')->content($this->getContentOverview($this->htmlDecode($post->getTitle()))),
+                    $html->tag('p')->content($this->getContentOverview($this->htmlDecode($post->getContent()))),
                     $html->tag('p')->content('Publié le ' . $this->createdAt($post)),
                     $html->tag('img')->src($this->media($post->getMedia())),
                     $html->tag('a')->href("/post/show/{$post->getPostId()}")->class('btn btn-primary')->content('Show Post'),
@@ -63,8 +67,8 @@ class BlogPostHTMLElement extends AbstractHtml
         return substr(strip_tags($this->htmlDecode($content)), 0, 1000) . '...';
     }
 
-    private function htmlDecode(string|null $str) : string
+    private function htmlDecode(string|null $str, int $flags = ENT_COMPAT) : string
     {
-        return ! empty($str) ? htmlspecialchars_decode(html_entity_decode($str), ENT_QUOTES) : '';
+        return ! empty($str) ? htmlspecialchars_decode(html_entity_decode($str), $flags) : '';
     }
 }
