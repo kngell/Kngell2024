@@ -13,6 +13,7 @@ class PostController extends Controller
 
     public function index(int|null $currentPage = null) : Response
     {
+        $this->pageTitle('Blog');
         $blogPost = new BlogPostDecorator($this, self::RECORDS_PER_PAGE, $currentPage);
         return $this->response('index', $blogPost->page());
     }

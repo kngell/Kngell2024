@@ -1,0 +1,141 @@
+@use "css/frontend/ecommerce/abstracts/mixins" as *;
+
+// Load Nunito font family
+@include load-font-family(
+  "Nunito",
+  "fonts/Nunito/static",
+  (
+    (weight: 200, style: normal, filename: "Nunito-ExtraLight"),
+    (weight: 200, style: italic, filename: "Nunito-ExtraLightItalic"),
+    (weight: 300, style: normal, filename: "Nunito-Light"),
+    (weight: 300, style: italic, filename: "Nunito-LightItalic"),
+    (weight: 400, style: normal, filename: "Nunito-Regular"),
+    (weight: 400, style: italic, filename: "Nunito-Italic"),
+    (weight: 500, style: normal, filename: "Nunito-Medium"),
+    (weight: 500, style: italic, filename: "Nunito-MediumItalic"),
+    (weight: 600, style: normal, filename: "Nunito-SemiBold"),
+    (weight: 600, style: italic, filename: "Nunito-SemiBoldItalic"),
+    (weight: 700, style: normal, filename: "Nunito-Bold"),
+    (weight: 700, style: italic, filename: "Nunito-BoldItalic"),
+    (weight: 800, style: normal, filename: "Nunito-ExtraBold"),
+    (weight: 800, style: italic, filename: "Nunito-ExtraBoldItalic"),
+    (weight: 900, style: normal, filename: "Nunito-Black"),
+    (weight: 900, style: italic, filename: "Nunito-BlackItalic")
+  )
+);
+
+// Load Josefin Sans font family
+@include load-font-family(
+  "Josefin Sans",
+  "fonts/Josefin_Sans/static",
+  (
+    (weight: 100, style: normal, filename: "JosefinSans-Thin"),
+    (weight: 100, style: italic, filename: "JosefinSans-ThinItalic"),
+    (weight: 200, style: normal, filename: "JosefinSans-ExtraLight"),
+    (weight: 200, style: italic, filename: "JosefinSans-ExtraLightItalic"),
+    (weight: 300, style: normal, filename: "JosefinSans-Light"),
+    (weight: 300, style: italic, filename: "JosefinSans-LightItalic"),
+    (weight: 400, style: normal, filename: "JosefinSans-Regular"),
+    (weight: 400, style: italic, filename: "JosefinSans-Italic"),
+    (weight: 500, style: normal, filename: "JosefinSans-Medium"),
+    (weight: 500, style: italic, filename: "JosefinSans-MediumItalic"),
+    (weight: 600, style: normal, filename: "JosefinSans-SemiBold"),
+    (weight: 600, style: italic, filename: "JosefinSans-SemiBoldItalic"),
+    (weight: 700, style: normal, filename: "JosefinSans-Bold"),
+    (weight: 700, style: italic, filename: "JosefinSans-BoldItalic")
+  )
+);
+
+// Load Dancing Script font family
+@include load-font-family(
+  "Dancing Script",
+  "fonts/Dancing_Script/static",
+  (
+    (weight: 400, style: normal, filename: "DancingScript-Regular"),
+    (weight: 500, style: normal, filename: "DancingScript-Medium"),
+    (weight: 600, style: normal, filename: "DancingScript-SemiBold"),
+    (weight: 700, style: normal, filename: "DancingScript-Bold")
+  )
+);
+// Load SF Pro
+@include load-font-family(
+  "SF Pro Display",
+  "fonts/SF Pro",
+  (
+    (weight: 400, style: normal, filename: "SF-Pro"),
+    (weight: 400, style: italic, filename: "SF-Pro-Italic")
+  )
+);
+
+// Load SF Pro Display OTF fonts
+@include font-face-otf(
+  "SF Pro Display",
+  "fonts/SF Pro/SF-Pro-Display-Thin",
+  200,
+  normal
+);
+
+@include font-face-otf(
+  "SF Pro Display",
+  "fonts/SF Pro/SF-Pro-Display-Light",
+  300,
+  normal
+);
+
+@include font-face-otf(
+  "SF Pro Display",
+  "fonts/SF Pro/SF-Pro-Display-Regular",
+  400,
+  normal
+);
+@include font-face-otf(
+  "SF Pro Display",
+  "fonts/SF Pro/SF-Pro-Display-Medium",
+  500,
+  normal
+);
+
+// Alternative: Load variable fonts (more efficient for modern browsers)
+// Uncomment these if you prefer to use variable fonts instead of static fonts
+
+@include font-face-ttf(
+  "Figtree",
+  "fonts/Figtree/Figtree-VariableFont_wght",
+  100 900,
+  normal
+);
+// Note: Roboto variable font has comma in filename which causes webpack issues
+@include font-face-ttf(
+  "Roboto",
+  "fonts/Roboto/Roboto-VariableFont_wdth,wght",
+  100 900,
+  normal
+);
+
+// @include font-face-ttf(
+//   "Nunito Variable",
+//   "../../../fonts/Nunito/Nunito-Italic-VariableFont_wght",
+//   100 900,
+//   italic
+// )
+
+// @include font-face-ttf(
+//   "Josefin Sans Variable",
+//   "../../../fonts/Josefin_Sans/JosefinSans-VariableFont_wght",
+//   100 700,
+//   normal
+// )
+
+// @include font-face-ttf(
+//   "Josefin Sans Variable",
+//   "../../../fonts/Josefin_Sans/JosefinSans-Italic-VariableFont_wght",
+//   100 700,
+//   italic
+// )
+
+// @include font-face-ttf(
+//   "Dancing Script Variable",
+//   "../../../fonts/Dancing_Script/DancingScript-VariableFont_wght",
+//   400 700,
+//   normal
+// )

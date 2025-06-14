@@ -120,6 +120,26 @@ class View implements ViewInterface
         return $this->viewEnv->getJs($path);
     }
 
+    /**
+     * Generate URL for assets like images, SVGs, etc.
+     *
+     * @param string $path Relative path to the asset
+     * @return string Full URL to the asset
+     */
+    private function asset(string $path) : string
+    {
+        // Remove leading slash if present
+        $path = ltrim($path, '/');
+
+        // Check if path already contains the assets directory
+        if (! str_starts_with($path, 'assets/')) {
+            $path = 'assets/' . $path;
+        }
+
+        // Return full URL to the asset
+        return HOST . '/' . $path;
+    }
+
     private function start(string $type) : void
     {
         $this->_outputBuffer = $type;

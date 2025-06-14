@@ -1,0 +1,31 @@
+@use "css/frontend/ecommerce/abstracts" as *;
+/*---------------- BUTONS ----------------*/
+.btn {
+  display: inline-flex;
+  padding: 1.6rem 5.6rem;
+  justify-content: center;
+  align-items: center;
+  border-radius: 0.6rem;
+  text-align: center;
+  font-family: "SF Pro Display";
+  font-size: 1.6rem;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 1.5; /* 150% */
+  text-decoration: none;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  &-outline-white {
+    border: 1px solid $white;
+    color: $white;
+    background-color: transparent;
+    &:hover {
+      background: $banner-text-white;
+      color: $banner-bg-primary;
+    }
+    :focus {
+      outline: 2px solid $banner-text-white;
+      outline-offset: 2px;
+    }
+  }
+}

@@ -1,0 +1,174 @@
+@use "sass:map";
+@use "variables" as *;
+
+// Responsive breakpoint manager
+// Creates media queries for different screen sizes
+@mixin respond-below($breakpoint) {
+  @if map-has-key($breakpoints, $breakpoint) {
+    $breakpoint-value: map-get($breakpoints, $breakpoint);
+    @media (max-width: $breakpoint-value) {
+      @content;
+    }
+  } @else {
+    @warn "Invalid breakpoint: #{$breakpoint}. Available breakpoints are: #{map-keys($breakpoints)}";
+  }
+}
+
+@mixin respond-above($breakpoint) {
+  @if map-has-key($breakpoints, $breakpoint) {
+    $breakpoint-value: map-get($breakpoints, $breakpoint);
+    @media (min-width: $breakpoint-value) {
+      @content;
+    }
+  } @else {
+    @warn "Invalid breakpoint: #{$breakpoint}. Available breakpoints are: #{map-keys($breakpoints)}";
+  }
+}
+
+@mixin respond-between($lower, $upper) {
+  @if map-has-key($breakpoints, $lower) and map-has-key($breakpoints, $upper) {
+    $lower-value: map-get($breakpoints, $lower);
+    $upper-value: map-get($breakpoints, $upper);
+    @media (min-width: $lower-value) and (max-width: $upper-value) {
+      @content;
+    }
+  } @else {
+    @if not map-has-key($breakpoints, $lower) {
+      @warn "Invalid lower breakpoint: #{$lower}. Available breakpoints are: #{map-keys($breakpoints)}";
+    }
+    @if not map-has-key($breakpoints, $upper) {
+      @warn "Invalid upper breakpoint: #{$upper}. Available breakpoints are: #{map-keys($breakpoints)}";
+    }
+  }
+}
+//Flex center
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+// transition
+@mixin transition($property: all, $duration: 0.2s, $timing: ease) {
+  transition: $property $duration $timing;
+}
+
+@mixin focus-outline {
+  outline: 2px solid map-get($colors-ecommerce, focus);
+  outline-offset: 2px;
+}
+
+@mixin button-reset {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+@mixin hover-bg {
+  &:hover {
+    background-color: map-get($colors, gray-100);
+  }
+}
+
+@mixin responsive($breakpoint) {
+  @if map-has-key($breakpoints-short, $breakpoint) {
+    @media (min-width: map-get($breakpoints-short, $breakpoint)) {
+      @content;
+    }
+  }
+}
+
+@mixin max-responsive($breakpoint) {
+  @if map-has-key($breakpoints-short, $breakpoint) {
+    @media (max-width: map-get($breakpoints-short, $breakpoint)) {
+      @content;
+    }
+  }
+}
+
+// Font face mixin for generating font declarations from local files
+// Generates font-face declarations with multiple format support
+@mixin font-face(
+  $font-family,
+  $font-path,
+  $font-weight: normal,
+  $font-style: normal,
+  $font-display: swap
+) {
+  @font-face {
+    font-family: $font-family;
+    src:
+      url("#{$font-path}.woff2") format("woff2"),
+      url("#{$font-path}.woff") format("woff"),
+      url("#{$font-path}.ttf") format("truetype"),
+      url("#{$font-path}.otf") format("truetype");
+    font-weight: $font-weight;
+    font-style: $font-style;
+    font-display: $font-display;
+  }
+}
+
+// Simplified font-face mixin for TTF only (since your fonts are in TTF format)
+@mixin font-face-ttf(
+  $font-family,
+  $font-path,
+  $font-weight: normal,
+  $font-style: normal,
+  $font-display: swap
+) {
+  @font-face {
+    font-family: $font-family;
+    src: url("#{$font-path}.ttf") format("truetype");
+    font-weight: $font-weight;
+    font-style: $font-style;
+    font-display: $font-display;
+  }
+}
+
+// OTF font-face mixin for OTF only
+@mixin font-face-otf(
+  $font-family,
+  $font-path,
+  $font-weight: normal,
+  $font-style: normal,
+  $font-display: swap
+) {
+  @font-face {
+    font-family: $font-family;
+    src: url("#{$font-path}.otf") format("opentype");
+    font-weight: $font-weight;
+    font-style: $font-style;
+    font-display: $font-display;
+  }
+}
+
+// Bulk font loader mixin - generates multiple font-face declarations
+@mixin load-font-family($font-family, $base-path, $variants: ()) {
+  @each $variant in $variants {
+    $weight: map-get($variant, weight);
+    $style: map-get($variant, style);
+    $filename: map-get($variant, filename);
+
+    @include font-face-ttf(
+      $font-family,
+      "#{$base-path}/#{$filename}",
+      $weight,
+      $style
+    );
+  }
+}
+
+// Bulk OTF font loader mixin
+@mixin load-font-family-otf($font-family, $base-path, $variants: ()) {
+  @each $variant in $variants {
+    $weight: map-get($variant, weight);
+    $style: map-get($variant, style);
+    $filename: map-get($variant, filename);
+
+    @include font-face-otf(
+      $font-family,
+      "#{$base-path}/#{$filename}",
+      $weight,
+      $style
+    );
+  }
+}

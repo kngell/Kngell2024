@@ -1,0 +1,24 @@
+@use "sass:map";
+@use "css/frontend/ecommerce/abstracts" as *;
+@use "animation" as *;
+
+/*--------------------- BASE ------------------*/
+*,
+*::after,
+*::before {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+html {
+  font-size: $base-font-size;
+}
+body {
+  box-sizing: border-box;
+  font-family: unquote(map-get($font, family));
+  background-color: map-get($colors-ecommerce, white);
+  font-size: $paragraph-size;
+  line-height: 1.7;
+  font-weight: 400;
+  min-height: 100vh;
+}

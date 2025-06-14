@@ -1,0 +1,44 @@
+// Examples of how to use the font-face mixins
+@use "../abstracts/mixins" as *
+
+// Example 1: Load a single font variant
+// @include font-face-ttf(
+//   "Custom Font",
+//   "/assets/fonts/CustomFont/CustomFont-Regular",
+//   400,
+//   normal
+// )
+
+// Example 2: Load multiple variants of the same font individually
+// @include font-face-ttf("MyFont", "/assets/fonts/MyFont/MyFont-Light", 300, normal)
+// @include font-face-ttf("MyFont", "/assets/fonts/MyFont/MyFont-Regular", 400, normal)
+// @include font-face-ttf("MyFont", "/assets/fonts/MyFont/MyFont-Bold", 700, normal)
+
+// Example 3: Load a font with multiple format support (if you have woff/woff2 files)
+// @include font-face(
+//   "Modern Font",
+//   "/assets/fonts/ModernFont/ModernFont-Regular",
+//   400,
+//   normal,
+//   swap
+// )
+
+// Example 4: Load a variable font
+// @include font-face-ttf(
+//   "Variable Font",
+//   "/assets/fonts/VariableFont/VariableFont-Variable",
+//   100 900,  // weight range for variable fonts
+//   normal
+// )
+
+// Example 5: Bulk load an entire font family
+// @include load-font-family(
+//   "New Font Family",
+//   "/assets/fonts/NewFontFamily",
+//   (
+//     (weight: 300, style: normal, filename: "NewFont-Light"),
+//     (weight: 400, style: normal, filename: "NewFont-Regular"),
+//     (weight: 400, style: italic, filename: "NewFont-Italic"),
+//     (weight: 700, style: normal, filename: "NewFont-Bold")
+//   )
+// )

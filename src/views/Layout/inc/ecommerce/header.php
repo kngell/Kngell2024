@@ -6,54 +6,153 @@
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
    <?= $this->getPageTitle()?>
    <!-- Main style -->
-   <?= $this->css('css/librairies/frontlib') ?? '' ?>
+   <?= $this->css('path') ?? '' ?>
+   <!-- css/librairies/librairy -->
    <!-- Plugins css -->
    <?= $this->css('css/plugins/homeplugins') ?? '' ?>
    <!-- Main style -->
-   <?= $this->css('css/main/main') ?? '' ?>
+   <?= $this->css('css/frontend/main/main') ?? '' ?>
 </head>
 
-<body>
-   <header>
-      <div class="container">
-         <nav class="navbar navbar-expand-lg bg-body-tertiary bg-light py-3 fixed-top">
-            <div class="container-fluid">
-
-               <div class="col">
-                  <a class="navbar-brand" href="#"><img src="#" alt="Logo"></a>
-                  <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                     data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
-                     aria-expanded="false" aria-label="Toggle navigation">
-                     <span class="navbar-toggler-icon"></span>
-                  </button>
-               </div>
-               <div class="col">
-                  <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                     <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                        <li class="nav-item">
-                           <a class="nav-link" href="#">Home</a>
-                        </li>
-                        <li class="nav-item">
-                           <a class="nav-link" href="#">Shop</a>
-                        </li>
-                        <li class="nav-item">
-                           <a class="nav-link" href="#">Blog</a>
-                        </li>
-                        <li class="nav-item">
-                           <a class="nav-link" href="#">Contact Us</a>
-                        </li>
-                        <li class="nav-item">
-                           <i class="fa-solid fa-bag-shopping"></i>
-                           <i class="fa-solid fa-user-large"></i>
-                        </li>
-                     </ul>
-
-                  </div>
-               </div>
-
-
-
-            </div>
+<body class="page-body">
+   <!-- Main Header -->
+   <header class="header">
+      <div class="header-top">
+         <button class="header-top__mobile-toggle js-mobile-menu-toggle">
+            <img src="<?= $this->asset('img/icons/hamburger-menu.svg') ?>" alt="Mobile menu"
+               class="header__mobile-toggle-img">
+         </button>
+         <div class="header-top__logo">
+            <a href="#" class="header-top__logo-link">
+               <img src="<?= $this->asset('img/icons/logo.svg') ?>" alt="Logo" class="image">
+            </a>
+         </div>
+         <form class="header-top__search">
+            <button type="submit" class="header-top__search--btn">
+               <img src="<?= $this->asset('img/icons/search.svg') ?>" alt="Search" class="header__search-icon">
+            </button>
+            <input type="text" name="search" id="header-top__search--input" class="header-top__search--input"
+               placeholder="Search...">
+         </form>
+         <nav class="header-top__nav">
+            <ul class="header-top__nav-list">
+               <li class="header-top__nav-list__item">
+                  <a href="#" class="nav-link active">Home</a>
+               </li>
+               <li class="header-top__nav-list__item">
+                  <a href="#" class="nav-link">About</a>
+               </li>
+               <li class="header-top__nav-list__item">
+                  <a href="#" class="nav-link">Contact</a>
+               </li>
+               <li class="header-top__nav-list__item">
+                  <a href="#" class="nav-link">Blog</a>
+               </li>
+            </ul>
          </nav>
+         <div class="header-top__actions">
+            <a href="#" class="header-top__actions-link header-top__actions--wishlist">
+               <img src="<?= $this->asset('img/icons/wishlist.svg') ?>" alt="Wishlist" class="icon">
+            </a>
+            <a href="#" class="header-top__actions-link header-top__actions--cart" data-count="0">
+               <img src="<?= $this->asset('img/icons/cart.svg') ?>" alt="Cart" class="icon">
+            </a>
+            <a href="#" class="header-top__actions-link header-top__actions--user">
+               <img src="<?= $this->asset('img/icons/user.svg') ?>" alt="User Account" class="icon">
+            </a>
+         </div>
+
+      </div>
+      <div class="header-bottom category-nav">
+         <a href="#" class="category-nav__link">
+            <img src="<?= $this->asset('img/icons/phone.svg') ?>" alt="Phone" class="category-nav__link-icon">
+            <span class="category-nav__link-text">Phone</span>
+         </a>
+         <a href="#" class="category-nav__link">
+            <img src="<?= $this->asset('img/icons/computers.svg') ?>" alt="Computers" class="category-nav__link-icon">
+            <span class="category-nav__link-text">Computers</span>
+         </a>
+         <a href="#" class="category-nav__link">
+            <img src="<?= $this->asset('img/icons/smart-watches.svg') ?>" alt="Smart Watches"
+               class="category-nav__link-icon">
+            <span class="category-nav__link-text">Smart Watches</span>
+         </a>
+         <a href="#" class="category-nav__link">
+            <img src="<?= $this->asset('img/icons/cameras.svg') ?>" alt="Cameras" class="category-nav__link-icon">
+            <span class="category-nav__link-text">Cameras</span>
+         </a>
+         <a href="#" class="category-nav__link">
+            <img src="<?= $this->asset('img/icons/headphones.svg') ?>" alt="Headphones" class="category-nav__link-icon">
+            <span class="category-nav__link-text">Headphones</span>
+         </a>
+         <a href="#" class="category-nav__link">
+            <img src="<?= $this->asset('img/icons/gaming.svg') ?>" alt="Gaming" class="category-nav__link-icon">
+            <span class="category-nav__link-text">Gaming</span>
+         </a>
       </div>
    </header>
+
+   <!-- Mobile Menu (Off-canvas) -->
+   <!-- <div class="mobile-menu">
+      <button class="mobile-menu__close js-mobile-menu-close">
+         <img src="<?= $this->asset('img/icons/close.svg') ?>" alt="Close menu" class="mobile-menu__close-icon">
+      </button>
+      <nav class="mobile-menu__nav">
+         <ul class="mobile-menu__list">
+            <li class="mobile-menu__item">
+               <a href="#" class="mobile-menu__link">Home</a>
+            </li>
+            <li class="mobile-menu__item">
+               <a href="#" class="mobile-menu__link">About</a>
+            </li>
+            <li class="mobile-menu__item">
+               <a href="#" class="mobile-menu__link">Contact</a>
+            </li>
+            <li class="mobile-menu__item">
+               <a href="#" class="mobile-menu__link">Blog</a>
+            </li>
+         </ul>
+      </nav>
+      <div class="mobile-menu__categories">
+         <h3 class="mobile-menu__heading">Categories</h3>
+         <ul class="mobile-menu__list">
+            <li class="mobile-menu__item">
+               <a href="#" class="mobile-menu__link">
+                  <img src="<?= $this->asset('img/icons/phone.svg') ?>" alt="Phone" class="mobile-menu__icon">
+                  Phone
+               </a>
+            </li>
+            <li class="mobile-menu__item">
+               <a href="#" class="mobile-menu__link">
+                  <img src="<?= $this->asset('img/icons/computers.svg') ?>" alt="Computers" class="mobile-menu__icon">
+                  Computers
+               </a>
+            </li>
+            <li class="mobile-menu__item">
+               <a href="#" class="mobile-menu__link">
+                  <img src="<?= $this->asset('img/icons/smart-watches.svg') ?>" alt="Smart Watches"
+                     class="mobile-menu__icon">
+                  Smart Watches
+               </a>
+            </li>
+            <li class="mobile-menu__item">
+               <a href="#" class="mobile-menu__link">
+                  <img src="<?= $this->asset('img/icons/cameras.svg') ?>" alt="Cameras" class="mobile-menu__icon">
+                  Cameras
+               </a>
+            </li>
+            <li class="mobile-menu__item">
+               <a href="#" class="mobile-menu__link">
+                  <img src="<?= $this->asset('img/icons/headphones.svg') ?>" alt="Headphones" class="mobile-menu__icon">
+                  Headphones
+               </a>
+            </li>
+            <li class="mobile-menu__item">
+               <a href="#" class="mobile-menu__link">
+                  <img src="<?= $this->asset('img/icons/gaming.svg') ?>" alt="Gaming" class="mobile-menu__icon">
+                  Gaming
+               </a>
+            </li>
+         </ul>
+      </div>
+   </div> -->

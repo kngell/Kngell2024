@@ -1,0 +1,30 @@
+@use "css/frontend/ecommerce/abstracts" as *;
+
+/****************** LAYOUT AND GRID *******************/
+.page-body {
+  min-block-size: 100dvh;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto 1fr auto;
+  grid-template-areas:
+    "header"
+    "main"
+    "footer";
+
+  // @include respond-below("xl") {
+  //   grid-template-columns: 1fr;
+  //   grid-template-areas:
+  //     "header"
+  //     "main"
+  //     "footer";
+  // }
+}
+.header {
+  grid-area: header;
+}
+.main {
+  grid-area: main;
+}
+.footer {
+  grid-area: footer;
+}

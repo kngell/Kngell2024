@@ -1,0 +1,308 @@
+@use "css/frontend/ecommerce/abstracts" as *;
+/*---------------- HERO ----------------*/
+
+.hero {
+  background: linear-gradient(
+    91deg,
+    $banner-bg-primary 0.64%,
+    $banner-bg-primary 101%
+  );
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  align-content: center;
+  row-gap: 24px;
+  flex-wrap: wrap;
+  padding: 0 16rem;
+  min-height: calc(100vh - 13.6rem);
+
+  // Tablet and large mobile adjustments
+  @include respond-below("xl") {
+    padding: 0 8rem;
+  }
+
+  @include respond-below("lg") {
+    padding: 0 4rem;
+    min-height: calc(100vh - 12rem);
+  }
+
+  @include respond-below("md") {
+    padding: 6rem 2.4rem 4rem 2.4rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4rem;
+    min-height: auto;
+  }
+
+  @include respond-below("sm") {
+    padding: 8.8rem 1.6rem 4rem 1.6rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4.8rem;
+  }
+  &__content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2.4rem;
+    flex: 1 0 0;
+
+    @include respond-below("lg") {
+      gap: 2rem;
+    }
+
+    @include respond-below("md") {
+      align-items: center;
+      gap: 2.8rem;
+      align-self: stretch;
+    }
+
+    @include respond-below("sm") {
+      align-items: center;
+      gap: 3.2rem;
+      align-self: stretch;
+    }
+    &-text {
+      display: flex;
+      flex-direction: column;
+      gap: 2.4rem;
+
+      @include respond-below("lg") {
+        gap: 2rem;
+      }
+
+      @include respond-below("md") {
+        align-items: flex-start;
+        gap: 1.8rem;
+        align-self: stretch;
+      }
+
+      @include respond-below("sm") {
+        align-items: flex-start;
+        gap: 1.6rem;
+        align-self: stretch;
+      }
+      &--titles {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2.4rem;
+        align-self: stretch;
+
+        .title-intro {
+          align-self: stretch;
+          color: $white;
+          font-family: Figtree;
+          font-size: 2.5rem;
+          font-style: normal;
+          font-weight: 600;
+          line-height: 1.28; /* 128% */
+          opacity: 0.4;
+
+          @include respond-below("lg") {
+            font-size: 2.2rem;
+          }
+
+          @include respond-below("md") {
+            font-size: 2rem;
+            text-align: center;
+          }
+
+          @include respond-below("sm") {
+            text-align: center;
+            font-size: 1.8rem;
+          }
+        }
+        .title-main {
+          align-self: stretch;
+          color: $white;
+          font-size: 9.6rem;
+          font-style: normal;
+          font-weight: 200;
+          line-height: 0.75; /* 75% */
+          letter-spacing: -0.96px;
+
+          @include respond-below("xl") {
+            font-size: 8.4rem;
+            letter-spacing: -0.84px;
+          }
+
+          @include respond-below("lg") {
+            font-size: 7.6rem;
+            letter-spacing: -0.76px;
+          }
+
+          @include respond-below("md") {
+            text-align: center;
+            font-size: 6.4rem;
+            line-height: 0.85;
+            letter-spacing: -0.64px;
+          }
+
+          @include respond-below("sm") {
+            text-align: center;
+            font-size: 7.2rem;
+            font-weight: 200;
+            line-height: 1; /* 100% */
+            letter-spacing: -0.72px;
+          }
+          .title-sub {
+            font-weight: 600;
+          }
+        }
+      }
+      &--body {
+        align-self: stretch;
+        color: $banner-text-muted1;
+        font-size: 1.8rem;
+        font-style: normal;
+        font-weight: 500;
+        line-height: 1.33333; /* 133.333% */
+
+        @include respond-below("lg") {
+          font-size: 1.7rem;
+        }
+
+        @include respond-below("md") {
+          text-align: center;
+          font-size: 1.6rem;
+          line-height: 1.375;
+        }
+
+        @include respond-below("sm") {
+          text-align: center;
+          font-size: 1.9rem;
+          line-height: 1.26316; /* 126.316% */
+        }
+      }
+    }
+    &-cta {
+      text-decoration: none;
+    }
+
+    // @include respond-below("sm") {
+    //   align-items: center;
+    //   gap: 3.2rem;
+    //   align-self: stretch;
+    // }
+  }
+  &__img-container {
+    display: flex;
+    width: 40.6rem;
+    padding-top: 7.3rem;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    flex-shrink: 0;
+
+    @include respond-below("xl") {
+      width: 36rem;
+      padding-top: 6rem;
+    }
+
+    @include respond-below("lg") {
+      width: 32rem;
+      padding-top: 4rem;
+    }
+
+    @include respond-below("md") {
+      padding: 0 2rem;
+      width: 100%;
+      max-width: 40rem;
+      height: 32rem;
+      justify-content: center;
+      align-self: center;
+    }
+
+    @include respond-below("sm") {
+      padding: 0 1.1rem;
+      width: 34.3rem;
+      height: 28.9rem;
+      justify-content: center;
+      align-self: stretch;
+    }
+    .image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      border-radius: 2.4rem;
+      box-shadow: 0 2.5rem 5rem -1.2rem rgba(0, 0, 0, 0.5);
+    }
+  }
+}
+
+// Hero responsive utilities
+.hero {
+  // Improved container queries for better responsive behavior
+  container-type: inline-size;
+
+  // Better spacing for different screen sizes
+  @container (max-width: 1200px) {
+    padding-left: 8rem;
+    padding-right: 8rem;
+  }
+
+  @container (max-width: 992px) {
+    padding-left: 4rem;
+    padding-right: 4rem;
+  }
+
+  @container (max-width: 768px) {
+    padding: 6rem 2.4rem 4rem;
+    flex-direction: column;
+  }
+
+  // Enhanced mobile-first approach
+  &__content {
+    // Ensure content doesn't get too wide on large screens
+    max-width: 60rem;
+
+    @include respond-below("lg") {
+      max-width: 50rem;
+    }
+
+    @include respond-below("md") {
+      max-width: none;
+    }
+  }
+
+  // Better image handling for different aspect ratios
+  &__img-container {
+    .image {
+      // Better responsive image handling
+      @include respond-below("md") {
+        aspect-ratio: 4/3;
+        object-fit: cover;
+      }
+
+      @include respond-below("sm") {
+        aspect-ratio: 16/10;
+      }
+    }
+  }
+}
+
+// Animation improvements for mobile
+@media (prefers-reduced-motion: no-preference) {
+  .hero {
+    &__content {
+      animation: fadeInUp 0.8s ease-out;
+    }
+
+    &__img-container {
+      animation: fadeInRight 0.8s ease-out 0.2s both;
+    }
+  }
+}
+
+// High contrast mode support
+@media (prefers-contrast: high) {
+  .hero {
+    .title-intro,
+    .title-main,
+    .hero__content-text--body {
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+    }
+  }
+}

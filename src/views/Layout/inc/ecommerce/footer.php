@@ -1,8 +1,9 @@
-<footer>
+<footer class="container footer">
 
 </footer>
-<?= $this->js('js/librairies/frontlib', 'js') ?>
-<?= $this->js('js/frontend/main/main', 'js')?>
+<?= $this->js('runtime') ?>
+<?= $this->js('js/librairies/librairy') ?>
+<?= $this->js('js/frontend/main/main')?>
 </body>
 
 </html>

@@ -1,0 +1,324 @@
+@use "css/frontend/ecommerce/abstracts" as *;
+
+// Header component-specific styling
+// This file contains styles for specific header components and variations
+// Main layout structure is in layout/_header.scss
+
+// Badge for cart items count
+.header__action--cart {
+  &::after {
+    content: attr(data-count);
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background-color: var(--accent-color, #f44336);
+    color: white;
+    font-size: 11px;
+    font-weight: bold;
+    height: 18px;
+    width: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    opacity: 0;
+    transform: scale(0.5);
+    transition:
+      opacity 0.3s,
+      transform 0.3s;
+  }
+
+  &[data-count]:not([data-count="0"])::after {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+// Enhanced hover effects for header actions
+.header__action {
+  &:hover {
+    .header__action-icon {
+      transform: translateY(-2px);
+    }
+  }
+
+  // Specific action hover effects
+  &--wishlist:hover {
+    color: var(--heart-color, #e91e63);
+  }
+
+  &--cart:hover {
+    color: var(--accent-color, #f44336);
+  }
+
+  &--user:hover {
+    color: var(--primary-color, #4a6cf7);
+  }
+}
+
+// Mobile toggle button animations
+.header__mobile-toggle {
+  &.is-active {
+    .header__mobile-toggle-img {
+      transform: rotate(90deg);
+    }
+  }
+}
+
+// Mobile menu styles
+.header__mobile-menu {
+  position: fixed;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100vh;
+  background: var(--bg-color, #ffffff);
+  z-index: 1000;
+  transition: left 0.3s ease;
+  overflow-y: auto;
+
+  &.is-open {
+    left: 0;
+  }
+
+  &-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2.4rem 1.6rem;
+    border-bottom: 1px solid var(--border-color, #e5e5e5);
+  }
+
+  &-close {
+    @include button-reset;
+    width: 3.2rem;
+    height: 3.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:focus {
+      @include focus-outline;
+    }
+  }
+
+  &-nav {
+    padding: 2.4rem 1.6rem;
+
+    &-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2.4rem;
+    }
+
+    &-item {
+      .nav-link {
+        display: block;
+        padding: 1.2rem 0;
+        color: var(--text-color, #000000);
+        text-decoration: none;
+        font-size: 1.8rem;
+        font-weight: 500;
+        border-bottom: 1px solid var(--border-light, #f0f0f0);
+        transition: color 0.2s ease;
+
+        &:hover,
+        &.active {
+          color: var(--primary-color, #4a6cf7);
+        }
+      }
+    }
+  }
+
+  &-actions {
+    padding: 2.4rem 1.6rem;
+    border-top: 1px solid var(--border-color, #e5e5e5);
+    display: flex;
+    justify-content: center;
+    gap: 3.2rem;
+
+    &-link {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.8rem;
+      text-decoration: none;
+      color: var(--text-muted, #666666);
+      font-size: 1.4rem;
+      transition: color 0.2s ease;
+
+      &:hover {
+        color: var(--primary-color, #4a6cf7);
+      }
+
+      .icon {
+        width: 2.4rem;
+        height: 2.4rem;
+      }
+    }
+  }
+
+  &-search {
+    padding: 1.6rem;
+    border-bottom: 1px solid var(--border-color, #e5e5e5);
+
+    &-form {
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+      padding: 1.2rem 1.6rem;
+      background: var(--search-bg, #f5f5f5);
+      border-radius: 0.8rem;
+    }
+
+    &-input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      font-size: 1.6rem;
+      outline: none;
+
+      &::placeholder {
+        color: var(--text-muted, #999999);
+      }
+    }
+
+    &-btn {
+      @include button-reset;
+      width: 2.4rem;
+      height: 2.4rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+}
+
+// Category nav hover effects and transitions
+.category-nav {
+  &__link {
+    &:hover {
+      .category-nav__icon {
+        transform: translateY(-3px);
+      }
+
+      .category-nav__text {
+        color: var(--primary-color, #4a6cf7);
+      }
+    }
+  }
+}
+
+// Search input focus effects
+.header__search {
+  &:focus-within {
+    border-color: var(--primary-color, #4a6cf7);
+    box-shadow: 0 0 0 2px rgba(74, 108, 247, 0.2);
+  }
+
+  &-input:focus {
+    &::placeholder {
+      opacity: 0.5;
+    }
+  }
+}
+
+// Responsive utility classes
+.show-mobile {
+  display: none !important;
+
+  @include respond-below("md") {
+    display: block !important;
+  }
+}
+
+.hide-mobile {
+  @include respond-below("md") {
+    display: none !important;
+  }
+}
+
+.show-tablet {
+  display: none !important;
+
+  @include respond-between("md", "lg") {
+    display: block !important;
+  }
+}
+
+.hide-tablet {
+  @include respond-between("md", "lg") {
+    display: none !important;
+  }
+}
+
+// Responsive text alignment
+.text-center-mobile {
+  @include respond-below("md") {
+    text-align: center !important;
+  }
+}
+
+.text-left-mobile {
+  @include respond-below("md") {
+    text-align: left !important;
+  }
+}
+
+// Dark mode adjustments
+.dark-mode {
+  .header {
+    &__top {
+      background-color: var(--dark-bg, #1f2937);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    &__nav-link,
+    &__action {
+      color: var(--dark-text, #f3f4f6);
+    }
+
+    &__search {
+      border-color: var(--dark-border, #4b5563);
+      background-color: var(--dark-input-bg, #374151);
+
+      &:focus-within {
+        border-color: var(--primary-color, #4a6cf7);
+        box-shadow: 0 0 0 2px rgba(74, 108, 247, 0.3);
+      }
+    }
+
+    &__search-input {
+      color: var(--dark-text-muted, #9ca3af);
+    }
+
+    &__mobile-toggle-img {
+      filter: brightness(0) invert(1);
+    }
+
+    &__bottom {
+      background-color: var(--dark-bg-secondary, #111827);
+    }
+  }
+
+  .category-nav {
+    &__link {
+      color: var(--dark-text, #f3f4f6);
+    }
+
+    &__text {
+      color: var(--dark-text-muted, #9ca3af);
+    }
+
+    &__link:hover .category-nav__text {
+      color: var(--primary-color, #4a6cf7);
+    }
+
+    &__icon {
+      filter: brightness(0) invert(0.8);
+    }
+  }
+}
