@@ -10,7 +10,7 @@ $this->start('head'); ?>
       <div class="container">
          <article class="p-4">
             <?php
-            if(isset($exception)) {
+            if (isset($exception)) {
                 $errfile = $exception->getFile();
                 $errline = $exception->getLine();
                 $errcode = $code;
@@ -49,8 +49,8 @@ $this->start('head'); ?>
             </ul>
             <ul class="uk-subnav uk-subnav-pill" uk-switcher>
                <li><a class="uk-text-capitalize uk-text-bolder" href="#">StackTrace
-                     <span>(<?php if(isset($errTrace)) {
-                         if(count($errTrace) > 0) {
+                     <span>(<?php if (isset($errTrace)) {
+                         if (count($errTrace) > 0) {
                              echo count($errTrace);
                          } else {
                              echo 0;
@@ -59,8 +59,8 @@ $this->start('head'); ?>
                <li><a class="uk-text-capitalize uk-text-bolder" href="#"><?= $errType ?? null; ?></a></li>
                <li><a class="uk-text-capitalize uk-text-bolder" href="#">Debug Backtrace
                      <span>(<?php
-                     if(isset($errDebugBacktrace)) {
-                         if(count($errDebugBacktrace) > 0) {
+                     if (isset($errDebugBacktrace)) {
+                         if (count($errDebugBacktrace) > 0) {
                              echo count($errDebugBacktrace);
                          } else {
                              echo 0;
@@ -80,7 +80,7 @@ $this->start('head'); ?>
                   <pre class="uk-dark uk-background-muted">
                        <?php
           $out = '';
-if(isset($stacktrace)) {
+if (isset($stacktrace)) {
     foreach ($stacktrace as $strace) {
         if ($strace['file'] == $errfile) {
             $out = $strace['code'];

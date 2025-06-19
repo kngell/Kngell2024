@@ -1,25 +1,31 @@
+# Restored zsh configuration after SSD migration and locale fix
+
+# Fix locale issues after SSD migration
+export LANG=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
+export LC_CTYPE=en_US.UTF-8
+
 # Path to your Oh My Zsh installation
 export ZSH="$HOME/.oh-my-zsh"
 
-# Set theme to Powerlevel10k if available, otherwise use robbyrussell
-if [ -d "$ZSH/custom/themes/powerlevel10k" ]; then
-  ZSH_THEME="powerlevel10k/powerlevel10k"
-else
-  ZSH_THEME="robbyrussell"
-fi
+# Set theme to a reliable one (change to powerlevel10k/powerlevel10k later if desired)
+ZSH_THEME="agnoster"
 
-# Enable Powerlevel10k instant prompt if available
-if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
-  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
-fi
-
-# Plugins
-plugins=(git zsh-syntax-highlighting zsh-autosuggestions)
+# Plugins (gradually add more as needed)
+plugins=(git zsh-autosuggestions zsh-syntax-highlighting)
 
 # Source Oh My Zsh
 source $ZSH/oh-my-zsh.sh
 
-# Lazy-load NVM to improve shell startup time
+# User configuration
+export EDITOR='vim'
+
+# Aliases
+alias ll='ls -la'
+alias la='ls -A'
+alias l='ls -CF'
+
+# NVM configuration (lazy-loaded for performance)
 export NVM_DIR="$HOME/.nvm"
 
 # Function to lazy-load NVM
@@ -52,12 +58,3 @@ npx() {
   load_nvm
   npx "$@"
 }
-
-# User configuration
-export EDITOR='vim'
-
-# Aliases
-alias ll='ls -la'
-
-# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh
-[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh

@@ -12,7 +12,7 @@ $this->start('head'); ?>
    <main id="main-site">
       <!-- Content -->
       <div class="show-container">
-         <?php if(! empty($show)): ?>
+         <?php if (! empty($show)): ?>
          <div class="show-img">
             <?php $img = '/public/assets/img/' . $show[0]; ?>
             <img src="<?= $img ?>" alt="">

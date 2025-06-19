@@ -1,5 +1,6 @@
 @use "css/frontend/ecommerce/abstracts" as *;
 /*---------------- BUTONS ----------------*/
+
 .btn {
   display: inline-flex;
   padding: 1.6rem 5.6rem;
@@ -7,7 +8,6 @@
   align-items: center;
   border-radius: 0.6rem;
   text-align: center;
-  font-family: "SF Pro Display";
   font-size: 1.6rem;
   font-style: normal;
   font-weight: 500;
@@ -15,9 +15,16 @@
   text-decoration: none;
   transition: all 0.3s ease;
   cursor: pointer;
+
+  @include respond-below("md") {
+    padding: 1.2rem 5.2rem;
+  }
+  @include respond-below("xs") {
+    align-self: stretch;
+  }
   &-outline-white {
-    border: 1px solid $white;
-    color: $white;
+    border: 1px solid $color-white;
+    color: $color-white;
     background-color: transparent;
     &:hover {
       background: $banner-text-white;
@@ -26,6 +33,33 @@
     :focus {
       outline: 2px solid $banner-text-white;
       outline-offset: 2px;
+    }
+  }
+  &-outline-dark {
+    border: 1px solid $color-dark;
+    color: $color-dark;
+    &:hover {
+      background: $banner-bg-primary;
+      color: $banner-text-white;
+    }
+    :focus {
+      outline: 2px solid $banner-bg-primary;
+      outline-offset: 2px;
+    }
+  }
+  &-dark-small {
+    padding: 1.2rem 6.4rem;
+    gap: 0.8rem;
+    border-radius: 0.8rem;
+    background: $color-black;
+    color: $color-white;
+    font-size: 1.4rem;
+    line-height: 1.71429; /* 171.429% */
+    cursor: pointer;
+    transition: all 0.2s;
+    &:hover {
+      background: darken($color-white, 10%);
+      color: $color-black;
     }
   }
 }

@@ -1,6 +1,7 @@
 @use "sass:map";
 @use "partials/color_map_variable" as *;
 
+/* ************** TYPOGRAPHY ************** */
 :root {
   --heading-1: 2.8rem;
   --heading-2: 2.4rem;
@@ -16,35 +17,6 @@
   --heading-font-weight-6: 400;
 }
 
-/********* COLORS **********/
-$primary-color: #4a6cf7;
-$colors-ecommerce: (
-  white: #ffffff,
-  black: #000000,
-  gray-100: #f5f5f5,
-  gray-400: #989898,
-  gray-500: #656565,
-  gray-600: #666666,
-  gray-800: #2e2e2e,
-  focus: #0066cc,
-);
-// Banner - hero section
-$banner-bg-primary: #211c24;
-$banner-text-white: #ffffff;
-$banner-text-muted1: #909090;
-$banner-text-muted2: #989898;
-$banner-border-color: #ffffff;
-$banner-bg-form: #f5f5f5;
-$white: #fff;
-$black: #000;
-/* ************** TYPOGRAPHY ************** */
-$base-font-size: 62.5%;
-$paragraph-size: 1.6rem;
-$body-font-family: "Poppins", sans-serif;
-$heading-font-family: "Manrope", sans-serif;
-$font-weight-bold: 700;
-$heading-line-height: 1.4;
-
 $font: (
   family:
     '"SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif',
@@ -54,6 +26,43 @@ $font: (
   weight-normal: 400,
   weight-medium: 500,
 );
+/********* COLORS **********/
+$primary-color: #4a6cf7;
+$colors-ecommerce: (
+  white: #ffffff,
+  black: #000000,
+  gray-100: #f5f5f5,
+  gray-300: #919191,
+  gray-400: #989898,
+  gray-500: #656565,
+  gray-600: #666666,
+  gray-800: #2e2e2e,
+  focus: #0066cc,
+);
+// Banner - hero section
+$color-muted: #909090;
+$color-white: #fff;
+$color-black: #000;
+$color-gray: #ededed;
+$color-dark: #353535;
+$banner-bg-primary: #211c24;
+$banner-text-white: #ffffff;
+$banner-text-muted: #989898;
+$banner-border-color: #ffffff;
+$banner-bg-form: #f5f5f5;
+//Categories
+$category-bg-color: #fafafa;
+//Products
+$product-bg-color: #f6f6f6;
+/* ************** TYPOGRAPHY ************** */
+$base-font-size: 62.5%;
+$paragraph-size: 1.6rem;
+$body-font-family: "Poppins", sans-serif;
+$heading-font-family: "Manrope", sans-serif;
+$font-weight-bold: 700;
+$heading-line-height: 1.4;
+/* ************** RADIUS ************** */
+$category-border-radius: 15px;
 
 /* ************** BREAKPOINTS ************** */
 $breakpoints: (
@@ -64,12 +73,12 @@ $breakpoints: (
   "xl": 1200px,
   "xxl": 1400px,
 );
-$breakpoints-short: (
-  mobile: 480px,
-  tablet: 640px,
-  desktop: 1024px,
-  large: 1440px,
-);
+// $breakpoints-short: (
+//   mobile: 480px,
+//   tablet: 640px,
+//   desktop: 1024px,
+//   large: 1440px,
+// );
 
 $spacing: (
   xs: 0.4rem,

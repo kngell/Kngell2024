@@ -22,6 +22,19 @@ class View implements ViewInterface
         $this->viewEnv = $viewEnv;
     }
 
+    // public function __destruct()
+    // {
+    //     unset($this->viewEnv);
+    //     unset($this->_head);
+    //     unset($this->_body);
+    //     unset($this->_footer);
+    //     unset($this->_footer);
+    //     unset($this->_html);
+    //     unset($this->_outputBuffer);
+    //     unset($this->_layout);
+    //     unset($this->request);
+    // }
+
     public function render(string $templatePath, array $context = []): string
     {
         $templatePath = $this->viewEnv->getFile($templatePath);
@@ -137,7 +150,7 @@ class View implements ViewInterface
         }
 
         // Return full URL to the asset
-        return HOST . '/' . $path;
+        return HOST . '/public/' . $path;
     }
 
     private function start(string $type) : void

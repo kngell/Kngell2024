@@ -10,7 +10,20 @@ Options -Indexes
     # Base directory
     RewriteBase /
 
-    # Redirect all requests to the public folder
+    ## Begin - Well-Known Directory Handling
+    # Handle .well-known requests before redirecting to public
+    # If the .well-known file exists in public, serve it directly
+    RewriteCond %{REQUEST_URI} ^/\.well-known/
+    RewriteCond %{DOCUMENT_ROOT}/public%{REQUEST_URI} -f
+    RewriteRule ^(.*)$ /public/$1 [L]
+    
+    # Return 404 for non-existent .well-known files (don't redirect to public)
+    RewriteCond %{REQUEST_URI} ^/\.well-known/
+    RewriteCond %{DOCUMENT_ROOT}/public%{REQUEST_URI} !-f
+    RewriteRule ^(.*)$ - [R=404,L]
+    ## End - Well-Known Directory Handling
+
+    # Redirect all other requests to the public folder
     RewriteCond %{REQUEST_URI} !^/public/
     RewriteRule ^(.*)$ /public/$1 [L]
 

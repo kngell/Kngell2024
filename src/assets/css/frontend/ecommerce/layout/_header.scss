@@ -52,6 +52,10 @@
       padding: 0px 0.047px 3.72px 0px;
       justify-content: center;
       align-items: center;
+      .logo {
+        color: $color-black;
+        fill: currentColor;
+      }
 
       @include respond-below("lg") {
         width: 8rem;
@@ -71,7 +75,7 @@
         .image {
           width: 100%;
           height: 100%;
-          fill: $black;
+          fill: $color-black;
         }
       }
     }
@@ -98,6 +102,15 @@
         height: 2.4rem;
         border: none;
         cursor: pointer;
+        .search {
+          display: inline-block;
+          width: 100%;
+          height: 100%;
+          color: $banner-text-muted;
+          fill: transparent;
+          stroke: currentColor;
+          stroke-width: 1.5;
+        }
       }
 
       &--input {
@@ -115,7 +128,7 @@
         line-height: 1.3;
 
         &::placeholder {
-          color: $banner-text-muted2;
+          color: $banner-text-muted;
           font-family: "SF Pro Display";
           font-size: 1.4rem;
           font-style: normal;
@@ -143,7 +156,7 @@
         }
         &__item {
           .nav-link {
-            color: $black;
+            color: $color-black;
             text-decoration: none;
             font-family: "SF Pro Display";
             font-size: 1.6rem;
@@ -189,18 +202,21 @@
         align-items: center;
         justify-content: center;
         text-decoration: none;
-        color: $banner-text-muted2;
+        color: $banner-text-muted;
         transition: transform 0.2s ease;
         position: relative;
+        width: 3.2rem;
+        height: 3.2rem;
 
         &:hover {
           transform: scale(1.1);
         }
-
         .icon {
-          width: 3.2rem;
-          height: 3.2rem;
-
+          width: 100%;
+          height: 100%;
+          color: $color-dark;
+          fill: transparent;
+          stroke: currentColor;
           @include respond-below("lg") {
             width: 2.8rem;
             height: 2.8rem;
@@ -309,16 +325,24 @@
     // cursor: pointer;
     @include transition(opacity);
     &-icon {
+      color: $color-white;
       width: 2.4rem;
       height: 2.4rem;
       opacity: 0.5;
+      fill: transparent;
+      stroke: currentColor;
+
       @include transition(opacity);
+
+      // For SVG sprites - make icons white
+      // filter: brightness(0) saturate(100%) invert(1);
+
       &:focus {
         @include focus-outline;
       }
     }
     &-text {
-      color: $white;
+      color: $color-white;
       text-align: center;
       font-family: "SF Pro Display";
       font-size: 1.6rem;
