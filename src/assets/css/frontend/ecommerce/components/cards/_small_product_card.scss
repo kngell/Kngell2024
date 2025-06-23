@@ -1,0 +1,84 @@
+@use "css/frontend/ecommerce/abstracts" as *;
+
+/*---------------- CARD --------------------*/
+
+$spc-white: #fff;
+$spc-bg: #f6f6f6;
+$spc-gray: #919191;
+
+.small-product-card {
+  display: flex;
+  min-width: 20rem;
+  width: 26.8rem;
+  padding: 2.4rem 1.6rem;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.6rem;
+  flex: 1 0 0;
+  border-radius: 9px;
+  background: #f6f6f6;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+
+  &__top {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.8rem;
+    align-self: stretch;
+    &--like {
+      width: 3.2rem;
+      height: 3.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      .icon {
+        color: map-get($colors-ecommerce, gray-300);
+        width: 100%;
+        height: 100%;
+        stroke: currentColor;
+        fill: none;
+        stroke-opacity: 0.77;
+        stroke-width: 1.4px;
+      }
+    }
+  }
+  &__image-container {
+    width: 16rem;
+    height: 16rem;
+    border-radius: 0.8rem;
+    @include flex-center;
+    .image {
+      width: 100%;
+      height: 100%;
+    }
+  }
+
+  &__info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2.4rem;
+    align-self: stretch;
+    &--text {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1.6rem;
+      align-self: stretch;
+      color: $color-black;
+      text-align: center;
+      .description {
+        align-self: stretch;
+        font-weight: 500;
+        line-height: 1.5; /* 150% */
+      }
+      .price {
+        align-self: stretch;
+        font-size: 2.4rem;
+        font-weight: 600;
+        line-height: 1; /* 100% */
+        letter-spacing: 0.72px;
+      }
+    }
+  }
+}

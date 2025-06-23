@@ -1,3 +1,10 @@
+# Security Headers
+<IfModule mod_headers.c>
+    Header always set X-XSS-Protection "1; mode=block"
+    Header always set Expect-CT "max-age=0, enforce"
+</IfModule>
+# Disable directory listing
+Options -Indexes
 # Determine the RewriteBase automatically and set it as environment variable.
 # If you are using Apache aliases to do mass virtual hosting or installed the
 # project in a subdirectory, the base path will be prepended to allow proper
@@ -24,10 +31,24 @@
     # the following lines.
     #
     # RewriteCond %{HTTP:X-Forwarded-Proto} https
-    # RewriteRule .* - [E=HTTPS:on]
+     # Handle authorization header
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
     #
     ## End - X-Forwarded-Proto
+    ## Begin - Well-Known Directory Handling
+    # Handle .well-known requests (Chrome DevTools, Let's Encrypt, etc.)
+    # This MUST be before the main rewrite rule
+    
+    # If the .well-known file exists, serve it directly
+    RewriteCond %{REQUEST_URI} ^/\.well-known/
+    RewriteCond %{REQUEST_FILENAME} -f
+    RewriteRule ^(.*)$ - [L]
+    
+    # Return 404 for non-existent .well-known files (don't pass to PHP)
+    RewriteCond %{REQUEST_URI} ^/\.well-known/
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^(.*)$ - [R=404,L]
+    ## End - Well-Known Directory Handling
 
     ## Begin - Index
     # If the requested filename exists, simply serve it.
@@ -41,7 +62,9 @@
     RewriteCond %{REQUEST_FILENAME} !-l
     RewriteRule ^(.*)$ index.php?url=$1 [L,QSA,NC]
 
-    ## End - Index
+    # Block sensitive files
+    RewriteRule ^(\.env|\.git|composer\.(json|lock))$ - [F,L,NC]
+    RewriteRule ^(App|src|webpack|session_dir|Framework|storage|vendor)/(.*)$ - [F,L,NC]
 
     ## Begin - Security
     # Block all direct access for these folders
@@ -60,8 +83,12 @@
     ## End - Security
 
 </IfModule>
-
-# Begin - Prevent Browsing and Set Default Resources
-Options -Indexes
 DirectoryIndex index.php index.html index.htm
 # End - Prevent Browsing and Set Default Resources
+# PHP Settings
+<IfModule mod_php.c>
+    php_flag display_errors Off
+    php_value max_execution_time 300
+    php_value post_max_size 128M
+    php_value upload_max_filesize 128M
+</IfModule>

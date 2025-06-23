@@ -5,6 +5,7 @@
    <meta charset="UTF-8">
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
    <?= $this->getPageTitle()?>
+   <link rel="shortcut icon" href="data:," />
    <!-- Main style -->
    <?= $this->css('path') ?? '' ?>
    <!-- css/librairies/librairy -->
@@ -19,17 +20,24 @@
    <header class="header">
       <div class="header-top">
          <button class="header-top__mobile-toggle js-mobile-menu-toggle">
-            <img src="<?= $this->asset('img/icons/hamburger-menu.svg') ?>" alt="Mobile menu"
+            <img src="<?= $this->asset('img/icons-sprite.svg') ?>#hamburger-menu.svg" alt="Mobile menu"
                class="header__mobile-toggle-img">
          </button>
          <div class="header-top__logo">
             <a href="#" class="header-top__logo-link">
-               <img src="<?= $this->asset('img/icons/logo.svg') ?>" alt="Logo" class="image">
+               <svg class="logo">
+                  <use href="<?= $this->asset('img/icons-sprite.svg') ?>#icon-logo" alt="Logo" class="image"></use>
+               </svg>
             </a>
          </div>
          <form class="header-top__search">
             <button type="submit" class="header-top__search--btn">
-               <img src="<?= $this->asset('img/icons/search.svg') ?>" alt="Search" class="header__search-icon">
+               <svg class="search">
+                  <use href="<?= $this->asset('img/icons-sprite.svg') ?>#icon-search" alt="search" class="search">
+                  </use>
+               </svg>
+               <!-- <img src="<?= $this->asset('img/icons-sprite.svg') ?>#icon-search.svg" alt="Search"
+                  class="header__search-icon"> -->
             </button>
             <input type="text" name="search" id="header-top__search--input" class="header-top__search--input"
                placeholder="Search...">
@@ -52,41 +60,63 @@
          </nav>
          <div class="header-top__actions">
             <a href="#" class="header-top__actions-link header-top__actions--wishlist">
-               <img src="<?= $this->asset('img/icons/wishlist.svg') ?>" alt="Wishlist" class="icon">
+               <svg class="icon wishlist-icon">
+                  <use href="<?= $this->asset('img/icons-sprite.svg') ?>#icon-wishlist" alt="Wishlist">
+                  </use>
+               </svg>
             </a>
             <a href="#" class="header-top__actions-link header-top__actions--cart" data-count="0">
-               <img src="<?= $this->asset('img/icons/cart.svg') ?>" alt="Cart" class="icon">
+               <svg class="icon cart-icon">
+                  <use href="<?= $this->asset('img/icons-sprite.svg') ?>#icon-cart">
+                  </use>
+                  <desc>User Cart</desc>
+               </svg>
             </a>
             <a href="#" class="header-top__actions-link header-top__actions--user">
-               <img src="<?= $this->asset('img/icons/user.svg') ?>" alt="User Account" class="icon">
+               <svg class="icon cart-icon">
+                  <use href="<?= $this->asset('img/icons-sprite.svg') ?>#icon-user">
+                  </use>
+                  <desc>User</desc>
+               </svg>
             </a>
          </div>
 
       </div>
       <div class="header-bottom category-nav">
          <a href="#" class="category-nav__link">
-            <img src="<?= $this->asset('img/icons/phone.svg') ?>" alt="Phone" class="category-nav__link-icon">
+            <svg class="category-nav__link-icon">
+               <use href="<?= $this->asset('img/icons-sprite.svg') ?>#icon-phone"></use>
+            </svg>
             <span class="category-nav__link-text">Phone</span>
          </a>
          <a href="#" class="category-nav__link">
-            <img src="<?= $this->asset('img/icons/computers.svg') ?>" alt="Computers" class="category-nav__link-icon">
+            <svg class="category-nav__link-icon">
+               <use href="<?= $this->asset('img/icons-sprite.svg') ?>#icon-computers"></use>
+            </svg>
             <span class="category-nav__link-text">Computers</span>
          </a>
          <a href="#" class="category-nav__link">
-            <img src="<?= $this->asset('img/icons/smart-watches.svg') ?>" alt="Smart Watches"
-               class="category-nav__link-icon">
+            <svg class="category-nav__link-icon">
+               <use href="<?= $this->asset('img/icons-sprite.svg') ?>#icon-smart-watches"></use>
+            </svg>
             <span class="category-nav__link-text">Smart Watches</span>
          </a>
          <a href="#" class="category-nav__link">
-            <img src="<?= $this->asset('img/icons/cameras.svg') ?>" alt="Cameras" class="category-nav__link-icon">
+            <svg class="category-nav__link-icon">
+               <use href="<?= $this->asset('img/icons-sprite.svg') ?>#icon-cameras"></use>
+            </svg>
             <span class="category-nav__link-text">Cameras</span>
          </a>
          <a href="#" class="category-nav__link">
-            <img src="<?= $this->asset('img/icons/headphones.svg') ?>" alt="Headphones" class="category-nav__link-icon">
+            <svg class="category-nav__link-icon">
+               <use href="<?= $this->asset('img/icons-sprite.svg') ?>#icon-headphones"></use>
+            </svg>
             <span class="category-nav__link-text">Headphones</span>
          </a>
          <a href="#" class="category-nav__link">
-            <img src="<?= $this->asset('img/icons/gaming.svg') ?>" alt="Gaming" class="category-nav__link-icon">
+            <svg class="category-nav__link-icon">
+               <use href="<?= $this->asset('img/icons-sprite.svg') ?>#icon-gaming"></use>
+            </svg>
             <span class="category-nav__link-text">Gaming</span>
          </a>
       </div>

@@ -1,0 +1,24 @@
+{
+  "dest": "src/assets/img/",
+  "log": "info",
+  "shape": {
+    "id": {
+      "separator": "-",
+      "generator": "icon-%s"
+    },
+    "dimension": {
+      "maxWidth": 50,
+      "maxHeight": 50
+    },
+    "spacing": {
+      "padding": 0
+    }
+  },
+  "mode": {
+    "symbol": {
+      "dest": "",
+      "sprite": "icons-sprite.svg",
+      "example": false
+    }
+  }
+}
