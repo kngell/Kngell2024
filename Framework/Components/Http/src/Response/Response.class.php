@@ -4,27 +4,31 @@ declare(strict_types=1);
 
 class Response
 {
-    protected const array ALLOW_ACCESS = [
-        'Access-Control-Allow-Origin' => 'https://localhost',
-    ];
     protected HeaderMap $headers;
     protected CookiesMap $cookies;
     protected string $content;
     protected HttpStatusCode $statusCode;
     protected HttpProtocolVersion $protocolVersion;
+    protected ?HeaderManager $headerManager;
 
     public function __construct(
         string $content = '',
         HttpStatusCode $statusCode = HttpStatusCode::HTTP_OK,
         array $headers = [],
         array $cookies = [],
-        HttpProtocolVersion $protocolVersion = HttpProtocolVersion::HTTP_1_1
+        HttpProtocolVersion $protocolVersion = HttpProtocolVersion::HTTP_1_1,
+        ?HeaderManager $headerManager = null
     ) {
         $this->content = $content;
         $this->statusCode = $statusCode;
-        $this->headers = HeaderMap::createFromArray(array_merge($headers, self::ALLOW_ACCESS));
+        $this->headers = HeaderMap::createFromArray($headers);
         $this->cookies = new CookiesMap($cookies);
         $this->protocolVersion = $protocolVersion;
+        $this->headerManager = $headerManager ?? new HeaderManager(
+            $this->headers,
+            $_SERVER['HTTP_HOST'] ?? '',
+            HttpMethod::fromString($_SERVER['REQUEST_METHOD'] ?? 'GET')
+        );
     }
 
     /**
@@ -58,6 +62,17 @@ class Response
         // if (! $session->exists(PREVIOUS_URL_KEY)) {
         //     $session->set(PREVIOUS_URL_KEY, $request->getRequestedUri());
         // }
+        // Apply security headers
+        $this->headerManager->applySecurityHeaders($this->headerManager->isDevEnvironment());
+        // Special case for API responses
+        if (str_starts_with($request->getRequestedUri(), '/api/')) {
+            $this->headerManager->applyCorsHeaders();
+        }
+        if ($request->isFromWebpackDevServer()) {
+            $this->headerManager->applyDevHeaders();
+        } else {
+            $this->headerManager->applySecurityHeaders();
+        }
     }
 
     public function send() : void

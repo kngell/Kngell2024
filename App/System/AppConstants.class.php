@@ -54,6 +54,6 @@ final readonly class AppConstants
         //----------------------------------------------
         // Host
         // ---------------------------------------------
-        defined('HOST') or define('HOST', 'https://localhost:3003');
+        defined('HOST') or define('HOST', '');//https://localhost:3003
     }
 }

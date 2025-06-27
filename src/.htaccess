@@ -1,94 +1,34 @@
-# Security Headers
-<IfModule mod_headers.c>
-    Header always set X-XSS-Protection "1; mode=block"
-    Header always set Expect-CT "max-age=0, enforce"
-</IfModule>
-# Disable directory listing
 Options -Indexes
-# Determine the RewriteBase automatically and set it as environment variable.
-# If you are using Apache aliases to do mass virtual hosting or installed the
-# project in a subdirectory, the base path will be prepended to allow proper
-# resolution of the index.php file and to redirect to the correct URI. It will
-# work in environments without path prefix as well, providing a safe, one-size
-# fits all solution. But as you do not need it in this case, you can comment
-# the following 2 lines to eliminate the overhead.
-<IfModule mod_rewrite.c>
-    # By default, Apache does not evaluate symbolic links if you did not enable this
-    # feature in your server configuration. Uncomment the following line if you
-    # install assets as symlinks or if you experience problems related to symlinks
-    # when compiling LESS/Sass/CoffeScript assets.
-    # Options FollowSymlinks
+FileETag None
 
-    # Disabling MultiViews prevents unwanted negotiation, e.g. "/index" should not resolve
-    # to the front controller "/index.php" but be rewritten to "/index.php/index".
-    # Remove the question mark from the request but maintain the query string
+<IfModule mod_headers.c>
+    Header always unset "X-Powered-By"
+    Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+</IfModule>
+
+<IfModule mod_rewrite.c>
     RewriteEngine On
     RewriteBase /
 
-    ## Begin - X-Forwarded-Proto
-    # In some hosted or load balanced environments, SSL negotiation happens upstream.
-    # In order for Lava-Studio to recognize the connection as secure, you need to uncomment
-    # the following lines.
-    #
-    # RewriteCond %{HTTP:X-Forwarded-Proto} https
-     # Handle authorization header
-    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
-    #
-    ## End - X-Forwarded-Proto
-    ## Begin - Well-Known Directory Handling
-    # Handle .well-known requests (Chrome DevTools, Let's Encrypt, etc.)
-    # This MUST be before the main rewrite rule
-    
-    # If the .well-known file exists, serve it directly
-    RewriteCond %{REQUEST_URI} ^/\.well-known/
-    RewriteCond %{REQUEST_FILENAME} -f
-    RewriteRule ^(.*)$ - [L]
-    
-    # Return 404 for non-existent .well-known files (don't pass to PHP)
-    RewriteCond %{REQUEST_URI} ^/\.well-known/
-    RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteRule ^(.*)$ - [R=404,L]
-    ## End - Well-Known Directory Handling
-
-    ## Begin - Index
-    # If the requested filename exists, simply serve it.
-    # We only want to let Apache serve files and not directories.
-    # Rewrite all other queries to the front controller.
-    # If the requested path and file is not /index.php and the request
-    # has not already been internally rewritten to the index.php script
-
+    # WebSocket Proxy (handled at VirtualHost level)
+    # Front Controller
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-l
-    RewriteRule ^(.*)$ index.php?url=$1 [L,QSA,NC]
+    RewriteRule ^(.*)$ index.php?url=$1 [L,QSA]
 
-    # Block sensitive files
+    # Security Rules
     RewriteRule ^(\.env|\.git|composer\.(json|lock))$ - [F,L,NC]
     RewriteRule ^(App|src|webpack|session_dir|Framework|storage|vendor)/(.*)$ - [F,L,NC]
-
-    ## Begin - Security
-    # Block all direct access for these folders
-    RewriteRule ^(\.git|bin|tmp|Storage|webserver-configs|tests)/(.*) error [F]
-    # Block access to specific file types for these system folders
-    RewriteRule ^(core|vendor)/(.*)\.(txt|xml|md|html|yaml|yml|php|pl|py|cgi|twig|sh|bat)$ error [F]
-    # Block access to specific file types for these user folders
-    RewriteRule ^(public)/(.*)\.(txt|md|yaml|yml|php|pl|py|cgi|twig|sh|bat)$ error [F]
-    # Block all direct access to .md files:
-    RewriteRule \.md$ error [F]
-    # Block all direct access to files and folders beginning with a dot
-    RewriteRule "/\.|^\.(?!well-known/)" - [F]
-    # RewriteRule "(^|/)\.(?!well-known)" - [F]
-    # Block access to specific files in the root folder
-    RewriteRule ^(LICENSE\.txt|robots\.txt|composer\.lock|composer\.json|\.htaccess)$ error [F]
-    ## End - Security
-
+    RewriteRule \.(md|sql|bak|swp|phps|fla|psd|sh)$ - [F,L,NC]
+    RewriteRule "/\.|^\.(?!well-known/)" - [F,L]
 </IfModule>
-DirectoryIndex index.php index.html index.htm
-# End - Prevent Browsing and Set Default Resources
-# PHP Settings
+
 <IfModule mod_php.c>
     php_flag display_errors Off
     php_value max_execution_time 300
     php_value post_max_size 128M
     php_value upload_max_filesize 128M
+    php_value session.gc_maxlifetime 1440
+    php_value opcache.enable 1
 </IfModule>

@@ -168,4 +168,24 @@ readonly class Request
 
         return null;
     }
+    // src/Http/Request.php
+
+    // public function isFromWebpackDevServer(): bool
+    // {
+    //     $origin = $this->headers->get('Origin');
+    //     return $origin && str_contains($origin, 'localhost:3003');
+    // }
+
+    public function isFromWebpackDevServer(): bool
+    {
+        $origin = $this->headers->get('Origin');
+        $host = $this->headers->get('Host');
+        $devHosts = ['localhost', '127.0.0.1', 'localhost:3003', '127.0.0.1:3003'];
+        foreach ($devHosts as $devHost) {
+            if (($origin && str_contains($origin, $devHost)) || ($host && str_contains($host, $devHost))) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

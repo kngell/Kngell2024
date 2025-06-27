@@ -1,9 +1,9 @@
 {
-  "js/frontend/main/main": "https://localhost:3003/public/assets/js/frontend/main/main.js",
-  "js/backend/main/main": "https://localhost:3003/public/assets/js/backend/main/main.js",
-  "css/frontend/main/main": "https://localhost:3003/public/assets/css/frontend/main/main.css",
-  "css/backend/main/main": "https://localhost:3003/public/assets/css/backend/main/main.css",
-  "css/librairies/librairy": "https://localhost:3003/public/assets/css/librairies/librairy.css",
-  "js/librairies/librairy": "https://localhost:3003/public/assets/js/librairies/librairy.js",
-  "runtime": "https://localhost:3003/public/assets/runtime.js"
+  "js/frontend/main/main": "/public/assets/js/frontend/main/main.js",
+  "js/backend/main/main": "/public/assets/js/backend/main/main.js",
+  "css/frontend/main/main": "/public/assets/css/frontend/main/main.css",
+  "css/backend/main/main": "/public/assets/css/backend/main/main.css",
+  "css/librairies/librairy": "/public/assets/css/librairies/librairy.css",
+  "js/librairies/librairy": "/public/assets/js/librairies/librairy.js",
+  "runtime": "/public/assets/runtime.js"
 }

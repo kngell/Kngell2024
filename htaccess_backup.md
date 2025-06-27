@@ -11,6 +11,7 @@ Options -Indexes -MultiViews
             Header set Content-Security-Policy "default-src 'self' data: https://localhost https://localhost:3003; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://localhost https://localhost:3003; style-src 'self' 'unsafe-inline' https://localhost https://localhost:3003; img-src 'self' data: blob: https://localhost https://localhost:3003; font-src 'self' data: https://localhost https://localhost:3003; connect-src 'self' ws://localhost:3003 wss://localhost:3003 ws://127.0.0.1:3003 wss://127.0.0.1:3003 https://localhost https://localhost:3003; frame-src 'self' https://localhost https://localhost:3003; worker-src 'self' blob: https://localhost https://localhost:3003"
         </FilesMatch>
     </If>
+
 </IfModule>
 
 <IfModule mod_rewrite.c>
@@ -28,4 +29,5 @@ Options -Indexes -MultiViews
     # Redirect to public folder
     RewriteCond %{REQUEST_URI} !^/public/
     RewriteRule ^(.*)$ public/$1 [L]
+
 </IfModule>

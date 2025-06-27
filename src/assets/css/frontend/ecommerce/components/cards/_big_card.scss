@@ -1,0 +1,78 @@
+@use "css/frontend/ecommerce/abstracts" as *;
+
+/*---------------- BIG PRODUCT CARD --------------------*/
+
+.big-card {
+  display: flex;
+  min-width: 28rem;
+  width: 36rem;
+  height: 64rem;
+  padding: 37.6rem 3.2rem 5.6rem 3.2rem;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2.4rem;
+  flex: 1 0 0;
+  background: $color-white;
+  position: relative;
+  border: 1px solid green;
+  overflow: hidden;
+  &__content {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: flex-start;
+    gap: 1.6rem;
+    align-self: stretch;
+    &--title {
+      align-self: stretch;
+      color: $color-black;
+      font-size: 3.3rem;
+      font-weight: 300;
+      line-height: 1.45455; /* 145.455% */
+    }
+    &--description {
+      align-self: stretch;
+      color: $color-muted;
+      font-size: 1.4rem;
+      font-weight: 500;
+      line-height: 1.711429; /* 171.429% */
+    }
+  }
+  &__img-container {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    .img-multiples {
+      position: relative;
+      &__left {
+        position: absolute;
+        left: -56px;
+        top: -106px;
+
+        width: 27.9414rem;
+        height: 26.3052rem;
+        .image {
+          width: 100%;
+          height: 100%;
+          transform: rotate(30deg);
+          border: 1px solid red;
+        }
+      }
+      &__right {
+        width: 213.937px;
+        height: 243.855px;
+        position: absolute;
+        right: -56.26px;
+        top: 12.148px;
+        .image {
+          width: 100%;
+          height: 100%;
+          transform: rotate(120deg);
+          border: 1px solid blue;
+        }
+      }
+    }
+  }
+}

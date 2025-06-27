@@ -5,8 +5,9 @@
       {
         "useBuiltIns": "usage",
         "corejs": "3.42.0"
+        // "modules": "commonjs"
       }
     ]
   ],
-  "plugins": ["@babel/plugin-transform-class-properties"]
+  "plugins": ["@babel/plugin-transform-runtime","@babel/plugin-transform-class-properties"]
 }
