@@ -14,4 +14,10 @@ class EcommerceController extends Controller
         $this->pageTitle('Ecommerce');
         return $this->render('index');
     }
+
+    public function shop() : string
+    {
+        $this->pageTitle('Shop');
+        return $this->render('shop');
+    }
 }

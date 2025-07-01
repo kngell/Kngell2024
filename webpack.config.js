@@ -7,10 +7,7 @@ require("dotenv").config();
 module.exports = () => {
   switch (process.env.NODE_ENV) {
     case "development":
-      return [
-        merge(viewsConfig, commonConfig),
-        merge(assetsConfig, commonConfig),
-      ];
+      return [merge(viewsConfig, commonConfig), merge(assetsConfig, commonConfig)];
 
     case "production":
       console.log("production");

@@ -78,6 +78,8 @@ class GrantControllerAccessMiddleware implements MiddlewareInterface
         // If access is granted, check if it's explicitly denied
         if ($accessGranted) {
             $accessGranted = ! $this->checkExplicitlyDenied($userAcls);
+        } else {
+            $accessGranted = true;
         }
 
         // Handle special cases for access decision

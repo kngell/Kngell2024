@@ -1,21 +1,46 @@
 @use "css/frontend/ecommerce/abstracts" as *;
 
 /*---------------- BIG PRODUCT CARD --------------------*/
-
+.big-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(28rem, auto));
+}
 .big-card {
   display: flex;
-  min-width: 28rem;
-  width: 36rem;
   height: 64rem;
   padding: 37.6rem 3.2rem 5.6rem 3.2rem;
   flex-direction: column;
   align-items: flex-start;
   gap: 2.4rem;
   flex: 1 0 0;
-  background: $color-white;
   position: relative;
-  border: 1px solid green;
   overflow: hidden;
+  &__bg-white {
+    background-color: $color-white;
+  }
+  &__bg-gray-light {
+    background-color: $color-big-card-light;
+  }
+  &__bg-gray-normal {
+    background-color: $color-big-card-normal;
+  }
+  &__bg-gray-dark {
+    background-color: $color-big-card-dark;
+    .big-card__content--title {
+      color: $color-white;
+    }
+    button {
+      background-color: transparent;
+      color: $color-white;
+      border-radius: 6px;
+      border: 1px solid $color-white;
+      @include transition;
+      &:hover {
+        background-color: $color-white;
+        color: $color-black;
+      }
+    }
+  }
   &__content {
     display: flex;
     flex-direction: column;
@@ -23,6 +48,7 @@
     align-items: flex-start;
     gap: 1.6rem;
     align-self: stretch;
+    z-index: 10;
     &--title {
       align-self: stretch;
       color: $color-black;
@@ -38,41 +64,75 @@
       line-height: 1.711429; /* 171.429% */
     }
   }
-  &__img-container {
+  &-multiple {
+    &__img-container {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 5.6rem;
+      left: 0;
+      .img-multiples {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        &__left {
+          position: absolute;
+          left: -5.2rem;
+          top: 1.2rem;
+          width: 26rem;
+          height: 26rem;
+          .image {
+            width: 100%;
+            height: 100%;
+            transform: rotate(30deg);
+          }
+        }
+        &__right {
+          width: 26rem;
+          height: 26rem;
+          position: absolute;
+          right: -3.2rem;
+          top: 1.2rem;
+          .image {
+            width: 100%;
+            height: 100%;
+            transform: rotate(120deg) scale(-0.7);
+          }
+        }
+      }
+    }
+  }
+  &__img-container--ipad {
+    width: 37rem;
+    height: 39rem;
     position: absolute;
-    width: 100%;
-    height: 100%;
-    top: 0;
-    left: 0;
-    .img-multiples {
-      position: relative;
-      &__left {
-        position: absolute;
-        left: -56px;
-        top: -106px;
-
-        width: 27.9414rem;
-        height: 26.3052rem;
-        .image {
-          width: 100%;
-          height: 100%;
-          transform: rotate(30deg);
-          border: 1px solid red;
-        }
-      }
-      &__right {
-        width: 213.937px;
-        height: 243.855px;
-        position: absolute;
-        right: -56.26px;
-        top: 12.148px;
-        .image {
-          width: 100%;
-          height: 100%;
-          transform: rotate(120deg);
-          border: 1px solid blue;
-        }
-      }
+    right: -4rem;
+    top: -5.2rem;
+    .image {
+      width: 100%;
+      height: 100%;
+    }
+  }
+  &__img-container--samsung {
+    width: 57.9rem;
+    height: 38.5rem;
+    position: absolute;
+    right: -11rem;
+    top: -2.5rem;
+    .image {
+      width: 100%;
+      height: 100%;
+    }
+  }
+  &__img-container--macbook {
+    width: 53.9rem;
+    height: 53.9rem;
+    position: absolute;
+    right: -25.7rem;
+    top: -7.5rem;
+    .image {
+      width: 100%;
+      height: 100%;
     }
   }
 }
