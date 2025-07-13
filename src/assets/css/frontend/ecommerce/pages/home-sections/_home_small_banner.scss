@@ -1,0 +1,785 @@
+@use "css/frontend/ecommerce/abstracts" as *;
+/*---------------- BANNERS ----------------*/
+
+.small-banner-section {
+  position: relative;
+  width: 100%;
+  overflow-x: hidden;
+
+  .banner {
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    width: 100%;
+    min-height: 60rem;
+    overflow: hidden;
+
+    // Responsive adjustments
+    @include respond-below("xl") {
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    @include respond-below("lg") {
+      min-height: 50rem;
+    }
+
+    @include respond-below("md") {
+      flex-direction: column;
+      min-height: auto;
+      // gap: 2rem;
+    }
+
+    @include respond-below("sm") {
+      // gap: 1.5rem;
+    }
+
+    @include respond-below("xs") {
+      // gap: 1rem;
+    }
+
+    // Left banner section
+    &-left {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: flex-end;
+      flex: 1 1 50%;
+      min-width: 0;
+      max-width: 50%;
+      overflow: hidden;
+      position: relative;
+
+      @include respond-below("xl") {
+        max-width: 100%;
+        width: 100%;
+        flex: 1 1 100%;
+      }
+
+      @include respond-below("md") {
+        align-items: center;
+      }
+
+      // Wide banner component
+      &__wide {
+        display: flex;
+        height: 32.8rem;
+        padding: 0rem 4.8rem 0rem 33.4rem;
+        justify-content: flex-end;
+        align-items: center;
+        align-self: stretch;
+        background: $color-white;
+        position: relative;
+        overflow: hidden;
+
+        // Equal width layout only between xl (1200px) and xxl (1400px)
+        @media (min-width: 1200px) and (max-width: 1399px) {
+          padding: 1.6rem 3.2rem;
+          justify-content: space-between;
+          align-items: center;
+          height: auto;
+          display: flex;
+          flex-direction: row;
+        }
+
+        @include respond-below("xl") {
+          padding: 1.6rem 3.2rem;
+          justify-content: space-between;
+          align-items: center;
+          height: auto;
+          display: flex;
+          flex-direction: row;
+        }
+
+        @include respond-below("lg") {
+          justify-content: center;
+          text-align: center;
+          // gap: 3.2em;
+        }
+        @include respond-below("xs") {
+          flex-direction: column;
+          justify-content: center;
+          text-align: center;
+          // gap: 3.2em;
+        }
+
+        // Image container
+        .image-container {
+          max-height: 34.3rem;
+          position: absolute;
+          left: -15.3rem;
+          bottom: -1.5rem;
+          max-width: calc(100% + 15.3rem);
+
+          @include respond-below("xxl") {
+            left: -12rem;
+            max-height: 32rem;
+            max-width: calc(100% + 12rem);
+          }
+
+          // Equal width only between xl (1200px) and xxl (1400px)
+          @media (min-width: 1200px) and (max-width: 1399px) {
+            position: relative;
+            left: 0;
+            bottom: 0;
+            max-height: none;
+            flex: 0 0 50%;
+            max-width: 50%;
+          }
+
+          @include respond-below("xl") {
+            position: relative;
+            left: -3em;
+            bottom: 0;
+            max-height: none;
+            flex: 1 1 50%;
+            max-width: 50%;
+          }
+
+          @include respond-below("lg") {
+            max-width: 100%;
+            order: -1;
+            margin: 0;
+            align-self: stretch;
+          }
+
+          @include respond-below("md") {
+            max-height: 25rem;
+          }
+
+          @include respond-below("sm") {
+            max-height: 22rem;
+          }
+
+          @include respond-below("xs") {
+            max-height: none;
+            position: static;
+            width: 100%;
+          }
+
+          &--img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+
+            @include respond-below("md") {
+              object-position: center;
+            }
+          }
+        }
+
+        // Text container
+        .text-container {
+          display: flex;
+          max-width: 40.4rem;
+          flex-direction: column;
+          justify-content: center;
+          align-items: flex-end;
+          gap: 1.6rem;
+          flex: 1 0 0;
+          z-index: 2;
+
+          // Equal width only between xl (1200px) and xxl (1400px)
+          @media (min-width: 1200px) and (max-width: 1399px) {
+            flex: 0 0 50%;
+            max-width: 50%;
+            padding: 3rem 2rem;
+            text-align: center;
+          }
+
+          @include respond-below("xl") {
+            flex: 1 1 50%;
+            max-width: 50%;
+            padding: 3rem 2rem;
+            text-align: center;
+          }
+
+          @include respond-below("lg") {
+            max-width: 100%;
+            align-items: center;
+            text-align: center;
+            padding: 3rem 2rem;
+            order: 1;
+          }
+
+          @include respond-below("md") {
+            padding: 2.5rem 2rem;
+            gap: 1.4rem;
+          }
+
+          @include respond-below("sm") {
+            padding: 2rem 1.5rem;
+            gap: 1.2rem;
+          }
+
+          @include respond-below("xs") {
+            padding: 1.5rem 1rem;
+            gap: 1rem;
+          }
+
+          &__heading {
+            align-self: stretch;
+            color: $color-black;
+            font-size: 4.9rem;
+            font-style: normal;
+            font-weight: 500;
+            line-height: 0.81633;
+
+            @include respond-below("xxl") {
+              font-size: 4.4rem;
+            }
+
+            @include respond-below("xl") {
+              font-size: 4rem;
+            }
+
+            @include respond-below("md") {
+              font-size: 3.6rem;
+              line-height: 0.9;
+            }
+
+            @include respond-below("sm") {
+              font-size: 3.6rem;
+              line-height: 1;
+            }
+
+            @include respond-below("xs") {
+              font-size: 3.2rem;
+              line-height: 1.1;
+            }
+          }
+
+          &__body {
+            align-self: stretch;
+            color: $color-muted;
+            font-size: 1.4rem;
+            font-style: normal;
+            font-weight: 500;
+            line-height: 1.71429;
+
+            @include respond-below("md") {
+              line-height: 1.6;
+            }
+
+            @include respond-below("sm") {
+              font-size: 1.3rem;
+              line-height: 1.5;
+            }
+
+            @include respond-below("xs") {
+              font-size: 1.2rem;
+              line-height: 1.4;
+            }
+          }
+        }
+      }
+
+      // Squares section
+      &__squares {
+        display: flex;
+        height: 27.2rem;
+        align-items: flex-start;
+        align-self: stretch;
+        overflow: hidden;
+
+        @include respond-below("xl") {
+          height: 25rem;
+        }
+
+        @include respond-below("lg") {
+          flex-direction: column;
+          height: auto;
+          gap: 0;
+        }
+
+        @include respond-below("md") {
+          // gap: 1.2rem;
+        }
+
+        @include respond-below("sm") {
+          // gap: 1rem;
+        }
+
+        @include respond-below("xs") {
+          // gap: 0.8rem;
+        }
+
+        // Banner square component
+        .banner-square {
+          display: flex;
+          padding: 0rem 4.8rem 0rem 15.6rem;
+          justify-content: flex-end;
+          align-items: center;
+          flex: 1 0 0;
+          align-self: stretch;
+          position: relative;
+          overflow: hidden;
+
+          @include respond-below("xl") {
+            padding: 1.6rem 3.2rem;
+            justify-content: space-between;
+          }
+
+          @include respond-below("lg") {
+            padding: 1.6rem 3.2rem;
+            justify-content: center;
+            align-items: stretch;
+            text-align: center;
+            gap: 20%;
+            flex: 1;
+          }
+          @include respond-below("xs") {
+            flex-direction: column;
+          }
+
+          &__text-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 0.8rem;
+            z-index: 2;
+
+            @include respond-below("xl") {
+              padding: 3rem 2rem;
+              max-width: 50%;
+              flex: 0 0 50%;
+            }
+
+            @include respond-below("lg") {
+              padding: 3rem 2rem;
+              order: 1;
+            }
+
+            @include respond-below("md") {
+              padding: 2.5rem 2rem;
+              gap: 0.7rem;
+            }
+
+            @include respond-below("sm") {
+              padding: 2rem 1.5rem;
+              gap: 0.6rem;
+            }
+
+            @include respond-below("xs") {
+              padding: 1.5rem 1rem;
+              gap: 0.5rem;
+            }
+
+            &--heading {
+              align-self: stretch;
+              font-size: 2.9rem;
+              font-style: normal;
+              font-weight: 300;
+              line-height: 1.37931;
+
+              @include respond-below("xl") {
+                font-size: 2.6rem;
+              }
+
+              @include respond-below("md") {
+                font-size: 2.6rem;
+                line-height: 1.3;
+              }
+
+              @include respond-below("sm") {
+                font-size: 2.3rem;
+                line-height: 1.2;
+              }
+
+              @include respond-below("xs") {
+                font-size: 2rem;
+                line-height: 1.1;
+              }
+
+              span {
+                font-weight: 500;
+              }
+            }
+
+            &--body {
+              align-self: stretch;
+              color: $banner-text-muted;
+              font-size: 1.4rem;
+              font-style: normal;
+              font-weight: 500;
+              line-height: 1.71429;
+
+              @include respond-below("md") {
+                line-height: 1.6;
+              }
+
+              @include respond-below("sm") {
+                font-size: 1.3rem;
+                line-height: 1.5;
+              }
+
+              @include respond-below("xs") {
+                font-size: 1.2rem;
+                line-height: 1.4;
+              }
+            }
+          }
+
+          &__img-container {
+            position: absolute;
+
+            @include respond-below("xl") {
+              position: static;
+              height: 80%;
+            }
+          }
+        }
+
+        // Light theme square
+        .light {
+          background-color: $color-gray;
+          position: relative;
+
+          .banner-square__text-container {
+            max-width: 16.8rem;
+
+            @include respond-below("xl") {
+              max-width: 50%;
+            }
+
+            @include respond-below("lg") {
+              max-width: 100%;
+            }
+
+            &--heading {
+              color: $color-black;
+            }
+          }
+
+          .banner-square__img-container {
+            max-height: 27.2rem;
+            left: -14.1rem;
+            max-width: calc(100% + 14.1rem);
+
+            @include respond-below("xl") {
+              left: -11rem;
+              max-height: 25rem;
+              max-width: calc(100% + 11rem);
+            }
+
+            @include respond-below("lg") {
+              position: relative;
+              left: 0;
+              max-width: 100%;
+              max-height: 25rem;
+              order: -1;
+              margin: 0;
+              align-self: stretch;
+            }
+
+            @include respond-below("md") {
+              max-height: 22rem;
+            }
+
+            @include respond-below("sm") {
+              max-height: 20rem;
+            }
+
+            @include respond-below("xs") {
+              max-height: none;
+            }
+
+            .img {
+              width: 100%;
+              height: 100%;
+              object-fit: cover;
+
+              @include respond-below("md") {
+                object-position: center;
+              }
+            }
+          }
+        }
+
+        // Dark theme square
+        .dark {
+          background-color: $color-dark;
+          position: relative;
+          z-index: -1;
+
+          .banner-square__img-container {
+            max-height: 19rem;
+            left: -17.6rem;
+            top: 4.1rem;
+            max-width: calc(100% + 17.6rem);
+
+            @include respond-below("xl") {
+              left: -14rem;
+              top: 3rem;
+              max-height: 17rem;
+              max-width: calc(100% + 14rem);
+            }
+
+            @include respond-below("lg") {
+              position: relative;
+              left: 0;
+              top: 0;
+              max-width: 100%;
+              max-height: 25rem;
+              order: -1;
+              margin: 0;
+              align-self: stretch;
+            }
+
+            @include respond-below("md") {
+              max-height: 22rem;
+            }
+
+            @include respond-below("sm") {
+              max-height: 20rem;
+            }
+
+            @include respond-below("xs") {
+              max-height: 18rem;
+            }
+
+            .img {
+              width: 100%;
+              height: 100%;
+              object-fit: cover;
+
+              @include respond-below("md") {
+                object-position: center;
+              }
+            }
+          }
+
+          .banner-square__text-container {
+            max-width: 17.6rem;
+
+            @include respond-below("xl") {
+              max-width: 50%;
+            }
+
+            @include respond-below("lg") {
+              max-width: 100%;
+            }
+
+            &--heading {
+              color: $color-white;
+            }
+          }
+        }
+      }
+    }
+
+    // Right banner section
+    &-right {
+      display: flex;
+      height: 60rem;
+      padding: 4.4rem 26.4rem 4.4rem 5.6rem;
+      align-items: center;
+      gap: 1px;
+      flex: 1 1 50%;
+      min-width: 0;
+      max-width: 50%;
+      background: $color-gray;
+      position: relative;
+      overflow: hidden;
+
+      @include respond-below("xl") {
+        max-width: 100%;
+        width: 100%;
+        justify-content: center;
+        padding: 1.6rem 3.2rem;
+      }
+
+      @include respond-below("lg") {
+        flex: 1 1 100%;
+        height: auto;
+        text-align: center;
+        align-items: stretch;
+        justify-content: flex-start;
+      }
+      @include respond-below("md") {
+        flex-direction: column;
+      }
+
+      &__content {
+        display: flex;
+        max-width: 36rem;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1.6rem;
+        flex: 1 0 0;
+        z-index: 2;
+
+        @include respond-below("xl") {
+          order: 1;
+          flex: 1 0 50%;
+          max-width: 50%;
+        }
+
+        @include respond-below("lg") {
+          max-width: 100%;
+          align-items: center;
+          padding: 3rem 2rem;
+          order: 1;
+        }
+
+        @include respond-below("md") {
+          padding: 2.5rem 2rem;
+          gap: 1.4rem;
+        }
+
+        @include respond-below("sm") {
+          padding: 2rem 1.5rem;
+          gap: 1.2rem;
+        }
+
+        @include respond-below("xs") {
+          padding: 1.5rem 1rem;
+          gap: 1rem;
+        }
+
+        .text-container {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 1.6rem;
+          align-self: stretch;
+
+          @include respond-below("xl") {
+            flex: 1 0 50%;
+            max-width: 100%;
+          }
+
+          @include respond-below("lg") {
+            align-items: center;
+            text-align: center;
+          }
+
+          @include respond-below("md") {
+            gap: 1.4rem;
+          }
+
+          @include respond-below("sm") {
+            gap: 1.2rem;
+          }
+
+          @include respond-below("xs") {
+            gap: 1rem;
+          }
+
+          &__heading {
+            color: $color-black;
+            font-size: 6.4rem;
+            font-style: normal;
+            font-weight: 200;
+            line-height: 0.875;
+
+            @include respond-below("xxl") {
+              font-size: 5.8rem;
+            }
+
+            @include respond-below("xl") {
+              font-size: 5.2rem;
+              line-height: 0.9;
+            }
+
+            @include respond-below("md") {
+              font-size: 4.6rem;
+              line-height: 0.9;
+            }
+
+            @include respond-below("sm") {
+              font-size: 4.8rem;
+              line-height: 1;
+            }
+
+            @include respond-below("xs") {
+              font-size: 4rem;
+              line-height: 1.1;
+            }
+
+            span {
+              font-weight: 500;
+            }
+          }
+
+          &__body {
+            color: $color-muted;
+            font-size: 1.4rem;
+            font-style: normal;
+            font-weight: 500;
+            line-height: 1.71429;
+
+            @include respond-below("md") {
+              line-height: 1.6;
+            }
+
+            @include respond-below("sm") {
+              font-size: 1.3rem;
+              line-height: 1.5;
+            }
+
+            @include respond-below("xs") {
+              font-size: 1.2rem;
+              line-height: 1.4;
+            }
+          }
+        }
+      }
+
+      &__img-container {
+        display: flex;
+        max-width: 82.9rem;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        position: absolute;
+        right: -53.7rem;
+        top: 4.9rem;
+
+        @include respond-below("xxl") {
+          max-width: 75rem;
+          right: -48rem;
+          top: 4.5rem;
+        }
+
+        @include respond-below("xl") {
+          position: static;
+          max-width: 65rem;
+          right: -42rem;
+          top: 4rem;
+        }
+
+        @include respond-below("lg") {
+          position: relative;
+          right: 0;
+          top: 0;
+          max-width: 100%;
+          order: -1;
+          margin: 0;
+          align-self: stretch;
+        }
+
+        .image {
+          width: 100%;
+          height: auto;
+          object-fit: contain;
+
+          @include respond-below("md") {
+            object-fit: cover;
+            object-position: center;
+          }
+
+          @include respond-below("sm") {
+            max-height: 22rem;
+          }
+
+          @include respond-below("xs") {
+            max-height: 20rem;
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,51 @@
+@use "css/frontend/ecommerce/abstracts" as *;
+/*---------------- NEW ARRIVALS ----------------*/
+
+.new-arrival-section {
+  background: $color-white;
+  width: 100%;
+  position: relative;
+  .products {
+    display: flex;
+    padding: 5.6rem 16rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 3.2rem;
+    &-tags {
+      display: flex;
+      align-items: center;
+      gap: 3.2rem;
+      align-self: stretch;
+      &__item {
+        color: $new-arrival-tag-color;
+        text-align: center;
+        font-size: 1.8rem;
+        font-weight: 500;
+        line-height: 1.77778; /* 177.778% */
+        text-decoration: none;
+      }
+      &__item.selected {
+        color: $color-black;
+        position: relative;
+        display: inline-block;
+        text-align: center;
+        &::after {
+          content: "";
+          display: block;
+          margin: 0 auto;
+          margin-top: 2px;
+          width: 100%;
+          height: 2px;
+          background: $color-black;
+          border-radius: 1px;
+        }
+      }
+    }
+    &-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.6rem;
+      align-items: stretch;
+    }
+  }
+}

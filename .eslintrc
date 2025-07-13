@@ -1,5 +1,6 @@
 {
-  "extends": "eslint:recommended",
+  "extends": ["eslint:recommended", "plugin:jsdoc/recommended"],
+  "plugins": ["jsdoc"],
   "parser": "@babel/eslint-parser",
   "parserOptions": {
     "ecmaVersion": "latest",

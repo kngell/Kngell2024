@@ -1,0 +1,140 @@
+@use "css/frontend/ecommerce/abstracts" as *;
+/*------------------------SHOP FILTER ITEMS ---------------------*/
+.shop-filter {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2.4rem;
+  align-self: stretch;
+  .content {
+    display: flex;
+    align-items: flex-end;
+    gap: 2.4rem;
+    align-self: stretch;
+    &__search-items {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1.6rem;
+      flex: 1 0 0;
+      .search {
+        @include search-component($font-size: 1.4rem);
+      }
+      .items {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.8rem;
+        align-self: stretch;
+        max-height: 40.8rem; /* Adjust this value as needed for your layout */
+        overflow-y: auto; /* Adds vertical scrollbar when content overflows */
+        padding-right: 10rem; /* Optional: Add some padding to prevent content from touching the scrollbar */
+
+        /* Optional: Style the scrollbar for WebKit browsers */
+        &::-webkit-scrollbar {
+          width: 8px;
+        }
+
+        &::-webkit-scrollbar-track {
+          background: #f1f1f1;
+          border-radius: 10px;
+        }
+
+        &::-webkit-scrollbar-thumb {
+          background: #888;
+          border-radius: 10px;
+        }
+
+        &::-webkit-scrollbar-thumb:hover {
+          background: #555;
+        }
+
+        &__box {
+          display: flex;
+          align-items: center;
+          align-self: stretch;
+
+          [type="checkbox"] {
+            display: none; // Hide the native checkbox
+
+            // Styles for the custom checkbox when it's NOT checked
+            & + label {
+              position: relative; // Essential for positioning ::before and ::after
+              cursor: pointer;
+              color: $color-black; // Example color, replace with your variable
+              font-family: map-get($font, family);
+              font-size: 1.5rem;
+              font-style: normal;
+              font-weight: 500;
+              line-height: 1.6; /* 160% */
+              display: flex;
+              align-items: center;
+              gap: 0.8rem; // Gap between the custom checkbox and the text
+              align-self: stretch;
+
+              // Styles for the text content inside the label
+              p {
+                margin: 0; // Remove default paragraph margin
+                display: flex; // Use flex to align text and span
+                align-items: center;
+                gap: 0.4rem; // Gap between main text and count span
+                span {
+                  color: $brand-span-color; // Example color, replace with your variable
+                  font-size: 1.2rem;
+                  font-weight: 400;
+                  line-height: 2;
+                }
+              }
+
+              // The custom checkbox square (always visible, changes color when checked)
+              &::before {
+                content: "";
+                display: inline-block;
+                width: 16px; // Desired size of the checkbox square
+                height: 16px;
+                border: 1.5px solid #d3d3d3; // Unchecked border color
+                border-radius: 3px;
+                background-color: white; // Unchecked background color
+                flex-shrink: 0; // Prevent the box from shrinking in flex layout
+                box-sizing: border-box; // Ensure padding/border are included in width/height
+                transition: background-color 0.2s ease, border-color 0.2s ease; // Smooth transition for colors
+              }
+
+              // The SVG checkmark (initially hidden)
+              &::after {
+                content: "";
+                position: absolute; // Position relative to the label
+                top: 50%; // Center vertically
+                left: 0; // Align with the left edge of the ::before box
+                transform: translateY(-50%); // Fine-tune vertical centering
+                width: 16px; // Match the size of the ::before box
+                height: 16px;
+
+                // ✨ UPDATED BACKGROUND-IMAGE WITH YOUR SVG ✨
+                background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="6" height="5" viewBox="0 0 6 5" fill="none"><path d="M1.00004 3.83335L1.56646 4.25817C1.99516 4.57969 2.60109 4.50614 2.94042 4.09141L5.33337 1.16669" stroke="white" stroke-linecap="round"/></svg>');
+                background-size: 80%; // Adjust size of the SVG within the 16x16 area (e.g., 80% or 100%)
+                background-repeat: no-repeat;
+                background-position: center;
+                opacity: 0; // Hidden by default
+                transition: opacity 0.2s ease-in-out; // Smooth transition for visibility
+                pointer-events: none; // Ensures clicks pass through to the label
+              }
+            }
+
+            // Styles for the custom checkbox when it IS checked
+            &:checked + label {
+              &::before {
+                background-color: $color-black;
+                border-color: $color-black;
+              }
+              &::after {
+                opacity: 1;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

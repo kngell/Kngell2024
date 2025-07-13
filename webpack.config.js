@@ -1,13 +1,13 @@
 const { merge } = require("webpack-merge");
 const { commonConfig } = require("./webpack/commonConfig");
 const { viewsConfig } = require("./webpack/viewsConfig");
-const { assetsConfig } = require("./webpack/assetsConfig");
+const { assetsConfig } = require("./webpack/assetConfig.v2");
 require("dotenv").config();
 
 module.exports = () => {
   switch (process.env.NODE_ENV) {
     case "development":
-      return [merge(viewsConfig, commonConfig), merge(assetsConfig, commonConfig)];
+      return merge(assetsConfig, commonConfig, viewsConfig);
 
     case "production":
       console.log("production");

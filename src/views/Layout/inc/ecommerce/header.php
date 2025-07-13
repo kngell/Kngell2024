@@ -13,15 +13,45 @@
        <?= $this->css('css/plugins/homeplugins') ?? '' ?>
        <!-- Main style -->
        <?= $this->css('css/frontend/main/main') ?? '' ?>
+       <script>
+       (function() {
+           const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+           const wsHost = window.location.host;
+           const wsUrl = `${protocol}//${wsHost}/ws`; // Common WebSocket path for webpack-dev-server
+
+           const ws = new WebSocket(wsUrl);
+
+           ws.onmessage = function(event) {
+               const data = JSON.parse(event.data);
+               if (data.type === 'full-reload') {
+                   console.log(`[Custom Reload] Full reload triggered by server. Reason: ${data.reason}`);
+                   window.location.reload(true); // Forces a full reload
+               }
+           };
+
+           ws.onopen = function() {
+               console.log('[Custom Reload] WebSocket connection opened.');
+           };
+           ws.onclose = function() {
+               console.log('[Custom Reload] WebSocket connection closed.');
+           };
+           ws.onerror = function(error) {
+               console.error('[Custom Reload] WebSocket error:', error);
+           };
+       })();
+       </script>
    </head>
 
    <body class="page-body">
        <!-- Main Header -->
        <header class="header">
-           <div class="header-top">
+           <div class="container header-top">
                <button class="header-top__mobile-toggle js-mobile-menu-toggle">
-                   <img src="<?= $this->asset('img/icons-sprite.svg') ?>#hamburger-menu.svg" alt="Mobile menu"
-                       class="header__mobile-toggle-img">
+                   <svg class="logo" aria-label="Mobile menu" role="img">
+                       <use href="<?= $this->asset('img/icons-sprite.svg') ?>#hamburger-menu.svg"
+                           class="header__mobile-toggle-img">
+                       </use>
+                   </svg>
                </button>
                <div class="header-top__logo">
                    <a href="#" class="logo-container">
@@ -84,7 +114,7 @@
                </div>
 
            </div>
-           <div class="header-bottom category-nav">
+           <div class="container header-bottom category-nav">
                <a href="#" class="category-nav__link">
                    <svg class="category-nav__link-icon">
                        <use href="<?= $this->asset('img/icons-sprite.svg') ?>#icon-phone"></use>

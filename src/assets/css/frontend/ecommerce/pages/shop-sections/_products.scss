@@ -1,0 +1,26 @@
+@use "css/frontend/ecommerce/abstracts" as *;
+/*------------------------SHOP PRODUCTS ---------------------*/
+
+.products {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4rem;
+  flex: 1 0 0;
+  &__content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2.4rem;
+    align-self: stretch;
+    &--header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      align-content: center;
+      row-gap: 16rem;
+      align-self: stretch;
+      flex-wrap: wrap;
+    }
+  }
+}

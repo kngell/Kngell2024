@@ -64,7 +64,7 @@ abstract class AbstractApp extends Container
     /**
      * @return App
      */
-    public static function getInstance() : self
+    public static function getInstance(): self
     {
         if (! isset(static::$instance)) {
             static::$instance = new static();
@@ -171,7 +171,7 @@ abstract class AbstractApp extends Container
             $cacheFacade = $container->resolve(CacheFacade::class);
             return $cacheFacade->create(
                 $this->appConfig->getCacheIdentifier(),
-                $this->appConfig->getCache()
+                $this->appConfig->getCache(),
             );
         });
 

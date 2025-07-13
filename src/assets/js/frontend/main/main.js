@@ -41,14 +41,14 @@ class Main {
 
       // Use the importAll method to import all SVG icons
       // This uses webpack's require.context to find all files in the icons directory
-      const iconsContext = require.context(
-        "src/assets/img/icons",
-        false,
-        /\.(svg|png|jpe?g|gif)$/
-      );
-      importer.importAll(iconsContext);
+      // const iconsContext = require.context(
+      //   "src/assets/img/icons",
+      //   false,
+      //   /\.(svg|png|jpe?g|gif)$/
+      // );
+      // importer.importAll(iconsContext);
 
-      console.log("Icons imported successfully");
+      // console.log("Icons imported successfully");
     } catch (error) {
       console.error("Error importing icons:", error);
     }
