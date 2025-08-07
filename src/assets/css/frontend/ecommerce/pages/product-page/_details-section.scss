@@ -1,0 +1,92 @@
+@use "css/frontend/ecommerce/abstracts" as *;
+
+.details-container {
+  display: flex;
+  padding: 8rem 16rem;
+  flex-direction: column;
+  align-items: center;
+  gap: 4rem;
+  background: $sections-bg1;
+  .content {
+    display: flex;
+    padding: 4.8rem 4rem;
+    flex-direction: column;
+    align-items: center;
+    gap: 3.2rem;
+    align-self: stretch;
+    border-radius: 8px;
+    background: #fff;
+    &__heading {
+      align-self: stretch;
+      color: $color-black;
+      font-size: 2.4rem;
+      font-weight: 500;
+      line-height: 1.33333; /* 133.333% */
+    }
+    &__desc {
+      align-self: stretch;
+      color: $color-text-details;
+      font-size: 1.4rem;
+      font-weight: 500;
+      line-height: 1.71429; /* 171.429% */
+    }
+    &__details {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4rem;
+      align-self: stretch;
+      &--info {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1.6rem;
+        align-self: stretch;
+        .heading {
+          align-self: stretch;
+          color: $color-black;
+          font-size: 2rem;
+          font-weight: 500;
+          line-height: 1.2; /* 120% */
+        }
+        .features {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 2.4rem;
+          align-self: stretch;
+          &__details {
+            display: flex;
+            padding-bottom: 8px;
+            justify-content: space-between;
+            align-items: flex-start;
+            align-self: stretch;
+            border-bottom: 0.5px solid $color-features-border;
+            &--parameter {
+              color: $color-black;
+              line-height: 1.5; /* 150% */
+            }
+            &--value,
+            &-group--value {
+              color: $color-black;
+              font-size: 1.5rem;
+              line-height: 1.6; /* 160% */
+            }
+            &-group {
+              display: flex;
+              flex-direction: column;
+              justify-content: flex-start;
+              align-items: flex-end;
+              &--value {
+                // color: $color-black;
+                text-align: right;
+                // font-size: 1.5rem;
+                // line-height: 1.6; /* 160% */
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

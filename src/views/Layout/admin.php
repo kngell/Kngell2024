@@ -3,10 +3,10 @@ require_once 'inc/admin/head.php';
 
 if ($this->request->get('request_uri') !== '/login'):?>
 <!----------------Header-------------------->
-<?php require_once 'inc/admin/header.php'; ?>
+<?php require_once 'inc/admin/aside.php'; ?>
 <!----------------xNavbar-------------------->
 <!----------------Sidebar-------------------->
-<?php require_once 'inc/admin/sidebar.php'; ?>
+<?php require_once 'inc/admin/header.php'; ?>
 <!----------------xSidebar-------------------->
 <!----------------Sidenavbar-------------------->
 <?= $sideNavComponent ?? ''?>

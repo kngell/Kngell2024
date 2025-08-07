@@ -1,0 +1,56 @@
+@use "sass:map";
+@use "css/frontend/ecommerce/abstracts/variables" as *;
+// transition
+@mixin transition($property: all, $duration: 0.2s, $timing: ease) {
+  transition: $property $duration $timing;
+}
+
+//fucus-outline
+@mixin focus-outline {
+  outline: 2px solid map-get($colors-ecommerce, focus);
+  outline-offset: 2px;
+}
+
+//hover-bg
+@mixin hover-bg {
+  &:hover {
+    background-color: map-get($colors, gray-100);
+  }
+}
+
+@mixin star($width: 2.4rem, $height: 2.4rem, $color: $star-color-full) {
+  display: flex;
+  align-items: center;
+  align-self: stretch;
+  &__icon {
+    width: $width;
+    height: $height;
+    color: $color;
+    stroke-width: 1px;
+  }
+}
+
+@mixin button-reset {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+@mixin logo(
+  $width: 9.6rem,
+  $height: 3.2rem,
+  $padding: 0px 0.047px 3.72px 0px,
+  $color: $color-black
+) {
+  display: flex;
+  width: $width;
+  height: $height;
+  padding: $padding;
+  justify-content: center;
+  align-items: center;
+  color: $color;
+  .logo {
+    width: 100%;
+    height: 100%;
+  }
+}

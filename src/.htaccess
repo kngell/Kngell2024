@@ -24,11 +24,11 @@ FileETag None
     RewriteRule "/\.|^\.(?!well-known/)" - [F,L]
 </IfModule>
 
-<IfModule mod_php.c>
-    php_flag display_errors Off
-    php_value max_execution_time 300
-    php_value post_max_size 128M
-    php_value upload_max_filesize 128M
-    php_value session.gc_maxlifetime 1440
-    php_value opcache.enable 1
-</IfModule>
+# <IfModule mod_php.c>
+#     php_flag display_errors Off
+#     php_value max_execution_time 300
+#     php_value post_max_size 128M
+#     php_value upload_max_filesize 128M
+#     php_value session.gc_maxlifetime 1440
+#     php_value opcache.enable 1
+# </IfModule>

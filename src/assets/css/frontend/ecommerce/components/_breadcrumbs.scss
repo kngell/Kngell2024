@@ -1,0 +1,44 @@
+@use "css/frontend/ecommerce/abstracts" as *;
+
+/*---------------------BREADCRUMBS------------------------*/
+
+.breadcrumbs-section {
+  .breadcrumbs-list {
+    padding-top: 4rem;
+    padding-bottom: 4rem;
+    list-style-type: none;
+    display: flex;
+    align-items: center;
+    gap: 1.6rem;
+    &__item {
+      @include flex-center;
+      gap: 1.6rem;
+      &:not(:last-of-type)::after {
+        content: "";
+        display: inline-block;
+        width: 2.4rem;
+        height: 2.4rem;
+        color: $breadcrumbs-color;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M9 6L15 12L9 18' stroke='currentColor'/%3E%3C/svg%3E");
+        background-size: 100% 100%;
+        background-repeat: no-repeat;
+        flex-shrink: 0;
+      }
+      &--link {
+        text-decoration: none;
+        color: $breadcrumbs-color;
+        font-size: 1.6rem;
+        font-weight: 500;
+        line-height: 1; /* 100% */
+        @include transition;
+        &:hover {
+          color: $color-black;
+          text-decoration: underline;
+        }
+        &.active {
+          color: $color-black;
+        }
+      }
+    }
+  }
+}

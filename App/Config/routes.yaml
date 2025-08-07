@@ -18,7 +18,10 @@
   controller: products
   method: index
   httpMethod: get
-
+/ecommerce:
+  controller: ecommerce
+  method: index
+  httpMethod: get
 /create-payment:
   controller: payments
   method: pay

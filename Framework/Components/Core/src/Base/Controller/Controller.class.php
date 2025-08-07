@@ -31,7 +31,7 @@ abstract class Controller
         }
     }
 
-    public function render(string $templatePath, array $context = []) : string
+    public function render(string $templatePath, array $context = []): string
     {
         $pathParts = explode(DS, $templatePath);
         if (count($pathParts) === 1) {
@@ -40,7 +40,7 @@ abstract class Controller
         return $this->view->render($templatePath, $this->context($context));
     }
 
-    public function redirect(string $url, bool $permanent = true) : Response
+    public function redirect(string $url, bool $permanent = true): Response
     {
         // $this->session->delete(PREVIOUS_PAGE);
         // $s = $_SESSION;
@@ -50,7 +50,7 @@ abstract class Controller
         return Rooter::redirect($url, $permanent);
     }
 
-    public function page() : array
+    public function page(): array
     {
         return [];
     }
@@ -63,7 +63,7 @@ abstract class Controller
      * @throws DependencyHasNoDefaultValueException
      * @throws BaseInvalidArgumentException
      */
-    public function getModel(string $modelName) : Model
+    public function getModel(string $modelName): Model
     {
         if (! class_exists($modelName)) {
             throw new BaseInvalidArgumentException("Model $modelName does not exist.");
@@ -87,7 +87,7 @@ abstract class Controller
         return $this;
     }
 
-    protected function getRedirectUrl() : string|null
+    protected function getRedirectUrl(): string|null
     {
         if ($this->session->exists('current_url')) {
             $previousUrl = $this->session->get('current_url');
@@ -97,7 +97,7 @@ abstract class Controller
         return $this->session->get('previous_url');
     }
 
-    protected function deleteFiles(string $dir) : void
+    protected function deleteFiles(string $dir): void
     {
         $files = FileManager::dirFilePaths($dir);
         foreach ($files as $file) {
@@ -105,7 +105,7 @@ abstract class Controller
         }
     }
 
-    protected function form(AbstractFormCreator $frm, string $action, array|Entity|bool $formValues = [], array|Entity|bool $formErrors = []) : string
+    protected function form(AbstractFormCreator $frm, string $action, array|Entity|bool $formValues = [], array|Entity|bool $formErrors = []): string
     {
         if ($this->session->exists('form')) {
             $form = $this->session->get('form');
@@ -134,34 +134,34 @@ abstract class Controller
     {
     }
 
-    protected function pageTitle(string $title) : void
+    protected function pageTitle(string $title): void
     {
         $this->view->pageTitle($title);
     }
 
-    protected function addProperties(array $props) : void
+    protected function addProperties(array $props): void
     {
         $this->view->addProperties($props);
     }
 
-    protected function response(string $template, array $data = []) : Response
+    protected function response(string $template, array $data = []): Response
     {
         return new Response(
             $this->render(
                 $template,
-                $data
+                $data,
             ),
             HttpStatusCode::HTTP_OK,
-            ['Content-Type' => 'text/html']
+            ['Content-Type' => 'text/html'],
         );
     }
 
-    protected function jsonResponse(string|object|array|bool $data = []) : JsonResponse
+    protected function jsonResponse(string|object|array|bool $data = []): JsonResponse
     {
         return new JsonResponse($data, HttpStatusCode::HTTP_OK, ['Content-Type' => 'application/json']);
     }
 
-    private function context(array $context) : array
+    private function context(array $context): array
     {
         $this->view->setToken($this->token);
         $this->view->setRequest($this->request);
@@ -173,7 +173,7 @@ abstract class Controller
         }
         $navbar = match (true) {
             $this->view->getLayout() === 'default' => DefaultNavbarDecorator::class,
-            $this->view->getLayout() === 'admin' => AdminNavbarDecorator::class,
+            // $this->view->getLayout() === 'admin' => AdminNavbarDecorator::class,
             default => '',
         };
         return array_merge($context, ['message' => $this->flash->get()], ! empty($navbar) ? (new $navbar($this))->page() : []);

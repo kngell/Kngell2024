@@ -39,10 +39,27 @@ $colors-ecommerce: (
   gray-800: #2e2e2e,
   focus: #0066cc,
 );
+$bar-color1: #d9d9d9;
+//Buttuns
+$btn-border-color: #545454;
+$star-color-full: #ffb547;
 // Banner - hero section
 $color-muted: #909090;
 $color-white: #fff;
 $color-black: #000;
+$color-black1: #4e4e4e;
+$color-black2: #111;
+$color-purple: #781dbc;
+$color-red: #e10000;
+$color-gray: #e8e8e8;
+$color-gray-light1: #d5d5d5;
+$color-gray-light2: #6f6f6f;
+$color-gray-light3: #f4f4f4;
+$color-gray-light4: #979797;
+$color-gray-light5: #a3a3a3;
+$color-gray-light6: #ebebeb;
+$color-yellow: #e1b000;
+$color-black-light: #0c0c0c;
 $color-gray: #ededed;
 $color-big-card-light: #f9f9f9;
 $color-big-card-normal: #eaeaea;
@@ -56,7 +73,7 @@ $banner-bg-form: #f5f5f5;
 $banner-text-gray: #787878;
 $footer-text: #cfcfcf;
 //Categories
-$category-bg-color: #fafafa;
+$sections-bg1: #fafafa;
 //Products
 $product-bg-color: #f6f6f6;
 $color-underline: #b5b5b5;
@@ -65,6 +82,8 @@ $color-border-filter: #9f9f9f;
 $color-info-filter-line: #e7e7e7;
 $color-scroll-barre-bg1: #414141;
 $color-scroll-barre-bg2: #cecece;
+$color-text-details: #9d9d9d;
+$color-features-border: #cdcdcd;
 /* ************** TYPOGRAPHY ************** */
 $base-font-size: 62.5%;
 $paragraph-size: 1.6rem;
@@ -77,9 +96,45 @@ $new-arrival-tag-color: #8b8b8b;
 $breadcrumbs-color: #a4a4a4;
 //Brands
 $brand-span-color: #929292;
+//Products
+$product-header-color: #6c6c6c;
+$product-header-dropdown-border: #d4d4d4;
+$product-price-color: #a0a0a0;
+$truck-color: #797979;
+$feature-text-color: #717171;
+//Reviews
+$review-text-color: #7e7e7e;
+//checkout multisteps form
+$checkout-primary-color: #007bff;
+$checkout-success-color: #28a745;
+$checkout-danger-color: #dc3545;
+$checkout-secondary-color: #6c757d;
+$checkout-light-grey: #e0e0e0;
+$checkout-dark-grey: #777;
+$checkout-text-color: #333;
+$checkout-box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+$form-step-address-title: #17183b;
+$form-step-shipping-bg: #d1d1d8;
+$checkout-step-background-color: #fff;
 /* ************** RADIUS ************** */
 $category-border-radius: 15px;
 
+/* ************** INPUT CONFIG ************** */
+$input-config: (
+  padding: 1.2rem 1.6rem,
+  border-color: #ccc,
+  border-radius: 0.6rem,
+  focus-color: #007bff,
+  label-color: #666,
+  label-floating-color: #333,
+  font-size: 1.6rem,
+);
+$padding: (
+  top: 1.6rem,
+  right: 1.6rem,
+  bottom: 0.6rem,
+  left: 1.6rem,
+);
 /* ************** BREAKPOINTS ************** */
 $breakpoints: (
   "xs": 480px,

@@ -1,0 +1,26 @@
+@use "css/frontend/ecommerce/abstracts" as *;
+/*---------------- CHECKOUT REVIEW ----------------*/
+.review-details {
+  background-color: #f9f9f9;
+  border: 1px solid $checkout-light-grey;
+  border-radius: 5px;
+  padding: 20px;
+  margin-top: 20px;
+
+  h3 {
+    color: $checkout-primary-color;
+    margin-top: 0;
+    margin-bottom: 15px;
+    border-bottom: 1px dashed $checkout-light-grey;
+    padding-bottom: 5px;
+  }
+
+  p {
+    margin-bottom: 10px;
+    line-height: 1.5;
+
+    strong {
+      color: $checkout-text-color;
+    }
+  }
+}

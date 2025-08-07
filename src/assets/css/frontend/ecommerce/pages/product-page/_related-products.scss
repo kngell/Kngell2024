@@ -1,0 +1,26 @@
+@use "css/frontend/ecommerce/abstracts" as *;
+/*------------------- RELATED PRODUCTS --------------------*/
+
+.related-products-container {
+  display: flex;
+  padding: 8rem 16rem;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3.2rem;
+  background: $color-white;
+  .title {
+    color: $color-black;
+    text-align: center;
+    font-size: 2.4rem;
+    font-weight: 500;
+    line-height: 1.33333; /* 133.333% */
+  }
+  .related-products {
+    display: flex;
+    align-items: flex-start;
+    align-content: flex-start;
+    gap: 1.6rem;
+    align-self: stretch;
+    flex-wrap: wrap;
+  }
+}

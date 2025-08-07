@@ -1,0 +1,309 @@
+@use "css/frontend/ecommerce/abstracts" as *;
+/*------------------- PRODUCT PAGE --------------------*/
+
+.section {
+  .single-product {
+    display: flex;
+    padding: 11.2rem 16rem;
+    align-items: center;
+    gap: 4.8rem;
+    &__img-container {
+      display: flex;
+      width: 53.6rem;
+      align-items: center;
+      gap: 4.8rem;
+      flex-shrink: 0;
+      .small-img-group {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2.4rem;
+        &__container {
+          width: 4.5rem;
+          height: auto;
+          aspect-ratio: 3 / 3;
+          opacity: 0.4;
+          &.active {
+            width: 7.5rem;
+            opacity: 1;
+          }
+          .image {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+          }
+        }
+      }
+      .big-img-container {
+        width: 41.5rem;
+        height: auto;
+        aspect-ratio: 41.3118 / 51.6;
+        flex-shrink: 0;
+        flex-shrink: 0;
+        .image {
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+        }
+      }
+    }
+    &__info {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 3.2rem;
+      flex: 1 0 0;
+      .content {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1.6rem;
+        align-self: stretch;
+        position: relative;
+        width: 100%;
+        flex: 0 0 auto;
+        &__header {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 2.4rem;
+          align-self: stretch;
+          position: relative;
+          width: 100%;
+          flex: 0 0 auto;
+          &--heading {
+            align-self: stretch;
+            color: $color-black;
+            font-size: 4rem;
+            font-weight: 600;
+            line-height: 1; /* 100% */
+          }
+          &--price {
+            display: flex;
+            align-items: center;
+            gap: 1.6rem;
+            align-self: stretch;
+            .current-price {
+              color: $color-black;
+              font-size: 3.2rem;
+              font-weight: 500;
+              line-height: 1.5; /* 150% */
+              letter-spacing: 0.96px;
+              white-space: nowrap;
+              position: relative;
+              width: fit-content;
+            }
+            .initial-price {
+              color: $product-price-color;
+              font-size: 2.4rem;
+              line-height: 1.33333; /* 133.333% */
+              letter-spacing: 0.72px;
+              text-decoration-line: line-through;
+              position: relative;
+              flex: 1;
+            }
+          }
+        }
+        &__body {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 2.4rem;
+          align-self: stretch;
+          &--colors {
+            display: flex;
+            align-items: center;
+            gap: 2.4rem;
+            position: relative;
+            align-self: stretch;
+            width: 100%;
+            flex: 0 0 auto;
+            .colors-title {
+              color: $color-black-light;
+              font-size: 1.5rem;
+              line-height: 1.6; /* 160% */
+              position: relative;
+              width: fit-content;
+              white-space: nowrap;
+            }
+            .colors-value {
+              display: flex;
+              padding-right: 24.6rem;
+              align-items: center;
+              gap: 0.8rem;
+              flex: 1 0 0;
+              align-self: stretch;
+              .icon {
+                width: 3.2rem;
+                height: 3.2rem;
+                &.color-black {
+                  color: $color-black;
+                }
+                &.color-purple {
+                  color: $color-purple;
+                }
+                &.color-red {
+                  color: $color-red;
+                }
+                &.color-yellow {
+                  color: $color-yellow;
+                }
+                &.color-gray {
+                  color: $color-gray;
+                }
+              }
+            }
+          }
+          &--tabs-memory {
+            display: flex;
+            align-items: center;
+            gap: 1.6rem;
+            align-self: stretch;
+            .tab {
+              display: flex;
+              padding: 1.6rem 2.4rem;
+              justify-content: center;
+              align-items: center;
+              gap: 0.8rem;
+              flex: 1 0 0;
+              border-radius: 8px;
+              border: 1px solid $color-gray-light1;
+              &__text {
+                color: $color-gray-light2;
+                text-align: center;
+                font-size: 1.4rem;
+                font-weight: 500;
+                line-height: 1.14286; /* 114.286% */
+                &.disabled {
+                  color: $color-gray-light1;
+                }
+                &.active {
+                  color: $color-black;
+                }
+              }
+            }
+          }
+          &--details {
+            display: flex;
+            align-items: flex-start;
+            align-content: flex-start;
+            gap: 1.6rem;
+            align-self: stretch;
+            flex-wrap: wrap;
+            position: relative;
+            width: 100%;
+            flex: 0 0 auto;
+            .details {
+              display: flex;
+              min-width: 16.8rem;
+              padding: 1.6rem;
+              align-items: center;
+              gap: 0.8rem;
+              flex: 1 0 0;
+              border-radius: 7px;
+              background-color: $color-gray-light3;
+              position: relative;
+              &__icon {
+                width: 2.4rem;
+                height: 2.4rem;
+                color: $color-black1;
+              }
+              &__text {
+                display: flex;
+                flex-direction: column;
+                justify-content: flex-start;
+                align-items: start;
+                &--title {
+                  flex: 1 0 0;
+                  color: #a7a7a7;
+                  font-size: 1.4rem;
+                  line-height: 1.14286; /* 114.286% */
+                }
+                &--desc {
+                  color: $color-black1;
+                  font-size: 1.4rem;
+                  font-weight: 500;
+                  line-height: 1.143;
+                }
+              }
+            }
+          }
+          &--description {
+            color: $product-header-color;
+            font-size: 1.4rem;
+            line-height: 1.71429; /* 171.429% */
+            letter-spacing: 0.42px;
+            span {
+              color: $color-big-card-dark;
+              font-size: 1.4rem;
+              line-height: 1.71428;
+              letter-spacing: 0.42px;
+              text-decoration-line: underline;
+              text-decoration-style: solid;
+              text-decoration-skip-ink: none;
+              text-decoration-thickness: auto;
+              text-underline-offset: auto;
+              text-underline-position: from-font;
+              cursor: pointer;
+              @include transition;
+            }
+          }
+        }
+      }
+      .buttons {
+        display: flex;
+        align-items: flex-start;
+        align-content: flex-start;
+        gap: 1.6rem;
+        align-self: stretch;
+        flex-wrap: wrap;
+        .btn {
+          flex-grow: 1;
+        }
+      }
+      .icons {
+        display: flex;
+        align-items: center;
+        gap: 3.2rem;
+        align-self: stretch;
+        &__feature {
+          display: flex;
+          align-items: center;
+          gap: 1.6rem;
+          flex: 1 0 0;
+          border-radius: 8px;
+          &--icon-container {
+            width: 2.4rem;
+            height: 2.4rem;
+            display: flex;
+            // padding: 1.6rem;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.8rem;
+            .icon {
+              width: 100%;
+              height: 100%;
+              color: $truck-color;
+              fill: currentColor;
+            }
+          }
+          &--text {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+            font-size: 1.4rem;
+            font-weight: 500;
+            line-height: 1.71429; /* 171.429% */
+            .title {
+              color: $feature-text-color;
+            }
+            .desc {
+              color: $color-black;
+            }
+          }
+        }
+      }
+    }
+  }
+}

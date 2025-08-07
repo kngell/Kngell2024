@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+
 class View implements ViewInterface
 {
     private ViewEnvironment $viewEnv;
@@ -15,25 +16,11 @@ class View implements ViewInterface
     private string $_token = '';
     private array $properties = [];
     private Request $request;
-    // private string $favicon;
 
     public function __construct(ViewEnvironment $viewEnv)
     {
         $this->viewEnv = $viewEnv;
     }
-
-    // public function __destruct()
-    // {
-    //     unset($this->viewEnv);
-    //     unset($this->_head);
-    //     unset($this->_body);
-    //     unset($this->_footer);
-    //     unset($this->_footer);
-    //     unset($this->_html);
-    //     unset($this->_outputBuffer);
-    //     unset($this->_layout);
-    //     unset($this->request);
-    // }
 
     public function render(string $templatePath, array $context = []): string
     {
@@ -48,17 +35,17 @@ class View implements ViewInterface
         }
     }
 
-    public function pageTitle(string $title) : void
+    public function pageTitle(string $title): void
     {
         $this->_pageTitle = $title;
     }
 
-    public function setLayout(string $layout) : void
+    public function setLayout(string $layout): void
     {
         $this->_layout = $layout;
     }
 
-    public function getPageTitle() : string
+    public function getPageTitle(): string
     {
         if (! empty($this->_pageTitle)) {
             return '<title>' . $this->_pageTitle . '</title>';
@@ -66,20 +53,20 @@ class View implements ViewInterface
         return '';
     }
 
-    // public function favicon() : string
-    // {
-    //     if (isset($this->favicon)) {
-    //         return $this->favicon;
-    //     }
-    //     return '';
-    // }
+    private function isDevEnv(): bool
+    {
+        if (isset($_ENV['NODE_ENV']) && $_ENV['NODE_ENV'] === 'development') {
+            return true;
+        }
+        return false;
+    }
 
-    public function getPath() : string
+    public function getPath(): string
     {
         return $this->viewEnv->getAppPath();
     }
 
-    public function addProperties(array $props) : void
+    public function addProperties(array $props): void
     {
         foreach ($props as $name => $prop) {
             $this->properties[$name] = $prop;
@@ -94,7 +81,7 @@ class View implements ViewInterface
         return $this->_layout;
     }
 
-    public function setToken(TokenInterface $token) : void
+    public function setToken(TokenInterface $token): void
     {
         $this->_token = $token->getCsrfHash(8, $this->_pageTitle);
     }
@@ -104,12 +91,12 @@ class View implements ViewInterface
         $this->request = $request;
     }
 
-    private function token() : string
+    private function token(): string
     {
         return $this->_token;
     }
 
-    private function renderViewContent(string $templatePath, $context) : string
+    private function renderViewContent(string $templatePath, $context): string
     {
         extract($context, EXTR_SKIP);
         require_once APP . 'Functions' . DS . 'functions.php';
@@ -123,12 +110,12 @@ class View implements ViewInterface
         return $this->content('html');
     }
 
-    private function css(string|null $path = null) : string
+    private function css(string|null $path = null): string
     {
         return $this->viewEnv->getCss($path);
     }
 
-    private function js(string|null $path = null) : string
+    private function js(string|null $path = null): string
     {
         return $this->viewEnv->getJs($path);
     }
@@ -139,7 +126,7 @@ class View implements ViewInterface
      * @param string $path Relative path to the asset
      * @return string Full URL to the asset
      */
-    private function asset(string $path) : string
+    private function asset(string $path): string
     {
         // Remove leading slash if present
         $path = ltrim($path, '/');
@@ -153,18 +140,18 @@ class View implements ViewInterface
         return HOST . '/public/' . $path;
     }
 
-    private function start(string $type) : void
+    private function start(string $type): void
     {
         $this->_outputBuffer = $type;
         ob_start();
     }
 
-    private function end() : void
+    private function end(): void
     {
         isset($this->_outputBuffer) ? $this->{'_' . $this->_outputBuffer} = ob_get_clean() : '';
     }
 
-    private function content(string $type) : bool|string
+    private function content(string $type): bool|string
     {
         return match ($type) {
             'head' => $this->_head ?? '',
@@ -175,17 +162,17 @@ class View implements ViewInterface
         };
     }
 
-    private function getContentOverview(string $content):string
+    private function getContentOverview(string $content): string
     {
         return substr(strip_tags($this->htmlDecode($content)), 0, 200) . '...';
     }
 
-    private function htmlDecode(string|null $str) : string
+    private function htmlDecode(string|null $str): string
     {
         return ! empty($str) ? htmlspecialchars_decode(html_entity_decode($str), ENT_QUOTES) : '';
     }
 
-    private function isUserLoggedIn() : bool
+    private function isUserLoggedIn(): bool
     {
         $session = App::getInstance()->getSession();
         return $session->exists(CURRENT_USER_SESSION_NAME);

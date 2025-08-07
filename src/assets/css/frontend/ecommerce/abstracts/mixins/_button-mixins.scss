@@ -1,0 +1,93 @@
+@use "sass:map";
+@use "css/frontend/ecommerce/abstracts/variables" as *;
+
+// Mixin for outline button base styles
+@mixin btn-outline-base($border-color, $text-color) {
+  background-color: transparent;
+  border: 1px solid $border-color;
+  color: $text-color;
+}
+
+// Mixin for dark button base styles
+@mixin btn-dark-base($bg-color, $text-color, $border-color: transparent) {
+  background-color: $bg-color;
+  color: $text-color;
+  border: 1px solid $border-color;
+}
+
+// Mixin for different button sizes
+@mixin btn-size(
+  $padding-y,
+  $padding-x,
+  $font-size: null,
+  $line-height: null,
+  $border-radius: null
+) {
+  padding: $padding-y $padding-x;
+  @if $font-size {
+    font-size: $font-size;
+  }
+  @if $line-height {
+    line-height: $line-height;
+  }
+  @if $border-radius {
+    border-radius: $border-radius;
+  }
+}
+
+// Mixin for common hover/focus states for outline buttons
+@mixin btn-outline-hover-focus($hover-bg, $hover-color, $focus-outline-color) {
+  &:hover {
+    background: $hover-bg;
+    color: $hover-color;
+    border-color: $hover-bg; // Often border color matches background on hover for outline
+  }
+  &:focus-visible {
+    // Use :focus-visible for better accessibility
+    outline: 2px solid $focus-outline-color;
+    outline-offset: 2px;
+  }
+}
+
+// Mixin for common hover/focus states for solid buttons
+@mixin btn-solid-hover-focus($hover-bg, $hover-color, $hover-border-color, $focus-outline-color) {
+  &:hover {
+    background: $hover-bg;
+    color: $hover-color;
+    border: 1px solid $hover-border-color;
+  }
+  &:focus-visible {
+    outline: 2px solid $focus-outline-color;
+    outline-offset: 2px;
+  }
+}
+
+// Mixin for SVG arrow icon (assuming the SVG sprite is correctly set up with currentColor)
+@mixin btn-with-arrow($icon-id, $icon-color: currentColor) {
+  position: relative; // Needed for pseudo-element positioning
+  padding-right: calc(
+    5.6rem + 2.4rem + 0.8rem
+  ); // Adjust padding for icon space (original padding + icon width + gap)
+
+  &::after {
+    content: "";
+    display: inline-flex; // Use inline-flex to align with text baseline
+    width: 2.4rem;
+    height: 2.4rem;
+    justify-content: center;
+    align-items: center;
+    // Position the icon absolutely to keep it out of flow and precisely place it
+    position: absolute;
+    right: 1.6rem; // Adjust this based on your padding and desired spacing
+    top: 50%;
+    transform: translateY(-50%);
+
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M18 9L12 15L6 9' stroke='currentColor' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E"); // Your arrow SVG
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    background-position: center;
+
+    // The color property here will affect the currentColor in the SVG Data URI
+    color: $icon-color;
+  }
+}

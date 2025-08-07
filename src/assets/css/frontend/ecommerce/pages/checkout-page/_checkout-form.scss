@@ -1,0 +1,272 @@
+@use "css/frontend/ecommerce/abstracts" as *;
+/*---------------- CHECKOUT FROM ----------------*/
+
+.checkout-steps-section {
+  .checkout-form {
+    padding: 7.2rem 16rem;
+    border-radius: 8px;
+    box-shadow: $checkout-box-shadow;
+    width: 100%;
+    box-sizing: border-box;
+
+    h2 {
+      text-align: center;
+      color: $checkout-text-color;
+      margin-bottom: 25px;
+    }
+    .form-step {
+      display: none;
+      &__block {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 3.2rem;
+        align-self: stretch;
+        &--title {
+          align-self: stretch;
+          color: $form-step-address-title;
+          font-size: 2rem;
+          font-weight: 600;
+          line-height: 1.2; /* 120% */
+          text-align: left;
+          margin-bottom: 0;
+        }
+        .details {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 4.8rem;
+          align-self: stretch;
+          &__addresses {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 2.4rem;
+            align-self: stretch;
+            &--address {
+              display: flex;
+              padding: 2.4rem;
+              justify-content: space-between;
+              align-items: center;
+              align-self: stretch;
+              border-radius: 7px;
+              background: $product-bg-color;
+              .address-container {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1.6rem;
+                flex: 1 0 0;
+                &--top {
+                  display: inline-flex;
+                  align-items: center;
+                  gap: 1.6rem;
+                  align-self: stretch;
+                  @include custom-radio(
+                    $radio: address-container--top,
+                    $radio-size: 1.2em,
+                    $dot-scale: 0.65
+                  );
+                  .text-container {
+                    display: flex;
+                    align-items: center;
+                    gap: 2.4rem;
+                    flex: 1 0 0;
+                    .title {
+                      color: $form-step-address-title;
+                      font-size: 1.8rem;
+                      line-height: 1.33333; /* 133.333% */
+                      letter-spacing: 0.15px;
+                    }
+                    .tag {
+                      display: flex;
+                      padding: 0.4rem 0.8rem;
+                      justify-content: center;
+                      align-items: center;
+                      gap: 0.8rem;
+                      border-radius: 4px;
+                      background: $color-black;
+                      span {
+                        color: $color-white;
+                        font-size: 1.2rem;
+                        font-weight: 500;
+                        text-transform: uppercase;
+                      }
+                    }
+                  }
+                }
+                &--info {
+                  display: flex;
+                  padding-left: 4rem;
+                  flex-direction: column;
+                  align-items: flex-start;
+                  gap: 0.8rem;
+                  align-self: stretch;
+                  .info-title {
+                    align-self: stretch;
+                    color: $form-step-address-title;
+                    line-height: 1.5; /* 150% */
+                  }
+                  .info-phone {
+                    display: flex;
+                    align-items: flex-end;
+                    gap: 1.2rem;
+                    align-self: stretch;
+                  }
+                }
+              }
+              .address-action {
+                display: flex;
+                align-items: flex-start;
+                gap: 2.4rem;
+                &__icon-container {
+                  width: 2.4rem;
+                  height: 2.4rem;
+                  cursor: pointer;
+                  .icon {
+                    width: 100%;
+                    height: 100%;
+                    color: $color-black;
+                  }
+                }
+              }
+            }
+          }
+          &__new-line {
+            display: flex;
+            flex-direction: column;
+            align-items: center; // This centers the wrapper and text horizontally
+            gap: 0.8rem;
+            align-self: stretch;
+            cursor: pointer;
+            position: relative; // Keep this if you have other absolute positioning needs, otherwise not strictly necessary for this line effect.
+
+            .line-and-icon-wrapper {
+              // <--- NEW STYLES FOR THE WRAPPER
+              display: flex; // Makes it a flex container
+              align-items: center; // Vertically centers the icon-container and pseudo-elements
+              width: 100%; // Make the wrapper span the full width of details__new-line
+              gap: 0.8rem; // Add a gap between the lines and the icon-container (optional, adjust as needed)
+
+              // Dashed line BEFORE the icon-container
+              &::before {
+                content: "";
+                flex-grow: 1; // Makes the line expand to fill available space
+                border-top: 1px dashed #a3a3a3; // Your dashed line style
+                height: 0; // The border itself provides the height, so content height is 0
+              }
+
+              // Dashed line AFTER the icon-container
+              &::after {
+                content: "";
+                flex-grow: 1; // Makes the line expand to fill available space
+                border-top: 1px dashed #a3a3a3; // Your dashed line style
+                height: 0; // The border itself provides the height
+              }
+
+              .icon-container {
+                // Original styles for the icon container
+                width: 2.4rem;
+                height: 2.4rem;
+                flex-shrink: 0; // Prevent the icon from shrinking if space is tight
+                display: flex; // Ensure it's a flex container to center its icon if needed
+                justify-content: center;
+                align-items: center;
+
+                .icon {
+                  width: 100%;
+                  height: 100%;
+                  color: $color-black; // Assuming you want the icon color to be black
+                }
+              }
+            }
+
+            .text {
+              color: $color-black;
+              text-align: center;
+              font-size: 1.4rem;
+              line-height: 1.14286; /* 114.286% */
+              letter-spacing: 0.1px;
+            }
+          }
+        }
+        &--methods {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 1.6rem;
+          align-self: stretch;
+          .shipping-method {
+            display: flex;
+            padding: 2.4rem;
+            justify-content: space-between;
+            align-items: center;
+            align-self: stretch;
+            border-radius: 11px;
+            border: 1px solid $form-step-shipping-bg;
+            &__text {
+              display: flex;
+              align-items: center;
+              gap: 1.6rem;
+              flex: 1 0 0;
+              .cost {
+                width: 6.8rem;
+                color: $color-black;
+                font-weight: 500;
+                line-height: 1.5; /* 150% */
+                letter-spacing: 0.1px;
+              }
+              .desc {
+                flex: 1 0 0;
+                color: $form-step-address-title;
+                line-height: 1.5; /* 150% */
+              }
+            }
+            .input-box-radio {
+              display: flex;
+              align-items: flex-start;
+              gap: 1.6rem;
+              &--horizontal {
+                flex-direction: row;
+                align-items: center;
+              }
+              @include custom-radio($radio: input-box-radio, $dot-scale: 0.65);
+            }
+          }
+        }
+      }
+      &__buttons {
+        display: flex;
+        justify-content: flex-end;
+        align-items: flex-start;
+        align-content: flex-start;
+        gap: 2.4rem;
+        align-self: stretch;
+        flex-wrap: wrap;
+        .btn {
+          @include btn-size(2.4rem, 8.6rem, $line-height: 1, $border-radius: 6px);
+        }
+      }
+    }
+  }
+  // Show current step based on radio
+  #step1:checked ~ .form-step[data-step="1"],
+  #step2:checked ~ .form-step[data-step="2"] {
+    display: flex;
+    padding-top: 4.8rem;
+    padding-bottom: 4.8rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6.4rem;
+    .progress-step {
+      opacity: 1;
+    }
+  }
+  #step3:checked ~ .form-step[data-step="3"] {
+    display: flex;
+    padding-top: 2.4rem;
+    padding-bottom: 7.2rem;
+    align-items: flex-start;
+    gap: 9.6rem;
+  }
+}

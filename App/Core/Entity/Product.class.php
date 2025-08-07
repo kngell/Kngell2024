@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 class Product extends Entity
 {
-    #[EntityFieldId(name: 'id')]
+    #[EntityFieldId(name: 'pdt_id')]
     private int $id;
     private ?string $name;
     private ?string $description;

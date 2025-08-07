@@ -1,0 +1,21 @@
+@use "css/frontend/ecommerce/abstracts" as *;
+/*---------------- CHECKOUT BUTTON ----------------*/
+.buttons {
+  margin-top: 3rem;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  @include btn-size(1.2rem, 2.5rem, $border-radius: 5px);
+
+  .next-btn {
+    // @include button-styles($primary-color, darken($primary-color, 10%));
+  }
+
+  .prev-btn {
+    // @include button-styles($secondary-color, darken($secondary-color, 10%));
+  }
+
+  button[type="submit"] {
+    // @include button-styles($success-color, darken($success-color, 10%));
+  }
+}

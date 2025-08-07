@@ -249,16 +249,16 @@ $this->start('head'); ?>
                     </div>
                 </div>
             </div>
-            <div class="products shop-content__products">
-                <div class="products__content">
-                    <div class="products__content--header">
-                        <h5 class="heading-left">
-                            <span class="heading-left__text">Selected Products:</span> <span
-                                class="heading-left__number">85</span>
+            <div class="shop-products shop-content__products">
+                <div class="shop-products__content">
+                    <div class="shop-products__content--header">
+                        <h5 class="header-left">
+                            <span class="header-left__text">Selected Products:</span> <span
+                                class="header-left__number">85</span>
                         </h5>
-                        <div class="product-dropdown">
-                            <h5 class="product-dropdown--heading">By rating</h5>
-                            <div class="product-dropdown--icon-container">
+                        <div class="header-right">
+                            <h5 class="header-right--heading">By rating</h5>
+                            <div class="header-right--icon-container">
                                 <svg class="icon icon-arrow-up">
                                     <use href="<?= $this->asset('img/icons-sprite.svg') ?>#icon-arrow-up"></use>
                                 </svg>
@@ -266,7 +266,7 @@ $this->start('head'); ?>
                         </div>
 
                     </div>
-                    <div class="products__body">
+                    <div class="shop-products__content--body">
                         <div class="product-card">
                             <div class="product-card__top">
                                 <span class="product-card__top--like">
@@ -300,7 +300,98 @@ $this->start('head'); ?>
                                 </span>
                             </div>
                             <div class="product-card__image-container">
-                                <img src="../../../assets/img/ecommerce/Iphone 14 pro 1.png" alt="Iphone 14 Pro"
+                                <img src="../../../assets/img/ecommerce/galaxy-z.png" alt="Iphone 14 Pro" class="image">
+                            </div>
+                            <div class="product-card__info">
+                                <div class="product-card__info--text">
+                                    <p class="description">
+                                        Apple iPhone 11 128GB White (MQ233)
+                                    </p>
+                                    <h5 class="price">$510</h5>
+                                </div>
+                                <button class="btn btn-dark-small">Buy Now</button>
+                            </div>
+                        </div>
+                        <div class="product-card">
+                            <div class="product-card__top">
+                                <span class="product-card__top--like">
+                                    <!-- Like Icon SVG -->
+                                    <svg class="icon" aria-label="Like" role="img">
+                                        <use href="<?= $this->asset('img/icons-sprite.svg') ?>#icon-like"></use>
+                                    </svg>
+                                </span>
+                            </div>
+                            <div class="product-card__image-container">
+                                <img src="../../../assets/img/ecommerce/ipad9.png" alt="Iphone 14 Pro" class="image">
+                            </div>
+                            <div class="product-card__info">
+                                <div class="product-card__info--text">
+                                    <p class="description">
+                                        Apple iPhone 11 128GB White
+                                        (MQ233)
+                                    </p>
+                                    <h5 class="price">$550</h5>
+                                </div>
+                                <button class="btn btn-dark-small">Buy Now</button>
+                            </div>
+                        </div>
+                        <div class="product-card">
+                            <div class="product-card__top">
+                                <span class="product-card__top--like">
+                                    <!-- Like Icon SVG -->
+                                    <svg class="icon" aria-label="Like" role="img">
+                                        <use href="<?= $this->asset('img/icons-sprite.svg') ?>#icon-like"></use>
+                                    </svg>
+                                </span>
+                            </div>
+                            <div class="product-card__image-container">
+                                <img src="../../../assets/img/ecommerce/Iphone 14 pro 1-3.png" alt="Iphone 14 Pro"
+                                    class="image">
+                            </div>
+                            <div class="product-card__info">
+                                <div class="product-card__info--text">
+                                    <p class="description">
+                                        Apple iPhone 14 Pro 1TB Gold (MQ2V3)
+                                    </p>
+                                    <h5 class="price">$1499</h5>
+                                </div>
+                                <button class="btn btn-dark-small">Buy Now</button>
+                            </div>
+                        </div>
+                        <div class="product-card">
+                            <div class="product-card__top">
+                                <span class="product-card__top--like">
+                                    <!-- Like Icon SVG -->
+                                    <svg class="icon" aria-label="Like" role="img">
+                                        <use href="<?= $this->asset('img/icons-sprite.svg') ?>#icon-like"></use>
+                                    </svg>
+                                </span>
+                            </div>
+                            <div class="product-card__image-container">
+                                <img src="../../../assets/img/ecommerce/Iphone 14 pro.png" alt="Iphone 14 Pro"
+                                    class="image">
+                            </div>
+                            <div class="product-card__info">
+                                <div class="product-card__info--text">
+                                    <p class="description">
+                                        Apple iPhone 14 Pro 1TB Gold (MQ2V3)
+                                    </p>
+                                    <h5 class="price">$1437</h5>
+                                </div>
+                                <button class="btn btn-dark-small">Buy Now</button>
+                            </div>
+                        </div>
+                        <div class="product-card">
+                            <div class="product-card__top">
+                                <span class="product-card__top--like">
+                                    <!-- Like Icon SVG -->
+                                    <svg class="icon" aria-label="Like" role="img">
+                                        <use href="<?= $this->asset('img/icons-sprite.svg') ?>#icon-like"></use>
+                                    </svg>
+                                </span>
+                            </div>
+                            <div class="product-card__image-container">
+                                <img src="../../../assets/img/ecommerce/IphonePro.jpg" alt="Iphone 14 Pro"
                                     class="image">
                             </div>
                             <div class="product-card__info">
@@ -323,7 +414,29 @@ $this->start('head'); ?>
                                 </span>
                             </div>
                             <div class="product-card__image-container">
-                                <img src="../../../assets/img/ecommerce/Iphone 14 pro 1.png" alt="Iphone 14 Pro"
+                                <img src="../../../assets/img/ecommerce/watch.png" alt="Iphone 14 Pro" class="image">
+                            </div>
+                            <div class="product-card__info">
+                                <div class="product-card__info--text">
+                                    <p class="description">
+                                        pple iPhone 14 Pro 512GB Gold (MQ233)
+                                    </p>
+                                    <h5 class="price">$1437</h5>
+                                </div>
+                                <button class="btn btn-dark-small">Buy Now</button>
+                            </div>
+                        </div>
+                        <div class="product-card">
+                            <div class="product-card__top">
+                                <span class="product-card__top--like">
+                                    <!-- Like Icon SVG -->
+                                    <svg class="icon" aria-label="Like" role="img">
+                                        <use href="<?= $this->asset('img/icons-sprite.svg') ?>#icon-like"></use>
+                                    </svg>
+                                </span>
+                            </div>
+                            <div class="product-card__image-container">
+                                <img src="../../../assets/img/ecommerce/watch6-classic.png" alt="Iphone 14 Pro"
                                     class="image">
                             </div>
                             <div class="product-card__info">
@@ -346,7 +459,7 @@ $this->start('head'); ?>
                                 </span>
                             </div>
                             <div class="product-card__image-container">
-                                <img src="../../../assets/img/ecommerce/Iphone 14 pro 1.png" alt="Iphone 14 Pro"
+                                <img src="../../../assets/img/ecommerce/Iphone 14 pro.png" alt="Iphone 14 Pro"
                                     class="image">
                             </div>
                             <div class="product-card__info">
@@ -369,8 +482,7 @@ $this->start('head'); ?>
                                 </span>
                             </div>
                             <div class="product-card__image-container">
-                                <img src="../../../assets/img/ecommerce/Iphone 14 pro 1.png" alt="Iphone 14 Pro"
-                                    class="image">
+                                <img src="../../../assets/img/ecommerce/image 64.png" alt="Iphone 14 Pro" class="image">
                             </div>
                             <div class="product-card__info">
                                 <div class="product-card__info--text">
@@ -392,8 +504,7 @@ $this->start('head'); ?>
                                 </span>
                             </div>
                             <div class="product-card__image-container">
-                                <img src="../../../assets/img/ecommerce/Iphone 14 pro 1.png" alt="Iphone 14 Pro"
-                                    class="image">
+                                <img src="../../../assets/img/ecommerce/image 8.png" alt="Iphone 14 Pro" class="image">
                             </div>
                             <div class="product-card__info">
                                 <div class="product-card__info--text">
@@ -415,123 +526,7 @@ $this->start('head'); ?>
                                 </span>
                             </div>
                             <div class="product-card__image-container">
-                                <img src="../../../assets/img/ecommerce/Iphone 14 pro 1.png" alt="Iphone 14 Pro"
-                                    class="image">
-                            </div>
-                            <div class="product-card__info">
-                                <div class="product-card__info--text">
-                                    <p class="description">
-                                        pple iPhone 14 Pro 512GB Gold (MQ233)
-                                    </p>
-                                    <h5 class="price">$1437</h5>
-                                </div>
-                                <button class="btn btn-dark-small">Buy Now</button>
-                            </div>
-                        </div>
-                        <div class="product-card">
-                            <div class="product-card__top">
-                                <span class="product-card__top--like">
-                                    <!-- Like Icon SVG -->
-                                    <svg class="icon" aria-label="Like" role="img">
-                                        <use href="<?= $this->asset('img/icons-sprite.svg') ?>#icon-like"></use>
-                                    </svg>
-                                </span>
-                            </div>
-                            <div class="product-card__image-container">
-                                <img src="../../../assets/img/ecommerce/Iphone 14 pro 1.png" alt="Iphone 14 Pro"
-                                    class="image">
-                            </div>
-                            <div class="product-card__info">
-                                <div class="product-card__info--text">
-                                    <p class="description">
-                                        pple iPhone 14 Pro 512GB Gold (MQ233)
-                                    </p>
-                                    <h5 class="price">$1437</h5>
-                                </div>
-                                <button class="btn btn-dark-small">Buy Now</button>
-                            </div>
-                        </div>
-                        <div class="product-card">
-                            <div class="product-card__top">
-                                <span class="product-card__top--like">
-                                    <!-- Like Icon SVG -->
-                                    <svg class="icon" aria-label="Like" role="img">
-                                        <use href="<?= $this->asset('img/icons-sprite.svg') ?>#icon-like"></use>
-                                    </svg>
-                                </span>
-                            </div>
-                            <div class="product-card__image-container">
-                                <img src="../../../assets/img/ecommerce/Iphone 14 pro 1.png" alt="Iphone 14 Pro"
-                                    class="image">
-                            </div>
-                            <div class="product-card__info">
-                                <div class="product-card__info--text">
-                                    <p class="description">
-                                        pple iPhone 14 Pro 512GB Gold (MQ233)
-                                    </p>
-                                    <h5 class="price">$1437</h5>
-                                </div>
-                                <button class="btn btn-dark-small">Buy Now</button>
-                            </div>
-                        </div>
-                        <div class="product-card">
-                            <div class="product-card__top">
-                                <span class="product-card__top--like">
-                                    <!-- Like Icon SVG -->
-                                    <svg class="icon" aria-label="Like" role="img">
-                                        <use href="<?= $this->asset('img/icons-sprite.svg') ?>#icon-like"></use>
-                                    </svg>
-                                </span>
-                            </div>
-                            <div class="product-card__image-container">
-                                <img src="../../../assets/img/ecommerce/Iphone 14 pro 1.png" alt="Iphone 14 Pro"
-                                    class="image">
-                            </div>
-                            <div class="product-card__info">
-                                <div class="product-card__info--text">
-                                    <p class="description">
-                                        pple iPhone 14 Pro 512GB Gold (MQ233)
-                                    </p>
-                                    <h5 class="price">$1437</h5>
-                                </div>
-                                <button class="btn btn-dark-small">Buy Now</button>
-                            </div>
-                        </div>
-                        <div class="product-card">
-                            <div class="product-card__top">
-                                <span class="product-card__top--like">
-                                    <!-- Like Icon SVG -->
-                                    <svg class="icon" aria-label="Like" role="img">
-                                        <use href="<?= $this->asset('img/icons-sprite.svg') ?>#icon-like"></use>
-                                    </svg>
-                                </span>
-                            </div>
-                            <div class="product-card__image-container">
-                                <img src="../../../assets/img/ecommerce/Iphone 14 pro 1.png" alt="Iphone 14 Pro"
-                                    class="image">
-                            </div>
-                            <div class="product-card__info">
-                                <div class="product-card__info--text">
-                                    <p class="description">
-                                        pple iPhone 14 Pro 512GB Gold (MQ233)
-                                    </p>
-                                    <h5 class="price">$1437</h5>
-                                </div>
-                                <button class="btn btn-dark-small">Buy Now</button>
-                            </div>
-                        </div>
-                        <div class="product-card">
-                            <div class="product-card__top">
-                                <span class="product-card__top--like">
-                                    <!-- Like Icon SVG -->
-                                    <svg class="icon" aria-label="Like" role="img">
-                                        <use href="<?= $this->asset('img/icons-sprite.svg') ?>#icon-like"></use>
-                                    </svg>
-                                </span>
-                            </div>
-                            <div class="product-card__image-container">
-                                <img src="../../../assets/img/ecommerce/Iphone 14 pro 1.png" alt="Iphone 14 Pro"
-                                    class="image">
+                                <img src="../../../assets/img/ecommerce/image 12.png" alt="Iphone 14 Pro" class="image">
                             </div>
                             <div class="product-card__info">
                                 <div class="product-card__info--text">

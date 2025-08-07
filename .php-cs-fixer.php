@@ -120,8 +120,8 @@ $rules = [
     // PHP 8.3+ specific enhancements
     'modernize_types_casting' => true,
     'modernize_strpos' => true,
-    'ordered_attributes'=> true,
-    'no_useless_nullsafe_operator'=> true,
+    'ordered_attributes' => true,
+    'no_useless_nullsafe_operator' => true,
 
     // Allow risky rules for better modern code (adjust if needed)
     '@PSR12' => true,

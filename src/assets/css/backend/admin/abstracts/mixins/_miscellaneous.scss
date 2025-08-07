@@ -1,0 +1,16 @@
+@use "sass:map";
+
+@mixin button-reset {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+@mixin input-reset {
+  font: inherit;
+  border: none;
+  outline: none;
+  background: none;
+  padding: 0;
+  margin: 0;
+  box-shadow: none;
+}

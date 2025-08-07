@@ -1,0 +1,58 @@
+@use "css/backend/admin/abstracts" as *;
+/*============= GRID LAYOUT =============*/
+
+.dashboard {
+  display: grid;
+  grid-template-columns: $sidebar-width 1fr;
+  grid-template-rows: $navbar-height 1fr;
+  grid-template-areas:
+    "sidebar navbar"
+    "sidebar main";
+  height: 100vh;
+  max-width: 100%;
+  overflow: hidden;
+  font-family: $font-family-base;
+
+  &__sidebar {
+    grid-area: sidebar;
+    background-color: $gray-100;
+    padding: $space-lg;
+    box-shadow: $shadow-md;
+  }
+
+  &__navbar {
+    grid-area: navbar;
+    background-color: $color-light;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 $space-lg;
+    box-shadow: $shadow-sm;
+  }
+
+  &__main {
+    grid-area: main;
+    padding: $space-xl;
+    background-color: $gray-100;
+    overflow-y: auto;
+
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(28rem, 1fr));
+    gap: $space-lg;
+
+    section {
+      background-color: white;
+      padding: $space-md;
+      border-radius: $radius-md;
+      box-shadow: $shadow-sm;
+    }
+  }
+
+  &__stats,
+  &__orders,
+  &__products,
+  &__customers,
+  &__activity {
+    // You can add specific styles per section here
+  }
+}

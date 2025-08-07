@@ -3,7 +3,6 @@
 
 .btn {
   display: inline-flex;
-  padding: 1.6rem 5.6rem;
   justify-content: center;
   align-items: center;
   border-radius: 0.6rem;
@@ -15,54 +14,179 @@
   text-decoration: none;
   transition: all 0.3s ease;
   cursor: pointer;
+  border: 1px solid transparent;
+  // Default padding, can be overridden by size mixins
+  @include btn-size(1.6rem, 5.6rem);
+
+  // Default background and color for the base .btn (can be overridden by variants)
   background-color: $color-black;
+  color: $color-white;
+
+  // Responsive adjustments for base padding
   @include respond-below("md") {
-    padding: 1.2rem 5.2rem;
+    @include btn-size(1.2rem, 5.2rem);
   }
   @include respond-below("xs") {
-    align-self: stretch;
+    align-self: stretch; // Allows button to stretch to full width in flex containers
   }
+
+  // --- Button Variants ---
+
+  // Outline Buttons
   &-outline {
-    background-color: transparent;
+    // Specific outline white button
     &-white {
-      border: 1px solid $color-white;
-      color: $color-white;
-      &:hover {
-        background: $banner-text-white;
-        color: $banner-bg-primary;
-      }
-      :focus {
-        outline: 2px solid $banner-text-white;
-        outline-offset: 2px;
-      }
+      @include btn-outline-base($color-white, $color-white);
+      @include btn-outline-hover-focus($banner-text-white, $banner-bg-primary, $banner-text-white);
     }
+    // Specific outline dark button
     &-dark {
-      border: 1px solid $color-dark;
-      color: $color-dark;
-      &:hover {
-        background: $banner-bg-primary;
-        color: $banner-text-white;
-      }
-      :focus {
-        outline: 2px solid $banner-bg-primary;
-        outline-offset: 2px;
-      }
+      @include btn-outline-base($color-dark, $color-dark);
+      @include btn-outline-hover-focus($banner-bg-primary, $banner-text-white, $banner-bg-primary);
     }
   }
 
+  // Dark Solid Button
+  &-dark {
+    @include btn-dark-base($color-black, $color-white, $color-dark); // Use $color-dark for border
+    @include btn-solid-hover-focus(
+      $color-white,
+      $color-black,
+      $color-dark,
+      $color-black
+    ); // Hover to white, border remains dark
+  }
+
+  // Small Button
+  &-small {
+    @include btn-size(1.2rem, 5.6rem, 1.4rem, 1.71429); // Use rem for font-size consistency
+    border-radius: 8px;
+    border: 1px solid $btn-border-color;
+    color: $color-black; // Use SCSS variable for consistency
+    background-color: $color-white; // Assuming a default light background for small
+    @include btn-solid-hover-focus(
+      darken($color-white, 5%),
+      $color-black,
+      $btn-border-color,
+      $color-black
+    ); // Slight darken on hover
+  }
+
+  // Dark Small Button (specific override)
   &-dark-small {
-    padding: 1.2rem 6.4rem;
+    // Inherits .btn-small base, then overrides
+    @include btn-size(1.2rem, 6.4rem, 1.4rem, 1.71429, 0.8rem); // Override padding, border-radius
+    @include btn-dark-base($color-black, $color-white); // Override background/color
+    @include btn-solid-hover-focus(
+      darken($color-white, 10%),
+      $color-black,
+      $color-black,
+      $color-black
+    ); // Specific hover/focus
     gap: 0.8rem;
-    border-radius: 0.8rem;
-    background: $color-black;
-    color: $color-white;
-    font-size: 1.4rem;
-    line-height: 1.71429; /* 171.429% */
-    cursor: pointer;
-    transition: all 0.2s;
-    &:hover {
-      background: darken($color-white, 10%);
-      color: $color-black;
-    }
+  }
+
+  // Button with Arrow Icon
+  &-arrow-down-right {
+    @include btn-with-arrow("icon-arrow-down-right", $color-white); // Pass icon ID and color
+    // If this is a specific variant, you might also include a color/background mixin here
+    // e.g., @include btn-dark-base($color-black, $color-white);
   }
 }
+
+// .btn {
+//   display: inline-flex;
+//   padding: 1.6rem 5.6rem;
+//   justify-content: center;
+//   align-items: center;
+//   border-radius: 0.6rem;
+//   text-align: center;
+//   font-size: 1.6rem;
+//   font-style: normal;
+//   font-weight: 500;
+//   line-height: 1.5; /* 150% */
+//   text-decoration: none;
+//   transition: all 0.3s ease;
+//   cursor: pointer;
+//   background-color: $color-black;
+//   @include respond-below("md") {
+//     padding: 1.2rem 5.2rem;
+//   }
+//   @include respond-below("xs") {
+//     align-self: stretch;
+//   }
+//   &-outline {
+//     background-color: transparent;
+//     &-white {
+//       border: 1px solid $color-white;
+//       color: $color-white;
+//       &:hover {
+//         background: $banner-text-white;
+//         color: $banner-bg-primary;
+//       }
+//       :focus {
+//         outline: 2px solid $banner-text-white;
+//         outline-offset: 2px;
+//       }
+//     }
+//     &-dark {
+//       border: 1px solid $color-dark;
+//       color: $color-dark;
+//       &:hover {
+//         background: $banner-bg-primary;
+//         color: $banner-text-white;
+//       }
+//       :focus {
+//         outline: 2px solid $banner-bg-primary;
+//         outline-offset: 2px;
+//       }
+//     }
+//   }
+//   &-dark {
+//     background-color: $color-black;
+//     color: $color-white;
+//     border: 1px solid $color-dark;
+//     &:hover {
+//       background: $color-white;
+//       color: $color-black;
+//       border: 1px solid $color-dark;
+//     }
+//   }
+//   &-small {
+//     padding: 1.2rem 5.6rem;
+//     color: var(--Main-Black, #000);
+//     font-size: 0.875em;
+//     line-height: 1.71429; /* 171.429% */
+//     border-radius: 8px;
+//     border: 1px solid $btn-border-color;
+//   }
+//   &-arrow-down-right {
+//     &::after {
+//       content: "";
+//       display: flex;
+//       width: 2.4rem;
+//       height: 2.4rem;
+//       justify-content: center;
+//       align-items: center;
+//       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M18 9L12 15L6 9' stroke='currentColor' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+//       background-size: 100% 100%;
+//       background-repeat: no-repeat;
+//     }
+//   }
+
+//   &-dark-small {
+//     padding: 1.2rem 6.4rem;
+//     gap: 0.8rem;
+//     border-radius: 0.8rem;
+//     background: $color-black;
+//     color: $color-white;
+//     font-size: 1.4rem;
+//     line-height: 1.71429; /* 171.429% */
+//     cursor: pointer;
+//     transition: all 0.2s;
+//     &:hover {
+//       background: darken($color-white, 10%);
+//       color: $color-black;
+//     }
+//   }
+// }

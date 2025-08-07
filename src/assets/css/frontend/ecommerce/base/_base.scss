@@ -23,3 +23,6 @@ body {
   font-style: normal;
   min-height: 100vh;
 }
+input {
+  @include input-reset;
+}

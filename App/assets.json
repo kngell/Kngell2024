@@ -2,6 +2,7 @@
   "js/frontend/main/main": "/public/assets/js/frontend/main/main.js",
   "js/backend/main/main": "/public/assets/js/backend/main/main.js",
   "css/frontend/main/main": "/public/assets/css/frontend/main/main.css",
+  "css/backend/admin/admin": "/public/assets/css/backend/admin/admin.css",
   "css/librairies/librairy": "/public/assets/css/librairies/librairy.css",
   "js/librairies/librairy": "/public/assets/js/librairies/librairy.js",
   "runtime": "/public/assets/runtime.js"

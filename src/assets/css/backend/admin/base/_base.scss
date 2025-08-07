@@ -1,0 +1,30 @@
+@use "sass:map";
+@use "css/backend/admin/abstracts" as *;
+
+/*--------------------- BASE ------------------*/
+*,
+*::after,
+*::before {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+html {
+  font-size: 62.5%;
+}
+body {
+  box-sizing: border-box;
+  font-family: $font-family-base;
+  background-color: #fff;
+  font-size: $font-size-base;
+  line-height: 1.7;
+  font-weight: 400;
+  font-style: normal;
+  min-height: 100vh;
+}
+input {
+  @include input-reset;
+}
+button {
+  @include button-reset;
+}

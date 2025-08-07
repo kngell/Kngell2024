@@ -11,7 +11,7 @@ class User extends Entity
     private ?string $userName;
     private ?string $email;
     private ?string $password;
-    private ?string $tokenExpire;
+    private ?string $tokenExpiry;
     private ?string $passwordResetHash;
     private ?string $passwordResetExpiry;
     private ?bool $active;
@@ -137,18 +137,18 @@ class User extends Entity
     /**
      * @return string|null
      */
-    public function getTokenExpire(): ?string
+    public function getTokenExpiry(): ?string
     {
-        return $this->tokenExpire;
+        return $this->tokenExpiry;
     }
 
     /**
-     * @param string|null $tokenExpire
+     * @param string|null $tokenExpiry
      * @return User
      */
-    public function setTokenExpire(?string $tokenExpire): self
+    public function setTokenExpiry(?string $tokenExpiry): self
     {
-        $this->tokenExpire = $tokenExpire;
+        $this->tokenExpiry = $tokenExpiry;
         return $this;
     }
 

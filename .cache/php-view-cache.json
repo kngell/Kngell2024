@@ -1,6 +1,6 @@
 {
   "Layout/admin.php": {
-    "hash": "1c709548179efcfe9ae4d60352e305e0e443685f7690736c1571b5b75ecfca1c",
+    "hash": "8618c99cd7c1ec7d9500dc925685a23da6c8bdf59d8dcad95b67df5e0b5e795f",
     "outputPath": "/home/kngell/projects/kngell-ecom/App/Views/Layout/admin.php"
   },
   "Layout/ecommerce.php": {
@@ -23,10 +23,6 @@
     "hash": "0b692b23e183ee499b98e62acb66622e7ca4c3f41582ae8201ee2ed43c71dddf",
     "outputPath": "/home/kngell/projects/kngell-ecom/App/Views/Layout/training.php"
   },
-  "Backend/dashboard/index.php": {
-    "hash": "8fa6240e7638a6ae29c7a9d39bc3b4ecb61778d47a81a6853d5218c498cdc702",
-    "outputPath": "/home/kngell/projects/kngell-ecom/App/Views/Backend/dashboard/index.php"
-  },
   "Frontend/api/index.php": {
     "hash": "8e12ca9f2ea42c574b358c3a06f97ab65196a4a6ec3907de4775d773158fbb7e",
     "outputPath": "/home/kngell/projects/kngell-ecom/App/Views/Frontend/api/index.php"
@@ -36,7 +32,7 @@
     "outputPath": "/home/kngell/projects/kngell-ecom/App/Views/Frontend/ecommerce/category/index.php"
   },
   "Layout/inc/admin/footer.php": {
-    "hash": "c30f8cfb8529f3615a2b71726523fc9365e1c9829c9133c0e72547009528bdda",
+    "hash": "bd94c6993a2fa45d427c6a2cc3af2481398800201721b0edf45ce897e386b7c0",
     "outputPath": "/home/kngell/projects/kngell-ecom/App/Views/Layout/inc/admin/footer.php"
   },
   "backup/frontend/navbarElement.php": {
@@ -100,16 +96,12 @@
     "outputPath": "/home/kngell/projects/kngell-ecom/App/Views/Layout/inc/email/header.php"
   },
   "Layout/inc/ecommerce/footer.php": {
-    "hash": "168d8c948e53c162980f898e4094bf3a1815cbb723853e954fd66d947fcd4d54",
+    "hash": "66760e2cbd9a9a5cd01815c2130c79db70e757100a96385731029cf8f69291af",
     "outputPath": "/home/kngell/projects/kngell-ecom/App/Views/Layout/inc/ecommerce/footer.php"
   },
   "Layout/inc/freecodecamp/footer.php": {
     "hash": "f3e11ce17a82319f5191866fecb6e18777527bafa6e17ac781762ea7a5156514",
     "outputPath": "/home/kngell/projects/kngell-ecom/App/Views/Layout/inc/freecodecamp/footer.php"
-  },
-  "Backend/dashboard/login.php": {
-    "hash": "8a142205709b18a1c8c500e1332bb9cc9bd694b33e65ae3e22ca075b05954a82",
-    "outputPath": "/home/kngell/projects/kngell-ecom/App/Views/Backend/dashboard/login.php"
   },
   "Frontend/designPattern/prototype.php": {
     "hash": "cd9145306ea79ea4de6636693002a89ec303b3c5cc29821b66982edc881e560f",
@@ -224,27 +216,23 @@
     "outputPath": "/home/kngell/projects/kngell-ecom/App/Views/Frontend/training/pratique/profile.php"
   },
   "Layout/inc/admin/head.php": {
-    "hash": "551ad0ea5a4b6b49b641d64a92ff5bf916f131c972ee416257771e4692f01ded",
+    "hash": "46a877b4c0740793b658440aa3ce9fd7c8bef8156ce13fa3682599844ec3357f",
     "outputPath": "/home/kngell/projects/kngell-ecom/App/Views/Layout/inc/admin/head.php"
   },
   "Layout/inc/admin/sidebar.php": {
-    "hash": "302af8a5e1326201e7d5ebb5d292f82caf5ed21df8800a73906783383f72ec10",
+    "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "outputPath": "/home/kngell/projects/kngell-ecom/App/Views/Layout/inc/admin/sidebar.php"
   },
   "Frontend/post/new.php": {
     "hash": "0d315d6521a6af50ebb5ec81480f507d024590ce3c7d380fd8a60b2fbf5b4bc6",
     "outputPath": "/home/kngell/projects/kngell-ecom/App/Views/Frontend/post/new.php"
   },
-  "Layout/inc/ecommerce/head.php": {
-    "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "outputPath": "/home/kngell/projects/kngell-ecom/App/Views/Layout/inc/ecommerce/head.php"
-  },
   "Layout/inc/ecommerce/mobile-menu.php": {
     "hash": "4492adbbab3a99ab7ca128f21263756ae25e2945047e110f5673f2de5a42abdd",
     "outputPath": "/home/kngell/projects/kngell-ecom/App/Views/Layout/inc/ecommerce/mobile-menu.php"
   },
   "Layout/inc/ecommerce/header.php": {
-    "hash": "b1ba164c6acde844d8438afb10713de5e2b6769d4c3a7ebca6e9f4647b1296fa",
+    "hash": "3cd6bff4618500a616d869ee2dbd7bd65ca7031093d9bd4475e2d4a76cd9c7c0",
     "outputPath": "/home/kngell/projects/kngell-ecom/App/Views/Layout/inc/ecommerce/header.php"
   },
   "Layout/inc/default/head.php": {
@@ -262,10 +250,6 @@
   "Frontend/errors/dev.php": {
     "hash": "ec36c76ba866930063f548080a55ca65623db2abbbf1342b5ded8f5d2f01eb70",
     "outputPath": "/home/kngell/projects/kngell-ecom/App/Views/Frontend/errors/dev.php"
-  },
-  "Frontend/training/paypal/checkout/index.php": {
-    "hash": "5e05b6a99cc381d93daec9dba0094f97cca9284234cf7ff4b1020ab27373afe2",
-    "outputPath": "/home/kngell/projects/kngell-ecom/App/Views/Frontend/training/paypal/checkout/index.php"
   },
   "Layout/inc/default/header.php": {
     "hash": "236ce49dbfad05b12d5600b0d467ee9ad59bf944c9ab2f54e1cc61c4fb67b275",
@@ -352,16 +336,12 @@
     "outputPath": "/home/kngell/projects/kngell-ecom/App/Views/Frontend/components/authentication/forgotpassword/email_check_msg.php"
   },
   "Frontend/ecommerce/shop.php": {
-    "hash": "118f6f43471daed59b9edde1579b1f5404c953649f3248f2cea4a2bf9328ae16",
+    "hash": "08dc708ae2a72183d385ab73e4969a16e0a87e27fb2fe4804f693749e98a0419",
     "outputPath": "/home/kngell/projects/kngell-ecom/App/Views/Frontend/ecommerce/shop.php"
   },
   "backup/frontend/navbar.php": {
     "hash": "60695a803f3c35996d8ad326d3a837c3c977d06c6b8e71fa42bd7f4257be029f",
     "outputPath": "/home/kngell/projects/kngell-ecom/App/Views/backup/frontend/navbar.php"
-  },
-  "Backend/dashboard/edit-profile.php": {
-    "hash": "5ed97bfbcb5be17fdff0fdb7d5872c4374d6c9c15678b0e9e5343a08a6787095",
-    "outputPath": "/home/kngell/projects/kngell-ecom/App/Views/Backend/dashboard/edit-profile.php"
   },
   "Frontend/training/pratique/dairy_app.php": {
     "hash": "1e5ac97c7616d561d149fd1691dfb70ef4a53a74c1e961f8ac3e1d673cb46595",
@@ -376,7 +356,7 @@
     "outputPath": "/home/kngell/projects/kngell-ecom/App/Views/Layout/inc/training/header.php"
   },
   "Layout/inc/admin/header.php": {
-    "hash": "6036d9339c93af72a61825e2486b09c7062cea72d1986ace9e644167e050b994",
+    "hash": "db75e3c43fb0015c2d4c522f4044dbce0770ebad5bdc91ddb65cf861900888ca",
     "outputPath": "/home/kngell/projects/kngell-ecom/App/Views/Layout/inc/admin/header.php"
   },
   "Frontend/components/authentication/signup/index.php": {
@@ -404,7 +384,31 @@
     "outputPath": "/home/kngell/projects/kngell-ecom/App/Views/Frontend/training/sass2/index.php"
   },
   "Frontend/ecommerce/index.php": {
-    "hash": "19483e1bf3a8407d925d1e9f3657150f177b35c34bcf5c20ec000e8bff44823d",
+    "hash": "7ddca01afc5e92a0b243e183393202f23d8e2ced4ae02d9ffad601165c1658d5",
     "outputPath": "/home/kngell/projects/kngell-ecom/App/Views/Frontend/ecommerce/index.php"
+  },
+  "Frontend/ecommerce/product.php": {
+    "hash": "0765b4c483fe38e84c8dcf233ad59c11fce4649d2ea0fecedbd3b8a3a86cbf25",
+    "outputPath": "/home/kngell/projects/kngell-ecom/App/Views/Frontend/ecommerce/product.php"
+  },
+  "Frontend/ecommerce/shopping-cart.php": {
+    "hash": "97fbdaf536dc5dbc0ac34901b719dbe83ebd454d4c56bdc0dcae71e02c1c930e",
+    "outputPath": "/home/kngell/projects/kngell-ecom/App/Views/Frontend/ecommerce/shopping-cart.php"
+  },
+  "Frontend/ecommerce/checkout/index.php": {
+    "hash": "54ac127e2e76df395270ef963924276c122bb34a66280847d6fd5406de8cf7d9",
+    "outputPath": "/home/kngell/projects/kngell-ecom/App/Views/Frontend/ecommerce/checkout/index.php"
+  },
+  "Frontend/training/paypal/checkout/indexp.php": {
+    "hash": "5e05b6a99cc381d93daec9dba0094f97cca9284234cf7ff4b1020ab27373afe2",
+    "outputPath": "/home/kngell/projects/kngell-ecom/App/Views/Frontend/training/paypal/checkout/indexp.php"
+  },
+  "Layout/inc/admin/aside.php": {
+    "hash": "5e13867e0fc45d413d360272bca466d7ad40a30f326daa741b4eb740ab3ca7b1",
+    "outputPath": "/home/kngell/projects/kngell-ecom/App/Views/Layout/inc/admin/aside.php"
+  },
+  "Backend/admin/index.php": {
+    "hash": "f3dd3035c6f3271fb984c3001ace29a14d70a16beac0772b1bce840b837379b0",
+    "outputPath": "/home/kngell/projects/kngell-ecom/App/Views/Backend/admin/index.php"
   }
 }

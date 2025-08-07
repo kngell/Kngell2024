@@ -9,6 +9,9 @@
     padding-bottom: 5.6rem;
     align-items: flex-start;
     gap: 3.2rem;
+    .product-dropdown {
+      @include dropdown-title;
+    }
     &__filter {
       display: flex;
       max-width: 25.6rem;

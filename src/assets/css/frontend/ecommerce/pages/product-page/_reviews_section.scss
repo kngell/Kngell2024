@@ -1,0 +1,242 @@
+@use "css/frontend/ecommerce/abstracts" as *;
+/*------------------- REVIEWS --------------------*/
+
+.reviews-container {
+  display: flex;
+  padding: 8.8rem 16rem;
+  flex-direction: column;
+  align-items: center;
+  gap: 3.2rem;
+  .reviews-header {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 4.8rem;
+    align-self: stretch;
+    &__title {
+      display: flex;
+      align-items: center;
+      gap: 3.2rem;
+      align-self: stretch;
+      span {
+        flex: 1 0 0;
+        color: $color-black;
+        font-size: 2.4rem;
+        font-weight: 500;
+        line-height: 1.33333; /* 133.333% */
+      }
+    }
+    &__overall-rating {
+      display: flex;
+      align-items: center;
+      align-content: center;
+      gap: 6rem;
+      align-self: stretch;
+      flex-wrap: wrap;
+      &--values {
+        display: flex;
+        padding: 3.2rem;
+        flex-direction: column;
+        align-items: center;
+        gap: 1.6rem;
+        border-radius: 2.5rem;
+        background: $sections-bg1;
+        text-align: center;
+        .total {
+          align-self: stretch;
+          color: $color-black;
+          font-size: 5.6rem;
+          font-weight: 500;
+          line-height: 1; /* 100% */
+        }
+        .total-of {
+          align-self: stretch;
+          color: $color-black;
+          font-size: 1.5rem;
+          font-weight: 500;
+          line-height: 1.06667; /* 106.667% */
+        }
+        .stars {
+          @include star;
+        }
+      }
+      &--schedule {
+        display: flex;
+        min-width: 39rem;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2.4rem;
+        flex: 1 0 0;
+        position: relative;
+        .review-level {
+          display: flex;
+          align-items: center;
+          gap: 1.6rem;
+          align-self: stretch;
+          &__text {
+            width: 11.6rem;
+            color: $color-black;
+            font-size: 1.8rem;
+            font-weight: 500;
+            line-height: 0.88889; /* 88.889% */
+          }
+          &__bar {
+            display: flex;
+            align-items: flex-start;
+            flex: 1 0 0;
+            transform: rotate(180deg);
+            .bar1 {
+              height: 5px;
+              flex: 1 0 0;
+              border-radius: 1.6rem;
+              background: $bar-color1;
+            }
+            .bar2 {
+              margin-left: -62.8rem;
+              height: 5px;
+              flex: 1 0 0;
+              border-radius: 1.6rem;
+              background: $star-color-full;
+            }
+            .bar2.good {
+              margin-left: -11.8rem;
+            }
+            .bar2.average {
+              margin-left: 0rem;
+            }
+            .bar2.below-average {
+              margin-left: -2rem;
+            }
+            .bar2.poor {
+              margin-left: -0.1rem;
+            }
+          }
+          &__value {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.8rem;
+            span {
+              color: $color-black;
+              text-align: right;
+              font-weight: 500;
+              line-height: 1; /* 100% */
+              white-space: nowrap;
+              opacity: 0.4;
+            }
+          }
+        }
+      }
+    }
+    &__comments {
+      display: flex;
+      padding: 2.4rem 1.6rem;
+      align-items: center;
+      align-self: stretch;
+      border-radius: 7px;
+      border: 0.5px solid $color-scroll-barre-bg2;
+      background: $color-white;
+      &--title {
+        flex: 1 0 0;
+        color: $color-gray-light4;
+        font-size: 1.4rem;
+        line-height: 1.14286; /* 114.286% */
+        letter-spacing: -0.07px;
+      }
+      &--icon-container {
+        width: 2.4rem;
+        height: 2.4rem;
+      }
+    }
+  }
+  .reviews-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2.4rem;
+    align-self: stretch;
+    position: relative;
+    .review {
+      display: flex;
+      padding: 2.4rem 2.8rem 2.4rem 1.6rem;
+      align-items: flex-start;
+      gap: 1.9rem;
+      align-self: stretch;
+      border-radius: 10px;
+      background: $sections-bg1;
+      .avatar-container {
+        width: 5.6rem;
+        height: 5.6rem;
+        position: relative;
+        aspect-ratio: 3 / 3;
+        .image {
+          width: 100%;
+          height: 100%;
+          border-radius: 50%;
+        }
+      }
+      .content {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.8rem;
+        flex: 1 0 0;
+        &__headings {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 0.8rem;
+          align-self: stretch;
+          &--titles {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            align-self: stretch;
+            .name {
+              color: $color-black;
+              font-size: 1.7rem;
+              font-weight: 600;
+              line-height: 1.41176; /* 141.176% */
+              white-space: nowrap;
+            }
+            .date {
+              color: $color-black;
+              text-align: right;
+              font-size: 1.4rem;
+              font-weight: 500;
+              line-height: 1.14286; /* 114.286% */
+              opacity: 0.2;
+            }
+          }
+          &--stars {
+            @include star;
+          }
+        }
+        &__text {
+          align-self: stretch;
+          color: $review-text-color;
+          font-size: 1.5rem;
+          font-weight: 500;
+          line-height: 1.6; /* 160% */
+        }
+        &__images {
+          display: flex;
+          align-items: flex-start;
+          gap: 0.8rem;
+          .img-container {
+            width: 11.8rem;
+            border-radius: 6px;
+            aspect-ratio: 118.34 / 88;
+          }
+        }
+      }
+    }
+  }
+  .review-footer {
+    display: flex;
+    padding: 12px 56px;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+  }
+}

@@ -1,1 +1,5 @@
-@use 'variables' as *
+@use "variables" as *;
+
+@function input-var($key) {
+  @return map-get($input-config, $key);
+}

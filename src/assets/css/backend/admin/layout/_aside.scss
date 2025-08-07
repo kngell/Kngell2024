@@ -1,0 +1,28 @@
+@use "css/backend/admin/abstracts" as *;
+/*--------------- ASIDE -------------*/
+
+.sidebar__logo {
+  font-size: $font-lg;
+  font-weight: bold;
+  margin-bottom: $space-lg;
+}
+
+.sidebar__nav {
+  display: flex;
+  flex-direction: column;
+  gap: $space-sm;
+}
+
+.sidebar__link {
+  text-decoration: none;
+  color: $color-text;
+  padding: $space-sm $space-md;
+  border-radius: $border-radius;
+  transition: background 0.2s;
+
+  &:hover,
+  &.is-active {
+    background-color: $color-primary;
+    color: white;
+  }
+}

@@ -1,0 +1,70 @@
+@use "css/frontend/ecommerce/abstracts" as *;
+/*------------------------SHOP PRODUCTS ---------------------*/
+
+.shop-products {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4rem;
+  flex: 1 0 0;
+  &__content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2.4rem;
+    align-self: stretch;
+    &--header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      align-content: center;
+      row-gap: 16rem;
+      align-self: stretch;
+      flex-wrap: wrap;
+      .header-left {
+        display: flex;
+        min-width: 20rem;
+        align-items: flex-end;
+        gap: 0.6rem;
+        flex: 1 0 0;
+        &__text {
+          color: $product-header-color;
+          font-weight: 500;
+          line-height: 1; /* 100% */
+          letter-spacing: 0.48px;
+        }
+        &__number {
+          color: $color-black;
+          text-align: center;
+          font-size: 2rem;
+          font-weight: 500;
+          line-height: 0.8; /* 80% */
+          letter-spacing: 0.6px;
+        }
+      }
+      .header-right {
+        @include dropdown-title(
+          $padding: 8px 16px,
+          $font-size: 1.5rem,
+          $font-weight: 400,
+          $line-height: 1.06667,
+          $letter-spacing: -0.075px,
+          $border-radius: 8px,
+          $show-underline: false
+        );
+        min-width: 14rem;
+        max-width: 25.6rem;
+        align-items: center;
+        flex: 1 0 0;
+        border: 0.5px solid $product-header-dropdown-border;
+        background: $color-white;
+      }
+    }
+    &--body {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      column-gap: 1.6rem;
+      row-gap: 2.4rem;
+    }
+  }
+}

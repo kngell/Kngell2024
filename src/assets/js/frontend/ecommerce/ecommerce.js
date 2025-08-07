@@ -1,4 +1,8 @@
 import CategoryGap from "./Classes/_CategoryGap";
+import LastReview from "./Classes/_LastReview";
+import QuantityBoxMirror from "./Classes/_QuantityBoxMirror";
+// import CheckoutForm from "./Classes/checkout/CheckoutForm";
+import ProgressBar from "./Classes/checkout/_checkoutProgressBar";
 
 export default class Ecommerce {
   constructor() {
@@ -9,6 +13,12 @@ export default class Ecommerce {
   _init = () => {
     //Set Category
     this._setCategoryGap();
+    new LastReview()._init();
+    new QuantityBoxMirror();
+    // Checkout ProgressBar
+    new ProgressBar();
+
+    // const checkout = new CheckoutForm("checkoutForm");
   };
 
   _setCategoryGap = () => {
@@ -26,7 +36,6 @@ export default class Ecommerce {
     this._setCategoryGap();
   };
 
-  // Method to reinitialize everything (useful for dynamic content changes)
   reinit = () => {
     this._init();
   };
