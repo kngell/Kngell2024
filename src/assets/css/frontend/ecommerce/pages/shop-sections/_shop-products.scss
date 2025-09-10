@@ -43,6 +43,12 @@
         }
       }
       .header-right {
+        min-width: 14rem;
+        max-width: 25.6rem;
+        align-items: center;
+        flex: 1 0 0;
+        border: 0.5px solid $product-header-dropdown-border;
+        background: $color-white;
         @include dropdown-title(
           $padding: 8px 16px,
           $font-size: 1.5rem,
@@ -52,12 +58,6 @@
           $border-radius: 8px,
           $show-underline: false
         );
-        min-width: 14rem;
-        max-width: 25.6rem;
-        align-items: center;
-        flex: 1 0 0;
-        border: 0.5px solid $product-header-dropdown-border;
-        background: $color-white;
       }
     }
     &--body {

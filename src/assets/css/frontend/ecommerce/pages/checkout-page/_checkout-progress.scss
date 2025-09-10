@@ -1,3 +1,4 @@
+@use "sass:list";
 @use "css/frontend/ecommerce/abstracts" as *;
 /*---------------- CHECKOUT PROGRESS ----------------*/
 
@@ -121,7 +122,7 @@
       // Generate a comma-separated list of selectors for all content blocks
       $content-selectors: ();
       @for $j from 1 through $i {
-        $content-selectors: append(
+        $content-selectors: list.append(
           $content-selectors,
           ".progress-step[data-step='#{$j}'] .progress-step__content",
           comma
@@ -136,7 +137,7 @@
       // Generate a comma-separated list of selectors for connectors
       $connector-selectors: ();
       @for $k from 1 through $i - 1 {
-        $connector-selectors: append(
+        $connector-selectors: list.append(
           $connector-selectors,
           ".progress-step[data-step='#{$k}'] .progress-step__connector",
           comma

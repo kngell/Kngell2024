@@ -1,0 +1,5 @@
+@use "css/backend/admin/abstracts/mixins" as *;
+
+@include font-face-ttf("Hahmlet", "~fonts/Hahmlet/Hahmlet-VariableFont_wght", 100 900, normal);
+
+@include font-face-ttf("Figtree", "~fonts/Figtree/Figtree-VariableFont_wght", 100 900, normal);

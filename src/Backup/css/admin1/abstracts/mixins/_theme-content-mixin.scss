@@ -1,0 +1,24 @@
+/// Mixin to apply theme colors
+/// @param {String} $context - The color context (background, text, etc.)
+/// @param {String} $variant - The color variant (primary, secondary, etc.)
+@mixin theme-color($context, $variant: primary) {
+  $color: map-deep-get-safe($color-usage, ($context, neutral, $variant));
+
+  @if $color {
+    @if $context == "background" {
+      background-color: $color;
+    } @else if $context == "text" {
+      color: $color;
+    } @else if $context == "border" {
+      border-color: $color;
+    }
+  }
+}
+
+// Usage
+// .card {
+//   @include theme-color(background, secondary);
+//   @include theme-color(text, primary);
+//   border: 1px solid;
+//   @include theme-color(border, tertiary);
+// }

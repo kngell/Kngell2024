@@ -60,7 +60,7 @@
 // Load SF Pro
 @include load-font-family(
   "SF Pro Display",
-  "fonts/SF Pro",
+  "~fonts/SF Pro",
   (
     (weight: 400, style: normal, filename: "SF-Pro"),
     (weight: 400, style: italic, filename: "SF-Pro-Italic")
@@ -68,19 +68,19 @@
 );
 
 // Load SF Pro Display OTF fonts
-@include font-face-otf("SF Pro Display", "fonts/SF Pro/SF-Pro-Display-Thin", 200, normal);
+@include font-face-otf("SF Pro Display", "~fonts/SF Pro/SF-Pro-Display-Thin", 200, normal);
 
-@include font-face-otf("SF Pro Display", "fonts/SF Pro/SF-Pro-Display-Light", 300, normal);
+@include font-face-otf("SF Pro Display", "~fonts/SF Pro/SF-Pro-Display-Light", 300, normal);
 
-@include font-face-otf("SF Pro Display", "fonts/SF Pro/SF-Pro-Display-Regular", 400, normal);
-@include font-face-otf("SF Pro Display", "fonts/SF Pro/SF-Pro-Display-Medium", 500, normal);
+@include font-face-otf("SF Pro Display", "~fonts/SF Pro/SF-Pro-Display-Regular", 400, normal);
+@include font-face-otf("SF Pro Display", "~fonts/SF Pro/SF-Pro-Display-Medium", 500, normal);
 
 // Alternative: Load variable fonts (more efficient for modern browsers)
 // Uncomment these if you prefer to use variable fonts instead of static fonts
 
-@include font-face-ttf("Figtree", "fonts/Figtree/Figtree-VariableFont_wght", 100 900, normal);
+@include font-face-ttf("Figtree", "~fonts/Figtree/Figtree-VariableFont_wght", 100 900, normal);
 // Note: Roboto variable font has comma in filename which causes webpack issues
-@include font-face-ttf("Roboto", "fonts/Roboto/Roboto-VariableFont_wdth,wght", 100 900, normal);
+@include font-face-ttf("Roboto", "~fonts/Roboto/Roboto-VariableFont_wdth,wght", 100 900, normal);
 
 // @include font-face-ttf(
 //   "Nunito Variable",

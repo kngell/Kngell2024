@@ -1,0 +1,68 @@
+@use "css/backend/admin/abstracts" as *;
+/*--------------- MAIN -------------*/
+
+.main {
+  display: grid;
+  padding: 3.2rem 2.4rem;
+  align-self: stretch;
+
+  @include respond-above(md) {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .card {
+    padding: 1.6rem;
+    min-block-size: 11.2rem;
+    background-color: #fee;
+    border-radius: 0.8rem;
+
+    @include respond-above(md) {
+      grid-column: span 2;
+    }
+    &.card-1 {
+      background-image: linear-gradient(62deg, #fbaf7e 0%, #f7ce68);
+      @include respond-above(md) {
+        //   grid-row-start: 1;
+        //   grid-row-end: 2;
+        //   grid-row: 1 / 2;
+
+        //   grid-column-start: 1;
+        //   grid-column-end: 5;
+        //   grid-column: 1 / 5;
+        //   grid-area: 1 / 1 / 2 / 5;
+        //   grid-area: span 1 / span 4;
+        grid-column: span 4;
+      }
+    }
+    &.card-2,
+    &.card-3 {
+      @include respond-above(lg) {
+        grid-area: auto;
+      }
+    }
+    &.card-4 {
+      @include respond-above(lg) {
+        grid-area: 3 / 1 / 4 / 2;
+      }
+    }
+    &.card-5 {
+      @include respond-above(lg) {
+        grid-area: 3 / 2 / 4 / 3;
+      }
+    }
+    &.card-6,
+    &.card-7 {
+      @include respond-above(lg) {
+        grid-area: span 2 / auto;
+      }
+    }
+    &.card-10,
+    &.card-11,
+    &.card-12,
+    &.card-13 {
+      @include respond-above(lg) {
+        grid-column: auto;
+      }
+    }
+  }
+}

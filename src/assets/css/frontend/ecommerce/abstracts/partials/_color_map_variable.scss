@@ -1,3 +1,4 @@
+@use "sass:map";
 // Color palette
 $colors: (
   primary: (
@@ -56,27 +57,27 @@ $colors: (
 // Theme color variables for the :root
 :root {
   // Primary colors
-  --primary-color: #{map-get(map-get($colors, primary), base)};
-  --primary-color-light: #{map-get(map-get($colors, primary), light)};
-  --primary-color-dark: #{map-get(map-get($colors, primary), dark)};
+  --primary-color: #{map.get(map.get($colors, primary), base)};
+  --primary-color-light: #{map.get(map.get($colors, primary), light)};
+  --primary-color-dark: #{map.get(map.get($colors, primary), dark)};
 
   // Text colors
-  --text-color: #{map-get(map-get($colors, dark), base)};
-  --text-color-light: #{map-get(map-get($colors, secondary), base)};
-  --text-muted: #{map-get(map-get($colors, gray), 500)};
+  --text-color: #{map.get(map.get($colors, dark), base)};
+  --text-color-light: #{map.get(map.get($colors, secondary), base)};
+  --text-muted: #{map.get(map.get($colors, gray), 500)};
 
   // Background colors
   --bg-color: #ffffff;
-  --bg-color-light: #{map-get(map-get($colors, light), base)};
-  --bg-color-dark: #{map-get(map-get($colors, dark), base)};
+  --bg-color-light: #{map.get(map.get($colors, light), base)};
+  --bg-color-dark: #{map.get(map.get($colors, dark), base)};
 
   // Border colors
-  --border-color: #{map-get(map-get($colors, gray), 200)};
-  --border-color-dark: #{map-get(map-get($colors, gray), 300)};
+  --border-color: #{map.get(map.get($colors, gray), 200)};
+  --border-color-dark: #{map.get(map.get($colors, gray), 300)};
 
   // Status colors
-  --success-color: #{map-get(map-get($colors, success), base)};
-  --danger-color: #{map-get(map-get($colors, danger), base)};
-  --warning-color: #{map-get(map-get($colors, warning), base)};
-  --info-color: #{map-get(map-get($colors, info), base)};
+  --success-color: #{map.get(map.get($colors, success), base)};
+  --danger-color: #{map.get(map.get($colors, danger), base)};
+  --warning-color: #{map.get(map.get($colors, warning), base)};
+  --info-color: #{map.get(map.get($colors, info), base)};
 }

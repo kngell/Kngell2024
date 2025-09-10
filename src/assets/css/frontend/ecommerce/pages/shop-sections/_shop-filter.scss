@@ -1,3 +1,4 @@
+@use "sass:map";
 @use "css/frontend/ecommerce/abstracts" as *;
 /*------------------------SHOP FILTER ITEMS ---------------------*/
 .shop-filter {
@@ -63,7 +64,7 @@
               position: relative; // Essential for positioning ::before and ::after
               cursor: pointer;
               color: $color-black; // Example color, replace with your variable
-              font-family: map-get($font, family);
+              font-family: map.get($font, family);
               font-size: 1.5rem;
               font-style: normal;
               font-weight: 500;

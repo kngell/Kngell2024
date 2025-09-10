@@ -1,5 +1,18 @@
 @use "variables" as *;
 
 @function input-var($key) {
-  @return map-get($input-config, $key);
+  @return map.get($input-config, $key);
+}
+
+@function get-token($map, $keys...) {
+  $cursor: $map;
+  @each $key in $keys {
+    @if map.has-key($cursor, $key) {
+      $cursor: map.get($cursor, $key);
+    } @else {
+      @warn "Key `#{$key}` not found in map!";
+      @return null;
+    }
+  }
+  @return $cursor;
 }

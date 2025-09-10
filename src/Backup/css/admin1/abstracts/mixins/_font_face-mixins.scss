@@ -1,0 +1,77 @@
+@use "sass:map";
+@use "css/backend/admin/abstracts/variables" as *;
+
+// Font face mixin for generating font declarations from local files
+// Generates font-face declarations with multiple format support
+@mixin font-face(
+  $font-family,
+  $font-path,
+  $font-weight: normal,
+  $font-style: normal,
+  $font-display: swap
+) {
+  @font-face {
+    font-family: $font-family;
+    src: url("#{$font-path}.woff2") format("woff2"), url("#{$font-path}.woff") format("woff"),
+      url("#{$font-path}.ttf") format("truetype"), url("#{$font-path}.otf") format("truetype");
+    font-weight: $font-weight;
+    font-style: $font-style;
+    font-display: $font-display;
+  }
+}
+
+// Simplified font-face mixin for TTF only (since your fonts are in TTF format)
+@mixin font-face-ttf(
+  $font-family,
+  $font-path,
+  $font-weight: normal,
+  $font-style: normal,
+  $font-display: swap
+) {
+  @font-face {
+    font-family: $font-family;
+    src: url("#{$font-path}.ttf") format("truetype");
+    font-weight: $font-weight;
+    font-style: $font-style;
+    font-display: $font-display;
+  }
+}
+
+// OTF font-face mixin for OTF only
+@mixin font-face-otf(
+  $font-family,
+  $font-path,
+  $font-weight: normal,
+  $font-style: normal,
+  $font-display: swap
+) {
+  @font-face {
+    font-family: $font-family;
+    src: url("#{$font-path}.otf") format("opentype");
+    font-weight: $font-weight;
+    font-style: $font-style;
+    font-display: $font-display;
+  }
+}
+
+// Bulk font loader mixin - generates multiple font-face declarations
+@mixin load-font-family($font-family, $base-path, $variants: ()) {
+  @each $variant in $variants {
+    $weight: map.get($variant, weight);
+    $style: map.get($variant, style);
+    $filename: map.get($variant, filename);
+
+    @include font-face-ttf($font-family, "#{$base-path}/#{$filename}", $weight, $style);
+  }
+}
+
+// Bulk OTF font loader mixin
+@mixin load-font-family-otf($font-family, $base-path, $variants: ()) {
+  @each $variant in $variants {
+    $weight: map.get($variant, weight);
+    $style: map.get($variant, style);
+    $filename: map.get($variant, filename);
+
+    @include font-face-otf($font-family, "#{$base-path}/#{$filename}", $weight, $style);
+  }
+}

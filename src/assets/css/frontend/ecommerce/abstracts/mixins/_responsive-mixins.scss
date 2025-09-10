@@ -3,8 +3,8 @@
 
 // Responsive breakpoint manager
 @mixin respond-below($breakpoint) {
-  @if map-has-key($breakpoints, $breakpoint) {
-    $breakpoint-value: map-get($breakpoints, $breakpoint);
+  @if map.has-key($breakpoints, $breakpoint) {
+    $breakpoint-value: map.get($breakpoints, $breakpoint);
     @media (max-width: $breakpoint-value) {
       @content;
     }
@@ -14,8 +14,8 @@
 }
 
 @mixin respond-above($breakpoint) {
-  @if map-has-key($breakpoints, $breakpoint) {
-    $breakpoint-value: map-get($breakpoints, $breakpoint);
+  @if map.has-key($breakpoints, $breakpoint) {
+    $breakpoint-value: map.get($breakpoints, $breakpoint);
     @media (min-width: $breakpoint-value) {
       @content;
     }
@@ -25,33 +25,33 @@
 }
 
 @mixin respond-between($lower, $upper) {
-  @if map-has-key($breakpoints, $lower) and map-has-key($breakpoints, $upper) {
-    $lower-value: map-get($breakpoints, $lower);
-    $upper-value: map-get($breakpoints, $upper);
+  @if map.has-key($breakpoints, $lower) and map.has-key($breakpoints, $upper) {
+    $lower-value: map.get($breakpoints, $lower);
+    $upper-value: map.get($breakpoints, $upper);
     @media (min-width: $lower-value) and (max-width: $upper-value) {
       @content;
     }
   } @else {
-    @if not map-has-key($breakpoints, $lower) {
+    @if not map.has-key($breakpoints, $lower) {
       @warn "Invalid lower breakpoint: #{$lower}. Available breakpoints are: #{map-keys($breakpoints)}";
     }
-    @if not map-has-key($breakpoints, $upper) {
+    @if not map.has-key($breakpoints, $upper) {
       @warn "Invalid upper breakpoint: #{$upper}. Available breakpoints are: #{map-keys($breakpoints)}";
     }
   }
 }
 
 @mixin max-responsive($breakpoint) {
-  @if map-has-key($breakpoints-short, $breakpoint) {
-    @media (max-width: map-get($breakpoints-short, $breakpoint)) {
+  @if map.has-key($breakpoints-short, $breakpoint) {
+    @media (max-width: map.get($breakpoints-short, $breakpoint)) {
       @content;
     }
   }
 }
 
 @mixin responsive($breakpoint) {
-  @if map-has-key($breakpoints-short, $breakpoint) {
-    @media (min-width: map-get($breakpoints-short, $breakpoint)) {
+  @if map.has-key($breakpoints-short, $breakpoint) {
+    @media (min-width: map.get($breakpoints-short, $breakpoint)) {
       @content;
     }
   }

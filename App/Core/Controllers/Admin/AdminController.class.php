@@ -27,4 +27,23 @@ class AdminController extends Controller
         $profile = new UserProfileDecorator($this);
         return $this->render('edit-profile', $profile->page());
     }
+
+    public function test(): string
+    {
+        $this->setLayout('test');
+        $this->pageTitle('Test');
+        return $this->render('test');
+    }
+
+    public function productList(): string
+    {
+        $this->pageTitle('Product List');
+        return $this->render('product-list');
+    }
+
+    public function productAdd(): string
+    {
+        $this->pageTitle('Add Product');
+        return $this->render('product-add');
+    }
 }

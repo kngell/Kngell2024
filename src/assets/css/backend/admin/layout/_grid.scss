@@ -1,58 +1,49 @@
 @use "css/backend/admin/abstracts" as *;
-/*============= GRID LAYOUT =============*/
+
+/*-------------------- GRID LAYOUT --------------------*/
 
 .dashboard {
   display: grid;
-  grid-template-columns: $sidebar-width 1fr;
-  grid-template-rows: $navbar-height 1fr;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto 1fr auto;
   grid-template-areas:
-    "sidebar navbar"
-    "sidebar main";
-  height: 100vh;
-  max-width: 100%;
-  overflow: hidden;
-  font-family: $font-family-base;
-
-  &__sidebar {
+    "sidebar header"
+    "sidebar main"
+    "sidebar footer";
+  min-block-size: 100vh;
+  min-block-size: 100dvh;
+  transition: grid-template-columns 0.3s ease;
+  &__header {
+    grid-area: header;
+    position: sticky;
+    top: 0;
+    z-index: 200;
+  }
+  &__aside {
     grid-area: sidebar;
-    background-color: $gray-100;
-    padding: $space-lg;
-    box-shadow: $shadow-md;
-  }
-
-  &__navbar {
-    grid-area: navbar;
-    background-color: $color-light;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 $space-lg;
-    box-shadow: $shadow-sm;
-  }
-
-  &__main {
-    grid-area: main;
-    padding: $space-xl;
-    background-color: $gray-100;
+    width: 26.4rem;
+    position: sticky;
+    top: 0;
+    min-height: 100dvh;
+    height: 100dvh;
     overflow-y: auto;
-
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(28rem, 1fr));
-    gap: $space-lg;
-
-    section {
-      background-color: white;
-      padding: $space-md;
-      border-radius: $radius-md;
-      box-shadow: $shadow-sm;
+    scrollbar-width: thin;
+    z-index: 100;
+    &::-webkit-scrollbar {
+      width: 0.6rem; // optional styling
+    }
+    &::-webkit-scrollbar-thumb {
+      background-color: rgba(0, 0, 0, 0.2);
+      border-radius: 0.3rem;
     }
   }
-
-  &__stats,
-  &__orders,
-  &__products,
-  &__customers,
-  &__activity {
-    // You can add specific styles per section here
+  &__main {
+    grid-area: main;
+  }
+  &__footer {
+    grid-area: footer;
+  }
+  &.sb-expand {
+    grid-template-columns: 26.4rem 1fr;
   }
 }

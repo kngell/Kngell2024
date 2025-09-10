@@ -1,0 +1,88 @@
+@use "sass:map";
+@use "css/backend/admin/abstracts/variables" as *;
+@use "css/backend/admin/abstracts/functions" as *;
+@use "css/backend/admin/abstracts/mixins/miscellaneous" as *;
+
+@mixin breadcrumbs(
+  $color: map-deep-get($color-neutral, gray, gray-300),
+  $font-size: 1.6rem,
+  $font-weight: 500,
+  $line-height: 1,
+  $letter-spacing: 0.07px,
+  $active-color: map-deep-get($color-neutral, gray, gray-500),
+  $separator-type: svg,
+  // svg | text | css | none
+  $separator-content: "›",
+  // used when type = text
+  $separator-svg:
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M9 6L15 12L9 18' stroke='currentColor'/%3E%3C/svg%3E",
+  $separator-size: 2.4rem,
+  $gap: 1.6rem,
+  $padding-y: 4rem
+) {
+  .breadcrumbs-list {
+    padding-top: $padding-y;
+    padding-bottom: $padding-y;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: $gap;
+
+    &__item {
+      @include flex-center;
+      gap: $gap;
+
+      &:not(:last-of-type)::after {
+        flex-shrink: 0;
+
+        @if $separator-type == svg {
+          content: "";
+          display: inline-block;
+          width: $separator-size;
+          height: $separator-size;
+          color: $color; // drives 'currentColor' in the SVG
+          background-image: url(#{$separator-svg});
+          background-size: 100% 100%;
+          background-repeat: no-repeat;
+        } @else if $separator-type == text {
+          content: "#{$separator-content}";
+          display: inline-block;
+          line-height: 1;
+          font-size: $separator-size * 0.66;
+          color: $color;
+        } @else if $separator-type == css {
+          // Pure CSS chevron using borders
+          content: "";
+          display: inline-block;
+          width: $separator-size;
+          height: $separator-size;
+          color: $color;
+          border-right: 2px solid currentColor;
+          border-top: 2px solid currentColor;
+          box-sizing: border-box;
+          transform: rotate(45deg);
+        } @else if $separator-type == none {
+          content: none;
+        }
+      }
+
+      &--link {
+        text-decoration: none;
+        color: $color;
+        font-size: $font-size;
+        font-weight: $font-weight;
+        line-height: $line-height;
+        letter-spacing: $letter-spacing;
+        @include transition;
+
+        &:hover {
+          color: $active-color;
+          text-decoration: underline;
+        }
+        &.active {
+          color: $active-color;
+        }
+      }
+    }
+  }
+}

@@ -101,7 +101,7 @@
          $base-class: map.get($children,class)
          $suffix: map.get($children,suffix)
          $property: map.get($children,property)
-         $responsive: if(map-has-key($children,responsive),map.get($children, responsive),true)
-         $important: if(map-has-key($children,important),map.get($children, important),true)
+         $responsive: if(map.has-key($children,responsive),map.get($children, responsive),true)
+         $important: if(map.has-key($children,important),map.get($children, important),true)
          @if type-of($values) == map and $values != null and $base-class != null
             @include loop-trough-map($values ,$base-class,$suffix, $property, $responsive, $important)

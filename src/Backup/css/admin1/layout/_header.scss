@@ -1,0 +1,115 @@
+@use "css/backend/admin/abstracts" as *;
+/*----------------- HEADER ---------------*/
+.dashboard__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  align-self: start;
+  background-color: map-deep-get($background-color, neutral, primary);
+  box-shadow: 1px 2px 4px 0 rgba(69, 78, 93, 0.16);
+  .header-left {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    padding: 0.8rem 1.6rem;
+    &__title {
+      color: map-deep-get($text-color, neutral, primary);
+      font-family: map-deep-get($desktop-text-headings, regular, h5, font-family);
+      font-size: map-deep-get($desktop-text-headings, regular, h5, font-size);
+      font-style: normal;
+      font-weight: map-deep-get($desktop-text-headings, regular, h5, font-weight);
+      line-height: map-deep-get($desktop-text-headings, regular, h5, line-height); /* 130% */
+      letter-spacing: map-deep-get($desktop-text-headings, regular, h5, letter-spacing);
+    }
+    &__mobile-toggle {
+      width: 2.4rem;
+      height: 2.4rem;
+      .icon {
+        width: 100%;
+        height: 100%;
+        color: map-deep-get($icon-color, neutral, tertiary);
+      }
+      @include respond-above(md) {
+        display: none;
+      }
+    }
+  }
+  .header-right {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 3.2rem;
+    .search-form {
+      @include search-component(
+        $search-width: 40.7rem,
+        $search-height: 4.8rem,
+        $gap: 0.6rem,
+        $border-radius: map-deep-get($radius, xl),
+        $background: map-deep-get($background-color, neutral, tertiary),
+        $button-position: right
+      );
+    }
+    .user-action {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 1.6rem;
+      &__notification {
+        width: 2.4rem;
+        height: 2.4rem;
+        .icon.notification {
+          width: 100%;
+          height: 100%;
+          .bg {
+            width: 100%;
+            height: 100%;
+            fill: map-deep-get($background-color, neutral, primary);
+          }
+          .bell {
+            fill: map-deep-get($icon-color, neutral, tertiary);
+          }
+          .dot {
+            fill: map-deep-get($icon-color, semantic, error, primary);
+          }
+        }
+      }
+      &__settings {
+        display: flex;
+        width: 5.6rem;
+        padding: 0.4rem;
+        align-items: center;
+        border-radius: 20rem;
+        background-color: map-deep-get($background-color, semantic, success, bold);
+        .icon-container {
+          width: 2.4rem;
+          height: 2.4rem;
+          display: flex;
+          padding: 0.4rem;
+          align-items: center;
+          border-radius: 50%;
+          background: map-deep-get($background-color, neutral, primary);
+          box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14);
+          @include flex-center;
+          .icon {
+            width: 100%;
+            height: 100%;
+            color: map-deep-get($icon-color, neutral, tertiary);
+            fill: none;
+          }
+        }
+      }
+      &__submenu {
+        width: 4rem;
+        aspect-ratio: 1 / 1;
+
+        .image {
+          width: 100%;
+          object-fit: contain;
+          border-radius: 50%;
+        }
+      }
+    }
+  }
+}

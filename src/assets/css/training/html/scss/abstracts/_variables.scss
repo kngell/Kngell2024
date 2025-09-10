@@ -118,4 +118,4 @@ $margins: (
   400: 40rem,
   500: 50rem,
 );
-$navbar-margin-bottom: map-get($margins, 200);
+$navbar-margin-bottom: map.get($margins, 200);

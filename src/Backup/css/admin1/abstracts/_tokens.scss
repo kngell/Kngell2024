@@ -1,0 +1,341 @@
+$sizng-tokens: (
+  radius: (
+    xxs: 0.2rem,
+    xs: 0.4rem,
+    s: 0.8rem,
+    m: 1.2rem,
+    l: 2rem,
+    xl: 3rem,
+    full: 99.9rem,
+  ),
+  stroke-width: (
+    xs: 0.05rem,
+    s: 0.1rem,
+    m: 0.2rem,
+    l: 0.4rem,
+  ),
+);
+
+$color-usage: (
+  background: (
+    neutral: (
+      primary: #ffffff,
+      secondary: #f8f9fb,
+      tertiary: #f2f4f7,
+      disabled: #e8ebf0,
+    ),
+    neutral-inverse: (
+      primary: #14181e,
+      secondary: #232831,
+      tertiary: #454e5d,
+    ),
+    brand: (
+      primary: #1d4284,
+      secondary: #8ba6f3,
+      tertiary: #edf0fd,
+    ),
+    semantic: (
+      success: (
+        subtle: #ebffeb,
+        bold: #31a928,
+      ),
+      warning: (
+        subtle: #fffdf0,
+        bold: #d1b900,
+      ),
+      error: (
+        subtle: #fff0f1,
+        bold: #ad0613,
+      ),
+      info: (
+        subtle: #f6fbfe,
+        bold: #1b8dd5,
+      ),
+    ),
+  ),
+  text: (
+    neutral: (
+      primary: #232831,
+      secondary: #454e5d,
+      tertiary: #68758b,
+      disabled: #c3cbd9,
+    ),
+    neutral-inverse: (
+      primary: #f8f9fb,
+      secondary: #e8ebf0,
+      tertiary: #dbe0e8,
+    ),
+    brand: (
+      primary: #081a3b,
+      inverse: #edf0fd,
+    ),
+    semantic: (
+      success: (
+        primary: #072d05,
+        inverse: #ebffeb,
+      ),
+      warning: (
+        primary: #473f00,
+        inverse: #fffdf0,
+      ),
+      error: (
+        primary: #68030c,
+        inverse: #fff0f1,
+      ),
+      info: (
+        primary: #093048,
+        inverse: #f6fbfe,
+      ),
+    ),
+  ),
+  icon: (
+    neutral: (
+      primary: #232831,
+      secondary: #454e5d,
+      tertiary: #68758b,
+      disabled: #c3cbd9,
+    ),
+    neutral-inverse: (
+      primary: #f8f9fb,
+      secondary: #e8ebf0,
+      tertiary: #dbe0e8,
+    ),
+    brand: (
+      primary: #081a3b,
+      inverse: #edf0fd,
+    ),
+    semantic: (
+      success: (
+        primary: #072d05,
+        inverse: #ebffeb,
+      ),
+      warning: (
+        primary: #473f00,
+        inverse: #fffdf0,
+      ),
+      error: (
+        primary: #68030c,
+        inverse: #fff0f1,
+      ),
+      info: (
+        primary: #093048,
+        inverse: #f6fbfe,
+      ),
+    ),
+  ),
+  border: (
+    neutral: (
+      primary: #e8ebf0,
+      secondary: #c3cbd9,
+    ),
+    neutral-inverse: (
+      primary: #232831,
+      secondary: #68758b,
+    ),
+    brand: (
+      primary: #122f60,
+      inverse: #dbe2fb,
+    ),
+    semantic: (
+      success: (
+        primary: #14550f,
+        inverse: #cafec9,
+      ),
+      warning: (
+        primary: #8a7a00,
+        inverse: #fffbe0,
+      ),
+      error: (
+        primary: #8f0510,
+        inverse: #fee6e8,
+      ),
+      info: (
+        primary: #125d8c,
+        inverse: #edf7fd,
+      ),
+    ),
+  ),
+);
+
+$texts: (
+  desktop: (
+    hahmlet: (
+      headings: (
+        semibold: (
+          h1: (
+            font-family: Hahmlet,
+            font-size: 6.4rem,
+            font-weight: 600,
+            line-height: 7.68rem,
+            letter-spacing: -0.128rem,
+          ),
+          h2: (
+            font-family: Hahmlet,
+            font-size: 4.8rem,
+            font-weight: 600,
+            line-height: 5.76rem,
+            letter-spacing: -0.096rem,
+          ),
+          h3: (
+            font-family: Hahmlet,
+            font-size: 3rem,
+            font-weight: 600,
+            line-height: 3.6rem,
+            letter-spacing: -0.03rem,
+          ),
+          h4: (
+            font-family: Hahmlet,
+            font-size: 3rem,
+            font-weight: 600,
+            line-height: 3.6rem,
+            letter-spacing: -0.03rem,
+          ),
+          h5: (
+            font-family: Hahmlet,
+            font-size: 2.4rem,
+            font-weight: 600,
+            line-height: 3.12rem,
+            letter-spacing: -0.024rem,
+          ),
+          h6: (
+            font-family: Hahmlet,
+            font-size: 2rem,
+            font-weight: 600,
+            line-height: 3rem,
+            letter-spacing: 0rem,
+          ),
+        ),
+        regular: (
+          h1: (
+            font-family: Hahmlet,
+            font-size: 6.4rem,
+            font-weight: 400,
+            line-height: 7.68rem,
+            letter-spacing: -0.128rem,
+          ),
+          h2: (
+            font-family: Hahmlet,
+            font-size: 4.8rem,
+            font-weight: 400,
+            line-height: 5.76rem,
+            letter-spacing: -0.096rem,
+          ),
+          h3: (
+            font-family: Hahmlet,
+            font-size: 3rem,
+            font-weight: 400,
+            line-height: 3.6rem,
+            letter-spacing: -0.03rem,
+          ),
+          h4: (
+            font-family: Hahmlet,
+            font-size: 3rem,
+            font-weight: 400,
+            line-height: 3.6rem,
+            letter-spacing: -0.03rem,
+          ),
+          h5: (
+            font-family: Hahmlet,
+            font-size: 2.4rem,
+            font-weight: 400,
+            line-height: 3.12rem,
+            letter-spacing: -0.024rem,
+          ),
+          h6: (
+            font-family: Hahmlet,
+            font-size: 2rem,
+            font-weight: 400,
+            line-height: 3rem,
+            letter-spacing: 0rem,
+          ),
+        ),
+      ),
+      body: (
+        large: (
+          base: (
+            font-family: Figtree,
+            font-size: 1.8rem,
+            font-weight: 400,
+            line-height: 3.06rem,
+            letter-spacing: 0rem,
+          ),
+          strong: (
+            font-family: Figtree,
+            font-size: 1.8rem,
+            font-weight: 600,
+            line-height: 3.06rem,
+            letter-spacing: 0rem,
+          ),
+          italic: (
+            font-family: Figtree,
+            font-size: 1.8rem,
+            line-height: 3.06rem,
+            letter-spacing: 0rem,
+          ),
+        ),
+        regular: (
+          base: (
+            font-family: Figtree,
+            font-size: 1.6rem,
+            font-weight: 400,
+            line-height: 2.72rem,
+            letter-spacing: 0rem,
+          ),
+          strong: (
+            font-family: Figtree,
+            font-size: 1.6rem,
+            font-weight: 600,
+            line-height: 2.72rem,
+            letter-spacing: 0rem,
+          ),
+          italic: (
+            font-family: Figtree,
+            font-size: 1.6rem,
+            line-height: 2.72rem,
+            letter-spacing: 0rem,
+          ),
+        ),
+        small: (
+          base: (
+            font-family: Figtree,
+            font-size: 1.4rem,
+            font-weight: 400,
+            line-height: 2.38rem,
+            letter-spacing: 0rem,
+          ),
+          strong: (
+            font-family: Figtree,
+            font-size: 1.4rem,
+            font-weight: 600,
+            line-height: 2.38rem,
+            letter-spacing: 0rem,
+          ),
+          italic: (
+            font-family: Figtree,
+            font-size: 1.4rem,
+            line-height: 2.38rem,
+            letter-spacing: 0rem,
+          ),
+        ),
+        caption: (
+          caption: (
+            font-family: Figtree,
+            font-size: 1.2rem,
+            font-weight: 600,
+            line-height: 1.8rem,
+            letter-spacing: 0.024rem,
+          ),
+        ),
+        notes: (
+          notes: (
+            font-family: Figtree,
+            font-size: 1rem,
+            font-weight: 400,
+            line-height: 1.5rem,
+            letter-spacing: 0rem,
+          ),
+        ),
+      ),
+    ),
+  ),
+);

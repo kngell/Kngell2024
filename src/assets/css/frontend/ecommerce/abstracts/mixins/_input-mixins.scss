@@ -1,103 +1,10 @@
 @use "sass:map";
+@use "sass:color";
+@use "sass:list";
 @use "css/frontend/ecommerce/abstracts/variables" as *;
 @use "css/frontend/ecommerce/abstracts/functions" as *;
 @use "miscellaneous-mixins" as *;
 @use "flex-mixins" as *;
-
-// @mixin custom-radio(
-//   $radio: input-radio,
-//   $radio-size: 1.6rem,
-//   $border-width: 1px,
-//   $border-color: $color-black,
-//   $dot-color: $color-black,
-//   $dot-scale: 0.5,
-//   $font-size: 1.6rem,
-//   $gap: 1.2rem,
-//   $focus-outline: lighten($border-color, 20%),
-//   $direction: ltr // "ltr" or "rtl"
-// ) {
-//   $dot-size: calc(#{$radio-size} * #{$dot-scale});
-//   $is-rtl: $direction == rtl;
-
-//   input[type="radio"] {
-//     display: none;
-
-//     & + .#{$radio}__label {
-//       position: relative;
-//       display: flex;
-//       align-items: center;
-//       gap: $gap;
-//       font-size: $font-size;
-//       cursor: pointer;
-
-//       @if $is-rtl {
-//         flex-direction: row-reverse;
-//         padding-right: calc(#{$radio-size} + $gap);
-//       } @else {
-//         padding-left: calc(#{$radio-size} + $gap);
-//       }
-
-//       &::before {
-//         content: "";
-//         position: absolute;
-//         top: 50%;
-//         @if $is-rtl {
-//           right: 0;
-//           transform: translate(50%, -50%);
-//         } @else {
-//           left: 0;
-//           transform: translate(-50%, -50%);
-//         }
-//         width: $radio-size;
-//         height: $radio-size;
-//         border: $border-width solid $border-color;
-//         border-radius: 50%;
-//         background-color: #fff;
-//       }
-
-//       &::after {
-//         content: "";
-//         position: absolute;
-//         top: 50%;
-//         @if $is-rtl {
-//           right: 0;
-//           transform: translate(50%, -50%) scale(0);
-//         } @else {
-//           left: 0;
-//           transform: translate(-50%, -50%) scale(0);
-//         }
-//         width: $dot-size;
-//         height: $dot-size;
-//         background-color: $dot-color;
-//         border-radius: 50%;
-//         transition: transform 0.2s ease-in-out;
-//         pointer-events: none;
-//       }
-//     }
-
-//     &:checked + .#{$radio}__label::after {
-//       @if $is-rtl {
-//         transform: translate(50%, -50%) scale(1);
-//       } @else {
-//         transform: translate(-50%, -50%) scale(1);
-//       }
-//     }
-
-//     &:disabled + .#{$radio}__label {
-//       opacity: 0.4;
-//       cursor: not-allowed;
-//     }
-
-//     &:focus-visible + .#{$radio}__label::before {
-//       outline: 2px solid $focus-outline;
-//       outline-offset: 2px;
-//     }
-
-//     &:hover + .#{$radio}__label::before {
-//       border-color: darken($border-color, 10%);
-//     }
-//   }
-// }
 
 @mixin custom-radio(
   $radio: input-radio,
@@ -108,7 +15,7 @@
   $dot-scale: 0.5,
   $font-size: 1.6rem,
   $gap: 1.2rem,
-  $focus-outline: lighten($border-color, 20%),
+  $focus-outline: color.adjust($border-color, $lightness: 20%),
   $direction: ltr // "ltr" or "rtl"
 ) {
   $dot-size: calc(#{$radio-size} * #{$dot-scale});
@@ -198,7 +105,7 @@
     }
 
     &:hover + .#{$radio}__label::before {
-      border-color: darken($border-color, 10%);
+      border-color: color.adjust($border-color, $lightness: -10%);
     }
   }
 }
@@ -216,7 +123,7 @@
   $border-color: $color-black,
   $checked-bg-color: $color-black,
   $check-color: $color-white,
-  $focus-outline: lighten($border-color, 20%),
+  $focus-outline: color.adjust($border-color, $lightness: 20%),
   $checkmark-type: "text",
   // "text" or "svg"
   $direction: ltr // "ltr" or "rtl"
@@ -333,7 +240,7 @@
 
     // Hover
     &:hover + .#{$checkbox}__label::before {
-      border-color: darken($border-color, 10%);
+      border-color: color.adjust($border-color, $lightness: -10%);
     }
 
     // Disabled state
@@ -382,15 +289,7 @@
     }
   }
 }
-@mixin input-reset {
-  font: inherit;
-  border: none;
-  outline: none;
-  background: none;
-  padding: 0;
-  margin: 0;
-  box-shadow: none;
-}
+
 @mixin input-transition($props...) {
   transition: $props;
 }
@@ -444,7 +343,7 @@
 
   &__label {
     position: absolute;
-    left: nth($padding, 2);
+    left: list.nth($padding, 2);
     pointer-events: none;
     color: $label-color;
     transition: top 0.2s ease, transform 0.2s ease, font-size 0.2s ease, color 0.2s ease,
@@ -484,7 +383,7 @@
       color: $label-floating-color;
       background-color: $background; // Solid background
       padding: 0 0.4rem; // Padding for "cut-out" effect
-      left: nth($padding, 2); // Maintain horizontal position
+      left: list.nth($padding, 2); // Maintain horizontal position
       z-index: 2;
       border-radius: 4px;
     }
@@ -497,7 +396,7 @@
     margin-top: 0.4rem;
     color: red;
     display: none;
-    padding-left: nth($padding, 2);
+    padding-left: list.nth($padding, 2);
   }
 
   &.has-error {

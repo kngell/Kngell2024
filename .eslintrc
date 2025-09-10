@@ -8,16 +8,39 @@
     "requireConfigFile": false,
     "ecmaFeatures": {
       "jsx": true,
-      "js": true,
       "experimentalObjectRestSpread": true
     }
   },
   "env": {
-    "node": true,
-    "browser": true
+    "browser": true,
+    "node": true
   },
   "rules": {
     "no-console": "off",
     "no-unused-vars": "off"
   }
 }
+
+// {
+//   "extends": ["eslint:recommended", "plugin:jsdoc/recommended"],
+//   "plugins": ["jsdoc"],
+//   "parser": "@babel/eslint-parser",
+//   "parserOptions": {
+//     "ecmaVersion": "latest",
+//     "sourceType": "module",
+//     "requireConfigFile": false,
+//     "ecmaFeatures": {
+//       "jsx": true,
+//       "js": true,
+//       "experimentalObjectRestSpread": true
+//     }
+//   },
+//   "env": {
+//     "node": true,
+//     "browser": true
+//   },
+//   "rules": {
+//     "no-console": "off",
+//     "no-unused-vars": "off"
+//   }
+// }

@@ -1,0 +1,423 @@
+@use "sass:map";
+@use "sass:color";
+@use "sass:list";
+@use "css/backend/admin/abstracts/variables" as *;
+@use "css/backend/admin/abstracts/functions" as *;
+@use "miscellaneous" as *;
+
+@mixin custom-radio(
+  $radio: input-radio,
+  $radio-size: 1.6rem,
+  $border-width: 1px,
+  $border-color: map-deep-get($color-neutral, black, black-500),
+  $dot-color: map-deep-get($color-neutral, black, black-500),
+  $dot-scale: 0.5,
+  $font-size: 1.6rem,
+  $gap: 1.2rem,
+  $focus-outline: color.adjust($border-color, $lightness: 20%),
+  $direction: ltr // "ltr" or "rtl"
+) {
+  $dot-size: calc(#{$radio-size} * #{$dot-scale});
+  $is-rtl: $direction == rtl;
+
+  input[type="radio"] {
+    display: none;
+
+    & + .#{$radio}__label {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: $gap;
+      font-size: $font-size;
+      cursor: pointer;
+
+      @if $is-rtl {
+        flex-direction: row-reverse;
+        padding-right: calc(#{$radio-size} + $gap);
+      } @else {
+        padding-left: calc(#{$radio-size} + $gap);
+      }
+
+      &::before,
+      &::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        border-radius: 50%;
+        pointer-events: none;
+      }
+
+      // Outer circle
+      &::before {
+        width: $radio-size;
+        height: $radio-size;
+        border: $border-width solid $border-color;
+        background-color: #fff;
+        transition: border-color 0.2s ease;
+
+        @if $is-rtl {
+          right: 0;
+          transform: translate(50%, -50%);
+        } @else {
+          left: 0;
+          transform: translate(-50%, -50%);
+        }
+      }
+
+      // Dot inside
+      &::after {
+        width: $dot-size;
+        height: $dot-size;
+        background-color: $dot-color;
+        opacity: 0;
+        transform: scale(0);
+        transition: transform 0.2s ease, opacity 0.2s ease;
+
+        @if $is-rtl {
+          right: 0;
+          transform: translate(50%, -50%) scale(0);
+        } @else {
+          left: 0;
+          transform: translate(-50%, -50%) scale(0);
+        }
+      }
+    }
+
+    &:checked + .#{$radio}__label::after {
+      opacity: 1;
+
+      @if $is-rtl {
+        transform: translate(50%, -50%) scale(1);
+      } @else {
+        transform: translate(-50%, -50%) scale(1);
+      }
+    }
+
+    &:disabled + .#{$radio}__label {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    &:focus-visible + .#{$radio}__label::before {
+      outline: 2px solid $focus-outline;
+      outline-offset: 2px;
+    }
+
+    &:hover + .#{$radio}__label::before {
+      border-color: color.adjust($border-color, $lightness: -10%);
+    }
+  }
+}
+
+@mixin custom-checkbox(
+  $checkbox: checkbox,
+  $box-size: 1.6rem,
+  $border-width: 1px,
+  $gap: 1.2rem,
+  $font-family: inherit,
+  $font-size: inherit,
+  $letter-spacing: inherit,
+  $color: inherit,
+  $font-weight: 500,
+  $line-height: inherit,
+  $border-radius: 3px,
+  $border-color: map-deep-get($color-neutral, black, black-500),
+  $background: transparent,
+  $checked-bg-color: map-deep-get($color-neutral, black, black-500),
+  $check-color: map-deep-get($color-neutral, white),
+  $focus-outline: color.adjust($border-color, $lightness: 20%),
+  $checkmark-type: "text",
+  $flex: null,
+  // e.g. 100px or 20%
+  // "text" or "svg"
+  $direction: ltr // "ltr" or "rtl"
+) {
+  $is-rtl: $direction == rtl;
+  $effective-box-total-size-calc: calc(#{$box-size} + (2 * #{$border-width}));
+
+  $svg-checkmark-data-uri: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M5 12l5 5L20 7' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+
+  input[type="checkbox"] {
+    display: none;
+
+    & + .#{$checkbox}__label {
+      @if $flex != null {
+        flex: $flex;
+      }
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: $gap;
+      font-family: $font-family;
+      font-size: $font-size;
+      color: $color;
+      font-weight: $font-weight;
+      line-height: $line-height;
+      letter-spacing: $letter-spacing;
+      cursor: pointer;
+
+      @if $is-rtl {
+        flex-direction: row-reverse;
+        padding-right: calc(#{$box-size} + $gap);
+      } @else {
+        padding-left: calc(#{$box-size} + $gap);
+      }
+
+      // Checkbox box
+      &::before {
+        content: "";
+        position: absolute;
+        top: 50%;
+        @if $is-rtl {
+          right: 0;
+          transform: translateY(-50%);
+        } @else {
+          left: 0;
+          transform: translateY(-50%);
+        }
+
+        width: $box-size;
+        height: $box-size;
+        border: $border-width solid $border-color;
+        border-radius: $border-radius;
+        background-color: $background;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background-color 0.2s ease, border-color 0.2s ease;
+      }
+
+      // Checkmark inside the box
+      &::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        @if $is-rtl {
+          right: 0;
+          transform: translateY(-50%) scale(0);
+        } @else {
+          left: 0;
+          transform: translateY(-50%) scale(0);
+        }
+
+        width: $box-size;
+        height: $box-size;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+        opacity: 0;
+        transform-origin: center;
+        transition: transform 0.2s ease, opacity 0.2s ease;
+
+        @if $checkmark-type == "text" {
+          content: "✓";
+          font-size: calc(#{$box-size} * 0.75);
+          line-height: 1;
+          color: $check-color;
+        } @else if $checkmark-type == "svg" {
+          background-image: $svg-checkmark-data-uri;
+          background-repeat: no-repeat;
+          background-position: center;
+          background-size: calc(#{$box-size} * 0.75);
+        }
+      }
+    }
+
+    // When checked
+    &:checked + .#{$checkbox}__label {
+      &::before {
+        background-color: $checked-bg-color;
+        border-color: $checked-bg-color;
+      }
+
+      &::after {
+        opacity: 1;
+        @if $is-rtl {
+          transform: translateY(-50%) scale(1);
+        } @else {
+          transform: translateY(-50%) scale(1);
+        }
+      }
+    }
+
+    // Focus style
+    &:focus-visible + .#{$checkbox}__label::before {
+      outline: 2px solid $focus-outline;
+      outline-offset: 2px;
+    }
+
+    // Hover
+    &:hover + .#{$checkbox}__label::before {
+      border-color: color.adjust($border-color, $lightness: -10%);
+    }
+
+    // Disabled state
+    &:disabled + .#{$checkbox}__label {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+  }
+
+  // Hint text under checkbox
+  .#{$checkbox}__hint-text {
+    font-size: 1.3rem;
+    margin-top: 0.4rem;
+    color: red;
+    display: none;
+
+    @if $is-rtl {
+      padding-right: calc(#{$effective-box-total-size-calc} + #{$gap});
+    } @else {
+      padding-left: calc(#{$effective-box-total-size-calc} + #{$gap});
+    }
+  }
+
+  &.has-error {
+    .#{$checkbox}__hint-text {
+      display: block;
+    }
+  }
+}
+
+@mixin input-box-theme(
+  $padding: 1.2rem 1.6rem,
+  $border-color: #ccc,
+  $radius: 0.6rem,
+  $focus-color: #007bff,
+  $font-size: 1.6rem
+) {
+  .input-box__input {
+    padding: $padding;
+    border: 1px solid $border-color;
+    border-radius: $radius;
+    font-size: $font-size;
+
+    &:focus {
+      border-color: $focus-color;
+    }
+  }
+}
+
+@mixin input-transition($props...) {
+  transition: $props;
+}
+
+@mixin input-box(
+  $input-box: input-box,
+  $floating: true,
+  $border: true,
+  $padding: 1.2rem 1.6rem,
+  $border-color: #ccc,
+  $radius: 0.6rem,
+  $focus-color: #007bff,
+  $label-color: #666,
+  $label-floating-color: #333,
+  $font-size: 1.6rem,
+  $label-float-size: 1.2rem,
+  $background: #fff
+) {
+  width: 100%;
+  position: relative;
+  font-size: $font-size;
+  margin-bottom: 1.6rem;
+
+  &__input {
+    width: 100%;
+    font: inherit;
+    padding: $padding;
+    border: if($border, 1px solid $border-color, none);
+    border-radius: $radius;
+    font-size: inherit;
+    background-color: $background;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
+    z-index: 0;
+
+    &::placeholder {
+      @if $floating {
+        color: transparent;
+      } @else {
+        color: $label-color;
+        opacity: 1;
+      }
+    }
+
+    &:focus {
+      border-color: $focus-color;
+      box-shadow: 0 0 0 2px rgba($focus-color, 0.1);
+    }
+  }
+
+  &__label {
+    position: absolute;
+    left: list.nth($padding, 2);
+    pointer-events: none;
+    color: $label-color;
+    transition: top 0.2s ease, transform 0.2s ease, font-size 0.2s ease, color 0.2s ease,
+      background-color 0.2s ease, padding 0.2s ease;
+    transform-origin: left center;
+    z-index: 1;
+
+    @if $floating {
+      // **DEFAULT STATE of the floating label (when input is not focused AND has placeholder shown)**
+      // This is the "resting" or "placeholder-shown" state
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: $font-size; // Larger font
+      background-color: transparent; // No background
+      padding: 0; // No padding for "cut-out"
+
+      // for focus/content.
+    } @else {
+      // Non-floating label styles
+      position: static;
+      display: block;
+      transform: none;
+      margin-bottom: 0.4rem;
+    }
+  }
+
+  // --- CRITICAL CHANGE HERE ---
+  // This block defines the "floated" state for the label.
+  // It applies when the input is focused OR when it has content (not placeholder-shown).
+  @if $floating {
+    // Target the label (which is a sibling of the input)
+    .#{$input-box}__input:focus + .#{$input-box}__label,
+    .#{$input-box}__input:not(:placeholder-shown) + .#{$input-box}__label {
+      top: 0;
+      transform: translateY(-50%);
+      font-size: $label-float-size; // Smaller font
+      color: $label-floating-color;
+      background-color: $background; // Solid background
+      padding: 0 0.4rem; // Padding for "cut-out" effect
+      left: list.nth($padding, 2); // Maintain horizontal position
+      z-index: 2;
+      border-radius: 4px;
+    }
+  }
+  // --- END CRITICAL CHANGE ---
+
+  // Hint text and has-error styles (no change)
+  &__hint-text {
+    font-size: 1.3rem;
+    margin-top: 0.4rem;
+    color: red;
+    display: none;
+    padding-left: list.nth($padding, 2);
+  }
+
+  &.has-error {
+    .#{$input-box}__input {
+      border-color: red;
+      &:focus {
+        border-color: red;
+        box-shadow: 0 0 0 2px rgba(red, 0.1);
+      }
+    }
+    .#{$input-box}__hint-text {
+      display: block;
+    }
+  }
+}

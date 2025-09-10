@@ -1,16 +1,18 @@
 @use "sass:map";
+@use "sass:string";
 @use "css/frontend/ecommerce/abstracts/variables" as *;
 
 @mixin search-component(
-  $background: map-get($map: $colors-ecommerce, $key: gray-100),
+  $background: map.get($map: $colors-ecommerce, $key: gray-100),
   $font-size: 1.6rem,
-  $font-family: unquote(map-get($font, family)),
+  $font-family: string.unquote(map.get($font, family)),
   $font-weight: 500,
   $search-width: 100%,
   $padding: 0.8rem 1.6rem,
-  $icon-color: map-get($colors-ecommerce, gray-400),
+  $icon-color: map.get($colors-ecommerce, gray-400),
   $gap: 0.8rem,
-  $color: map-get($colors-ecommerce, gray-500)
+  $color: map.get($colors-ecommerce, gray-500),
+  $button-position: left // New parameter: left or right
 ) {
   display: flex;
   padding: $padding;
@@ -21,12 +23,18 @@
   background: $background;
   width: $search-width;
 
-  &__icon-box {
+  // Control flex direction based on button position
+  @if $button-position == right {
+    flex-direction: row-reverse;
+  }
+
+  &__btn {
     width: 2.4rem;
     height: 2.4rem;
     border: none;
     cursor: pointer;
     flex-shrink: 0;
+    order: if($button-position == right, 2, 1); // Explicit order control
 
     .icon {
       display: block;
@@ -52,6 +60,7 @@
     font-size: $font-size;
     letter-spacing: 0;
     line-height: 1.3;
+    order: if($button-position == right, 1, 2); // Explicit order control
 
     &::placeholder {
       color: $icon-color;

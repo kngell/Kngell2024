@@ -1,2 +1,38 @@
-@use "css/frontend/ecommerce/abstracts" as *;
-/*---------------- BUTONS ----------------*/
+@use "css/backend/admin/abstracts" as *;
+
+/*---------------- BUTTONS ----------------*/
+.btn {
+  @include button-base;
+
+  // Variant classes
+  @each $variant, $value in $button-variants {
+    &--#{$variant} {
+      @include button-variant($variant);
+      .btn__label {
+        @include button-label($variant);
+      }
+    }
+  }
+
+  // Size classes
+  @each $size, $value in $button-sizes {
+    &--#{$size} {
+      @include button-size($size);
+    }
+  }
+
+  &__icon {
+    @include button-icon();
+  }
+
+  &--icon-left {
+    flex-direction: row;
+  }
+  &--icon-right {
+    flex-direction: row-reverse;
+  }
+  &--icon-only {
+    @include button-icon-only;
+    flex-direction: row;
+  }
+}

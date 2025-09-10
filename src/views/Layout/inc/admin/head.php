@@ -67,4 +67,5 @@
     <?php endif; ?>
 </head>
 
-<body id="body" class="dashboard">
+<body id="body">
+    <div class="dashboard">

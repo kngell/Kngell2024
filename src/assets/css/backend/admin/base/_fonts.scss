@@ -1,1 +1,12 @@
-@use "css/backend/admin/abstracts" as *;
+@use "css/backend/admin/abstracts/mixins" as *;
+
+@include font-face-ttf("Inter", "~fonts/Inter/Inter-VariableFont_opsz,wght", 100 900, normal);
+
+@include font-face-ttf(
+  "Inter Tight",
+  "~fonts/Inter_Tight/InterTight-VariableFont_wght",
+  100 900,
+  normal
+);
+
+@include font-face-ttf("Roboto", "~fonts/Roboto/Roboto-VariableFont_wdth,wght", 100 900, normal);

@@ -1,2 +1,20 @@
 @use "css/backend/admin/abstracts" as *;
 @use "fonts" as *;
+
+body {
+  color: map-deep-get($color-neutral, black, black-500);
+  font-family: "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: map-deep-get($text-l, regular, font-size);
+  font-weight: map-deep-get($text-l, regular, font-weight);
+  font-style: normal;
+  font-variant: normal;
+  letter-spacing: normal;
+  line-height: map-deep-get($text-l, regular, line-height);
+  text-align: left;
+}
+
+@for $i from 1 through 6 {
+  h#{$i} {
+    font-family: "Inter Tight", "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+}

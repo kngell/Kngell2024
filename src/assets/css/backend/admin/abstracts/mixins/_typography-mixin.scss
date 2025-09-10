@@ -1,0 +1,20 @@
+/// Typography mixin using your typography maps
+/// @param {String} $style - The typography style to apply
+@mixin typography($style) {
+  $typography: map-deep-get-safe($typography-primitive, ($style));
+
+  @if $typography {
+    @each $property, $value in $typography {
+      #{$property}: $value;
+    }
+  }
+}
+
+// Usage
+.heading {
+  @include typography(heading-1);
+}
+
+.body-text {
+  @include typography(body-caption);
+}

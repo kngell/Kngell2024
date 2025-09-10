@@ -1,0 +1,102 @@
+@use "sass:map";
+@use "css/backend/admin/abstracts/variables" as *;
+@use "css/backend/admin/abstracts/functions" as *;
+
+// ---------------------
+// Mixins
+// ---------------------
+
+// Colors
+@mixin badge-colors($bg, $color) {
+  background-color: $bg;
+  color: $color;
+}
+
+@mixin badge-size($token, $padding: 0.2rem 0.8rem) {
+  font-size: map-deep-get($token, font-size);
+  font-weight: map-deep-get($token, font-weight);
+  line-height: map-deep-get($token, line-height);
+  letter-spacing: map-deep-get($token, letter-spacing);
+  padding: $padding;
+  height: calc(#{map-deep-get($token, line-height)} + 0.2rem + 0.8rem);
+}
+
+// Optional icon inside badge
+@mixin badge-icon($position: left, $size: 1em, $gap: 0.4rem) {
+  display: inline-flex;
+  align-items: center;
+  gap: $gap;
+  flex-direction: if($position == right, row-reverse, row);
+
+  .badge__icon {
+    width: $size;
+    height: $size;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+  }
+}
+
+// Unified badge mixin
+@mixin badge(
+  $variant: neutral,
+  $size: md,
+  $has-icon: false,
+  $icon-position: left,
+  $icon-size: 1em,
+  $icon-gap: 0.4rem
+) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: map-deep-get($radius, full);
+  white-space: nowrap;
+
+  // Size handling
+  @if $size == sm {
+    @include badge-size(map-deep-get($text-s, semibold), 0.15rem 0.6rem);
+  } @else if $size == md {
+    @include badge-size(map-deep-get($text-m, semibold), 0.2rem 0.8rem);
+  } @else if $size == lg {
+    @include badge-size(map-deep-get($text-l, semibold), 0.25rem 1rem);
+  }
+
+  // Variant handling
+  @if $variant == neutral {
+    @include badge-colors(
+      map-deep-get($color-neutral, gray, gray-100),
+      map-deep-get($color-neutral, black, black-600)
+    );
+  } @else if $variant == success {
+    @include badge-colors(
+      map-deep-get($color-secondary, green, green-50),
+      map-deep-get($color-secondary, green, green-500)
+    );
+  } @else if $variant == error {
+    @include badge-colors(
+      map-deep-get($color-secondary, red, red-50),
+      map-deep-get($color-secondary, red, red-500)
+    );
+  } @else if $variant == warning {
+    @include badge-colors(
+      map-deep-get($color-secondary, yellow, yellow-50),
+      map-deep-get($color-secondary, yellow, yellow-500)
+    );
+  } @else if $variant == info {
+    @include badge-colors(
+      map-deep-get($color-secondary, blue, blue-50),
+      map-deep-get($color-secondary, blue, blue-500)
+    );
+  }
+
+  // Icon handling
+  @if $has-icon {
+    @include badge-icon($icon-position, $icon-size, $icon-gap);
+  }
+}

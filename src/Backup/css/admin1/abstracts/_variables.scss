@@ -1,0 +1,91 @@
+@use "sass:map";
+@use "tokens" as *;
+@use "functions" as *;
+
+//COLORS
+$background-color: map-deep-get($color-usage, background);
+$text-color: map-deep-get($color-usage, text);
+$icon-color: map-deep-get($color-usage, icon);
+$border-color: map-deep-get($color-usage, border);
+//RADIUS
+$radius: map-deep-get($sizng-tokens, radius);
+
+//TYPOGRAPHY
+$desktop-text-body: map-deep-get($texts, desktop, hahmlet, body);
+$desktop-text-headings: map-deep-get($texts, desktop, hahmlet, headings);
+
+$fills: (
+  white: #ffffff,
+  black: #000000,
+  grey: #7c7c7c,
+  cyprus: #023337,
+  icon: #1f1f1f,
+  text-active: #1d4284,
+  ocean-green: #4ea674,
+  surf-crest: #c1e6ba,
+  aqua-spring: #eaf8e7,
+  primary: #6467f2,
+  success: #21c45d,
+  pending: #f0d411,
+  error: #ef4343,
+  neutral-50: #f3f3f3,
+  //#f9fafb,
+);
+
+// $texts: (
+//   display: (
+//     font-family: Lato,
+//     font-size: 5.7rem,
+//     font-weight: 400,
+//     line-height: normal,
+//     letter-spacing: -0.0025em,
+//   ),
+//   headline: (
+//     font-family: Lato,
+//     font-size: 3.2rem,
+//     font-weight: 400,
+//     line-height: normal,
+//     letter-spacing: 0em,
+//   ),
+//   dashboard-title: (
+//     font-family: Lato,
+//     font-size: 1.8rem,
+//     font-weight: 400,
+//     line-height: normal,
+//     letter-spacing: 0em,
+//   ),
+//   title-2: (
+//     font-family: Lato,
+//     font-size: 2.2rem,
+//     font-weight: 400,
+//     line-height: normal,
+//     letter-spacing: 0em,
+//   ),
+//   body: (
+//     font-family: Lato,
+//     font-size: 1.6rem,
+//     font-weight: 400,
+//     line-height: normal,
+//     letter-spacing: 0em,
+//   ),
+//   label: (
+//     font-family: Lato,
+//     font-size: 1.4rem,
+//     font-weight: 400,
+//     line-height: normal,
+//     letter-spacing: 0em,
+//   ),
+// );
+
+$effects: (
+  6-ambient: "0px 3px 5px rgba(0,0,0,0.20000000298023224)",
+  3-ambient: "0px 1px 8px rgba(0,0,0,0.20000000298023224)",
+  1-ambient: "0px 1px 3px rgba(0,0,0,0.20000000298023224)"
+);
+
+$breakpoints: (
+  sm: 36rem,
+  md: 48rem,
+  lg: 62rem,
+  xl: 75rem,
+);

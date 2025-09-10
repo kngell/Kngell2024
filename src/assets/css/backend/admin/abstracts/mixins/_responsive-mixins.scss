@@ -1,0 +1,151 @@
+@use "sass:map";
+@use "css/backend/admin/abstracts/variables" as *;
+
+// Responsive breakpoint manager
+@mixin respond-below($breakpoint) {
+  @if map.has-key($breakpoints, $breakpoint) {
+    $breakpoint-value: map.get($breakpoints, $breakpoint);
+    @media (max-width: $breakpoint-value) {
+      @content;
+    }
+  } @else {
+    @warn "Invalid breakpoint: #{$breakpoint}. Available breakpoints are: #{map-keys($breakpoints)}";
+  }
+}
+
+@mixin respond-above($breakpoint) {
+  @if map.has-key($breakpoints, $breakpoint) {
+    $breakpoint-value: map.get($breakpoints, $breakpoint);
+    @media (min-width: $breakpoint-value) {
+      @content;
+    }
+  } @else {
+    @warn "Invalid breakpoint: #{$breakpoint}. Available breakpoints are: #{map-keys($breakpoints)}";
+  }
+}
+
+@mixin respond-between($lower, $upper) {
+  @if map.has-key($breakpoints, $lower) and map.has-key($breakpoints, $upper) {
+    $lower-value: map.get($breakpoints, $lower);
+    $upper-value: map.get($breakpoints, $upper);
+    @media (min-width: $lower-value) and (max-width: $upper-value) {
+      @content;
+    }
+  } @else {
+    @if not map.has-key($breakpoints, $lower) {
+      @warn "Invalid lower breakpoint: #{$lower}. Available breakpoints are: #{map-keys($breakpoints)}";
+    }
+    @if not map.has-key($breakpoints, $upper) {
+      @warn "Invalid upper breakpoint: #{$upper}. Available breakpoints are: #{map-keys($breakpoints)}";
+    }
+  }
+}
+
+@mixin max-responsive($breakpoint) {
+  @if map.has-key($breakpoints-short, $breakpoint) {
+    @media (max-width: map.get($breakpoints-short, $breakpoint)) {
+      @content;
+    }
+  }
+}
+
+@mixin responsive($breakpoint) {
+  @if map.has-key($breakpoints-short, $breakpoint) {
+    @media (min-width: map.get($breakpoints-short, $breakpoint)) {
+      @content;
+    }
+  }
+}
+
+// Responsive typography scaling mixin
+// Automatically scales font sizes across breakpoints
+@mixin responsive-font-size($base-size, $scale-factor: 0.8) {
+  font-size: $base-size;
+
+  @include respond-below("xxl") {
+    font-size: $base-size * 0.95;
+  }
+
+  @include respond-below("xl") {
+    font-size: $base-size * 0.9;
+  }
+
+  @include respond-below("lg") {
+    font-size: $base-size * 0.85;
+  }
+
+  @include respond-below("md") {
+    font-size: $base-size * $scale-factor;
+  }
+
+  @include respond-below("sm") {
+    font-size: $base-size * ($scale-factor * 0.9);
+  }
+
+  @include respond-below("xs") {
+    font-size: $base-size * ($scale-factor * 0.8);
+  }
+}
+
+// Responsive spacing mixin
+// Automatically adjusts padding/margin across breakpoints
+@mixin responsive-spacing($property, $base-value, $scale-factor: 0.7) {
+  #{$property}: $base-value;
+
+  @include respond-below("lg") {
+    #{$property}: $base-value * 0.85;
+  }
+
+  @include respond-below("md") {
+    #{$property}: $base-value * $scale-factor;
+  }
+
+  @include respond-below("sm") {
+    #{$property}: $base-value * ($scale-factor * 0.8);
+  }
+
+  @include respond-below("xs") {
+    #{$property}: $base-value * ($scale-factor * 0.6);
+  }
+}
+
+// Container query-like behavior for responsive images
+@mixin responsive-image($mobile-height: 20rem) {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+
+  @include respond-below("md") {
+    object-position: center;
+    max-height: $mobile-height;
+  }
+}
+
+// Responsive container mixin
+@mixin responsive-container($mobile-stack: true) {
+  display: flex;
+
+  @if $mobile-stack {
+    @include respond-below("md") {
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    @include respond-below("sm") {
+      gap: 1.5rem;
+    }
+
+    @include respond-below("xs") {
+      gap: 1rem;
+    }
+  }
+}
+
+// Responsive text alignment
+@mixin responsive-text-align($desktop: left, $mobile: center) {
+  text-align: $desktop;
+
+  @include respond-below("md") {
+    text-align: $mobile;
+  }
+}

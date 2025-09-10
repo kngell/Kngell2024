@@ -1,3 +1,4 @@
+@use "sass:color";
 @use "css/frontend/ecommerce/abstracts" as *;
 /*---------------- BUTONS ----------------*/
 
@@ -65,7 +66,7 @@
     color: $color-black; // Use SCSS variable for consistency
     background-color: $color-white; // Assuming a default light background for small
     @include btn-solid-hover-focus(
-      darken($color-white, 5%),
+      color.adjust($color-white, $lightness: -5%),
       $color-black,
       $btn-border-color,
       $color-black
@@ -78,7 +79,7 @@
     @include btn-size(1.2rem, 6.4rem, 1.4rem, 1.71429, 0.8rem); // Override padding, border-radius
     @include btn-dark-base($color-black, $color-white); // Override background/color
     @include btn-solid-hover-focus(
-      darken($color-white, 10%),
+      color.adjust($color-white, $lightness: -10%),
       $color-black,
       $color-black,
       $color-black

@@ -16,7 +16,7 @@
 :root
    @each $block, $children in $colors
       @each $child, $value in $children
-         $name: map-get($children, name)
+         $name: map.get($children, name)
          @if type-of($value)==map
             @each $item, $val in $value
                @if $item==main

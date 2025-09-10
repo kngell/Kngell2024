@@ -1,0 +1,312 @@
+@use "css/backend/admin/abstracts" as *;
+
+/*--------------- ASIDE -------------*/
+.dashboard {
+  &__aside {
+    position: sticky;
+    top: 0;
+    align-self: start;
+    background-color: map-deep-get($background-color, neutral, primary);
+    box-shadow: 0 3px 4px rgba(0, 0, 0, 0.12);
+    padding: 0.5rem 2rem;
+    min-height: 100dvh;
+    width: 26rem;
+    transition: all 0.3s ease-in-out;
+    overflow-y: auto; // changed from hidden
+    overflow-x: hidden; // keep horizontal hidden
+    scrollbar-width: thin;
+    text-wrap: nowrap;
+
+    &::-webkit-scrollbar {
+      width: 0.6rem; // optional styling
+    }
+    &::-webkit-scrollbar-thumb {
+      background-color: rgba(0, 0, 0, 0.2);
+      border-radius: 0.3rem;
+    }
+
+    /* --- COLLAPSED --- */
+    &.collapsed {
+      width: 6rem;
+      padding: 0.5rem;
+      overflow: visible; // important: prevent clipping
+      position: relative;
+      z-index: 20;
+
+      .logo-container,
+      span,
+      .menu-group__title span,
+      .menu-group__list-item--dropdown-button .icon.arrow-down {
+        display: none;
+      }
+
+      .search-box,
+      .logo-box,
+      .menu-group__list-item--link,
+      .menu-group__list-item--dropdown-button {
+        gap: 0;
+        justify-content: center;
+        padding: 1rem;
+      }
+
+      .search-box .search-form {
+        gap: 0;
+        padding: 0;
+        justify-content: center;
+
+        &__input {
+          display: none;
+        }
+      }
+
+      .menu-group__list-item {
+        position: relative;
+
+        /* flyout submenu */
+        & > .menu-group__list-item--dropdown-menu {
+          position: absolute;
+          left: calc(100% + 0.8rem);
+          top: 0;
+          min-width: 18rem;
+          padding: 0.8rem;
+          background-color: map-deep-get($background-color, neutral, primary);
+          border-radius: map-deep-get($radius, s);
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+          opacity: 0;
+          visibility: hidden;
+          pointer-events: none;
+          transform: translateX(6px);
+          transition: opacity 0.2s ease, transform 0.2s ease;
+          z-index: 999;
+
+          &.show {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+            transform: translateX(0);
+            max-height: none;
+          }
+        }
+      }
+    }
+
+    /* --- LOGO --- */
+    .logo-box {
+      display: flex;
+      height: 8rem;
+      padding: 0.8rem 0;
+      justify-content: space-between;
+      align-items: center;
+
+      .logo-container {
+        width: 8rem;
+        aspect-ratio: 12/1.8;
+        flex-shrink: 0;
+
+        .image {
+          margin-top: 1rem;
+          width: 100%;
+          object-fit: contain;
+        }
+      }
+
+      .icon-container.toggle-btn {
+        @include flex-center;
+        padding: 0.8rem;
+        color: map-deep-get($text-color, neutral, primary);
+        background-color: transparent;
+        border: 1px solid map-deep-get($border-color, neutral, secondary);
+        border-radius: map-deep-get($radius, s);
+        cursor: pointer;
+        @include transition;
+
+        &.rotate {
+          transform: rotate(180deg);
+        }
+
+        &:hover {
+          background-color: map-deep-get($background-color, neutral, tertiary);
+          color: map-deep-get($text-color, brand, primary);
+          border: none;
+        }
+
+        .icon {
+          width: 2.4rem;
+          height: 2.4rem;
+          flex-shrink: 0;
+          transition: rotate 0.15s ease;
+        }
+      }
+    }
+
+    /* --- SEARCH --- */
+    .search-box {
+      width: 100%;
+      display: flex;
+      padding: 0.8rem 0;
+      flex-direction: column;
+      align-items: flex-start;
+      border-radius: map-deep-get($radius, s);
+
+      .search-form {
+        @include search-component(
+          $border-radius: map-deep-get($radius, s),
+          $button-position: right,
+          $background: map-deep-get($background-color, neutral, tertiary),
+          $color: map-deep-get($text-color, neutral, tertiary),
+          $font-size: map-deep-get($desktop-text-body, large, base, font-size)
+        );
+      }
+
+      &:hover {
+        background-color: map-deep-get($background-color, neutral, tertiary);
+        color: map-deep-get($text-color, brand, primary);
+      }
+    }
+
+    /* --- MENU GROUP --- */
+    .menu-group {
+      display: flex;
+      flex-direction: column;
+
+      &__title {
+        display: flex;
+        padding: 3.8rem 0 0.8rem;
+        align-items: center;
+        position: relative;
+
+        &::after {
+          content: "";
+          height: 1px;
+          background-color: map-deep-get($border-color, neutral, secondary);
+          width: 100%;
+          position: absolute;
+          bottom: 0;
+          left: 0;
+        }
+
+        span {
+          flex: 1 0 0;
+          color: map-deep-get($text-color, neutral, tertiary);
+        }
+      }
+
+      &__list {
+        display: flex;
+        flex-direction: column;
+        &-item {
+          position: relative;
+          &:not(:last-of-type) {
+            margin-bottom: 0.4rem;
+          }
+          &--link,
+          &--dropdown-button {
+            height: 100%;
+            display: flex;
+            padding: 0.4rem;
+            align-items: center;
+            gap: 0.8rem;
+            border-radius: map-deep-get($radius, s);
+            color: map-deep-get($text-color, neutral, primary);
+            font-family: map-deep-get($desktop-text-body, large, base, font-family);
+            font-size: map-deep-get($desktop-text-body, large, base, font-size);
+            font-weight: map-deep-get($desktop-text-body, large, base, font-weight);
+            line-height: map-deep-get($desktop-text-body, large, base, line-height);
+            @include transition;
+
+            .icon {
+              color: map-deep-get($icon-color, neutral, primary);
+              width: 2.4rem;
+              height: 2.4rem;
+            }
+
+            .icon.arrow-down {
+              fill: none;
+              transition: 0.3s ease-in-out;
+
+              &.rotated {
+                rotate: 180deg;
+              }
+            }
+
+            span {
+              flex-grow: 1;
+            }
+
+            &:hover {
+              background-color: map-deep-get($background-color, neutral, tertiary);
+              color: map-deep-get($text-color, brand, primary);
+
+              .icon {
+                color: map-deep-get($icon-color, brand, primary);
+              }
+
+              .icon.main-dashboard {
+                fill: map-deep-get($icon-color, brand, primary);
+              }
+            }
+          }
+
+          &--dropdown-button {
+            width: 100%;
+            text-align: left;
+            background: none;
+            border: none;
+            cursor: pointer;
+          }
+
+          &--dropdown-menu {
+            display: grid;
+            grid-template-columns: 1fr;
+            grid-template-rows: 0fr;
+            overflow: hidden;
+            max-height: 0;
+            transition: grid-template-rows 0.3s ease, max-height 0.3s ease;
+
+            & > div {
+              overflow: hidden;
+              display: flex;
+              flex-direction: column;
+              gap: 0.4rem;
+              margin-top: 0.4rem;
+              .dropdown-menu__item {
+                &--link {
+                  display: flex;
+                  align-items: center;
+                  padding: 0.4rem 0 0.4rem 0.8rem;
+                  border-radius: map-deep-get($radius, s);
+                  transition: background-color 0.2s ease, color 0.2s ease;
+                  &:hover {
+                    background-color: map-deep-get($background-color, neutral, tertiary);
+                    color: map-deep-get($text-color, brand, primary);
+                  }
+                }
+                &.active {
+                  background-color: map-deep-get($background-color, brand, tertiary);
+                  color: map-deep-get($text-color, brand, primary);
+                  font-weight: 600;
+                  border-radius: map-deep-get($radius, s);
+                }
+              }
+            }
+
+            &.show {
+              grid-template-rows: 1fr;
+              padding-left: 3.2rem;
+              max-height: 100%;
+            }
+          }
+
+          &.active {
+            .menu-group__list-item--link,
+            .menu-group__list-item--dropdown-button {
+              background-color: map-deep-get($background-color, brand, tertiary);
+              color: map-deep-get($text-color, brand, primary);
+              font-weight: 600;
+            }
+          }
+        }
+      }
+    }
+  }
+}

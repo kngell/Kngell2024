@@ -1,0 +1,35 @@
+@use "css/backend/admin/abstracts" as *;
+
+/*-------------------- GRID LAYOUT --------------------*/
+
+.dashboard {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto 1fr auto;
+  grid-template-areas:
+    "sidebar header"
+    "sidebar main"
+    "sidebar footer";
+  min-block-size: 100vh;
+  min-block-size: 100dvh;
+  transition: grid-template-columns 0.3s ease;
+  &__header {
+    height: 9.6rem;
+    padding: 1.6rem 4rem 1.6rem 2.4rem;
+    grid-area: header;
+  }
+  &__aside {
+    grid-area: sidebar;
+  }
+  &__main {
+    padding: 1.6rem 4rem 1.6rem 2.4rem;
+    grid-area: main;
+  }
+  &__footer {
+    padding: 1.6rem 4rem 1.6rem 2.4rem;
+    grid-area: footer;
+  }
+  &.sb-expand {
+    grid-template-columns: 26rem 1fr;
+  }
+}

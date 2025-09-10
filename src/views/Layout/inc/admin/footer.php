@@ -2,7 +2,7 @@
   <footer class="dashboard__footer">
       &copy; 2025 ShopAdmin. All rights reserved.
   </footer>
-
+  </div>
   <!-- Runtime Webpack -->
   <?= $this->js('runtime') ?>
   <?= $this->js('js/librairies/librairy') ?>

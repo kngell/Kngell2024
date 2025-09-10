@@ -57,9 +57,9 @@
 // Bulk font loader mixin - generates multiple font-face declarations
 @mixin load-font-family($font-family, $base-path, $variants: ()) {
   @each $variant in $variants {
-    $weight: map-get($variant, weight);
-    $style: map-get($variant, style);
-    $filename: map-get($variant, filename);
+    $weight: map.get($variant, weight);
+    $style: map.get($variant, style);
+    $filename: map.get($variant, filename);
 
     @include font-face-ttf($font-family, "#{$base-path}/#{$filename}", $weight, $style);
   }
@@ -68,9 +68,9 @@
 // Bulk OTF font loader mixin
 @mixin load-font-family-otf($font-family, $base-path, $variants: ()) {
   @each $variant in $variants {
-    $weight: map-get($variant, weight);
-    $style: map-get($variant, style);
-    $filename: map-get($variant, filename);
+    $weight: map.get($variant, weight);
+    $style: map.get($variant, style);
+    $filename: map.get($variant, filename);
 
     @include font-face-otf($font-family, "#{$base-path}/#{$filename}", $weight, $style);
   }

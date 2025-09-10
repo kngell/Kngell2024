@@ -1,28 +1,204 @@
 @use "css/backend/admin/abstracts" as *;
+
 /*--------------- ASIDE -------------*/
 
-.sidebar__logo {
-  font-size: $font-lg;
-  font-weight: bold;
-  margin-bottom: $space-lg;
-}
-
-.sidebar__nav {
+.aside {
   display: flex;
   flex-direction: column;
-  gap: $space-sm;
-}
+  align-items: flex-start;
+  align-self: stretch;
+  border-right: 1px solid map-deep-get($color-neutral, gray, gray-50);
+  background-color: map-deep-get($color-neutral, white);
+  box-shadow: 0.4rem 0 3rem 0 rgba(131, 98, 234, 0.05);
+  transition: all 0.3s ease-in-out;
+  overflow-y: auto; // changed from hidden
+  overflow-x: hidden; // keep horizontal hidden
+  text-wrap: nowrap;
 
-.sidebar__link {
-  text-decoration: none;
-  color: $color-text;
-  padding: $space-sm $space-md;
-  border-radius: $border-radius;
-  transition: background 0.2s;
+  .logo-box {
+    display: inline-flex;
+    width: 100%;
+    height: 6.4rem;
+    padding: 0.8rem 2rem;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 1rem;
+    &__content {
+      width: fit-content;
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+      align-self: stretch;
+      &--img-container {
+        width: 3.4rem;
+        height: 3.4rem;
+        display: flex;
+        align-items: center;
+        gap: 1.2rem;
 
-  &:hover,
-  &.is-active {
-    background-color: $color-primary;
-    color: white;
+        .image {
+          width: 100%;
+          height: 100%;
+          flex-shrink: 0;
+        }
+      }
+      &--text-container {
+        display: flex;
+        width: 7rem;
+        height: 3.2rem;
+        padding: 0.4rem 0.8rem;
+        background: var(--Background-Brand-Primary, #1d4284);
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        aspect-ratio: 35/16;
+        flex: 1 0 0;
+        border-radius: map-deep-get($radius, xs);
+        position: relative;
+        .text-1,
+        .text-3 {
+          width: 100%;
+          object-fit: contain;
+        }
+        .text-3 {
+          position: absolute;
+          width: calc(100% - 2 * 0.8rem);
+          top: 2.075rem;
+          left: 0.8rem;
+        }
+      }
+    }
+  }
+  .menu-box {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    flex: 1 0 0;
+    align-self: stretch;
+    &__main-menu {
+      position: relative;
+      .menu-list {
+        display: flex;
+        padding: 2.4rem 1.8rem 3.2rem 1.8rem;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.8rem;
+        flex: 1 0 0;
+        align-self: stretch;
+
+        &__item {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 0.8rem;
+          position: relative;
+          &--link,
+          &--dropdown-button {
+            display: flex;
+            width: 100%;
+            padding: 0.8rem 1.2rem;
+            align-items: center;
+            gap: 0.8rem;
+            border-radius: map-deep-get($radius, s);
+            text-align: left;
+            .icon {
+              width: 2.4rem;
+              height: 2.4rem;
+              flex-shrink: 0;
+            }
+            .icon.arrow-down {
+              width: 2.2rem;
+              height: 2.2rem;
+              transition: all 0.3s ease-in-out;
+              &.rotated {
+                rotate: 180deg;
+              }
+            }
+            span {
+              flex: 1 0 0;
+              font-size: map-deep-get($text-m, semibold, font-size);
+              font-weight: map-deep-get($text-m, semibold, font-weight);
+              line-height: map-deep-get($text-m, semibold, line-height);
+              letter-spacing: map-deep-get($text-m, semibold, letter-spacing);
+            }
+            &:hover {
+              background-color: map-deep-get($color-primary, primary-50);
+              color: map-deep-get($color-primary, primary-500);
+            }
+          }
+          &--dropdown-menu {
+            display: grid;
+            justify-content: flex-start;
+            width: 100%;
+            grid-template-columns: 1fr;
+            grid-template-rows: 0;
+            overflow: hidden;
+            transition: grid-template-rows 0.3s ease, max-height 0.3s ease;
+
+            & > .wrapper {
+              position: relative;
+              .dropdown-list {
+                display: flex;
+                flex-direction: column;
+                align-items: stretch;
+                gap: 0.4rem;
+                position: relative;
+                &__item {
+                  position: relative;
+                  &--link {
+                    display: flex;
+                    // width: 228px;
+                    padding: 1rem 1.2rem 1rem 4.4rem;
+                    justify-content: flex-start;
+                    align-items: center;
+                    gap: 0.8rem;
+                    border-radius: map-deep-get($radius, s);
+
+                    /* Text M/Semibold */
+                    font-size: map-deep-get($text-m, semibold, font-size);
+                    font-weight: map-deep-get($text-m, semibold, font-weight);
+                    line-height: map-deep-get($text-m, semibold, line-height);
+                    letter-spacing: map-deep-get($text-m, semibold, letter-spacing);
+                    transition: background-color 0.2s ease, color 0.2s ease;
+                    &:hover {
+                      background-color: map-deep-get($color-primary, primary-50);
+                      color: map-deep-get($color-primary, primary-500);
+                    }
+                  }
+                  &.active {
+                    .dropdown-list__item--link {
+                      background-color: map-deep-get($color-primary, primary-500);
+                      color: map-deep-get($color-neutral, white);
+                    }
+                  }
+                }
+              }
+            }
+
+            &.show {
+              grid-template-rows: 1fr;
+            }
+          }
+          &.active {
+            .menu-list__item--link,
+            .menu-list__item--dropdown-button {
+              background-color: map-deep-get($color-primary, primary-500);
+              color: map-deep-get($color-neutral, white);
+            }
+          }
+          &.active.opened {
+            .menu-list__item--link,
+            .menu-list__item--dropdown-button {
+              background-color: map-deep-get($color-primary, primary-50);
+              color: map-deep-get($color-primary, primary-500);
+              .icon {
+                fill: map-deep-get($color-primary, primary-500);
+              }
+            }
+          }
+        }
+      }
+    }
   }
 }

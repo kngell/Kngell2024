@@ -1,0 +1,98 @@
+@use "sass:map";
+@use "css/backend/admin/abstracts/variables" as *;
+@use "css/backend/admin/abstracts/functions" as *;
+
+/// Mixin: Icon with optional badge
+/// @param {Length} $icon-size - Container size
+/// @param {Length} $padding - Inner padding
+/// @param {Color} $badge-bg - Badge background color
+/// @param {Color} $badge-color - Badge text color
+/// @param {Bool} $with-badge - Enable/disable badge
+@mixin icon-with-badge(
+  $icon-size: 4rem,
+  $icon-color: map-deep-get($color-neutral, black, black-500),
+  $padding: 0.8rem,
+  $border-radius: map-deep-get($radius, s),
+  $badge-bg: map-deep-get($color-secondary, red, red-500),
+  $badge-color: map-deep-get($color-neutral, white),
+  $badge-padding: 0.2rem 0.6rem,
+  $badge-gap: 0.8rem,
+  $badge-offset: -0.4rem,
+  $badge-font-size: 1rem,
+  $badge-font-weight: 600,
+  $badge-line-height: 1.36,
+  $badge-letter-spacing: 0.05px,
+  $with-badge: true,
+  $badge-position: top-right // top-right, top-left, bottom-right, bottom-left
+) {
+  width: $icon-size;
+  height: $icon-size;
+  flex-shrink: 0;
+  display: flex;
+  padding: $padding;
+  align-items: center;
+  gap: $padding;
+  align-self: stretch;
+  border-radius: $border-radius;
+  position: relative;
+
+  .icon {
+    width: 100%;
+    height: 100%;
+    color: $icon-color;
+  }
+
+  @if $with-badge {
+    .icon-badge {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: $badge-gap;
+      padding: $badge-padding;
+      position: absolute;
+      border-radius: 50%;
+      background-color: $badge-bg;
+
+      min-width: 1.6rem;
+      min-height: 1.6rem;
+
+      @if $badge-position == top-right {
+        right: $badge-offset;
+        top: $badge-offset;
+      } @else if $badge-position == top-left {
+        left: $badge-offset;
+        top: $badge-offset;
+      } @else if $badge-position == bottom-right {
+        right: $badge-offset;
+        bottom: $badge-offset;
+      } @else if $badge-position == bottom-left {
+        left: $badge-offset;
+        bottom: $badge-offset;
+      }
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+      &:hover {
+        transform: scale(1.05);
+      }
+
+      &:focus {
+        outline: 2px solid map-deep-get($color-secondary, blue, blue-300);
+        outline-offset: 2px;
+      }
+      span {
+        color: $badge-color;
+        font-size: $badge-font-size;
+        font-weight: $badge-font-weight;
+        line-height: $badge-line-height;
+        letter-spacing: $badge-letter-spacing;
+        white-space: nowrap;
+      }
+      &[data-single-digit="true"] {
+        width: 1.6rem;
+        height: 1.6rem;
+        padding: 0.2rem;
+      }
+    }
+  }
+}

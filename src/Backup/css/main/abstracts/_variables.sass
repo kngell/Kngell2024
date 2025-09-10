@@ -4,7 +4,7 @@
 :root
   @each $block, $children in $e-colors
     @each $child, $value in $children
-      $name: map-get($children, name)
+      $name: map.get($children, name)
       @if type-of($value) ==map
         @each $item, $val in $value
           @if $item==main
@@ -22,7 +22,7 @@
 
 @function get-color($color_name: "gray", $shade: main)
   @each $block, $children in $e-colors
-    $name: map-get($children, name)
+    $name: map.get($children, name)
     @if $name == $color_name or $block==$color_name
       @each $child, $value in $children
         @if type-of($value) == map

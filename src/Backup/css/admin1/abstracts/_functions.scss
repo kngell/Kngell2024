@@ -1,0 +1,43 @@
+@use "sass:map";
+/// Deep map get function to access nested values
+/// @param {Map} $map - The map to search
+/// @param {Arglist} $keys - Keys to traverse
+/// @return {*} - The value found
+@function map-deep-get($map, $keys...) {
+  @each $key in $keys {
+    $map: map.get($map, $key);
+    @if $map == null {
+      @return null;
+    }
+  }
+  @return $map;
+}
+
+// Usage
+// .element {
+//   background: map-deep-get($color-usage, background, neutral, primary);
+//   color: map-deep-get($color-usage, background, neutral, secondary);
+// }
+
+/// Deep map get with fallback value
+/// @param {Map} $map - The map to search
+/// @param {List} $keys - Keys to traverse
+/// @param {*} $fallback - Fallback value if not found
+/// @return {*} - The value found or fallback
+@function map-deep-get-safe($map, $keys, $fallback: null) {
+  $value: $map;
+  @each $key in $keys {
+    @if type-of($value) == "map" and map.has-key($value, $key) {
+      $value: map.get($value, $key);
+    } @else {
+      @return $fallback;
+    }
+  }
+  @return $value;
+}
+
+// Usage with fallback
+// .element {
+//   background: map-deep-get-safe($color-usage, (background, neutral, primary), #000000);
+//   border: 1px solid map-deep-get-safe($color-usage, (border, primary), #ccc);
+// }

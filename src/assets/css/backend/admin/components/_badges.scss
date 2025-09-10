@@ -1,1 +1,59 @@
 @use "css/backend/admin/abstracts" as *;
+
+/*--------------- BADGES -------------*/
+
+// ---------------------
+// Badge component
+// ---------------------
+.badge {
+  @include badge(); // Default neutral, md size, no icon
+
+  // ---------------------
+  // Variants
+  // ---------------------
+  &--success {
+    @include badge($variant: success);
+  }
+
+  &--error {
+    @include badge($variant: error);
+  }
+
+  &--warning {
+    @include badge($variant: warning);
+  }
+
+  &--info {
+    @include badge($variant: info);
+  }
+
+  // ---------------------
+  // Sizes
+  // ---------------------
+  &--sm {
+    @include badge($size: sm);
+  }
+
+  &--md {
+    @include badge($size: md);
+  }
+
+  &--lg {
+    @include badge($size: lg);
+  }
+
+  // ---------------------
+  // Icon variants
+  // ---------------------
+  &--with-icon {
+    @include badge($has-icon: true);
+
+    &-left {
+      @include badge($has-icon: true, $icon-position: left);
+    }
+
+    &-right {
+      @include badge($has-icon: true, $icon-position: right);
+    }
+  }
+}

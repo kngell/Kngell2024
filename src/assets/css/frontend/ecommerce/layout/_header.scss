@@ -1,3 +1,4 @@
+@use "sass:map";
 @use "css/frontend/ecommerce/abstracts" as *;
 /*----------------- HEADER ---------------*/
 
@@ -12,7 +13,7 @@
   // Top header section
   &-top {
     width: 100%;
-    background: map-get($colors-ecommerce, white);
+    background: map.get($colors-ecommerce, white);
     .menu {
       display: flex;
       padding-top: 1.6rem;
@@ -95,7 +96,7 @@
           border: none;
           outline: none;
           background: transparent;
-          font-family: map-get($font, family);
+          font-family: map.get($font, family);
           font-weight: 500;
           font-size: 1.6rem;
           letter-spacing: 0;
@@ -149,7 +150,7 @@
             }
           }
           // @include respond-between("lg", "xl") {
-          //   gap: map-get($spacing, 2xl);
+          //   gap: map.get($spacing, 2xl);
           // }
         }
       }
@@ -205,9 +206,9 @@
       &__mobile-toggle {
         @include flex-center;
         @include button-reset;
-        width: map-get($sizes, btn-md);
-        height: map-get($sizes, btn-md);
-        color: map-get($colors-ecommerce, black);
+        width: map.get($sizes, btn-md);
+        height: map.get($sizes, btn-md);
+        color: map.get($colors-ecommerce, black);
         display: none;
 
         @include respond-below("md") {
@@ -225,19 +226,19 @@
       }
       // @include respond-below("xl") {
       //   justify-content: space-between;
-      //   // padding: map-get($spacing, lg) map-get($spacing, 4xl);
-      //   gap: map-get($spacing, 2xl);
+      //   // padding: map.get($spacing, lg) map.get($spacing, 4xl);
+      //   gap: map.get($spacing, 2xl);
       // }
       // @include respond-below("lg") {
-      //   padding: map-get($spacing, lg) map-get($spacing, 4xl);
-      //   gap: map-get($spacing, 2xl);
+      //   padding: map.get($spacing, lg) map.get($spacing, 4xl);
+      //   gap: map.get($spacing, 2xl);
       // }
       // @include respond-below("md") {
-      //   // padding: map-get($spacing, lg) map-get($spacing, 3xl);
-      //   gap: map-get($spacing, 2xl);
+      //   // padding: map.get($spacing, lg) map.get($spacing, 3xl);
+      //   gap: map.get($spacing, 2xl);
       // }
       // @include respond-below("sm") {
-      //   // padding: map-get($spacing, xl) map-get($spacing, md);
+      //   // padding: map.get($spacing, xl) map.get($spacing, md);
       // }
     }
   }
@@ -245,7 +246,7 @@
   // Bottom section with category list
   &-bottom {
     width: 100%;
-    background: map-get($colors-ecommerce, gray-800);
+    background: map.get($colors-ecommerce, gray-800);
   }
 }
 
@@ -278,10 +279,10 @@
     display: none;
   }
   // @include respond-below("xl") {
-  //   // padding: map-get($spacing, sm) map-get($spacing, 4xl);
+  //   // padding: map.get($spacing, sm) map.get($spacing, 4xl);
   // }
   // @include respond-below("md") {
-  //   // padding: map-get($spacing, sm) map-get($spacing, 3xl);
+  //   // padding: map.get($spacing, sm) map.get($spacing, 3xl);
   // }
   // @include respond-below("sm") {
   //   display: none;
@@ -291,10 +292,10 @@
     align-items: center;
     gap: 8px;
 
-    // color: map-get($colors-ecommerce, white);
+    // color: map.get($colors-ecommerce, white);
     // text-align: center;
-    // font-size: map-get($font, size-base);
-    // font-weight: map-get($font, weight-normal);
+    // font-size: map.get($font, size-base);
+    // font-weight: map.get($font, weight-normal);
     // line-height: 2rem;
     // opacity: 0.5;
     // text-decoration: none;
@@ -337,7 +338,7 @@
       }
       .category-nav__link-text {
         opacity: 1;
-        color: map-get($colors-ecommerce, white);
+        color: map.get($colors-ecommerce, white);
         transform: scale(1.01);
       }
     }
@@ -353,8 +354,8 @@
         top: 50%;
         transform: translateY(-50%);
         width: 1px;
-        height: map-get($sizes, divider-height);
-        background: map-get($colors-ecommerce, white);
+        height: map.get($sizes, divider-height);
+        background: map.get($colors-ecommerce, white);
         opacity: 0.2;
 
         @include respond-below("lg") {
@@ -367,6 +368,8 @@
 
 // Enhanced responsive adjustments
 .header {
+  // Better z-index management
+  z-index: 100;
   // Sticky header improvements
   &.is-scrolled {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -381,9 +384,6 @@
       }
     }
   }
-
-  // Better z-index management
-  z-index: 100;
 
   // Improved mobile header
   @include respond-below("md") {

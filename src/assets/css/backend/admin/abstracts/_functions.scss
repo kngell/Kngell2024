@@ -1,1 +1,64 @@
+@use "sass:map";
+// /// Deep map get function to access nested values
+// /// @param {Map} $map - The map to search
+// /// @param {Arglist} $keys - Keys to traverse
+// /// @return {*} - The value found
+// @function map-deep-get($map, $keys...) {
+//   @each $key in $keys {
+//     $map: map.get($map, $key);
+//     @if $map == null {
+//       @return null;
+//     }
+//   }
+//   @return $map;
+// }
 
+// // Usage
+// // .element {
+// //   background: map-deep-get($color-usage, background, neutral, primary);
+// //   color: map-deep-get($color-usage, background, neutral, secondary);
+// // }
+
+// /// Deep map get with fallback value
+// /// @param {Map} $map - The map to search
+// /// @param {List} $keys - Keys to traverse
+// /// @param {*} $fallback - Fallback value if not found
+// /// @return {*} - The value found or fallback
+// @function map-deep-get-safe($map, $keys, $fallback: null) {
+//   $value: $map;
+//   @each $key in $keys {
+//     @if type-of($value) == "map" and map.has-key($value, $key) {
+//       $value: map.get($value, $key);
+//     } @else {
+//       @return $fallback;
+//     }
+//   }
+//   @return $value;
+// }
+
+/// Deep get through nested maps (returns null if not found)
+/// Usage: map-deep-get($map, key1, key2, key3)
+@function map-deep-get($map, $keys...) {
+  $value: $map;
+  @each $key in $keys {
+    @if type-of($value) != "map" or not map.has-key($value, $key) {
+      @return null;
+    }
+    $value: map.get($value, $key);
+  }
+  @return $value;
+}
+
+/// Deep get with fallback using a **list of keys**
+/// Usage: map-deep-get-list($map, (key1, key2, key3), $fallback: default)
+@function map-deep-get-list($map, $keys, $fallback: null) {
+  $value: $map;
+  @each $key in $keys {
+    @if type-of($value) == "map" and map.has-key($value, $key) {
+      $value: map.get($value, $key);
+    } @else {
+      @return $fallback;
+    }
+  }
+  @return $value;
+}

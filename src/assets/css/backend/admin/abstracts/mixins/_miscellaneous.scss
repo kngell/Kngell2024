@@ -1,10 +1,26 @@
 @use "sass:map";
 
-@mixin button-reset {
-  background: none;
-  border: none;
-  cursor: pointer;
+@mixin transition($property: all, $duration: 0.2s, $timing: ease) {
+  transition: $property $duration $timing;
 }
+
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin button-reset {
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  appearance: none;
+}
+
 @mixin input-reset {
   font: inherit;
   border: none;
@@ -13,4 +29,22 @@
   padding: 0;
   margin: 0;
   box-shadow: none;
+}
+
+@mixin a-reset {
+  text-decoration: none; // Removes the underline
+  color: inherit; // Links will inherit the parent's color
+}
+
+@mixin list-reset {
+  list-style: none; /* Removes the bullet points or numbers */
+  padding: 0; /* Removes default padding */
+  margin: 0; /* Removes default margin */
+}
+
+@mixin heading-reset {
+  font-size: inherit; // Inherits font size from parent
+  font-weight: inherit; // Inherits font weight
+  margin: 0; // Removes default margins
+  padding: 0; // Removes default padding
 }

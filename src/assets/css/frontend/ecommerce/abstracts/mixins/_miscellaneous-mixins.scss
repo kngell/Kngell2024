@@ -7,14 +7,14 @@
 
 //fucus-outline
 @mixin focus-outline {
-  outline: 2px solid map-get($colors-ecommerce, focus);
+  outline: 2px solid map.get($colors-ecommerce, focus);
   outline-offset: 2px;
 }
 
 //hover-bg
 @mixin hover-bg {
   &:hover {
-    background-color: map-get($colors, gray-100);
+    background-color: map.get($colors, gray-100);
   }
 }
 
@@ -35,7 +35,32 @@
   border: none;
   cursor: pointer;
 }
+@mixin input-reset {
+  font: inherit;
+  border: none;
+  outline: none;
+  background: none;
+  padding: 0;
+  margin: 0;
+  box-shadow: none;
+}
 
+@mixin list-reset {
+  list-style: none; /* Removes the bullet points or numbers */
+  padding: 0; /* Removes default padding */
+  margin: 0; /* Removes default margin */
+}
+
+@mixin a-reset {
+  text-decoration: none; // Removes the underline
+  color: inherit; // Links will inherit the parent's color
+}
+@mixin heading-reset {
+  font-size: inherit; // Inherits font size from parent
+  font-weight: inherit; // Inherits font weight
+  margin: 0; // Removes default margins
+  padding: 0; // Removes default padding
+}
 @mixin logo(
   $width: 9.6rem,
   $height: 3.2rem,

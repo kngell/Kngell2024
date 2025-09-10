@@ -1,0 +1,14 @@
+@use "css/backend/admin/abstracts" as *;
+@use "fonts" as *;
+
+body {
+  color: map-deep-get($text-color, neutral, primary);
+  font-family: map-deep-get($desktop-text-body, regular, base, font-family);
+  font-size: map-deep-get($desktop-text-body, regular, base, font-size);
+  font-weight: map-deep-get($desktop-text-body, regular, base, font-weight);
+  font-style: normal;
+  font-variant: normal;
+  letter-spacing: normal;
+  line-height: map-deep-get($desktop-text-body, regular, base, line-height);
+  text-align: left;
+}
