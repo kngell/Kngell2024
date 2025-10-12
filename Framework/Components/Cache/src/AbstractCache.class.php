@@ -5,7 +5,7 @@ declare(strict_types=1);
 abstract class AbstractCache implements CacheInterface
 {
     /** @var string regular expression - ensure cache name is of correct values */
-    const PATTERN_ENTRYIDENTIFIER = '/^[a-zA-Z0-9_\.]{1,64}$/';
+    public const PATTERN_ENTRYIDENTIFIER = '/^[a-zA-Z0-9_\.]{1,64}$/';
     /** @var object|null */
     protected ?object $storage;
     /** @var string|null */

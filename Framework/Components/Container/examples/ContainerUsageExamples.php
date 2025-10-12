@@ -46,7 +46,7 @@ class ContainerUsageExamples
                 host: $container->get('config.database.host'),
                 port: $container->get('config.database.port'),
                 username: $container->get('config.database.username'),
-                password: $container->get('config.database.password')
+                password: $container->get('config.database.password'),
             );
         });
 
@@ -161,7 +161,7 @@ class ContainerUsageExamples
                 private string $apiKey,                // String parameter
                 private int $timeout = 30,             // Default value
                 private ?Logger $logger = null,        // Nullable dependency
-                private array $config = []             // Array parameter
+                private array $config = [],             // Array parameter
             ) {
             }
         }
@@ -188,7 +188,7 @@ class ContainerUsageExamples
             public function __construct(
                 private Logger|NullLogger $logger,           // Union type
                 private string|int $identifier,              // Built-in union
-                private UserRepository&Cacheable $repo       // Intersection type
+                private UserRepository&Cacheable $repo,       // Intersection type
             ) {
             }
         }
@@ -232,7 +232,7 @@ class ContainerUsageExamples
         $this->container->bind(UserService::class, function ($container) {
             return new UserService(
                 $container->get(UserRepository::class),
-                $container->get(Logger::class)
+                $container->get(Logger::class),
             );
         });
 
@@ -261,7 +261,7 @@ class ContainerUsageExamples
                 host: $_ENV['DB_HOST'] ?? 'localhost',
                 username: $_ENV['DB_USER'] ?? 'root',
                 password: $_ENV['DB_PASS'] ?? '',
-                database: $_ENV['DB_NAME'] ?? 'app'
+                database: $_ENV['DB_NAME'] ?? 'app',
             );
         });
 
@@ -294,3 +294,21 @@ class ContainerUsageExamples
         $this->container->alias(Logger::class, 'log');
     }
 }
+
+// The container is automatically injected
+$formCreator = App::diGet(ProductFormCreator::class);
+echo $formCreator->make('create');
+
+// In your bootstrap or service provider
+$container = App::getInstance();
+
+// Default model binding
+$container->bind(ProductRepositoryInterface::class, ProductModel::class);
+
+// For admin context - use enhanced model
+$container->bind(ProductRepositoryInterface::class, AdminProductModel::class)
+    ->when(AdminFormCreator::class);
+
+// For API context - use lightweight model
+$container->bind(ProductRepositoryInterface::class, ApiProductModel::class)
+    ->when(ApiFormCreator::class);

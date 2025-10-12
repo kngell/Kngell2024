@@ -2,3 +2,23 @@
 @use "css/backend/admin/abstracts" as *;
 
 /* *************** UTILITIES *************/
+
+.span-all {
+  grid-column: 1 / -1;
+  width: 100%;
+}
+
+// ---------------------
+// Utility class for one-off customizations
+// ---------------------
+.badge-custom-properties {
+  // This class is meant to be extended or used with inline styles
+  @include badge-base();
+  @include badge-size(map-deep-get($text-m, semibold));
+
+  // Colors must be provided via inline style or extended
+  &.bg-primary {
+    @include badge-colors(#007bff, white);
+  }
+  // Add more utility color classes as needed
+}

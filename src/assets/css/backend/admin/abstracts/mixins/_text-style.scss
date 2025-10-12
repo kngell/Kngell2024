@@ -1,0 +1,51 @@
+@use "sass:map";
+@use "css/backend/admin/abstracts/variables" as *;
+@use "css/backend/admin/abstracts/functions" as *;
+
+@mixin text-style($text-map, $weight-key, $overrides: ()) {
+  $style: map-deep-get($text-map, $weight-key);
+
+  @if $style == null {
+    @warn "⚠️ No text style found for `#{$weight-key}` in given map.";
+  } @else {
+    // Base styles from tokens
+    // font-family: map.get($style, font-family);
+    font-size: map.get($style, font-size);
+    font-weight: map.get($style, font-weight);
+    line-height: map.get($style, line-height);
+    letter-spacing: map.get($style, letter-spacing);
+
+    // Apply overrides if provided
+    @each $prop, $value in $overrides {
+      #{$prop}: $value;
+    }
+  }
+}
+
+/// Utility mixin to apply a text-style from a list or map with optional overrides
+/// Usage: @include apply-text-style($style, $fallback-color: null);
+@mixin apply-text-style($style, $fallback-color: null) {
+  @if $style != null {
+    @if type-of($style) == "list" {
+      $ts-map: nth($style, 1);
+      $ts-weight: nth($style, 2);
+      $ts-overrides: if(length($style) > 2, nth($style, 3), ());
+      @include text-style($ts-map, $ts-weight, $ts-overrides);
+    } @else if type-of($style) == "map" and map.has-key($style, map) {
+      $ts-map: map.get($style, map);
+      $ts-weight: map.get($style, weight);
+      $ts-overrides: if(map.has-key($style, overrides), map.get($style, overrides), ());
+      @include text-style($ts-map, $ts-weight, $ts-overrides);
+    } @else {
+      @warn "apply-text-style: \$style must be a list or map. Falling back to defaults.";
+      @if $fallback-color != null {
+        color: $fallback-color;
+      }
+    }
+  }
+
+  // Only apply fallback color if no color is already set from the style
+  @if $fallback-color != null and not & {
+    color: $fallback-color;
+  }
+}

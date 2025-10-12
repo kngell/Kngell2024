@@ -16,7 +16,7 @@ class CookiesMap implements Countable, IteratorAggregate
         $this->addAll($cookies);
     }
 
-    public static function createFromCookieGlobals(array $cookieGlobals) : self
+    public static function createFromCookieGlobals(array $cookieGlobals): self
     {
         $cookies = [];
         foreach ($cookieGlobals as $name => $value) {
@@ -25,7 +25,7 @@ class CookiesMap implements Countable, IteratorAggregate
         return new self($cookies);
     }
 
-    public function exists() : bool
+    public function exists(): bool
     {
         return ! empty($this->cookies);
     }
@@ -34,22 +34,22 @@ class CookiesMap implements Countable, IteratorAggregate
      * @param CookieObject[] $cookies
      * @return void
      */
-    public function addAll(array $cookies) : void
+    public function addAll(array $cookies): void
     {
         foreach ($cookies as $cookie) {
             $this->add($cookie);
         }
     }
 
-    public function add(CookieObject $cookie) : void
+    public function add(CookieObject $cookie): void
     {
         $this->cookies[$cookie->getId()] = $cookie;
     }
 
-    public function get(string $name, string|null $domain = null, string|null $path = null) : CookieObject|null
+    public function get(string $name, string|null $domain = null, string|null $path = null): CookieObject|null
     {
-        $checkDomain = ! StringUtils::isBlanc($domain);
-        $checkPath = ! StringUtils::isBlanc($path);
+        $checkDomain = ! StringUtils::isBlank($domain);
+        $checkPath = ! StringUtils::isBlank($path);
 
         foreach ($this->cookies as $cookie) {
             if ($name !== $cookie->getName()) {
@@ -79,7 +79,7 @@ class CookiesMap implements Countable, IteratorAggregate
     /**
      * @return CookieObject[]
      */
-    public function all() : array
+    public function all(): array
     {
         return $this->cookies;
     }

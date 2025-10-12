@@ -8,16 +8,16 @@ final readonly class FileUtils
     {
     }
 
-    public static function getMaxFileSizeFromPhpSettings() : int
+    public static function getMaxFileSizeFromPhpSettings(): int
     {
         $postMaxSize = self::parseIniFileSize(ini_get('post_max_size'));
         $uploadFileSize = self::parseIniFileSize(ini_get('upload_max_filesize'));
         return min($postMaxSize ?? PHP_INT_MAX, $uploadFileSize ?? PHP_INT_MAX);
     }
 
-    private static function parseIniFileSize(string|false $size) : int|null
+    private static function parseIniFileSize(string|false $size): int|null
     {
-        if ($size === false || StringUtils::isBlanc($size)) {
+        if ($size === false || StringUtils::isBlank($size)) {
             return null;
         }
 

@@ -8,7 +8,7 @@ class Repository implements RepositoryInterface
     {
     }
 
-    public function create() : void
+    public function create(): void
     {
         try {
             $this->em->createQueryBuilder()->insert()->build();
@@ -17,7 +17,7 @@ class Repository implements RepositoryInterface
         }
     }
 
-    public function delete(array $conditions = []) : void
+    public function delete(array $conditions = []): void
     {
         try {
             $conditions = $this->conditions($conditions);
@@ -27,7 +27,7 @@ class Repository implements RepositoryInterface
         }
     }
 
-    public function update(array $conditions = []) : void
+    public function update(array $conditions = []): void
     {
         try {
             $conditions = $this->conditions($conditions);
@@ -49,7 +49,7 @@ class Repository implements RepositoryInterface
         }
     }
 
-    public function findOneBy(array $conditions = []) : void
+    public function findOneBy(array $conditions = []): void
     {
         if ($this->isArray($conditions)) {
             try {
@@ -69,16 +69,26 @@ class Repository implements RepositoryInterface
         }
     }
 
-    public function findBy(array $conditions = []) : void
+    public function findBy(array $conditions = [], ?int $limit = null, ?int $offset = null): void
     {
         try {
-            $this->em->createQueryBuilder()->select()->where($conditions)->build();
+            $queryBuilder = $this->em->createQueryBuilder()->select()->where($conditions);
+
+            // Add pagination if provided
+            if ($limit !== null) {
+                $queryBuilder->limit($limit);
+            }
+            if ($offset !== null) {
+                $queryBuilder->offset($offset);
+            }
+
+            $queryBuilder->build();
         } catch (Throwable $th) {
             throw $th;
         }
     }
 
-    public function showColumns(string $tableName) : void
+    public function showColumns(string $tableName): void
     {
         try {
             $this->em->createQueryBuilder()->raw("SHOW COLUMNS FROM $tableName")->build();
@@ -87,7 +97,7 @@ class Repository implements RepositoryInterface
         }
     }
 
-    private function conditions(array|string $conditions) : array
+    private function conditions(array|string $conditions): array
     {
         if (empty($conditions)) {
             $fieldId = $this->em->getEntityKeyField();
@@ -97,7 +107,7 @@ class Repository implements RepositoryInterface
         return $conditions;
     }
 
-    private function isArray(array $conditions) : bool
+    private function isArray(array $conditions): bool
     {
         if (! is_array($conditions)) {
             throw new RepositoryInvalidArgumentException('Argument Supplied is not an array');
@@ -106,7 +116,7 @@ class Repository implements RepositoryInterface
         return true;
     }
 
-    private function isEmpty(int|string $id) : bool
+    private function isEmpty(int|string $id): bool
     {
         if (empty($id)) {
             throw new RepositoryInvalidArgumentException('Argument shuold not be empty');

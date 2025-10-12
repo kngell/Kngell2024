@@ -3,16 +3,26 @@
 declare(strict_types=1);
 class MinValidator extends AbstractValidator
 {
-    private const string ERROR_MESSAGE = 'The %s must have a minimum of %s characters';
-
-    public function __construct(private string $display, private mixed $inputValue, private mixed $ruleValue)
-    {
+    public function __construct(
+        private readonly array $errorParams,
+        private string $display,
+        private mixed $inputValue,
+        private mixed $ruleValue,
+    ) {
     }
 
-    public function validate() : string|bool
+    public function validate(): array|string|bool
     {
-        if (! (strlen($this->inputValue) >= $this->ruleValue)) {
-            return $this->erroMessage(sprintf(self::ERROR_MESSAGE, $this->display, $this->ruleValue));
+        // Skip validation if input is empty and not required
+        if ($this->inputValue === null || $this->inputValue === '') {
+            return false;
+        }
+
+        if (!(strlen($this->inputValue) >= $this->ruleValue)) {
+            return $this->errorMessage(
+                sprintf($this->errorParams['message'], $this->display),
+                $this->errorParams['classes'],
+            );
         }
         return false;
     }

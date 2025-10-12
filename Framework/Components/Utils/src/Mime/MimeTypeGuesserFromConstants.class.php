@@ -15,7 +15,7 @@ class MimeTypeGuesserFromConstants implements MimeTypesGuesserInterface
             return null;
         }
         $extension = pathinfo($path, PATHINFO_EXTENSION);
-        if (StringUtils::isBlanc($extension)) {
+        if (StringUtils::isBlank($extension)) {
             return null;
         }
 

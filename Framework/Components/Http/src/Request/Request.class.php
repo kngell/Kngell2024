@@ -29,16 +29,16 @@ readonly class Request
         $this->protocol = strtolower($this->server->get('server_protocol'));
         $this->requestedUri = $superGlobals->server('request_uri');
         $rawContent = file_get_contents('php://input');
-        $this->rawContent = $rawContent !== false && ! StringUtils::isBlanc($rawContent) ? $rawContent : null;
+        $this->rawContent = $rawContent !== false && ! StringUtils::isBlank($rawContent) ? $rawContent : null;
         //$superGlobals->emptyGlobals();
     }
 
-    public function hasBody() : bool
+    public function hasBody(): bool
     {
-        return ! $this->post->isEmpty() || ! StringUtils::isBlanc($this->rawContent);
+        return ! $this->post->isEmpty() || ! StringUtils::isBlank($this->rawContent);
     }
 
-    public function hasFormDataBody() : bool
+    public function hasFormDataBody(): bool
     {
         if (! $this->hasBody() || ! $this->headers->has(HeaderMap::CONTENT_TYPE_HEADER)) {
             return false;
@@ -47,12 +47,12 @@ readonly class Request
         return str_starts_with($contentType, 'multipart/formdata');
     }
 
-    public function hasCookies() : bool
+    public function hasCookies(): bool
     {
         return $this->cookies->exists();
     }
 
-    public function hasXmlBody() : bool
+    public function hasXmlBody(): bool
     {
         if (! $this->hasBody() || ! $this->headers->has(HeaderMap::CONTENT_TYPE_HEADER)) {
             return false;
@@ -63,7 +63,7 @@ readonly class Request
         str_ends_with($contentType, '+xml');
     }
 
-    public function hasJsonBody() : bool
+    public function hasJsonBody(): bool
     {
         if (! $this->hasBody() || ! $this->headers->has(HeaderMap::CONTENT_TYPE_HEADER)) {
             return false;
@@ -73,7 +73,7 @@ readonly class Request
         str_ends_with($contentType, '+json');
     }
 
-    public function hasFormUrlEncodedBody() : bool
+    public function hasFormUrlEncodedBody(): bool
     {
         if (! $this->hasBody() || ! $this->headers->has(HeaderMap::CONTENT_TYPE_HEADER)) {
             return false;
@@ -137,17 +137,17 @@ readonly class Request
         return $this->rawContent;
     }
 
-    public function isGet() : bool
+    public function isGet(): bool
     {
         return $this->getMethod() === HttpMethod::GET;
     }
 
-    public function isPost() : bool
+    public function isPost(): bool
     {
         return $this->getMethod() === HttpMethod::POST;
     }
 
-    public function get(string $key) : mixed
+    public function get(string $key): mixed
     {
         if ($this->getServer()->get($key)) {
             return $this->getServer()->get($key);

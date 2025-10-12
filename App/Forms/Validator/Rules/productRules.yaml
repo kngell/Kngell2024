@@ -1,0 +1,162 @@
+sku:
+  display: SKU
+  required: true
+  min: 3
+  max: 64
+  pattern: "^[A-Za-z0-9-_]+$"
+
+slug:
+  display: Slug
+  required: true
+  min: 3
+  max: 191
+  pattern: "^[a-z0-9-]+$"
+
+name:
+  display: Product Name
+  required: true
+  min: 3
+  max: 255
+
+short_description:
+  display: Product Short Description
+  required_if: status=published
+  min: 3
+
+description:
+  display: Product Description
+  required_if: status=published
+  min: 2
+
+price:
+  display: Base Price
+  required_if: name
+  numeric: true
+  min_value: 0
+
+tax_class:
+  display: VAT Class
+  required_if: price
+  numeric: true
+  min_value: 0
+
+compare_price:
+  display: Compare Price
+  numeric: true
+  min_value: 0
+  gte: price
+
+cost_price:
+  display: Cost Price
+  numeric: true
+  min_value: 0
+  gte: price
+
+currency:
+  display: Currency
+  required: true
+  pattern: "^[A-Z]{3}$" # ISO 4217 currency code
+
+main_image:
+  display: Main Image
+  required_if: status=published
+
+weight:
+  display: Weight
+  required_if: is_physical
+
+length:
+  display: Length
+  required_if: is_physical
+
+width:
+  display: Width
+  required_if: is_physical
+
+height:
+  display: Height
+  required_if: is_physical
+
+status:
+  display: Stock Status
+  required: true
+  pattern: "^(draft|active|archived)$"
+
+is_active:
+  display: Active Flag
+  required: true
+  pattern: "^(0|1|true|false)$"
+
+is_track_stock:
+  display: Track Stock
+  required: true
+  pattern: "^(0|1|true|false)$"
+
+stock_quantity:
+  display: Stock Quantity
+  required_if: is_track_stock=1
+  numeric: true
+  min_value: 0
+
+stock_status_id:
+  display: Stock Status ID
+  required_if: is_track_stock=1
+  numeric: true
+  min_value: 1
+
+variations:
+  array: true
+  max_items: 20
+  items:
+    type: "object"
+    rules:
+      variant_type:
+        display: "Variation Type"
+        required: true
+        integer: true
+        min_value: 1
+
+      name:
+        display: "Variation Name"
+        required_if: variant_type
+        min: 1
+        max: 255
+
+      sku:
+        display: "Variation SKU"
+        required: true
+        min: 3
+        max: 64
+        pattern: "^[A-Za-z0-9-_]+$"
+
+      price_modifier:
+        display: "Price Modifier"
+        numeric: true
+
+      stock_quantity:
+        display: "Variation Stock"
+        integer: true
+        min_value: 0
+
+      status:
+        display: "Variation Status"
+        required: true
+        in: ["active", "inactive"]
+
+      attributes:
+        array: true
+        max_items: 10
+        items:
+          type: "object"
+          rules:
+            attribute_name:
+              display: "Attribute Name"
+              required: true
+              min: 1
+              max: 100
+
+            attribute_value:
+              display: "Attribute Value"
+              required: true
+              min: 1
+              max: 255

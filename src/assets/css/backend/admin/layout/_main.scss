@@ -5,6 +5,7 @@
   display: grid;
   padding: 3.2rem 2.4rem;
   align-self: stretch;
+  height: 100%;
 
   @include respond-above(md) {
     grid-template-columns: repeat(4, 1fr);

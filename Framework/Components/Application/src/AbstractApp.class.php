@@ -113,12 +113,15 @@ abstract class AbstractApp extends Container
         $this->request = $this->resolve(Request::class);
         $this->response = $this->resolve(Response::class);
 
+
+
         // Set up application-wide parameters
         $this->setGlobalParameters([
             'app.name' => $this->appConfig->getConfig()['app']['app_name'] ?? 'Application',
             'app.version' => $this->appConfig->getConfig()['app']['app_version'] ?? '1.0.0',
             'app.debug' => $this->appConfig->getConfig()['app']['debug'] ?? false,
             'app.environment' => $this->appConfig->getConfig()['app']['environment'] ?? 'production',
+            'validationConfig' => $this->appConfig->getConfig()['validation'],
         ]);
 
         // Create aliases for commonly used services

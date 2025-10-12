@@ -33,17 +33,17 @@ class EntityManager implements EntityManagerInterface
         $this->mapper->rollback();
     }
 
-    public function getConnection() : DatabaseConnectionInterface
+    public function getConnection(): DatabaseConnectionInterface
     {
         return $this->mapper->getConnexion();
     }
 
-    public function createQueryBuilder() : QueryBuilder
+    public function createQueryBuilder(): QueryBuilder
     {
         return new QueryBuilder($this);
     }
 
-    public function getRepository(Entity|string|null $entityName = null) : array|RepositoryInterface
+    public function getRepository(Entity|string|null $entityName = null): array|RepositoryInterface
     {
         if (null !== $entityName) {
             if ($entityName instanceof Entity) {
@@ -62,7 +62,7 @@ class EntityManager implements EntityManagerInterface
         return new Repository($this);
     }
 
-    public function persist() : self
+    public function persist(): self
     {
         $sql = $this->queryExpr->getQuery();
         $parameters = $this->queryExpr->getParameters();
@@ -71,12 +71,12 @@ class EntityManager implements EntityManagerInterface
         return $this;
     }
 
-    public function getResults() : QueryResult
+    public function getQueryResult(): QueryResult
     {
         return new QueryResult($this->mapper, $this->entity);
     }
 
-    public function assign(array $data) : self
+    public function assign(array $data): self
     {
         $this->entity->assign($data);
         return $this;
@@ -90,14 +90,14 @@ class EntityManager implements EntityManagerInterface
         return $this->entity->getEntityKeyField();
     }
 
-    public function getEntityKeyValue() : mixed
+    public function getEntityKeyValue(): mixed
     {
         $keyField = StringUtils::studlyCaps($this->getEntityKeyField());
         $method = 'get' . ucfirst($keyField);
         return $this->reflector->getMethod($method)->invoke($this->entity, $method);
     }
 
-    public function isEntityKeyInitialized() : bool
+    public function isEntityKeyInitialized(): bool
     {
         $fieldId = $this->entityFieldId ?? $this->getEntityKeyField();
         $properties = $this->reflector->getProperties(ReflectionProperty::IS_PRIVATE);
@@ -110,7 +110,7 @@ class EntityManager implements EntityManagerInterface
         return false;
     }
 
-    public function getEntityProperties() : array
+    public function getEntityProperties(): array
     {
         $properties = [];
         $all = $this->reflector->getProperties(ReflectionProperty::IS_PUBLIC | ReflectionProperty::IS_PRIVATE);
@@ -146,7 +146,7 @@ class EntityManager implements EntityManagerInterface
         return $this;
     }
 
-    public function table() : string
+    public function table(): string
     {
         return $this->entity->table();
     }

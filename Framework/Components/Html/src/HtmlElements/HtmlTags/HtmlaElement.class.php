@@ -6,7 +6,6 @@ class HtmlaElement extends AbstractHtmlElement
     private const string TAG = 'a';
     private string $attributionsrc;
     private string $download;
-    private string $href;
     private string $hreflang;
     private string $ping;
     private string $referrerpolicy;
@@ -51,16 +50,6 @@ class HtmlaElement extends AbstractHtmlElement
     public function download(string $download): self
     {
         $this->download = $download;
-        return $this;
-    }
-
-    /**
-     * @param string $href
-     * @return HtmlaElement
-     */
-    public function aref(string $href): self
-    {
-        $this->href = $href;
         return $this;
     }
 

@@ -10,23 +10,23 @@ class UniqueValidator extends AbstractValidator
     {
     }
 
-    public function validate(): string|bool
+    public function validate(): array|string|bool
     {
         $ignore = false;
-        if (! empty($this->inputValue)) {
+        if (!empty($this->inputValue)) {
             $ruleValue = explode('|', $this->ruleValue);
             if (count($ruleValue) === 2 && $ruleValue[1] === 'ignore_current') {
                 $ignore = $this->CurrenUserCheck();
             }
             $user = $this->md->all(['email', $this->inputValue]);
-            if ($user->rowCount() >= 1 && ! $ignore) {
+            if ($user->rowCount() >= 1 && !$ignore) {
                 return $this->erroMessage(sprintf(self::ERROR_MESSAGE, $this->display));
             }
         }
         return true;
     }
 
-    private function CurrenUserCheck() : bool
+    private function CurrenUserCheck(): bool
     {
         /** @var User */
         $user = AuthService::currentUser();

@@ -17,12 +17,12 @@ readonly class RouteResponseGenerator
         $this->serializer = SerializerBuilder::create()->build();
     }
 
-    public function generate(?ResponseBody $responseBody, ?ResponseStatus $responseStatus, mixed $returnValue) : Response
+    public function generate(?ResponseBody $responseBody, ?ResponseStatus $responseStatus, mixed $returnValue): Response
     {
         $responseStatus = $this->ResponseStatus($responseStatus);
         $status = $responseStatus->statusCode !== null ? $responseStatus->statusCode : HttpStatusCode::HTTP_OK;
         if ($responseBody === null) {
-            return new Response($returnValue, $status);
+            $responseBody = new ResponseBody(ResponseBodyType::HTML);
         }
         $content = '';
         $contentTypeHeaderValue = '';
@@ -49,11 +49,11 @@ readonly class RouteResponseGenerator
             $status,
             [
                 'Content-Type' => $contentTypeHeaderValue,
-            ]
+            ],
         );
     }
 
-    private function ResponseStatus(?ResponseStatus $responseStatus) : ResponseStatus
+    private function ResponseStatus(?ResponseStatus $responseStatus): ResponseStatus
     {
         if ($responseStatus === null) {
             return new ResponseStatus(HttpStatusCode::HTTP_OK);

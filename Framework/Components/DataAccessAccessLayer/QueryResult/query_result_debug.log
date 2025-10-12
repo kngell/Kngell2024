@@ -1,0 +1,156 @@
+[2025-10-10 00:02:48.000] === EXECUTE CALLED ===
+[2025-10-10 00:02:48.000] Fetch options: Array
+(
+    [mode] => class
+    [class] => VariationType
+)
+
+[2025-10-10 00:02:48.000] Processed - mode: class, class: VariationType
+[2025-10-10 00:02:48.000] === SET_FETCH_MODE CALLED ===
+[2025-10-10 00:02:48.000] Mode: class, PDO Type: 8, Class: VariationType
+[2025-10-10 00:02:48.000] Manual instantiation successful: VariationType
+[2025-10-10 00:02:48.000] Class exists and will be used
+[2025-10-10 00:02:48.000] setFetchMode called with class (no constructor args)
+[2025-10-10 00:02:48.000] Testing fetch mode immediately after setting...
+[2025-10-10 00:06:41.000] === EXECUTE CALLED ===
+[2025-10-10 00:06:41.000] Fetch options: Array
+(
+    [mode] => class
+    [class] => VariationType
+)
+
+[2025-10-10 00:06:41.000] Processed - mode: class, class: VariationType
+[2025-10-10 00:06:41.000] === SET_FETCH_MODE CALLED ===
+[2025-10-10 00:06:41.000] Mode: class, PDO Type: 8, Class: VariationType
+[2025-10-10 00:06:41.000] Manual instantiation successful: VariationType
+[2025-10-10 00:06:41.000] Class exists and will be used
+[2025-10-10 00:06:41.000] setFetchMode called with class (no constructor args)
+[2025-10-10 00:06:41.000] Testing fetch mode immediately after setting...
+[2025-10-10 00:09:09.000] === EXECUTE CALLED ===
+[2025-10-10 00:09:09.000] Fetch options: Array
+(
+    [mode] => class
+    [class] => VariationType
+)
+
+[2025-10-10 00:09:09.000] Processed - mode: class, class: VariationType
+[2025-10-10 00:09:09.000] === SET_FETCH_MODE CALLED ===
+[2025-10-10 00:09:09.000] Mode: class, PDO Type: 8, Class: VariationType
+[2025-10-10 00:09:09.000] Manual instantiation successful: VariationType
+[2025-10-10 00:09:09.000] Class exists and will be used
+[2025-10-10 00:09:09.000] setFetchMode called with class (no constructor args)
+[2025-10-10 00:09:09.000] Testing fetch mode immediately after setting...
+[2025-10-10 00:11:11.000] === EXECUTE CALLED ===
+[2025-10-10 00:11:13.000] Fetch options: Array
+(
+    [mode] => class
+    [class] => VariationType
+)
+
+[2025-10-10 00:11:18.000] Processed - mode: class, class: VariationType
+[2025-10-10 00:11:20.000] === SET_FETCH_MODE CALLED ===
+[2025-10-10 00:11:20.000] Mode: class, PDO Type: 8, Class: VariationType
+[2025-10-10 00:11:20.000] Manual instantiation successful: VariationType
+[2025-10-10 00:11:20.000] Class exists and will be used
+[2025-10-10 00:11:20.000] setFetchMode called with class (no constructor args)
+[2025-10-10 00:11:20.000] Testing fetch mode immediately after setting...
+[2025-10-10 00:11:51.000] === EXECUTE CALLED ===
+[2025-10-10 00:11:52.000] Fetch options: Array
+(
+    [mode] => class
+    [class] => VariationType
+)
+
+[2025-10-10 00:11:56.000] Processed - mode: class, class: VariationType
+[2025-10-10 00:12:02.000] === SET_FETCH_MODE CALLED ===
+[2025-10-10 00:12:04.000] Mode: class, PDO Type: 8, Class: VariationType
+[2025-10-10 00:12:30.000] Manual instantiation successful: VariationType
+[2025-10-10 00:12:33.000] Class exists and will be used
+[2025-10-10 00:12:45.000] setFetchMode called with class (no constructor args)
+[2025-10-10 00:12:49.000] Testing fetch mode immediately after setting...
+[2025-10-10 00:13:15.000] === EXECUTE CALLED ===
+[2025-10-10 00:13:15.000] Fetch options: Array
+(
+    [mode] => class
+    [class] => VariationType
+)
+
+[2025-10-10 00:13:15.000] Processed - mode: class, class: VariationType
+[2025-10-10 00:13:15.000] === SET_FETCH_MODE CALLED ===
+[2025-10-10 00:13:15.000] Mode: class, PDO Type: 8, Class: VariationType
+[2025-10-10 00:13:15.000] Manual instantiation successful: VariationType
+[2025-10-10 00:13:15.000] Class exists and will be used
+[2025-10-10 00:13:15.000] setFetchMode called with class (no constructor args)
+[2025-10-10 00:13:15.000] Testing fetch mode immediately after setting...
+[2025-10-10 00:14:48.000] === EXECUTE CALLED ===
+[2025-10-10 00:14:48.000] Fetch options: Array
+(
+    [mode] => class
+    [class] => VariationType
+)
+
+[2025-10-10 00:14:48.000] Processed - mode: class, class: VariationType
+[2025-10-10 00:14:48.000] === SET_FETCH_MODE CALLED ===
+[2025-10-10 00:14:48.000] Mode: class, PDO Type: 8, Class: VariationType
+[2025-10-10 00:14:48.000] Manual instantiation successful: VariationType
+[2025-10-10 00:14:48.000] Class exists and will be used
+[2025-10-10 00:14:48.000] setFetchMode called with class (no constructor args)
+[2025-10-10 00:14:48.000] Testing fetch mode immediately after setting...
+[2025-10-10 00:16:16.000] === EXECUTE CALLED ===
+[2025-10-10 00:16:16.000] Fetch options: Array
+(
+    [mode] => class
+    [class] => VariationType
+)
+
+[2025-10-10 00:16:16.000] Processed - mode: class, class: VariationType
+[2025-10-10 00:16:16.000] === SET_FETCH_MODE CALLED ===
+[2025-10-10 00:16:16.000] Mode: class, PDO Type: 8, Class: VariationType
+[2025-10-10 00:16:16.000] Manual instantiation successful: VariationType
+[2025-10-10 00:16:16.000] Class exists and will be used
+[2025-10-10 00:16:16.000] setFetchMode called with class (no constructor args)
+[2025-10-10 00:16:16.000] Testing fetch mode immediately after setting...
+[2025-10-10 00:17:46.000] === EXECUTE CALLED ===
+[2025-10-10 00:17:46.000] Fetch options: Array
+(
+    [mode] => class
+    [class] => VariationType
+)
+
+[2025-10-10 00:17:46.000] Processed - mode: class, class: VariationType
+[2025-10-10 00:17:46.000] === SET_FETCH_MODE CALLED ===
+[2025-10-10 00:17:46.000] Mode: class, PDO Type: 8, Class: VariationType
+[2025-10-10 00:17:46.000] Manual instantiation successful: VariationType
+[2025-10-10 00:17:46.000] Class exists and will be used
+[2025-10-10 00:17:46.000] setFetchMode called with class (no constructor args)
+[2025-10-10 00:17:46.000] Testing fetch mode immediately after setting...
+[2025-10-10 00:21:40.000] === EXECUTE CALLED ===
+[2025-10-10 00:21:40.000] Fetch options: Array
+(
+    [mode] => class
+    [class] => VariationType
+)
+
+[2025-10-10 00:21:40.000] Processed - mode: class, class: VariationType
+[2025-10-10 00:21:40.000] === SET_FETCH_MODE CALLED ===
+[2025-10-10 00:21:40.000] Mode: class, PDO Type: 8, Class: VariationType
+[2025-10-10 00:21:40.000] Manual instantiation successful: VariationType
+[2025-10-10 00:21:40.000] Class exists and will be used
+[2025-10-10 00:21:40.000] setFetchMode called with class (no constructor args)
+[2025-10-10 00:21:40.000] Testing fetch mode immediately after setting...
+[2025-10-10 00:33:22.000] === EXECUTE CALLED ===
+[2025-10-10 00:33:23.000] Fetch options: Array
+(
+    [mode] => class
+    [class] => VariationType
+)
+
+[2025-10-10 00:33:30.000] Processed - mode: class, class: VariationType
+[2025-10-10 00:36:27.000] === EXECUTE CALLED ===
+[2025-10-10 00:36:27.000] Fetch options: Array
+(
+    [mode] => class
+    [class] => VariationType
+)
+
+[2025-10-10 00:36:27.000] Processed - mode: class, class: VariationType

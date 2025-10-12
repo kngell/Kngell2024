@@ -21,6 +21,11 @@ class TextAreaElement extends AbstractFormDataElement
     private bool $required;
     private string $wrap;
 
+    public function __construct($content = '')
+    {
+        $this->content = $content;
+    }
+
     public function generate(): string
     {
         $errorStr = $this->inputErrors($this->name);
@@ -36,6 +41,16 @@ class TextAreaElement extends AbstractFormDataElement
     public function rows(int $rows): self
     {
         $this->rows = $rows;
+        return $this;
+    }
+
+    /**
+     * @param string $content
+     * @return TextAreaElement
+     */
+    public function content(string $content): self
+    {
+        $this->content = $content;
         return $this;
     }
 

@@ -1,0 +1,838 @@
+@use "sass:list";
+@use "sass:map";
+@use "sass:color";
+// Then your other imports...
+@use "css/backend/admin/abstracts/variables" as *;
+@use "css/backend/admin/abstracts/functions" as *;
+@use "miscellaneous" as *;
+@use "text-style" as *;
+@use "icon_with_bade" as *;
+
+@mixin form-field($types: (), $options: ()) {
+  $merged-options: map.merge($form-field-defaults, $options);
+  $processed-file-types: false;
+
+  // Calls the base mixin for all shared container styles.
+  @include base-input-box($merged-options);
+
+  // Markup structure styles (ONCE)
+  @include markup-structure-styles($merged-options);
+
+  // Group text-like types and process them together
+  $text-like-types: ();
+  $non-text-types: ();
+
+  // Categorize the types
+  @each $type in $types {
+    @if list.index(("text", "email", "textarea", "select"), $type) {
+      $text-like-types: list.append($text-like-types, $type);
+    } @else if list.index(("radio", "checkbox"), $type) {
+      $non-text-types: list.append($non-text-types, $type);
+    } @else if list.index(("file", "video"), $type) and not $processed-file-types {
+      @include file-input-styles($type, $merged-options);
+      $processed-file-types: true;
+    }
+  }
+
+  // Process text-like types TOGETHER in one call
+  @if list.length($text-like-types) > 0 {
+    @include text-input-styles($text-like-types, $merged-options);
+  }
+
+  // Process other types
+  @each $type in $non-text-types {
+    @include non-text-input-styles($type, $merged-options);
+  }
+}
+@mixin pill-style($options: ()) {
+  $merged-options: map.merge($form-field-defaults, $options);
+  $input-box: map.get($merged-options, "input-box");
+  $show-box: map.get($merged-options, "show-box");
+
+  &.#{$input-box}--pill-style {
+    @include _apply-box-styles($merged-options);
+    display: inline-flex;
+    align-items: center;
+
+    &:focus-within {
+      outline: 2px solid map.get($merged-options, "focus-color");
+      outline-offset: 2px;
+    }
+
+    // Hover effect for better interaction feedback
+    &:hover:not(.has-error) {
+      border-color: map-deep-get($color-neutral, gray, gray-200);
+    }
+
+    @if $show-box == false {
+      .#{$input-box}__label {
+        &::before,
+        &::after {
+          display: none;
+        }
+      }
+    }
+    // Error state for pill style
+    &.has-error {
+      border-color: red;
+      background-color: rgba(red, 0.05);
+    }
+  }
+}
+
+@mixin _apply-box-styles($options) {
+  $padding: map.get($options, "padding");
+  $border: map.get($options, "border");
+  $border-color: map.get($options, "border-color");
+  $radius: map.get($options, "radius");
+  $background: map.get($options, "background");
+
+  @if $padding {
+    padding: $padding;
+  }
+  border: if($border, 1px solid $border-color, none);
+  @if $radius {
+    border-radius: $radius;
+  }
+  background-color: $background;
+  // outline: none;
+  @include transition((border-color, box-shadow, padding));
+}
+
+@mixin base-input-box($options) {
+  $input-box: map.get($options, "input-box");
+  $margin-bottom: map.get($options, "margin-bottom");
+  $padding: map.get($options, "padding");
+  $gap-input-hint: map.get($options, "gap-input-hint");
+
+  width: 100%;
+  @if $margin-bottom {
+    margin-bottom: $margin-bottom;
+  }
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+
+  &:focus-within {
+    z-index: 1; // Bring focused element to front
+
+    // Optional: change label color on focus
+    .#{$input-box}__label {
+      color: map.get($options, "focus-color");
+    }
+  }
+
+  // Styles for the label, including the required asterisk
+  .#{$input-box}__label {
+    @include apply-text-style(
+      map.get($options, "label-text-style"),
+      map.get($options, "label-color")
+    );
+  }
+
+  // Asterisk for text inputs, textarea, etc. (non-checkbox/radio)
+  &:has(:not([type="radio"]):not([type="checkbox"])[required]) .#{$input-box}__label {
+    @include asterix;
+  }
+
+  // Asterisk for required checkboxes that use the --required span
+  &:has([type="checkbox"][required]) .#{$input-box}__label--required {
+    @include asterix;
+  }
+
+  // Styles for the hint text
+  .#{$input-box}__hint-text {
+    font-size: 1.3rem;
+    color: red;
+    display: none;
+    margin-top: $gap-input-hint;
+    padding-left: list.nth($padding, 2);
+
+    // Add smooth appearance
+    opacity: 0;
+    @include transition(opacity, 0.3s);
+    // transition: opacity 0.3s ease;
+  }
+
+  &.has-error {
+    .#{$input-box}__hint-text {
+      display: block;
+      opacity: 1; // Smooth fade in
+    }
+  }
+}
+
+@mixin markup-structure-styles($options) {
+  $input-box: map.get($options, "input-box");
+  $padding: map.get($options, "padding");
+  $input-min-height: map.get($options, "input-min-height");
+  $textarea-min-height: map.get($options, "textarea-min-height");
+  $floating: map.get($options, "floating");
+  $placeholder-text-style: map.get($options, "placeholder-text-style");
+  $input-text-style: map.get($options, "input-text-style");
+
+  $gap-typing-area: map.get($options, "gap-typing-area");
+  $icon-size: map.get($options, "icon-size");
+
+  @at-root {
+    // === STANDARD MARKUP STYLES (non-icon) ===
+    .#{$input-box}:not(:has(.#{$input-box}__typing-area)) {
+      .#{$input-box}__input,
+      .#{$input-box}__textarea,
+      .#{$input-box}__select {
+        @include _apply-box-styles($options);
+        width: 100%;
+        min-height: $input-min-height;
+        @include apply-text-style($input-text-style, #000);
+        &::placeholder {
+          @if not $floating {
+            @include apply-text-style(
+              $placeholder-text-style,
+              map-deep-get($color-neutral, gray, gray-400)
+            );
+          }
+          @include transition((opacity));
+        }
+
+        &:focus::placeholder {
+          opacity: 0.7;
+        }
+      }
+    }
+
+    // === ICON MARKUP STYLES ===
+    .#{$input-box}:has(.#{$input-box}__typing-area) {
+      .#{$input-box}__input {
+        @include _apply-box-styles($options);
+        display: flex;
+        align-items: center;
+        gap: $gap-typing-area;
+        width: 100%;
+        min-height: $input-min-height;
+        position: relative;
+        z-index: 0;
+      }
+
+      .#{$input-box}__prefix,
+      .#{$input-box}__suffix {
+        @include icon-with-badge(
+          $icon-size: $icon-size,
+          $with-badge: false,
+          $border-radius: 4px,
+          $padding: 0
+        );
+        flex-shrink: 0;
+      }
+
+      .#{$input-box}__typing-area {
+        display: flex;
+        align-items: center;
+        flex: 1 0 0;
+        width: 100%;
+        position: relative;
+      }
+      // .#{$input-box}__field {
+      //   width: 100%;
+      // }
+
+      .#{$input-box}__field {
+        @include apply-text-style($input-text-style);
+        &::placeholder {
+          @if $floating {
+            opacity: 0;
+            transition: opacity 0.2s ease;
+          } @else {
+            @include apply-text-style(
+              $placeholder-text-style,
+              map-deep-get($color-neutral, gray, gray-400)
+            );
+          }
+          @include transition((opacity));
+        }
+        // Add focus placeholder for icon markup
+        &:focus::placeholder {
+          opacity: 0.7;
+        }
+      }
+    }
+  }
+}
+
+@mixin text-input-styles($types, $options) {
+  $input-box: map.get($options, "input-box");
+  $padding: map.get($options, "padding");
+  $gap-label-input: map.get($options, "gap-label-input");
+  $floating: map.get($options, "floating");
+  $textarea-min-height: map.get($options, "textarea-min-height");
+  $textarea-text-style: map.get($options, "textarea-text-style");
+
+  // === BASE STYLES (GENERATED ONLY ONCE) ===
+
+  // Label styles (non-floating) - ONLY ONCE
+  @if not $floating {
+    .#{$input-box}__label {
+      position: relative;
+      order: -1;
+      margin-bottom: $gap-label-input;
+      width: 100%;
+    }
+  } @else {
+    @include _floating-label-logic($options);
+  }
+
+  // Error styles for both markup types - ONLY ONCE
+  &.has-error {
+    .#{$input-box}__input,
+    .#{$input-box}__textarea {
+      border-color: red;
+      &:focus,
+      &:focus-within {
+        box-shadow: 0 0 0 2px rgba(red, 0.1);
+      }
+    }
+  }
+
+  // === TYPE-SPECIFIC STYLES ===
+
+  @each $type in $types {
+    // Textarea-specific adjustments
+    @if $type == "textarea" {
+      &:not(:has(.#{$input-box}__typing-area)) {
+        .#{$input-box}__textarea {
+          min-height: $textarea-min-height;
+          @if not map.get($options, "input-text-style") {
+            @include apply-text-style($textarea-text-style, #000);
+          }
+          @if $floating {
+            padding-top: calc(#{list.nth($padding, 1)} + 0.4rem);
+          }
+        }
+      }
+
+      // Floating textarea padding adjustment
+      @if $floating {
+        &:not(:has(.#{$input-box}__typing-area)) {
+          .#{$input-box}__textarea {
+            padding-top: calc(#{list.nth($padding, 1)} + 0.4rem);
+          }
+        }
+      }
+    }
+    // === SELECT ===
+    // In your SCSS - just style it properly
+    @if $type == "select" {
+      .#{$input-box}__select {
+        padding-right: calc(#{map.get($options, "icon-size")} + 1.6rem);
+        width: 100%;
+        flex: 1;
+
+        &::-ms-expand {
+          display: none;
+        }
+
+        option {
+          font-size: 1.4rem;
+          color: map-deep-get($color-neutral, gray, gray-400);
+        }
+
+        option:first-of-type {
+          color: map-deep-get($color-neutral, gray, gray-200);
+        }
+      }
+
+      // Style for select containers
+      .#{$input-box}:has(select) {
+        .#{$input-box}__input {
+          cursor: pointer;
+        }
+
+        .#{$input-box}__suffix {
+          pointer-events: none; // Let clicks pass through to select
+        }
+      }
+    }
+
+    // Add other type-specific styles here as needed
+    // @if $type == "email" {
+    //   // Email-specific styles
+    // }
+  }
+}
+
+@mixin _floating-label-logic($options) {
+  $input-box: map.get($options, "input-box");
+  $padding: map.get($options, "padding");
+  $background: map.get($options, "background");
+  $label-float-size: map.get($options, "label-float-size");
+  $label-floating-color: map.get($options, "label-floating-color");
+  $icon-size: map.get($options, "icon-size");
+  $gap-typing-area: map.get($options, "gap-typing-area");
+  $input-box-padding-left: list.nth($padding, 2);
+
+  // 1. Base Label Styles (Initial Vertical Centering)
+  .#{$input-box}__label {
+    position: absolute;
+    top: 50%;
+    left: $input-box-padding-left;
+    transform: translateY(-50%);
+    pointer-events: none;
+    z-index: 1;
+    background-color: transparent;
+    padding: 0;
+    transition: all 0.2s ease;
+  }
+
+  // 2. Initial Left Position for Icon Markup (Default State)
+  &:has(.#{$input-box}__prefix) .#{$input-box}__label {
+    left: calc(#{$input-box-padding-left} + #{$icon-size} + #{$gap-typing-area});
+  }
+
+  // 3. Floating State for Normal Markup (non-icon)
+  // Only apply to containers that DON'T have the prefix (normal markup)
+  &:not(:has(.#{$input-box}__prefix)):focus-within .#{$input-box}__label,
+  &:not(:has(.#{$input-box}__prefix)):has(.#{$input-box}__input:not(:placeholder-shown))
+    .#{$input-box}__label {
+    top: 0;
+    transform: translateY(-50%);
+    font-size: $label-float-size;
+    color: $label-floating-color;
+    background-color: $background;
+    padding: 0 0.4rem;
+    left: $input-box-padding-left;
+  }
+
+  // 4. Floating State for Icon Markup
+  // Only apply to containers that HAVE the prefix (icon markup)
+  &:has(.#{$input-box}__prefix):focus-within .#{$input-box}__label,
+  &:has(.#{$input-box}__prefix):has(.#{$input-box}__field:not(:placeholder-shown))
+    .#{$input-box}__label {
+    top: 0;
+    transform: translateY(-50%);
+    font-size: $label-float-size;
+    color: $label-floating-color;
+    background-color: $background;
+    padding: 0 0.4rem;
+    left: $input-box-padding-left; //calc(#{$input-box-padding-left} + #{$icon-size} + #{$gap-typing-area});
+  }
+
+  // Hide the placeholder on both input types.
+  .#{$input-box}__input::placeholder,
+  .#{$input-box}__textarea::placeholder,
+  .#{$input-box}__field::placeholder {
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+}
+
+@mixin non-text-input-styles($type, $options) {
+  $input-box: map.get($options, "input-box");
+  $box-size: map.get($options, "box-size");
+  $gap: map.get($options, "gap");
+  $checkbox-radius: map.get($options, "checkbox-radius");
+  $direction: map.get($options, "direction");
+  $non-text-line-height: map.get($options, "non-text-line-height");
+
+  // -- CHECKBOX STYLES --
+  @if $type == "checkbox" {
+    $is-rtl: $direction == rtl;
+    $checked-bg-color: map.get($options, "checked-bg-color");
+    $check-color: map.get($options, "check-color");
+    $checkmark-type: map.get($options, "checkmark-type");
+    $svg-checkmark-data-uri: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M5 12l5 5L20 7' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    $effective-box-total-size-calc: calc(#{$box-size} + (2 * #{map.get($options, "border-width")}));
+
+    input[type="checkbox"] {
+      display: none;
+
+      & + .#{$input-box}__label {
+        position: relative;
+        display: flex;
+        align-items: flex-start;
+        cursor: pointer;
+        gap: $gap; // Space between checkbox and label content
+        line-height: $non-text-line-height;
+
+        @if $is-rtl {
+          flex-direction: row-reverse;
+          padding-right: calc(#{$box-size} + $gap);
+        } @else {
+          padding-left: calc(#{$box-size} + $gap);
+        }
+
+        // Checkbox box
+        &::before {
+          $options-without-padding: map.remove($options, "padding", "radius");
+          @include _apply-box-styles($options-without-padding);
+          content: "";
+          position: absolute;
+          top: 50%;
+          @if $is-rtl {
+            right: 0;
+            transform: translateY(-50%);
+          } @else {
+            left: 0;
+            transform: translateY(-50%);
+          }
+          width: $box-size;
+          height: $box-size;
+          border-radius: $checkbox-radius;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+
+        // Checkmark
+        &::after {
+          content: "";
+          position: absolute;
+          top: 50%;
+          @if $is-rtl {
+            right: 0;
+            transform: translateY(-50%) scale(0);
+          } @else {
+            left: 0;
+            transform: translateY(-50%) scale(0);
+          }
+          width: $box-size;
+          height: $box-size;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          pointer-events: none;
+          opacity: 0;
+          transform-origin: center;
+          transition:
+            transform 0.2s ease,
+            opacity 0.2s ease;
+
+          @if $checkmark-type == "text" {
+            content: "✓";
+            font-size: calc(#{$box-size} * 0.75);
+            line-height: 1;
+            color: $check-color;
+          } @else if $checkmark-type == "svg" {
+            background-image: $svg-checkmark-data-uri;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: calc(#{$box-size} * 0.75);
+          }
+        }
+
+        // Suffix icon styles
+        .#{$input-box}__suffix-icon {
+          @include icon-with-badge(
+            $icon-size: map.get($options, "icon-size"),
+            $with-badge: false,
+            $border-radius: 4px,
+            $padding: 0
+          );
+          margin-left: 0.4rem; // Space between text and icon
+          flex-shrink: 0;
+          align-self: center; // Center align with text
+        }
+
+        // Required asterisk for checkboxes
+        // .#{$input-box}__label--required {
+        //   @include asterix;
+        // }
+      }
+
+      // Checked state
+      &:checked + .#{$input-box}__label {
+        &::before {
+          background-color: $checked-bg-color;
+          border-color: $checked-bg-color;
+        }
+        &::after {
+          opacity: 1;
+          @if $is-rtl {
+            transform: translateY(-50%) scale(1);
+          } @else {
+            transform: translateY(-50%) scale(1);
+          }
+        }
+      }
+
+      // Disabled state
+      &:disabled + .#{$input-box}__label {
+        opacity: 0.4;
+        cursor: not-allowed;
+
+        .#{$input-box}__suffix-icon {
+          opacity: 0.6;
+        }
+      }
+    }
+
+    // Hint text positioning
+    .#{$input-box}__hint-text {
+      @if $is-rtl {
+        padding-right: calc(#{$effective-box-total-size-calc} + #{$gap});
+      } @else {
+        padding-left: calc(#{$effective-box-total-size-calc} + #{$gap});
+      }
+    }
+  }
+
+  // -- RADIO STYLES --
+  @else if $type == "radio" {
+    $is-rtl: $direction == rtl;
+    $dot-scale: map.get($options, "dot-scale");
+    $dot-color: map.get($options, "dot-color");
+    $dot-size: calc(#{$box-size} * #{$dot-scale});
+    $radio-pile-style: map.get($options, "radio-pile-style");
+
+    // Pill style for radios
+    @if $radio-pile-style {
+      &.#{$input-box}--pill-style {
+        @include pill-style($options);
+        .#{$input-box}__label {
+          margin-bottom: 0;
+        }
+      }
+    }
+
+    input[type="radio"] {
+      display: none;
+
+      & + .#{$input-box}__label {
+        position: relative;
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        flex-grow: 1;
+        line-height: $non-text-line-height;
+
+        @if $is-rtl {
+          flex-direction: row-reverse;
+          padding-right: calc(#{$box-size} + $gap);
+        } @else {
+          padding-left: calc(#{$box-size} + $gap);
+        }
+
+        // Radio outer circle
+        &::before {
+          $options-without-padding: map.remove($options, "padding", "radius");
+          @include _apply-box-styles($options-without-padding);
+          content: "";
+          position: absolute;
+          top: 50%;
+          border-radius: 50%;
+          width: $box-size;
+          height: $box-size;
+          @if $is-rtl {
+            right: 0;
+            transform: translateY(-50%);
+          } @else {
+            left: 0;
+            transform: translateY(-50%);
+          }
+        }
+
+        // Radio inner dot
+        &::after {
+          content: "";
+          position: absolute;
+          top: 50%;
+          border-radius: 50%;
+          width: $dot-size;
+          height: $dot-size;
+          background-color: $dot-color;
+          opacity: 0;
+          transform: scale(0);
+          transition:
+            transform 0.2s ease,
+            opacity 0.2s ease;
+          @if $is-rtl {
+            right: calc(#{$box-size} * ((1 - #{$dot-scale}) / 2));
+            transform: translateY(-50%) scale(0);
+          } @else {
+            left: calc(#{$box-size} * ((1 - #{$dot-scale}) / 2));
+            transform: translateY(-50%) scale(0);
+          }
+        }
+
+        // Suffix icon styles
+        .#{$input-box}__suffix-icon {
+          @include icon-with-badge(
+            $icon-size: map.get($options, "icon-size"),
+            $with-badge: false,
+            $border-radius: 4px,
+            $padding: 0
+          );
+          margin-left: 0.4rem;
+          flex-shrink: 0;
+          align-self: center;
+        }
+      }
+
+      // Checked state
+      &:checked + .#{$input-box}__label {
+        &::after {
+          opacity: 1;
+          transform: translateY(-50%) scale(1);
+        }
+      }
+
+      // Disabled state
+      &:disabled + .#{$input-box}__label {
+        opacity: 0.4;
+        cursor: not-allowed;
+
+        .#{$input-box}__suffix-icon {
+          opacity: 0.6;
+        }
+      }
+    }
+  }
+
+  // -- COMMON STYLES FOR BOTH CHECKBOX AND RADIO --
+
+  // Focus styles
+  input[type="radio"],
+  input[type="checkbox"] {
+    &:focus + .#{$input-box}__label::before {
+      outline: 2px solid map.get($options, "focus-color");
+      outline-offset: 2px;
+    }
+  }
+
+  // Selection indicator (pill style background)
+  &:has([type="#{$type}"]:checked) {
+    background-color: map-deep-get($color-primary, primary-50);
+    border-color: map.get($options, "focus-color");
+  }
+
+  // Error styles
+  &.has-error {
+    input[type="#{$type}"] + .#{$input-box}__label::before {
+      border-color: red;
+      box-shadow: 0 0 0 2px rgba(red, 0.1);
+    }
+
+    input[type="#{$type}"]:focus-visible + .#{$input-box}__label::before {
+      outline-color: red;
+    }
+  }
+}
+
+@mixin file-input-styles($type, $options) {
+  $input-box: map.get($options, "input-box");
+  $media-title-style: map.get($options, "media-title-style");
+  $media-text-style: map.get($options, "media-text-style");
+
+  &__media-title {
+    width: 100%;
+    @include apply-text-style($media-title-style, #000);
+  }
+
+  &__media-upload {
+    display: flex;
+    padding: 2.4rem 1.2rem;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 1.6rem;
+    border-radius: map-deep-get($radius, s);
+    border: 1px dashed map-deep-get($color-neutral, gray, gray-100);
+    background-color: map-deep-get($color-neutral, gray, gray-25);
+    .media-preview {
+      display: flex;
+      flex-wrap: wrap; // Allow wrapping
+      justify-content: center; // Align to left
+      align-items: flex-start;
+      gap: 1.6rem;
+      width: 100%;
+      &__item {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        position: relative;
+        margin-bottom: 1rem;
+        &--img-container {
+          @include icon-with-badge(
+            $with-badge: false,
+            $icon-size: 10rem,
+            $padding: 0,
+            $content-type: image,
+            $icon-container-bg: map-deep-get($color-neutral, gray, gray-100),
+            $border-color: transparent
+          );
+          @include transition((border-color, transform));
+
+          &:hover {
+            border-color: map-deep-get($color-primary, primary-200);
+            transform: scale(1.05);
+          }
+        }
+        &--icon-container {
+          @include icon-with-badge(
+            $with-badge: false,
+            $icon-size: 1.6rem,
+            $padding: 0.4rem,
+            $content-type: icon,
+            $icon-container-bg: map-deep-get($color-secondary, green, green-100),
+            $border-radius: map-deep-get($radius, full)
+          );
+          position: absolute;
+          right: -0.4rem;
+          top: -0.4rem;
+          z-index: 2;
+        }
+        &--remove {
+          @include icon-with-badge(
+            $with-badge: false,
+            $icon-size: 1.6rem,
+            $padding: 0.4rem,
+            $content-type: icon,
+            $icon-container-bg: map-deep-get($color-secondary, red, red-100),
+            $icon-color: map-deep-get($color-secondary, red, red-500),
+            $border-radius: map-deep-get($radius, full)
+          );
+          position: absolute;
+          right: -0.4rem;
+          bottom: -0.4rem;
+          z-index: 2;
+          opacity: 1;
+          @include transition((background-color, color));
+
+          &:hover {
+            background-color: map-deep-get($color-secondary, red, red-300);
+            color: map-deep-get($color-secondary, red, red-500);
+          }
+        }
+      }
+      // Empty state
+      &.empty {
+        display: none;
+      }
+    }
+    .media-file {
+      display: none;
+    }
+    .media-avatar {
+      @include icon-with-badge(
+        $icon-size: 5.2rem,
+        $with-badge: false,
+        $border-radius: 50%,
+        $align-self: false,
+        $icon-color: map-deep-get($color-primary, primary-500),
+        $icon-container-bg: map-deep-get($color-primary, primary-100),
+        $border-color: map-deep-get($color-primary, primary-50)
+      );
+    }
+    .media-text {
+      @include apply-text-style($media-text-style, #000);
+    }
+  }
+  .#{$input-box}.has-error & {
+    &__media-upload {
+      border-color: red;
+      &:focus-within {
+        box-shadow: 0 0 0 2px rgba(red, 0.1);
+      }
+    }
+  }
+}

@@ -43,7 +43,17 @@ $button-sizes: (
   ),
   md: (
     padding-y: 1rem,
-    padding-x: 2rem,
+    padding-x: 1rem,
+    icon-size: 2rem,
+  ),
+  md-small: (
+    padding-y: 0.4rem,
+    padding-x: 1.2rem,
+    icon-size: null,
+  ),
+  md-tags: (
+    padding-y: 0.4rem,
+    padding-x: 0.6rem,
     icon-size: 1.6rem,
   ),
   md-compact: (
@@ -60,6 +70,14 @@ $button-sizes: (
 
 // Variants
 $button-variants: (
+  default-text: (
+    background: map-get($color-neutral, gray, gray-50),
+    color: map-get($color-neutral, black, black-500),
+    hover-background: map-get($color-neutral, gray, gray-100),
+    typography: map-get($text-m, semibold),
+    radius: map-get($radius, full),
+    shadow: null,
+  ),
   primary: (
     background: map-get($color-primary, primary-500),
     color: map-get($color-neutral, white),
@@ -80,9 +98,19 @@ $button-variants: (
 
   outlined: (
     background: transparent,
-    color: map-get($color-primary, primary-500),
-    border: 0.2rem solid map-get($color-primary, primary-500),
-    hover-background: rgba(map-get($color-primary, primary-500), 0.1),
+    color: map-get($color-neutral, gray, gray-400),
+    border: 1px solid map-get($color-neutral, gray, gray-400),
+    hover-background: rgba(map-get($color-primary, primary-100), 0.1),
+    hover-color: map-get($color-neutral, black, black-500),
+    typography: map-get($text-m, medium),
+    radius: map-get($radius, s),
+    shadow: null,
+  ),
+  danger-light: (
+    background: map-deep-get($color-secondary, red, red-100),
+    color: map-deep-get($color-secondary, red, red-500),
+    hover-background: map-deep-get($color-secondary, red, red-700),
+    hover-color: map-get($color-secondary, red, red-50),
     typography: map-get($text-m, medium),
     radius: map-get($radius, s),
     shadow: null,
@@ -95,4 +123,70 @@ $button-variants: (
     radius: map-get($radius, s),
     shadow: $hard-shadow,
   ),
+);
+
+// FORM FIELD
+//Default params
+
+$form-field-defaults: (
+  //1- general
+  "input-box": input-box,
+  "padding": 0.8rem 1.2rem,
+  "background": #fff,
+  "border": true,
+  "border-color": #e0e2e7,
+  "radius": 0.8rem,
+  "focus-color": map-deep-get($color-primary, promary-100),
+  "label-color": #666,
+  "label-floating-color": #333,
+  "label-float-size": 1.2rem,
+  "gap-label-input": 0.4rem,
+  "gap-input-hint": 0.8rem,
+  "gap-typing-area": 0.4rem,
+  "icon-size": 1.6rem,
+  "label-text-style": null,
+  "placeholder-text-style": null,
+  "input-text-style": null,
+  "textarea-text-style": null,
+  "with-multiple-label-children": false,
+  "input-min-height": 4rem,
+  "font-family": inherit,
+  "font-size": 1.6rem,
+  "letter-spacing": inherit,
+  "color": inherit,
+  "font-weight": 500,
+  "line-height": inherit,
+  //2- checkbox/Radio
+  "checkbox-radius": 0.3rem,
+  "gap": 1ch,
+  "direction": ltr,
+  "box-size": 1.6rem,
+  "border-width": 1px,
+  "checked-bg-color": #000,
+  "check-color": #fff,
+  "checkmark-type": "text",
+  "dot-color": #000,
+  "dot-scale": 0.5,
+  "show-box": true,
+  "radio-pile-style": false,
+  "checkbox-required": false,
+  //3- Texarea
+  "textarea-min-height": 3lh,
+  //4- Media
+  "media-title-style": null,
+  "media-text-style": null
+);
+
+// List of input types that should never have floating labels.
+$default-non-floating-types: (
+  "checkbox",
+  "radio",
+  "file",
+  "range",
+  "color",
+  "date",
+  "time",
+  "datetime-local",
+  "month",
+  "week"
 );

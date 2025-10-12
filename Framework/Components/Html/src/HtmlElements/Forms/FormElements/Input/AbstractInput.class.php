@@ -6,6 +6,7 @@ abstract class AbstractInput extends AbstractFormDataElement
 {
     // private const array ATTR_VALUES_TYPE = ['string', 'bool', 'boolean', 'array', 'integer'];
     private const string TAG = 'input';
+
     protected bool $readonly;
     protected bool $disabled;
     protected int $size;
@@ -23,19 +24,24 @@ abstract class AbstractInput extends AbstractFormDataElement
     protected string $list;
     protected string $autocomplete;
 
-    public function getFormElementAttributes(string $type) : string
+    public function getFormElementAttributes(string $type): string
     {
-        $strErrors = $this->inputErrors($this->name);
-        $this->value = $this->inputValue($this->name, $this->value ?? '');
-        $input = $this->getTagAttributes(
+        // $strErrors = '';
+        // if (isset($this->name)) {
+        //     $strErrors = $this->inputErrors($this->name);
+        //     $this->value = $this->inputValue($this->name, $this->value ?? '');
+        // }
+
+        return $this->getTagAttributes(
             array_merge(['type' => $type], get_object_vars($this)),
-            self::TAG
+            self::TAG,
         );
-        return $input . $strErrors;
+        // $this->errorMessage = $strErrors;
     }
 
     /**
      * @param bool $readonly
+     *
      * @return AbstractInput
      */
     public function readonly(bool $readonly): self
@@ -46,6 +52,7 @@ abstract class AbstractInput extends AbstractFormDataElement
 
     /**
      * @param bool $disabled
+     *
      * @return AbstractInput
      */
     public function disabled(bool $disabled): self
@@ -56,9 +63,10 @@ abstract class AbstractInput extends AbstractFormDataElement
 
     /**
      * @param string $alt
+     *
      * @return AbstractInput
      */
-    public function alt(string $alt) : self
+    public function alt(string $alt): self
     {
         $this->alt = $alt;
         return $this;
@@ -66,9 +74,10 @@ abstract class AbstractInput extends AbstractFormDataElement
 
     /**
      * @param string $src
+     *
      * @return AbstractInput
      */
-    public function src(string $src) : self
+    public function src(string $src): self
     {
         $this->src = $src;
         return $this;
@@ -76,6 +85,7 @@ abstract class AbstractInput extends AbstractFormDataElement
 
     /**
      * @param bool $hidden
+     *
      * @return AbstractInput
      */
     public function hidden(bool $hidden): self
@@ -86,6 +96,7 @@ abstract class AbstractInput extends AbstractFormDataElement
 
     /**
      * @param int $size
+     *
      * @return AbstractInput
      */
     public function size(int $size): self
@@ -96,6 +107,7 @@ abstract class AbstractInput extends AbstractFormDataElement
 
     /**
      * @param int $maxlength
+     *
      * @return AbstractInput
      */
     public function maxlength(int $maxlength): self
@@ -106,6 +118,7 @@ abstract class AbstractInput extends AbstractFormDataElement
 
     /**
      * @param string $accept
+     *
      * @return AbstractInput
      */
     public function accept(string $accept): self
@@ -116,6 +129,7 @@ abstract class AbstractInput extends AbstractFormDataElement
 
     /**
      * @param mixed $min
+     *
      * @return AbstractInput
      */
     public function min(mixed $min): self
@@ -126,6 +140,7 @@ abstract class AbstractInput extends AbstractFormDataElement
 
     /**
      * @param mixed $max
+     *
      * @return AbstractInput
      */
     public function max(mixed $max): self
@@ -136,6 +151,7 @@ abstract class AbstractInput extends AbstractFormDataElement
 
     /**
      * @param bool $multiple
+     *
      * @return AbstractInput
      */
     public function multiple(bool $multiple): self
@@ -146,6 +162,7 @@ abstract class AbstractInput extends AbstractFormDataElement
 
     /**
      * @param string $pattern
+     *
      * @return AbstractInput
      */
     public function pattern(string $pattern): self
@@ -156,6 +173,7 @@ abstract class AbstractInput extends AbstractFormDataElement
 
     /**
      * @param mixed $placeholder
+     *
      * @return AbstractInput
      */
     public function placeholder(mixed $placeholder): self
@@ -166,6 +184,7 @@ abstract class AbstractInput extends AbstractFormDataElement
 
     /**
      * @param bool $required
+     *
      * @return AbstractInput
      */
     public function required(bool $required = true): self
@@ -176,6 +195,7 @@ abstract class AbstractInput extends AbstractFormDataElement
 
     /**
      * @param int $step
+     *
      * @return AbstractInput
      */
     public function step(int $step): self
@@ -186,6 +206,7 @@ abstract class AbstractInput extends AbstractFormDataElement
 
     /**
      * @param bool $autofocus
+     *
      * @return AbstractInput
      */
     public function autofocus(bool $autofocus = true): self
@@ -196,6 +217,7 @@ abstract class AbstractInput extends AbstractFormDataElement
 
     /**
      * @param int $height
+     *
      * @return AbstractInput
      */
     public function height(int $height): self
@@ -206,6 +228,7 @@ abstract class AbstractInput extends AbstractFormDataElement
 
     /**
      * @param int $width
+     *
      * @return AbstractInput
      */
     public function width(int $width): self
@@ -216,6 +239,7 @@ abstract class AbstractInput extends AbstractFormDataElement
 
     /**
      * @param string $list
+     *
      * @return AbstractInput
      */
     public function list(string $list): self
@@ -226,6 +250,7 @@ abstract class AbstractInput extends AbstractFormDataElement
 
     /**
      * @param string $autocomplete
+     *
      * @return AbstractInput
      */
     public function autocomplete(string $autocomplete): self
@@ -236,6 +261,7 @@ abstract class AbstractInput extends AbstractFormDataElement
 
     /**
      * @param string $id
+     *
      * @return AbstractInput
      */
     public function id(string $id): self
@@ -246,6 +272,7 @@ abstract class AbstractInput extends AbstractFormDataElement
 
     /**
      * @param string ...$class
+     *
      * @return AbstractInput
      */
     public function class(string ...$class): self
@@ -256,6 +283,7 @@ abstract class AbstractInput extends AbstractFormDataElement
 
     /**
      * @param string $name
+     *
      * @return AbstractInput
      */
     public function name(string $name): self
@@ -266,6 +294,7 @@ abstract class AbstractInput extends AbstractFormDataElement
 
     /**
      * @param mixed $value
+     *
      * @return AbstractInput
      */
     public function value(mixed $value): self
@@ -276,6 +305,7 @@ abstract class AbstractInput extends AbstractFormDataElement
 
     /**
      * @param int $tabindex
+     *
      * @return AbstractInput
      */
     public function tabindex(int $tabindex): self
@@ -286,6 +316,7 @@ abstract class AbstractInput extends AbstractFormDataElement
 
     /**
      * @param string $title
+     *
      * @return AbstractInput
      */
     public function title(string $title): self
@@ -296,6 +327,7 @@ abstract class AbstractInput extends AbstractFormDataElement
 
     /**
      * @param array $custom
+     *
      * @return HtmlBuilder
      */
     public function custom(array $custom): self

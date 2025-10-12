@@ -10,16 +10,17 @@ class HtmlBuilder extends AbstractHtmlElement
         parent::__construct($token);
     }
 
-    public function form() : FormBuilder
+    public function form(): FormBuilder
     {
         return new FormBuilder($this->token);
     }
 
     /**
      * @param string $type
+     *
      * @return AbstractInput
      */
-    public function input(string $type) : AbstractInput
+    public function input(string $type): AbstractInput
     {
         $inputType = ucfirst(strtolower($type)) . 'Type';
         try {
@@ -29,46 +30,43 @@ class HtmlBuilder extends AbstractHtmlElement
         }
     }
 
+    public function textarea(string $content = ''): TextAreaElement
+    {
+        try {
+            return new TextAreaElement($content);
+        } catch (Throwable $th) {
+            throw new FormElementNotFound(TextAreaElement::class);
+        }
+    }
+
     /**
      * @param string|null $message
+     *
      * @return LabelElement
      */
-    public function label(string|null $message = null) : LabelElement
+    public function label(string|null $message = null): LabelElement
     {
         return new LabelElement($message);
     }
 
-    public function tag(string $tag) : self|HtmlaElement|HtmlTagElement
+    public function tag(string $tag): self|HtmlaElement|HtmlTagElement
     {
         return match (true) {
-            in_array($tag, ['div', 'section', 'body', 'nav', 'ul', 'li', 'dl', 'table', 'thead', 'tbody', 'tr', 'td', 'span', 'th', 'button', 'small']) || preg_match('~[0-9]+~', $tag) => new self($this->token, $tag),
+            in_array($tag, ['div', 'section', 'body', 'nav', 'ul', 'li', 'dl', 'table', 'thead', 'tbody', 'tr', 'td', 'span', 'th', 'button', 'small', 'svg', 'use']) || preg_match('~[0-9]+~', $tag) => new self($this->token, $tag),
             $tag === 'a' => new HtmlaElement(),
             in_array($tag, ['p', 'dd', 'dt', 'img', 'i', 'strong']) => new HtmlTagElement($tag),
+            $tag === 'select' => new SelectElement($this->token)
         };
     }
 
-    public function htmlBlock() : self|HtmlBlockElement
-    {
-        return new HtmlBlockElement();
-    }
-
-    public function button(string $type = '') : ButtonElement
+    public function button(string $type = ''): ButtonElement
     {
         return new ButtonElement($type);
     }
 
     /**
-     * @param array $custom
-     * @return HtmlBuilder
-     */
-    public function custom(array $custom): self
-    {
-        $this->custom = $custom;
-        return $this;
-    }
-
-    /**
      * @param array $formErrors
+     *
      * @return HtmlBuilder
      */
     #[Override]
@@ -80,6 +78,7 @@ class HtmlBuilder extends AbstractHtmlElement
 
     /**
      * @param array $formValues
+     *
      * @return HtmlBuilder
      */
     #[Override]
@@ -89,13 +88,9 @@ class HtmlBuilder extends AbstractHtmlElement
         return $this;
     }
 
-    /**
-     * @param string ...$class
-     * @return HtmlBuilder
-     */
-    public function class(string ...$class): self
+    public function href(string $href): self
     {
-        $this->class = array_merge($this->class, $class);
+        $this->href = $href;
         return $this;
     }
 
@@ -174,6 +169,7 @@ class HtmlBuilder extends AbstractHtmlElement
     /**
      * @param string $content
      * @param bool $contentUp
+     *
      * @return HtmlBuilder
      */
     public function content(string $content, bool $contentUp = true): self
@@ -186,6 +182,18 @@ class HtmlBuilder extends AbstractHtmlElement
     public function accesskey(string $accesskey): self
     {
         $this->accesskey = $accesskey;
+        return $this;
+    }
+
+    public function role(string $role): self
+    {
+        $this->role = $role;
+        return $this;
+    }
+
+    public function ariaLabel(string $ariaLabel): self
+    {
+        $this->ariaLabel = $ariaLabel;
         return $this;
     }
 

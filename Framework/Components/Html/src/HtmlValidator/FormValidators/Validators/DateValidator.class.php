@@ -22,17 +22,17 @@ class DateValidator extends AbstractValidator
     public function __construct(
         private readonly string $display,
         private readonly mixed $inputValue,
-        private readonly mixed $ruleValue
+        private readonly mixed $ruleValue,
     ) {
     }
 
-    public function validate(): string|bool
+    public function validate(): array|string|bool
     {
         if (empty($this->inputValue)) {
             return false; // Let RequiredValidator handle empty values
         }
 
-        if (! is_string($this->inputValue)) {
+        if (!is_string($this->inputValue)) {
             return $this->erroMessage(sprintf(self::ERROR_MESSAGE, $this->display));
         }
 
@@ -40,17 +40,17 @@ class DateValidator extends AbstractValidator
         $format = $config['format'] ?? 'Y-m-d';
 
         $date = $this->parseDate($this->inputValue, $format);
-        if (! $date) {
+        if (!$date) {
             $formatDisplay = self::SUPPORTED_FORMATS[$format] ?? $format;
             return $this->erroMessage(sprintf(self::ERROR_MESSAGE_FORMAT, $this->display, $formatDisplay));
         }
 
-        if (! $this->isDateInRange($date, $config)) {
+        if (!$this->isDateInRange($date, $config)) {
             return $this->erroMessage(sprintf(
                 self::ERROR_MESSAGE_RANGE,
                 $this->display,
                 $config['min'] ?? 'no limit',
-                $config['max'] ?? 'no limit'
+                $config['max'] ?? 'no limit',
             ));
         }
 
@@ -74,7 +74,7 @@ class DateValidator extends AbstractValidator
     {
         $date = DateTime::createFromFormat($format, $dateString);
 
-        if (! $date || $date->format($format) !== $dateString) {
+        if (!$date || $date->format($format) !== $dateString) {
             return null;
         }
 

@@ -1,0 +1,9 @@
+// test-sass-version.scss
+@use "sass:list";
+@use "sass:meta";
+
+:root {
+  --version-test: "Testing Dart Sass 1.92.1";
+  --is-list-exists: #{meta.function-exists("is-list", "list")};
+  --nth-exists: #{meta.function-exists("nth", "list")};
+}

@@ -30,7 +30,7 @@
     "classmap": [
       "Framework/",
       "App/",
-      "Scripts/src/"
+      "scripts/src/"
     ]
   },
   "scripts": {},

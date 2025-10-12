@@ -1,0 +1,391 @@
+@mixin non-text-input-styles($type, $options) {
+  $input-box: map.get($options, "input-box");
+  $box-size: map.get($options, "box-size");
+  $gap: map.get($options, "gap");
+  $checkbox-radius: map.get($options, "checkbox-radius");
+  $direction: map.get($options, "direction");
+
+  // Determine if we're using standard or icon markup
+  $using-icon-markup: false;
+
+  // Check if this input box uses icon markup structure
+  &:has(.#{$input-box}__typing-area) {
+    $using-icon-markup: true;
+  }
+
+  @if $type == "checkbox" {
+    @if $using-icon-markup {
+      @include _checkbox-icon-markup($type, $options);
+    } @else {
+      @include _checkbox-standard-markup($type, $options);
+    }
+  } @else if $type == "radio" {
+    @if $using-icon-markup {
+      @include _radio-icon-markup($type, $options);
+    } @else {
+      @include _radio-standard-markup($type, $options);
+    }
+  }
+}
+
+@mixin _checkbox-icon-markup($type, $options) {
+  $input-box: map.get($options, "input-box");
+  $box-size: map.get($options, "box-size");
+  $gap: map.get($options, "gap");
+  $checkbox-radius: map.get($options, "checkbox-radius");
+  $direction: map.get($options, "direction");
+  $is-rtl: $direction == rtl;
+  $checked-bg-color: map.get($options, "checked-bg-color");
+  $check-color: map.get($options, "check-color");
+  $checkmark-type: map.get($options, "checkmark-type");
+
+  // Hide the original input
+  .#{$input-box}__field[type="checkbox"] {
+    display: none;
+  }
+
+  // Style the custom checkbox container
+  .#{$input-box}__input {
+    display: flex;
+    align-items: center;
+    gap: $gap;
+    position: relative;
+    cursor: pointer;
+
+    // Custom checkbox box
+    &::before {
+      $options-without-padding: map.remove($options, "padding", "radius");
+      @include _apply-box-styles($options-without-padding);
+      content: "";
+      width: $box-size;
+      height: $box-size;
+      border-radius: $checkbox-radius;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      order: 1; // Position checkbox appropriately
+    }
+
+    // Checkmark
+    &::after {
+      content: "";
+      position: absolute;
+      width: $box-size;
+      height: $box-size;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      opacity: 0;
+      transform: scale(0);
+      transition:
+        transform 0.2s ease,
+        opacity 0.2s ease;
+
+      @if $checkmark-type == "text" {
+        content: "✓";
+        font-size: calc(#{$box-size} * 0.75);
+        line-height: 1;
+        color: $check-color;
+      } @else if $checkmark-type == "svg" {
+        background-image: url("data:image/svg+xml,...");
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: calc(#{$box-size} * 0.75);
+      }
+    }
+  }
+
+  // Checked state
+  .#{$input-box}__field[type="checkbox"]:checked + .#{$input-box}__typing-area {
+    ~ .#{$input-box}__input::before {
+      background-color: $checked-bg-color;
+      border-color: $checked-bg-color;
+    }
+
+    ~ .#{$input-box}__input::after {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  // Prefix/Suffix styles
+  .#{$input-box}__prefix,
+  .#{$input-box}__suffix {
+    @include icon-with-badge(
+      $icon-size: map.get($options, "icon-size"),
+      $with-badge: false,
+      $border-radius: 4px,
+      $padding: 0
+    );
+    flex-shrink: 0;
+  }
+
+  // Typing area (contains the hidden input)
+  .#{$input-box}__typing-area {
+    // Hide the typing area visually but keep it accessible
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  // Label styles for icon markup
+  .#{$input-box}__label {
+    order: 2; // Adjust order as needed
+    cursor: pointer;
+  }
+}
+
+@mixin _checkbox-standard-markup($type, $options) {
+  $is-rtl: $direction == rtl;
+  $checked-bg-color: map.get($options, "checked-bg-color");
+  $check-color: map.get($options, "check-color");
+  $checkmark-type: map.get($options, "checkmark-type");
+  $svg-checkmark-data-uri: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M5 12l5 5L20 7' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  $effective-box-total-size-calc: calc(#{$box-size} + (2 * #{map.get($options, "border-width")}));
+
+  input[type="checkbox"] {
+    display: none;
+    & + .#{$input-box}__label {
+      position: relative;
+      display: flex;
+      align-items: flex-start;
+
+      // gap: $gap;
+      cursor: pointer;
+
+      @if $is-rtl {
+        flex-direction: row-reverse;
+        padding-right: calc(#{$box-size} + $gap);
+      } @else {
+        padding-left: calc(#{$box-size} + $gap);
+      }
+
+      &::before {
+        $options-without-padding: map.remove($options, "padding", "radius");
+        @include _apply-box-styles($options-without-padding);
+        content: "";
+        position: absolute;
+        top: 50%;
+        @if $is-rtl {
+          right: 0;
+          transform: translateY(-50%);
+        } @else {
+          left: 0;
+          transform: translateY(-50%);
+        }
+        width: $box-size;
+        height: $box-size;
+        border-radius: $checkbox-radius;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      &::after {
+        position: absolute;
+        top: 50%;
+        @if $is-rtl {
+          right: 0;
+          transform: translateY(-50%) scale(0);
+        } @else {
+          left: 0;
+          transform: translateY(-50%) scale(0);
+        }
+        width: $box-size;
+        height: $box-size;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+        opacity: 0;
+        transform-origin: center;
+        transition:
+          transform 0.2s ease,
+          opacity 0.2s ease;
+        @if $checkmark-type == "text" {
+          content: "✓";
+          font-size: calc(#{$box-size} * 0.75);
+          line-height: 1;
+          color: $check-color;
+        } @else if $checkmark-type == "svg" {
+          background-image: $svg-checkmark-data-uri;
+          background-repeat: no-repeat;
+          background-position: center;
+          background-size: calc(#{$box-size} * 0.75);
+        }
+      }
+    }
+    &:checked + .#{$input-box}__label {
+      &::before {
+        background-color: $checked-bg-color;
+        border-color: $checked-bg-color;
+      }
+      &::after {
+        opacity: 1;
+        @if $is-rtl {
+          transform: translateY(-50%) scale(1);
+        } @else {
+          transform: translateY(-50%) scale(1);
+        }
+      }
+    }
+
+    &:disabled + .#{$input-box}__label {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+  }
+
+  .#{$input-box}__hint-text {
+    // font-size: 1.3rem;
+    // margin-top: 0.4rem;
+    // color: red;
+    // display: none;
+    @if $is-rtl {
+      padding-right: calc(#{$effective-box-total-size-calc} + #{$gap});
+    } @else {
+      padding-left: calc(#{$effective-box-total-size-calc} + #{$gap});
+    }
+  }
+}
+@mixin _radio-icon-markup($type, $options) {
+  $input-box: map.get($options, "input-box");
+  $dot-scale: map.get($options, "dot-scale");
+  $dot-color: map.get($options, "dot-color");
+  $box-size: map.get($options, "box-size");
+  $dot-size: calc(#{$box-size} * #{$dot-scale});
+  $box-size: map.get($options, "box-size");
+  $gap: map.get($options, "gap");
+
+  .#{$input-box}__field[type="radio"] {
+    display: none;
+  }
+
+  .#{$input-box}__input {
+    display: flex;
+    align-items: center;
+    gap: $gap;
+    position: relative;
+    cursor: pointer;
+
+    // Radio outer circle
+    &::before {
+      $options-without-padding: map.remove($options, "padding", "radius");
+      @include _apply-box-styles($options-without-padding);
+      content: "";
+      width: $box-size;
+      height: $box-size;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    // Radio inner dot
+    &::after {
+      content: "";
+      position: absolute;
+      width: $dot-size;
+      height: $dot-size;
+      background-color: $dot-color;
+      border-radius: 50%;
+      opacity: 0;
+      transform: scale(0);
+      transition:
+        transform 0.2s ease,
+        opacity 0.2s ease;
+    }
+  }
+
+  // Checked state
+  .#{$input-box}__field[type="radio"]:checked + .#{$input-box}__typing-area {
+    ~ .#{$input-box}__input::after {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+}
+@mixin _radio-standard-markup($type, $options) {
+  $is-rtl: $direction == rtl;
+  $dot-scale: map.get($options, "dot-scale");
+  $dot-color: map.get($options, "dot-color");
+  $dot-size: calc(#{$box-size} * #{$dot-scale});
+  $radio-pile-style: map.get($options, "radio-pile-style");
+
+  @if $radio-pile-style {
+    &.#{$input-box}--pill-style {
+      @include pill-style($options);
+      .#{$input-box}__label {
+        margin-bottom: 0;
+      }
+    }
+  }
+
+  input[type="radio"] {
+    display: none;
+    & + .#{$input-box}__label {
+      position: relative;
+      display: flex;
+      align-items: center;
+      // gap: $gap;
+      cursor: pointer;
+      flex-grow: 1;
+      @if $is-rtl {
+        flex-direction: row-reverse;
+        padding-right: calc(#{$box-size} + $gap);
+      } @else {
+        padding-left: calc(#{$box-size} + $gap);
+      }
+      &::before,
+      &::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        pointer-events: none;
+      }
+      &::before {
+        $options-without-padding: map.remove($options, "padding", "radius");
+        @include _apply-box-styles($options-without-padding);
+        border-radius: 50%;
+        width: $box-size;
+        height: $box-size;
+        @if $is-rtl {
+          right: 0;
+          transform: translateY(-50%);
+        } @else {
+          left: 0;
+          transform: translateY(-50%);
+        }
+      }
+      &::after {
+        border-radius: 50%;
+        width: $dot-size;
+        height: $dot-size;
+        background-color: $dot-color;
+        opacity: 0;
+        transform: scale(0);
+        transition:
+          transform 0.2s ease,
+          opacity 0.2s ease;
+        @if $is-rtl {
+          right: calc(#{$box-size} * ((1 - #{$dot-scale}) / 2));
+          transform: translateY(-50%) scale(0);
+        } @else {
+          left: calc(#{$box-size} * ((1 - #{$dot-scale}) / 2));
+          transform: translateY(-50%) scale(0);
+        }
+      }
+    }
+    &:checked + .#{$input-box}__label {
+      &::after {
+        opacity: 1;
+        transform: translateY(-50%) scale(1);
+      }
+    }
+
+    &:disabled + .#{$input-box}__label {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+  }
+}

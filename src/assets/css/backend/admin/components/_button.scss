@@ -2,7 +2,7 @@
 
 /*---------------- BUTTONS ----------------*/
 .btn {
-  @include button-base;
+  @include button-base(0.4rem);
 
   // Variant classes
   @each $variant, $value in $button-variants {

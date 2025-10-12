@@ -11,32 +11,7 @@
     gap: 2.4rem;
 
     .title {
-      display: flex;
-      flex-direction: column;
-      gap: 0.8rem;
-      flex: 1;
-
-      &__text {
-        color: map-deep-get($color-neutral, black, black-700);
-        font: {
-          size: map-deep-get($display-m, medium, font-size);
-          weight: map-deep-get($display-m, medium, font-weight);
-        }
-        line-height: map-deep-get($display-m, medium, line-height);
-        letter-spacing: map-deep-get($display-m, medium, letter-spacing);
-      }
-
-      &__breadcrumbs {
-        @include breadcrumbs(
-          $padding-y: 0,
-          $color: map-deep-get($color-primary, primary-500),
-          $font-size: map-deep-get($text-m, medium, font-size),
-          $line-height: map-deep-get($text-m, medium, line-height),
-          $active-color: map-deep-get($color-neutral, black, black-500),
-          $gap: 0.8rem,
-          $separator-size: 1.8rem
-        );
-      }
+      @include page-title;
     }
 
     .user-action {
@@ -49,7 +24,7 @@
     }
 
     @include respond-above(md) {
-      grid-column: span 4;
+      grid-column: 1 / -1;
     }
   }
 
@@ -115,18 +90,110 @@
 
     .table {
       width: 100%;
+      table-layout: fixed;
       border-collapse: collapse;
 
-      // generic cell base
+      // Column widths based on your Figma design
+      &__col {
+        &--product {
+          width: 20%; // or 180.8px if you prefer fixed pixels
+          min-width: 18rem;
+        }
+
+        &--sku {
+          width: 12%;
+          min-width: 10rem;
+        }
+
+        &--category {
+          width: 15%;
+          min-width: 12rem;
+        }
+
+        &--stock {
+          width: 10%;
+          min-width: 8rem;
+        }
+
+        &--price {
+          width: 10%;
+          min-width: 9rem;
+        }
+
+        &--status {
+          width: 12%;
+          min-width: 10rem;
+        }
+
+        &--added {
+          width: 10%;
+          min-width: 11rem;
+        }
+
+        &--action {
+          width: 11%;
+          min-width: 12rem;
+        }
+      }
+
       &__head--row-cell,
       &__body--row-cell {
         padding: 1.8rem 2.2rem;
         border-bottom: 1px solid map-deep-get($color-neutral, gray, gray-50);
         background: map-deep-get($color-neutral, white);
         text-align: left;
+
+        // Enable text wrapping and overflow control
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        hyphens: auto; // Optional: better text breaking
+
+        // Prevent content from forcing column expansion
+        min-width: 0; // Important for text truncation
+
+        // Product column specific - allow multiple lines
+        &:first-child {
+          .body-cell-product__label {
+            .text-container {
+              min-width: 0; // Allow text to wrap
+              flex: 1;
+
+              &__name {
+                // Allow product name to wrap to multiple lines
+                word-wrap: break-word;
+                overflow-wrap: break-word;
+                line-height: 1.4; // Better for multi-line text
+                display: -webkit-box;
+                -webkit-line-clamp: 2; // Limit to 2 lines max
+                line-clamp: 2; // Standard property for compatibility
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+              }
+
+              &__variant {
+                font-size: map-deep-get($text-s, regular, font-size);
+                color: map-deep-get($color-neutral, gray, gray-600);
+              }
+            }
+          }
+        }
+
+        // Other columns - single line with ellipsis
+        &:not(:first-child) {
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+
+          .body-cell > span {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: block;
+            width: 100%;
+          }
+        }
       }
 
-      /* HEADERS */
       &__head--row-cell {
         background-color: map-deep-get($color-neutral, gray, gray-25);
         color: map-deep-get($color-neutral, black, black-700);
@@ -134,34 +201,96 @@
         font-weight: map-deep-get($text-m, medium, font-weight);
         line-height: map-deep-get($text-m, medium, line-height);
         letter-spacing: map-deep-get($text-m, medium, letter-spacing);
-        .header-cell-product,
         .header-cell {
           display: flex;
-          justify-content: space-between;
-          align-items: center;
-          gap: 0.8rem;
-
-          @include custom-checkbox(
-            header-cell-product,
-            $box-size: 2rem,
-            $border-width: 2px,
-            $border-color: map-deep-get($color-neutral, gray, gray-400),
-            $background: map-deep-get($color-neutral, white),
-            $border-radius: 6px,
-            $gap: 0.8rem
-          );
-          .icon-container {
-            @include icon-with-badge($with-badge: false, $icon-size: 2rem, $padding: 0);
-            cursor: pointer;
-            &:hover {
-              color: map-deep-get($color-primary, primary-500);
-              background-color: map-deep-get($color-primary, primary-50);
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 0.4rem;
+          width: 100%;
+          min-width: 0;
+          &__top-row {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            width: 100%;
+            min-width: 0;
+            .checkbox-box {
+              flex: 1;
+              min-width: 0;
+              &__label {
+                white-space: normal; // Allow wrapping
+                word-wrap: break-word;
+                overflow-wrap: break-word;
+                line-height: 1.3;
+              }
+              @include form-field(
+                $types: "checkbox",
+                $options: (
+                  input-box: checkbox-box,
+                  box-size: 2rem,
+                  border-width: 2px,
+                  border-color: map-deep-get($color-neutral, gray, gray-400),
+                  background: map-deep-get($color-neutral, white),
+                  border-radius: 6px,
+                  gap: 0.8rem,
+                )
+              );
             }
+            .dropdown-container {
+              position: relative;
+              flex-shrink: 0;
+              &__btn {
+                @include icon-with-badge($with-badge: false, $icon-size: 2rem, $padding: 0);
+                cursor: pointer;
+                transition: all 0.2s ease;
+
+                &:hover {
+                  color: map-deep-get($color-primary, primary-500);
+                  background-color: map-deep-get($color-primary, primary-50);
+                  border-color: map-deep-get($color-primary, primary-300);
+                }
+
+                &[aria-expanded="true"] {
+                  background-color: map-deep-get($color-neutral, gray, gray-100);
+                  .icon {
+                    transform: rotate(180deg);
+                  }
+                }
+
+                span {
+                  font-size: 1.4rem;
+                  font-weight: 500;
+                  margin-right: 0.4rem;
+                }
+
+                .icon {
+                  transition: transform 0.2s ease;
+                }
+              }
+              // For other headers (Stock, Price, etc.)
+              & > span {
+                white-space: normal;
+                word-wrap: break-word;
+                line-height: 1.3;
+              }
+            }
+          }
+
+          // Hint text (reuses text styles)
+          &__hint-text {
+            width: 100%;
+            padding-left: calc(2rem + 0.8rem); // box-size + gap
+            @include text-style(
+              $text-s,
+              regular,
+              (
+                color: map-deep-get($color-neutral, gray, gray-500),
+              )
+            );
           }
         }
       }
 
-      /* BODY */
       &__body--row {
         @include transition;
         cursor: pointer;
@@ -174,33 +303,30 @@
             gap: 0.8rem;
           }
           .body-cell-product {
-            @include custom-checkbox(
-              body-cell-product,
-              $box-size: 2rem,
-              $border-width: 2px,
-              $border-color: map-deep-get($color-neutral, gray, gray-400),
-              $background: map-deep-get($color-neutral, white),
-              $border-radius: 6px,
-              $gap: 0.8rem,
-              $flex: 1 0 0
+            @include form-field(
+              $types: "checkbox",
+              $options: (
+                input-box: body-cell-product,
+                box-size: 2rem,
+                border-width: 2px,
+                border-color: map-deep-get($color-neutral, gray, gray-400),
+                background: map-deep-get($color-neutral, white),
+                border-radius: 6px,
+                gap: 0.8rem,
+              )
             );
-
+            width: 100%;
             &__label {
-              // display: flex;
-              // align-items: center;
-              // gap: 0.8rem;
-
+              width: 100%;
               .img-container {
-                width: 4.4rem;
-                height: 4.4rem;
-                border-radius: 0.4rem;
-                background: map-deep-get($color-neutral, gray, gray-100);
-
-                .image {
-                  width: 100%;
-                  height: 100%;
-                  object-fit: contain;
-                }
+                @include icon-with-badge(
+                  $with-badge: false,
+                  $icon-size: 4.4rem,
+                  $padding: 0,
+                  $border-radius: 0.4rem,
+                  $icon-container-bg: map-deep-get($color-neutral, gray, gray-100),
+                  $content-type: image
+                );
               }
 
               .text-container {
@@ -208,7 +334,15 @@
                 flex-direction: column;
                 gap: 0.4rem;
                 color: map-deep-get($color-neutral, black, black-700);
-
+                word-wrap: break-word;
+                overflow-wrap: break-word;
+                line-height: 1.4;
+                // Optional: Limit to 2 lines with ellipsis
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                line-clamp: 2;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
                 &__name {
                   font-size: map-deep-get($text-m, medium, font-size);
                   font-weight: map-deep-get($text-m, medium, font-weight);
@@ -216,6 +350,7 @@
 
                 &__variant {
                   font-size: map-deep-get($text-s, regular, font-size);
+                  color: map-deep-get($color-neutral, gray, gray-600);
                 }
               }
             }
@@ -385,7 +520,6 @@
     }
   }
 
-  /* Accessibility */
   .visually-hidden {
     position: absolute !important;
     height: 1px;

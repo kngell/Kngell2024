@@ -4,6 +4,7 @@ declare(strict_types=1);
 abstract class Controller
 {
     use ControllerGettersAndSetters;
+
     protected Request $request;
     protected Response $response;
     protected TokenInterface $token;
@@ -13,6 +14,7 @@ abstract class Controller
     protected CookieInterface $cookie;
     protected EventManagerInterface $eventManager;
     protected HtmlBuilder $builder;
+    protected AbstractFormCreator $frm;
     private ViewInterface $view;
     private string $layout;
     private Model|null $currentModel;
@@ -57,18 +59,20 @@ abstract class Controller
 
     /**
      * @param string $modelName
-     * @return Model
-     * @throws BindingResolutionException
-     * @throws ReflectionException
-     * @throws DependencyHasNoDefaultValueException
+     *
      * @throws BaseInvalidArgumentException
+     * @throws BindingResolutionException
+     * @throws DependencyHasNoDefaultValueException
+     * @throws ReflectionException
+     *
+     * @return Model
      */
     public function getModel(string $modelName): Model
     {
-        if (! class_exists($modelName)) {
+        if (!class_exists($modelName)) {
             throw new BaseInvalidArgumentException("Model $modelName does not exist.");
         }
-        if (! is_subclass_of($modelName, Model::class)) {
+        if (!is_subclass_of($modelName, Model::class)) {
             throw new BaseInvalidArgumentException("Model $modelName must extend Model.");
         }
         if (isset($this->currentModel) && $this->currentModel !== null && get_class($this->currentModel) === $modelName) {
@@ -79,12 +83,70 @@ abstract class Controller
 
     /**
      * @param EventManagerInterface $eventManager
+     *
      * @return Controller
      */
     public function setEventManager(EventManagerInterface $eventManager): self
     {
         $this->eventManager = $eventManager;
         return $this;
+    }
+
+    /**
+     * Determines if the current page matches the given method name.
+     *
+     * @param string $methodName The method name (typically from __FUNCTION__)
+     * @param array $options Additional options for active link detection:
+     *   - 'exact' (bool): Whether to require exact URL match
+     *   - 'submenu' (bool): Whether this is a submenu item
+     *   - 'additionalPaths' (array): Additional URL patterns to match
+     *
+     * @return array Returns ['active' => ' active'] if active, ['active' => ''] otherwise
+     */
+    protected function activeLink(string $methodName, array $options = []): array
+    {
+        $defaultOptions = [
+            'exact' => false,
+            'submenu' => false,
+            'additionalPaths' => [],
+        ];
+        $options = array_merge($defaultOptions, $options);
+
+        // Convert method name to kebab-case (e.g., productList -> product-list)
+        $methodPath = StringUtils::kebabCase($methodName);
+
+        // Get current controller name in kebab-case (e.g., AdminController -> admin)
+        $currentController = StringUtils::kebabCase(
+            str_replace('Controller', '', (new ReflectionClass($this))->getShortName()),
+        );
+
+        // Build the expected path
+        $expectedPath = DS . $currentController . DS . $methodPath;
+
+        // Get current URL
+        $currentUrl = $this->request->getRequestedUri();
+
+        // Check for exact match
+        if ($options['exact']) {
+            $isActive = $currentUrl === $expectedPath ||
+                       rtrim($currentUrl, '/') === rtrim($expectedPath, '/');
+        }
+        // Check for partial match (default behavior)
+        else {
+            $isActive = str_contains($currentUrl, $expectedPath);
+        }
+
+        // Check against additional paths if provided
+        if (!$isActive && !empty($options['additionalPaths'])) {
+            foreach ($options['additionalPaths'] as $path) {
+                if (str_contains($currentUrl, $path)) {
+                    $isActive = true;
+                    break;
+                }
+            }
+        }
+
+        return $isActive ? ['active' => ' active'] : ['active' => ''];
     }
 
     protected function getRedirectUrl(): string|null
@@ -105,14 +167,22 @@ abstract class Controller
         }
     }
 
-    protected function form(AbstractFormCreator $frm, string $action, array|Entity|bool $formValues = [], array|Entity|bool $formErrors = []): string
+    protected function form(string $action, array|Entity|bool $formValues = [], array|Entity|bool $formErrors = []): string
     {
-        if ($this->session->exists('form')) {
-            $form = $this->session->get('form');
-            $this->session->delete('form');
-        } else {
-            $form = $frm->make($action, $formValues, $formErrors);
-        }
+        // Use more specific keys to avoid conflicts
+        $formKey = 'form_' . md5($action); // Unique key per form action
+
+        $values = $this->session->exists($formKey . '_values') ?
+            $this->session->get($formKey . '_values') : $formValues;
+        $errors = $this->session->exists($formKey . '_errors') ?
+            $this->session->get($formKey . '_errors') : $formErrors;
+
+        $form = $this->frm->make($action, $values, $errors);
+
+        // Clear the session data immediately after use
+        $this->session->delete($formKey . '_values');
+        $this->session->delete($formKey . '_errors');
+
         return $form;
     }
 
@@ -176,6 +246,6 @@ abstract class Controller
             // $this->view->getLayout() === 'admin' => AdminNavbarDecorator::class,
             default => '',
         };
-        return array_merge($context, ['message' => $this->flash->get()], ! empty($navbar) ? (new $navbar($this))->page() : []);
+        return array_merge($context, ['message' => $this->flash->get()], !empty($navbar) ? (new $navbar($this))->page() : []);
     }
 }

@@ -7,7 +7,7 @@ class FileUpload extends FileInformation
     private readonly string $originalName;
     private readonly string $mimeType;
     private ErrorFile $uploadError;
-    private array $class = ['invalid-feedback'];
+    private array $class = ['input-box__hint-text', 'invalid-feedback'];
 
     public function __construct(string $path, string $originalName, string $mimeType, int $uploadError)
     {
@@ -36,23 +36,23 @@ class FileUpload extends FileInformation
         return $this->uploadError->value;
     }
 
-    public function isValid() : bool
+    public function isValid(): bool
     {
         return $this->uploadError->value === UPLOAD_ERR_OK && is_uploaded_file($this->getPathname());
     }
 
-    public function getOriginalExtension() : string
+    public function getOriginalExtension(): string
     {
         return pathinfo($this->originalName, PATHINFO_EXTENSION);
     }
 
-    public function guessExtensionFromMimeType() : string|null
+    public function guessExtensionFromMimeType(): string|null
     {
         $extension = MimeTypeGuessDelegator::getInstance()->guessExtensionByMimeType($this->mimeType);
         return ArrayUtils::first($extension);
     }
 
-    public function move(string $directory, string|null $name = null) : FileInformation
+    public function move(string $directory, string|null $name = null): FileInformation
     {
         if (! $this->isValid()) {
             throw new FileException($this->getUploadedErrorMessage());
@@ -74,7 +74,7 @@ class FileUpload extends FileInformation
         return $targetFile;
     }
 
-    public function getUploadedErrorMessage() : string
+    public function getUploadedErrorMessage(): string
     {
         $errorMsg = $this->erroMessage($this->uploadError->getErrMsg());
         if ($this->uploadError === UPLOAD_ERR_INI_SIZE) {
@@ -83,17 +83,17 @@ class FileUpload extends FileInformation
         return str_contains($errorMsg, '%s') ? sprintf($errorMsg, $this->originalName) : $errorMsg;
     }
 
-    public function setError(ErrorFile $error) : void
+    public function setError(ErrorFile $error): void
     {
         $this->uploadError = $error;
     }
 
-    public function getError() : ErrorFile
+    public function getError(): ErrorFile
     {
         return $this->uploadError;
     }
 
-    private function originalName(string $originalName, int|null $index = null) : string
+    private function originalName(string $originalName, int|null $index = null): string
     {
         if (! empty($originalName)) {
             $pathInfo = pathinfo($originalName);
@@ -104,7 +104,7 @@ class FileUpload extends FileInformation
         return '';
     }
 
-    private function erroMessage(string $errMsg) : string
+    private function erroMessage(string $errMsg): string
     {
         $errMsg = nl2br(htmlspecialchars($errMsg));
         return "<div class='" . implode(' ', $this->class) . "'>" . $errMsg . '</div>';

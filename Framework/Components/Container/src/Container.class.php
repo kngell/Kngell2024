@@ -62,7 +62,7 @@ class Container implements ContainerInterface
         string $abstract,
         Closure|string|null $concrete = null,
         bool $shared = false,
-        mixed $parameters = []
+        mixed $parameters = [],
     ): self {
         $this->dropStaleInstances($abstract);
 
@@ -73,7 +73,7 @@ class Container implements ContainerInterface
             abstract: $abstract,
             concrete: $concrete,
             shared: $shared,
-            parameters: $parameters
+            parameters: $parameters,
         );
 
         return $this;
@@ -86,7 +86,7 @@ class Container implements ContainerInterface
         string $abstract,
         Closure|string|null $concrete = null,
         bool $shared = true,
-        mixed $args = []
+        mixed $args = [],
     ): self {
         return $this->bind($abstract, $concrete, true, $args);
     }
@@ -102,7 +102,7 @@ class Container implements ContainerInterface
             abstract: $abstract,
             concrete: $abstract,
             shared: false,
-            factory: $factory
+            factory: $factory,
         );
 
         return $this;
@@ -115,7 +115,7 @@ class Container implements ContainerInterface
         string $abstract,
         Closure|string|null $concrete = null,
         array $tags = [],
-        bool $shared = false
+        bool $shared = false,
     ): self {
         $this->bind($abstract, $concrete, $shared);
 
@@ -242,7 +242,7 @@ class Container implements ContainerInterface
         $this->bindings[$abstract] = new BindingDefinition(
             abstract: $abstract,
             concrete: $instance,
-            shared: true
+            shared: true,
         );
 
         $this->fireReboundCallbacks($abstract, $instance);
@@ -464,7 +464,7 @@ class Container implements ContainerInterface
         $dependencies = $this->resolveConstructorDependencies(
             $constructor,
             $parameters,
-            $binding
+            $binding,
         );
 
         $instance = $reflector->newInstanceArgs($dependencies);
@@ -477,7 +477,7 @@ class Container implements ContainerInterface
     protected function resolveConstructorDependencies(
         ReflectionMethod $constructor,
         array $parameters = [],
-        ?BindingDefinition $binding = null
+        ?BindingDefinition $binding = null,
     ): array {
         $dependencies = [];
         $bindingParameters = $binding?->parameters ?? [];
@@ -536,7 +536,7 @@ class Container implements ContainerInterface
 
         throw ContainerException::cannotResolve(
             $parameter->getDeclaringClass()?->getName() ?? 'unknown',
-            "Cannot resolve parameter [{$name}]"
+            "Cannot resolve parameter [{$name}]",
         );
     }
 
@@ -599,7 +599,7 @@ class Container implements ContainerInterface
             'array' => [],
             default => throw ContainerException::cannotResolve(
                 $parameter->getDeclaringClass()?->getName() ?? 'unknown',
-                "Cannot resolve built-in type [{$typeName}] for parameter [{$name}]"
+                "Cannot resolve built-in type [{$typeName}] for parameter [{$name}]",
             )
         };
     }
@@ -650,7 +650,7 @@ class Container implements ContainerInterface
 
         throw ContainerException::cannotResolve(
             $parameter->getDeclaringClass()?->getName() ?? 'unknown',
-            "Cannot resolve union type for parameter [{$parameter->getName()}]"
+            "Cannot resolve union type for parameter [{$parameter->getName()}]",
         );
     }
 
@@ -681,7 +681,7 @@ class Container implements ContainerInterface
 
         throw ContainerException::cannotResolve(
             $parameter->getDeclaringClass()?->getName() ?? 'unknown',
-            "Cannot resolve intersection type for parameter [{$parameter->getName()}]"
+            "Cannot resolve intersection type for parameter [{$parameter->getName()}]",
         );
     }
 

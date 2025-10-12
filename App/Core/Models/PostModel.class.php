@@ -4,23 +4,18 @@ declare(strict_types=1);
 
 class PostModel extends Model
 {
-    public function __construct(EntityManagerInterface $em)
+    public function getPaginatedPost(int $limit, int $offset): QueryResult
     {
-        parent::__construct($em);
-    }
-
-    public function getPaginatedPost(int $limit, int $offset) : QueryResult
-    {
-        $this->entityManager->createQueryBuilder()
+        $this->em->createQueryBuilder()
             ->select()
             ->OrderBy('created_at', 'DESC')
             ->limit($limit)
             ->offset($offset)
             ->build();
-        return $this->entityManager->persist()->getResults();
+        return $this->em->persist()->getResults();
     }
 
-    public function getPost(string|int $id) : Post
+    public function getPost(string|int $id): Post
     {
         $post = $this->find($id)->getResults('class')->single();
         if ($post === false) {
@@ -29,10 +24,10 @@ class PostModel extends Model
         return $post;
     }
 
-    public function getTotal() : int
+    public function getTotal(): int
     {
-        $this->entityManager->createQueryBuilder()->select('count(title) AS tot')->build();
-        $total = $this->entityManager->persist()->getResults();
+        $this->em->createQueryBuilder()->select('count(title) AS tot')->build();
+        $total = $this->em->persist()->getResults();
         $count = ArrayUtils::first($total->getResults()->all());
         return $count['tot'];
     }

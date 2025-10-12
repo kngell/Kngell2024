@@ -4,13 +4,11 @@ declare(strict_types=1);
 
 abstract class AbstractValidator
 {
-    protected array $class = ['invalid-feedback'];
+    abstract public function validate(): array|string|bool;
 
-    abstract public function validate() : string|bool;
-
-    protected function erroMessage(string $errMsg) : string
+    protected function errorMessage(string $errMsg, array $class): string
     {
-        $errMsg = nl2br(htmlspecialchars($errMsg));
-        return "<div class='" . implode(' ', $this->class) . "'>" . $errMsg . '</div>';
+        // $errMsg = nl2br(htmlspecialchars($errMsg));
+        return "<div class='" . implode(' ', $class) . "'>" . $errMsg . '</div>';
     }
 }

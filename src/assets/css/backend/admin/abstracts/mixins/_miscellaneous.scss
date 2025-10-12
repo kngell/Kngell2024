@@ -1,7 +1,20 @@
 @use "sass:map";
 
-@mixin transition($property: all, $duration: 0.2s, $timing: ease) {
-  transition: $property $duration $timing;
+/// Transition mixin
+/// @param {List|String} $properties - Property or list of properties
+/// @param {Time} $duration [0.2s] - Transition duration
+/// @param {String} $timing [ease] - Timing function
+@mixin transition($properties: all, $duration: 0.2s, $timing: ease) {
+  $transition-list: ();
+
+  @if type-of($properties) == "list" {
+    @each $prop in $properties {
+      $transition-list: append($transition-list, $prop + " " + $duration + " " + $timing, comma);
+    }
+    transition: $transition-list;
+  } @else {
+    transition: $properties $duration $timing;
+  }
 }
 
 @mixin flex-center {
@@ -25,9 +38,7 @@
   font: inherit;
   border: none;
   outline: none;
-  background: none;
-  padding: 0;
-  margin: 0;
+  background: transparent;
   box-shadow: none;
 }
 
@@ -38,13 +49,97 @@
 
 @mixin list-reset {
   list-style: none; /* Removes the bullet points or numbers */
-  padding: 0; /* Removes default padding */
-  margin: 0; /* Removes default margin */
 }
 
 @mixin heading-reset {
   font-size: inherit; // Inherits font size from parent
   font-weight: inherit; // Inherits font weight
-  margin: 0; // Removes default margins
-  padding: 0; // Removes default padding
 }
+
+@mixin textarea-reset {
+  border: none;
+  background: none;
+  resize: vertical;
+  font: inherit;
+  color: inherit;
+  line-height: inherit;
+  outline: 1px solid transparent;
+}
+
+@mixin select-reset() {
+  appearance: none; // Remove default arrow
+  -webkit-appearance: none; // Chrome/Safari
+  -moz-appearance: none; // Firefox
+  background: transparent; // Remove background
+  border: none; // Remove default border
+  outline: none; // Remove focus outline
+  font: inherit; // Use inherited font
+  color: inherit; // Use inherited text color
+  padding: 0; // Reset padding
+  margin: 0; // Reset margin
+  width: 100%; // Fill container
+  line-height: normal;
+  cursor: pointer; // Indicate it's clickable
+
+  &:focus {
+    outline: none;
+  }
+
+  &::-ms-expand {
+    display: none; // Remove arrow in IE
+  }
+
+  option {
+    padding: 0.8rem 1.2rem;
+    font-size: inherit;
+    color: inherit;
+  }
+}
+
+@mixin reset-fieldset($border-color: transparent, $border-radius: 0, $remove-legend: false) {
+  border: 1px solid $border-color;
+  border-radius: $border-radius;
+  min-width: 0;
+
+  legend {
+    font: inherit;
+    min-inline-size: 0;
+
+    @if $remove-legend {
+      display: none;
+    }
+  }
+}
+
+@mixin asterix($gap: 0.2em, $font-size: 1.2rem, $line-height: 1, $color: null) {
+  display: inline-flex;
+  align-items: flex-start; // Ensure top alignment
+  gap: $gap;
+
+  &::after {
+    content: "*";
+    @if $color != null {
+      color: $color;
+    }
+    font-size: $font-size;
+    line-height: $line-height;
+    // Remove vertical-align: super - it doesn't work in flex context
+    align-self: flex-start; // Use flex alignment instead
+    margin-top: 0.1em; // Fine-tune vertical position if needed
+  }
+}
+
+// @mixin asterix($gap: 0.2em, $font-size: 1.2rem, $line-height: 1, $color: null) {
+//   display: inline;
+
+//   &::after {
+//     content: "*";
+//     @if $color != null {
+//       color: $color;
+//     }
+//     font-size: $font-size;
+//     line-height: $line-height;
+//     vertical-align: top; // Consistent top alignment
+//     margin-left: $gap; // Use margin instead of gap
+//   }
+// }

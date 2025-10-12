@@ -10,9 +10,10 @@
     "sidebar header"
     "sidebar main"
     "sidebar footer";
-  min-block-size: 100vh;
-  min-block-size: 100dvh;
-  transition: grid-template-columns 0.3s ease;
+  height: 100dvh;
+  min-height: 100dvh; // safety for mobile
+  // overflow: hidden; // no extra scroll
+  @include transition((grid-template-columns), 0.3s, ease-in-out);
   &__header {
     grid-area: header;
     position: sticky;
@@ -27,11 +28,14 @@
     min-height: 100dvh;
     height: 100dvh;
     overflow-y: auto;
+    overflow-x: hidden; // keep horizontal hidden
+    border-right: 1px solid map-deep-get($color-neutral, gray, gray-50);
+    background-color: map-deep-get($color-neutral, white);
+    box-shadow: 0.4rem 0 3rem 0 rgba(131, 98, 234, 0.05);
+    transition: all 0.3s ease-in-out;
+    text-wrap: nowrap;
     scrollbar-width: thin;
     z-index: 100;
-    &::-webkit-scrollbar {
-      width: 0.6rem; // optional styling
-    }
     &::-webkit-scrollbar-thumb {
       background-color: rgba(0, 0, 0, 0.2);
       border-radius: 0.3rem;
@@ -39,6 +43,7 @@
   }
   &__main {
     grid-area: main;
+    overflow: hidden;
   }
   &__footer {
     grid-area: footer;

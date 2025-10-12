@@ -71,9 +71,166 @@ session:
     pdo_storage:
       class: PdoSessionStorage
 
+#============================================
+# Validation messages - Centralized for both client and server
+#============================================
+validation:
+  # Global validation settings
+  settings:
+    stop_on_first_error: false
+    sanitize_input: true
+    validate_all_fields: false
+    skip_missing_fields: true
+    default_locale: "en"
+    fallback_messages: true
+
+  # Core validation messages
+  messages:
+    # Basic field validators
+    required: "%s is required."
+    min: "%s must be at least %s characters."
+    max: "%s must be at most %s characters."
+    pattern: "%s format is invalid."
+    numeric: "%s must be a number."
+    integer: "%s must be a whole number."
+    decimal: "%s must be a decimal number."
+    boolean: "%s must be true or false."
+
+    # Number comparisons
+    min_value: "%s must be at least %s."
+    max_value: "%s must be at most %s."
+    lte: "%s must be less than or equal to %s."
+    gte: "%s must be greater than or equal to %s."
+    lt: "%s must be less than %s."
+    gt: "%s must be greater than %s."
+
+    # Conditional validators
+    required_if: "%s is required when %s is present."
+    required_with: "%s is required when %s is present."
+    required_without: "%s is required when %s is not present."
+
+    # Array validators (for variations system)
+    array: "%s must be an array."
+    max_items: "%s cannot have more than %s items."
+    min_items: "%s must have at least %s items."
+
+    # Type validators
+    email: "%s must be a valid email address."
+    url: "%s must be a valid URL."
+    date: "%s must be a valid date."
+    datetime: "%s must be a valid date and time."
+    time: "%s must be a valid time."
+
+    # File validators
+    file: "%s must be a file."
+    image: "%s must be an image."
+    mimes: "%s must be a file of type: %s."
+    max_size: "%s must not be larger than %s kilobytes."
+
+    # String validators
+    alpha: "%s must contain only letters."
+    alpha_num: "%s must contain only letters and numbers."
+    alpha_dash: "%s must contain only letters, numbers, dashes and underscores."
+
+    # Comparison validators
+    same: "%s must match %s."
+    different: "%s must be different from %s."
+
+    # Custom business rules
+    unique: "%s already exists."
+    exists: "Selected %s is invalid."
+    password_match: "Passwords do not match."
+    strong_password: "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character."
+
+  # Product-specific validation messages (for variations)
+  product_messages:
+    sku:
+      pattern: "SKU can only contain letters, numbers, hyphens, and underscores."
+      unique: "This SKU is already in use."
+    variations:
+      array: "Product variations must be provided as an array."
+      max_items: "Cannot have more than %s variations."
+    variation_sku:
+      pattern: "Variation SKU can only contain letters, numbers, hyphens, and underscores."
+      unique: "This variation SKU is already in use."
+    price:
+      min_value: "Price cannot be negative."
+    stock_quantity:
+      integer: "Stock quantity must be a whole number."
+      min_value: "Stock quantity cannot be negative."
+    weight:
+      min_value: "Weight cannot be negative."
+
+  # CSS classes for error display
+  classes:
+    hint:
+      - input-box__hint-text
+      - invalid-feedback
+    error:
+      - has-error
+      - error-field
+    parent_error:
+      - has-error
+      - error-container
+    success:
+      - valid-feedback
+      - is-valid
+
+  # Validation groups for different scenarios
+  groups:
+    create:
+      - required
+      - min
+      - max
+      - pattern
+    update:
+      - required
+      - min
+      - max
+    quick:
+      - required
+    strict:
+      - required
+      - min
+      - max
+      - pattern
+      - custom
+
+  # Field-specific custom messages
+  field_messages:
+    email:
+      required: "Please enter your email address."
+      email: "Please enter a valid email address."
+    password:
+      required: "Please enter a password."
+      min: "Password must be at least 8 characters."
+      strong_password: "Password must include uppercase, lowercase, number, and special character."
+    variations[][name]:
+      required: "Variation name is required."
+      min: "Variation name must be at least 1 character."
+    variations[][sku]:
+      required: "Variation SKU is required."
+      pattern: "Variation SKU can only contain letters, numbers, hyphens, and underscores."
+    variations[][attributes][][attribute_name]:
+      required: "Attribute name is required."
+    variations[][attributes][][attribute_value]:
+      required: "Attribute value is required."
+
+  # Localization support
+  locales:
+    en:
+      required: "%s is required."
+      min: "%s must be at least %s characters."
+    fr:
+      required: "%s est requis."
+      min: "%s doit contenir au moins %s caractères."
+    es:
+      required: "%s es requerido."
+      min: "%s debe tener al menos %s caracteres."
+
 # CACHE CONFIGURATIONS
-#=============================================================================
-#=============================================================================
+#================================
+#================================
 cache:
   cache_name: system_cache
   use_cache: true
@@ -93,49 +250,13 @@ cache:
       class: PdoCacheStorage
       default: false
 
-# SYSTEM CONFIGURATIONS
-#=============================================================================
-#=============================================================================
-system:
-  use_resolvable_method: false
-  use_session: true
-  use_cookie: true
-  logger:
-    use_logger: true
-    log:
-    - warnings
-    - errors
-    - critical
-    - exceptions
-    log_path: /Storage/Logs/
-  use_translations: true
-  use_csrf: true
-  use_honeypot: true
-  use_hash_cost_factor: 10
-  use_auto_password: false,
-  use_auth: true
-  activation_token_expiration: 3600
-  default_status: "pending"
-  super_role:
-    props: { name: Super, id: 1, description: Roles which contains all priviledges }
-  default_role:
-    props: { name: Subscriber, id: 2, description: Role which allows basic user access }
-
-# GRAVATAR CONFIGURATIONS
-#=============================================================================
-#=============================================================================
-gravatar:
-  rating: R
-  size: 200
-  default: mystery #monsterid, identicon, wavatar, blank, default, mystery
-
 # SECURITY CONFIGURATIONS
 #=============================================================================
 #=============================================================================
 security:
   password_pattern: '(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}'
   url_pattern: "https?://.+"
-  search_pattern: "[^'\"]+"
+  search_pattern: '[^''"]+'
   email_pattern: '[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$'
   tel_pattern: "[0-9]{3}-[0-9]{3}-[0-9]{4}"
   random_pass_char: 9
@@ -188,20 +309,20 @@ logger_handler:
 # menu item. If you want a particular controller to not be accessible from the admin menu. You will need to
 # list it in the array below
 disallowed_controllers:
-- home
-- security
-- password
-- activation
-- registration
-- profile
-- account
-- install
-- accessDenied
-- admin
-- event
-- notification
-- userRole
-- logout
+  - home
+  - security
+  - password
+  - activation
+  - registration
+  - profile
+  - account
+  - install
+  - accessDenied
+  - admin
+  - event
+  - notification
+  - userRole
+  - logout
 
 # TEMPLATES CONFIGURATIONS
 #=============================================================================
@@ -220,5 +341,5 @@ token_expired:
   title: Token Expired
   message: Its seem the requested token has expired. Possible reasons could be.
   reasons:
-  - The token was already use to reset the password
-  - The token has pass the expiration time.
+    - The token was already use to reset the password
+    - The token has pass the expiration time.

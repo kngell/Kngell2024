@@ -14,7 +14,7 @@ class App extends AbstractApp
         ContainerClassRegistrator::register($this);
     }
 
-    public function boot() : self
+    public function boot(): self
     {
         $this->loadErrorHandlers();
         $this->loadSession();
@@ -26,14 +26,14 @@ class App extends AbstractApp
         return $this;
     }
 
-    public function run(string $url = '', array $params = []) : void
+    public function run(string $url = '', array $params = []): void
     {
         $response = $this->rooter->handle($this->request, $this, $url, $params);
         $response->prepare($this->request);
         $response->send();
     }
 
-    public function runError(string $url, array $params = []) : void
+    public function runError(string $url, array $params = []): void
     {
         $this->run($url, $params);
     }

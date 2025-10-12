@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 class ButtonElement extends AbstractHtmlElement
 {
-    private string $name;
-    private string $value;
     private string $type;
     private bool $autofocus;
     private string $command;
@@ -35,6 +33,7 @@ class ButtonElement extends AbstractHtmlElement
 
     /**
      * @param string $name
+     *
      * @return ButtonElement
      */
     public function name(string $name): self
@@ -45,6 +44,7 @@ class ButtonElement extends AbstractHtmlElement
 
     /**
      * @param mixed $value
+     *
      * @return ButtonElement
      */
     public function value(mixed $value): self
@@ -55,6 +55,7 @@ class ButtonElement extends AbstractHtmlElement
 
     /**
      * @param string $id
+     *
      * @return ButtonElement
      */
     public function id(string $id): self
@@ -65,6 +66,7 @@ class ButtonElement extends AbstractHtmlElement
 
     /**
      * @param string ...$class
+     *
      * @return ButtonElement
      */
     public function class(string ...$class): self
@@ -75,6 +77,7 @@ class ButtonElement extends AbstractHtmlElement
 
     /**
      * @param string $type
+     *
      * @return ButtonElement
      */
     public function type(string $type): self
@@ -85,6 +88,7 @@ class ButtonElement extends AbstractHtmlElement
 
     /**
      * @param bool $autofocus
+     *
      * @return ButtonElement
      */
     public function autofocus(bool $autofocus): self
@@ -95,6 +99,7 @@ class ButtonElement extends AbstractHtmlElement
 
     /**
      * @param string $command
+     *
      * @return ButtonElement
      */
     public function command(string $command): self
@@ -105,6 +110,7 @@ class ButtonElement extends AbstractHtmlElement
 
     /**
      * @param string $commandfor
+     *
      * @return ButtonElement
      */
     public function commandfor(string $commandfor): self
@@ -115,6 +121,7 @@ class ButtonElement extends AbstractHtmlElement
 
     /**
      * @param bool $disabled
+     *
      * @return ButtonElement
      */
     public function disabled(bool $disabled): self
@@ -125,6 +132,7 @@ class ButtonElement extends AbstractHtmlElement
 
     /**
      * @param string $form
+     *
      * @return ButtonElement
      */
     public function form(string $form): self
@@ -135,6 +143,7 @@ class ButtonElement extends AbstractHtmlElement
 
     /**
      * @param string $formaction
+     *
      * @return ButtonElement
      */
     public function formaction(string $formaction): self
@@ -145,6 +154,7 @@ class ButtonElement extends AbstractHtmlElement
 
     /**
      * @param string $formenctype
+     *
      * @return ButtonElement
      */
     public function formenctype(string $formenctype): self
@@ -155,6 +165,7 @@ class ButtonElement extends AbstractHtmlElement
 
     /**
      * @param string $formmethod
+     *
      * @return ButtonElement
      */
     public function formmethod(string $formmethod): self
@@ -165,6 +176,7 @@ class ButtonElement extends AbstractHtmlElement
 
     /**
      * @param bool $formnovalidate
+     *
      * @return ButtonElement
      */
     public function formnovalidate(bool $formnovalidate): self
@@ -175,6 +187,7 @@ class ButtonElement extends AbstractHtmlElement
 
     /**
      * @param string $formtarget
+     *
      * @return ButtonElement
      */
     public function formtarget(string $formtarget): self
@@ -185,6 +198,7 @@ class ButtonElement extends AbstractHtmlElement
 
     /**
      * @param string $popovertarget
+     *
      * @return ButtonElement
      */
     public function popovertarget(string $popovertarget): self
@@ -195,6 +209,7 @@ class ButtonElement extends AbstractHtmlElement
 
     /**
      * @param string $popovertargetaction
+     *
      * @return ButtonElement
      */
     public function popovertargetaction(string $popovertargetaction): self
@@ -206,6 +221,7 @@ class ButtonElement extends AbstractHtmlElement
     /**
      * @param string $content
      * @param bool $contentUp
+     *
      * @return ButtonElement
      */
     public function content(string $content, bool $contentUp = true): self
@@ -217,6 +233,7 @@ class ButtonElement extends AbstractHtmlElement
 
     /**
      * @param int $tabindex
+     *
      * @return ButtonElement
      */
     public function tabindex(int $tabindex): self

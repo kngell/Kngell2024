@@ -1,0 +1,139 @@
+@use "sass:map";
+@use "css/backend/admin/abstracts/variables" as *;
+@use "css/backend/admin/abstracts/functions" as *;
+
+@use "text-style" as *;
+
+@mixin progress-bar(
+  $width: 100%,
+  $height: 0.6rem,
+  $progress-color: #007bff,
+  $background-color: #e9ecef,
+  $border-radius: 1.2rem,
+  $show-percentage: false,
+  // New parameter
+  $percentage-position: outside,
+  // outside or inside
+  $percentage-color: null,
+  // Custom percentage color
+  $container-gap: 1rem // Gap between bar and percentage
+) {
+  @if $show-percentage and $percentage-position == outside {
+    // Container for bar + percentage
+    display: flex;
+    align-items: center;
+    gap: $container-gap;
+
+    .completeness-progress {
+      @include progress-bar-internal(
+        $width,
+        $height,
+        $progress-color,
+        $background-color,
+        $border-radius,
+        $show-percentage,
+        $percentage-position
+      );
+    }
+
+    .completeness-percentage {
+      @include progress-percentage(
+        $percentage-color,
+        $text-style: (
+          $text-m,
+          medium,
+          (
+            color: if(
+                $percentage-color,
+                $percentage-color,
+                map-deep-get($color-neutral, black, black-700)
+              )
+          )
+        )
+      );
+      min-width: 3rem;
+    }
+  } @else {
+    // Single progress bar (original behavior)
+    @include progress-bar-internal(
+      $width,
+      $height,
+      $progress-color,
+      $background-color,
+      $border-radius,
+      $show-percentage,
+      $percentage-position
+    );
+
+    @if $show-percentage and $percentage-position == inside {
+      // Percentage inside the bar
+      .completeness-percentage {
+        @include progress-percentage(
+          $percentage-color: if($percentage-color, $percentage-color, white),
+          $text-style: (
+            $text-s,
+            bold,
+            (color: if($percentage-color, $percentage-color, white)),
+          )
+        );
+      }
+    }
+  }
+}
+
+// Internal progress bar styles (without container)
+@mixin progress-bar-internal(
+  $width: 100%,
+  $height: 0.6rem,
+  $progress-color: #007bff,
+  $background-color: #e9ecef,
+  $border-radius: 1.2rem,
+  $show-percentage: false,
+  $percentage-position: outside
+) {
+  position: relative;
+  width: $width;
+  height: $height;
+  background-color: $background-color;
+  border-radius: $border-radius;
+  overflow: hidden;
+
+  &--bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background-color: $progress-color;
+    border-radius: $border-radius;
+    transition: width 0.3s ease;
+
+    @if $show-percentage and $percentage-position == inside {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+}
+
+// Percentage text styles
+@mixin progress-percentage($percentage-color: null, $text-style: null) {
+  @if $text-style {
+    @include text-style($text-style...);
+  } @else {
+    @include text-style(
+      $text-m,
+      medium,
+      (
+        color: if(
+            $percentage-color,
+            $percentage-color,
+            map-deep-get($color-neutral, black, black-700)
+          ),
+      )
+    );
+  }
+
+  @if $percentage-color {
+    color: $percentage-color;
+  }
+}

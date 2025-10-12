@@ -161,7 +161,7 @@ trait ControllerGettersAndSetters
         return $this;
     }
 
-    protected function setLayout(string $layout) : void
+    protected function layout(string $layout): void
     {
         $this->layout = $layout;
     }
@@ -170,7 +170,7 @@ trait ControllerGettersAndSetters
      * @param Model $model
      * @return void
      */
-    protected function currentModel(Model $model) : void
+    protected function currentModel(Model $model): void
     {
         $this->currentModel = $model;
     }

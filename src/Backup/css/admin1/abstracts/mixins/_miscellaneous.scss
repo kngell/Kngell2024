@@ -1,7 +1,15 @@
 @use "sass:map";
 
-@mixin transition($property: all, $duration: 0.2s, $timing: ease) {
-  transition: $property $duration $timing;
+@mixin transition($properties: all, $duration: 0.2s, $timing: ease) {
+  $transition-list: ();
+  @if length($properties) == 1 {
+    transition: nth($properties, 1) $duration $timing;
+  } @else {
+    @each $prop in $properties {
+      $transition-list: append($transition-list, $prop + " " + $duration + " " + $timing, comma);
+    }
+    transition: join($transition-list, comma);
+  }
 }
 
 @mixin flex-center {

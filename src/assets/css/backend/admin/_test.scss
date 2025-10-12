@@ -1,0 +1,22 @@
+// test-dart-sass.scss
+@use "sass:list";
+@use "sass:meta";
+
+// .test {
+//   content: inspect(list.is-list((1, 2, 3)));
+// }
+.test-backend-list {
+  content: inspect(list.nth((1, 2, 3), 2)); // This should work
+  // content: inspect(list.is-list((1, 2, 3))); // This might fail
+}
+
+.test-list {
+  content: inspect(meta.global-variable-exists("list"));
+  function-exists: meta.function-exists("is-list", "list");
+  type-check: type-of((1, 2, 3)) == list;
+}
+
+.test-modern {
+  has-map: meta.global-variable-exists("map");
+  has-math: meta.global-variable-exists("math");
+}

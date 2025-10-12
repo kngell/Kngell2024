@@ -14,7 +14,6 @@ class FormBuilder extends AbstractHtmlElement
     protected string $acceptCharset;
     protected string $autocapitalize;
     protected bool $novalidate;
-    protected string $role;
 
     public function __construct(TokenInterface $token)
     {
@@ -25,7 +24,7 @@ class FormBuilder extends AbstractHtmlElement
     /**
      * @return self
      */
-    public function form() : self
+    public function form(): self
     {
         return new self($this->token);
     }
@@ -46,9 +45,10 @@ class FormBuilder extends AbstractHtmlElement
 
     /**
      * @param string $type
+     *
      * @return AbstractInput
      */
-    public function input(string $type) : AbstractInput
+    public function input(string $type): AbstractInput
     {
         $inputType = ucfirst(strtolower($type)) . 'Type';
         try {
@@ -60,9 +60,10 @@ class FormBuilder extends AbstractHtmlElement
 
     /**
      * @param string|null $message
+     *
      * @return LabelElement
      */
-    public function label(string|null $message = null) : LabelElement
+    public function label(string|null $message = null): LabelElement
     {
         return new LabelElement($message);
     }
@@ -70,7 +71,7 @@ class FormBuilder extends AbstractHtmlElement
     /**
      * @return TextAreaElement
      */
-    public function textArea() : TextAreaElement
+    public function textArea(): TextAreaElement
     {
         return new TextAreaElement();
     }
@@ -78,31 +79,37 @@ class FormBuilder extends AbstractHtmlElement
     /**
      * @return SelectElement
      */
-    public function select() : SelectElement
+    public function select(): SelectElement
     {
         return new SelectElement($this->token);
+    }
+
+    public function option(string $key, string $content): SelectOption
+    {
+        return new SelectOption($key, $content);
     }
 
     /**
      * @return ButtonElement
      */
-    public function button(string $type = '') : ButtonElement
+    public function button(string $type = ''): ButtonElement
     {
         return new ButtonElement($type);
     }
 
-    public function tag(string $tag) : HtmlBuilder|HtmlaElement|HtmlTagElement|self
+    public function tag(string $tag): HtmlBuilder|HtmlaElement|HtmlTagElement|self
     {
         return (new HtmlBuilder($this->token))->tag($tag);
     }
 
-    public function htmlBlock() : HtmlBlockElement
-    {
-        return new HtmlBlockElement();
-    }
+    // public function htmlBlock(): HtmlBlockElement
+    // {
+    //     return new HtmlBlockElement();
+    // }
 
     /**
      * @param string $action
+     *
      * @return FormBuilder
      */
     public function action(string $action): self
@@ -113,6 +120,7 @@ class FormBuilder extends AbstractHtmlElement
 
     /**
      * @param string $target
+     *
      * @return FormBuilder
      */
     public function target(string $target): self
@@ -123,6 +131,7 @@ class FormBuilder extends AbstractHtmlElement
 
     /**
      * @param string $method
+     *
      * @return FormBuilder
      */
     public function method(string $method): self
@@ -133,6 +142,7 @@ class FormBuilder extends AbstractHtmlElement
 
     /**
      * @param string $autocomplete
+     *
      * @return FormBuilder
      */
     public function autocomplete(string $autocomplete): self
@@ -143,6 +153,7 @@ class FormBuilder extends AbstractHtmlElement
 
     /**
      * @param string $enctype
+     *
      * @return FormBuilder
      */
     public function enctype(string $enctype): self
@@ -151,8 +162,21 @@ class FormBuilder extends AbstractHtmlElement
         return $this;
     }
 
+    public function role(string $role): self
+    {
+        $this->role = $role;
+        return $this;
+    }
+
+    public function ariaLabel(string $ariaLabel): self
+    {
+        $this->ariaLabel = $ariaLabel;
+        return $this;
+    }
+
     /**
      * @param string $rel
+     *
      * @return FormBuilder
      */
     public function rel(string $rel): self
@@ -163,6 +187,7 @@ class FormBuilder extends AbstractHtmlElement
 
     /**
      * @param string $acceptCharset
+     *
      * @return FormBuilder
      */
     public function acceptCharset(string $acceptCharset): self
@@ -173,6 +198,7 @@ class FormBuilder extends AbstractHtmlElement
 
     /**
      * @param string $autocapitalize
+     *
      * @return FormBuilder
      */
     public function autocapitalize(string $autocapitalize): self
@@ -183,6 +209,7 @@ class FormBuilder extends AbstractHtmlElement
 
     /**
      * @param bool $novalidate
+     *
      * @return FormBuilder
      */
     public function novalidate(bool $novalidate): self
@@ -193,21 +220,12 @@ class FormBuilder extends AbstractHtmlElement
 
     /**
      * @param string $name
+     *
      * @return FormBuilder
      */
     public function name(string $name): self
     {
         $this->name = $name;
-        return $this;
-    }
-
-    /**
-     * @param string $role
-     * @return FormBuilder
-     */
-    public function role(string $role): self
-    {
-        $this->role = $role;
         return $this;
     }
 
@@ -309,6 +327,7 @@ class FormBuilder extends AbstractHtmlElement
 
     /**
      * @param string ...$class
+     *
      * @return FormBuilder
      */
     public function class(string ...$class): self

@@ -62,3 +62,9 @@ if (document.readyState !== "loading") {
     new Main();
   });
 }
+
+console.log("🚀 FRONTEND main.js loaded", {
+  file: "frontend/main/main.js",
+  path: window.location.pathname,
+  timestamp: Date.now(),
+});

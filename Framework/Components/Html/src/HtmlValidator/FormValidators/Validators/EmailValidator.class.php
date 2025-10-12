@@ -10,22 +10,22 @@ class EmailValidator extends AbstractValidator
     public function __construct(
         private readonly string $display,
         private readonly mixed $inputValue,
-        private readonly mixed $ruleValue
+        private readonly mixed $ruleValue,
     ) {
     }
 
-    public function validate(): string|bool
+    public function validate(): array|string|bool
     {
         // Skip validation if field is empty (let RequiredValidator handle it)
         if (empty($this->inputValue)) {
             return false;
         }
 
-        if (! is_string($this->inputValue)) {
-            return $this->erroMessage(sprintf(self::ERROR_MESSAGE, $this->display));
+        if (!is_string($this->inputValue)) {
+            return $this->errorMessage(sprintf(self::ERROR_MESSAGE, $this->display));
         }
 
-        if (! $this->isValidEmailFormat($this->inputValue)) {
+        if (!$this->isValidEmailFormat($this->inputValue)) {
             return $this->erroMessage(sprintf(self::ERROR_MESSAGE, $this->display));
         }
 
@@ -40,12 +40,12 @@ class EmailValidator extends AbstractValidator
         }
 
         // Basic format validation
-        if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             return false;
         }
 
         // Additional checks for common issues
-        if (! $this->hasValidDomainPart($email)) {
+        if (!$this->hasValidDomainPart($email)) {
             return false;
         }
 

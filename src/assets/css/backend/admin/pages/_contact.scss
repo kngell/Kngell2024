@@ -1,0 +1,80 @@
+@use "css/backend/admin/abstracts" as *;
+
+/*--------------- PRODUCT ADD -------------*/
+
+.contact {
+  grid-template-rows: min-content 1fr;
+  gap: 2.4rem;
+  &__header {
+    display: flex;
+    align-items: flex-end;
+    gap: 2.4rem;
+    align-self: stretch;
+    .title {
+      @include page-title;
+    }
+    .user-action {
+      display: flex;
+      align-items: flex-start;
+      gap: 1.6rem;
+    }
+    @include respond-above(md) {
+      grid-column: 1 / -1;
+    }
+  }
+  &__body {
+    .frm-wrapper {
+      padding: 2.4rem;
+      background-color: map-deep-get($color-neutral, white);
+      border-radius: map-deep-get($radius, m);
+      max-inline-size: 70rem;
+      margin-inline: auto;
+      &__form {
+        display: grid;
+        gap: 1.4rem;
+        @include respond-above(md) {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .input-box {
+          @include form-field(
+            $types: (
+              text,
+              textarea,
+              email,
+              checkbox,
+              radio,
+            ),
+            $options: (
+              floating: false,
+              radio-pile-style: true,
+              checkbox-required: true,
+              border-color: map-deep-get($color-neutral, gray, gray-100),
+              radius: map-deep-get($radius, s),
+              padding: 0.8em 1.2em,
+            )
+          );
+        }
+        // .input-box--radio,
+        // .input-box--checkbox {
+        //   @include pill-style;
+        // }
+        .radio-group {
+          display: grid;
+          grid-template-columns: inherit;
+          gap: inherit;
+          &:has([required]) {
+            .radio-group__legend {
+              @include asterix;
+            }
+          }
+        }
+      }
+    }
+
+    @include respond-above(md) {
+      grid-column: 1 / -1;
+      height: 100vh;
+      overflow-y: auto;
+    }
+  }
+}

@@ -15,7 +15,7 @@
            <div class="menu-box__main-menu">
                <ul class="menu-list">
                    <li class="menu-list__item">
-                       <a href="#" class="menu-list__item--link<?= $dashboardActive ?? ''?>">
+                       <a href="/admin/index" class="menu-list__item--link">
                            <svg class="icon home" aria-label="Home" role="img">
                                <use href="<?= $this->asset('img/icons-sprite.svg') ?>#icon-dashboard" class="image">
                                </use>
@@ -23,9 +23,18 @@
                            <span>Dashboard</span>
                        </a>
                    </li>
-                   <li class="menu-list__item<?= $productListActive ?? ''?>">
+                   <li class="menu-list__item">
+                       <a href="/admin/contact" class="menu-list__item--link">
+                           <svg class="icon contact" aria-label="Contact" role="img">
+                               <use href="<?= $this->asset('img/icons-sprite.svg') ?>#icon-email" class="image">
+                               </use>
+                           </svg>
+                           <span>Contact</span>
+                       </a>
+                   </li>
+                   <li class="menu-list__item">
                        <button class="menu-list__item--dropdown-button">
-                           <svg class="icon product" aria-label="Product" role="img">
+                           <svg class="icon produc-icon" aria-label="Product" role="img">
                                <use href="<?= $this->asset('img/icons-sprite.svg') ?>#icon-shopping-bag" class="image">
                                </use>
                            </svg>
@@ -35,10 +44,10 @@
                                </use>
                            </svg>
                        </button>
-                       <ul class="menu-list__item--dropdown-menu show">
+                       <ul class="menu-list__item--dropdown-menu">
                            <li role="presentation" class="wrapper">
                                <ul class="dropdown-list">
-                                   <li class="dropdown-list__item active">
+                                   <li class="dropdown-list__item">
                                        <a href="/admin/product-list" class="dropdown-list__item--link">
                                            Product List
                                        </a>
@@ -46,6 +55,11 @@
                                    <li class="dropdown-list__item">
                                        <a href="/admin/product-add" class="dropdown-list__item--link">
                                            Add Product
+                                       </a>
+                                   </li>
+                                   <li class="dropdown-list__item">
+                                       <a href="/admin/product-edit" class="dropdown-list__item--link">
+                                           Edit Product
                                        </a>
                                    </li>
                                </ul>

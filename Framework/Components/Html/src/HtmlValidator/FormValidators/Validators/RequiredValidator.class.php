@@ -4,19 +4,20 @@ declare(strict_types=1);
 
 class RequiredValidator extends AbstractValidator
 {
-    private const string ERROR_MESSAGE = '%s is required';
-
     public function __construct(
+        private readonly array $errorParams,
         private readonly string $display,
         private readonly mixed $inputValue,
-        private readonly mixed $ruleValue
     ) {
     }
 
-    public function validate(): string|bool
+    public function validate(): array|string|bool
     {
         if ($this->isEmpty($this->inputValue)) {
-            return $this->erroMessage(sprintf(self::ERROR_MESSAGE, $this->display));
+            return $this->errorMessage(
+                sprintf($this->errorParams['message'], $this->display),
+                $this->errorParams['classes'],
+            );
         }
         return false;
     }

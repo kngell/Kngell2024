@@ -28,7 +28,7 @@ class HtmlTagElement extends AbstractHtmlComponent
      * @param string|null $content
      * @return HtmlTagElement
      */
-    public function content(?string $content) : self
+    public function content(?string $content): self
     {
         $this->content = $content;
         return $this;
@@ -48,7 +48,7 @@ class HtmlTagElement extends AbstractHtmlComponent
      * @param string|null $src
      * @return HtmlTagElement
      */
-    public function src(string|null $src) : self
+    public function src(string|null $src): self
     {
         $this->src = $src;
         return $this;
@@ -58,7 +58,7 @@ class HtmlTagElement extends AbstractHtmlComponent
      * @param string $alt
      * @return HtmlTagElement
      */
-    public function alt(string $alt) : self
+    public function alt(string $alt): self
     {
         $this->alt = $alt;
         return $this;
@@ -231,6 +231,12 @@ class HtmlTagElement extends AbstractHtmlComponent
     public function translate(string $translate): self
     {
         $this->translate = $translate;
+        return $this;
+    }
+
+    public function href(string $href): self
+    {
+        $this->href = $href;
         return $this;
     }
 }

@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 $this->start('head'); ?>
 <!-------Costum-------->
-<?= $this->css('path') ?>
+<?= $this->css('css/backend/admin/pages/product-list') ?>
 <?php $this->end(); ?>
 <?php $this->start('body'); ?>
 <main class="dashboard__main main product-list" id="main">
@@ -20,7 +20,6 @@ $this->start('head'); ?>
                     </li>
                 </ul>
             </nav>
-
         </div>
         <div class="user-action">
             <button class="btn btn--secondary btn--md-compact btn--icon-left">
@@ -95,16 +94,31 @@ $this->start('head'); ?>
             <thead class="table__head">
                 <tr class="table__head--row">
                     <th scope="col" class="table__head--row-cell">
-                        <div class="header-cell-product">
-                            <span id="select-all-label" class="visually-hidden">Select all products</span>
-                            <input type="checkbox" id="select-all" aria-labelledby="select-all-label">
-                            <label for="select-all" class="header-cell-product__label">
-                                products</label>
-                            <span class="icon-container">
-                                <svg class="icon arrow-down" aria-label="Arrow Down" role="img">
-                                    <use href="<?= $this->asset('img/icons-sprite.svg') ?>#icon-arrow-down"></use>
-                                </svg>
-                            </span>
+                        <div class="header-cell">
+                            <div class="header-cell__top-row">
+                                <!-- Checkbox for select all -->
+                                <div class="checkbox-box">
+                                    <span id="select-all-label" class="visually-hidden">Select all products</span>
+                                    <input type="checkbox" id="select-all" class="checkbox-box__input"
+                                        aria-labelledby="select-all-label" />
+                                    <label for="select-all" class="checkbox-box__label">products</label>
+                                </div>
+                                <!-- Separate dropdown for advanced selection -->
+                                <div class="dropdown-container">
+                                    <button class="dropdown-container__btn" aria-expanded="false"
+                                        aria-controls="advanced-selection">
+                                        <svg class="icon arrow-down" aria-hidden="true">
+                                            <use href="<?= $this->asset('img/icons-sprite.svg') ?>#icon-arrow-down">
+                                            </use>
+                                        </svg>
+                                    </button>
+
+                                    <div id="advanced-selection" class="dropdown-container__dropdown" hidden>
+                                        <!-- Advanced selection options -->
+                                    </div>
+                                </div>
+                            </div>
+                            <span class="header-cell__hint-text"></span>
                         </div>
                     </th>
                     <th scope="col" class="table__head--row-cell">
@@ -115,47 +129,95 @@ $this->start('head'); ?>
                     </th>
                     <th scope="col" class="table__head--row-cell">
                         <div class="header-cell">
-                            <span>Stock</span>
-                            <span class="icon-container">
-                                <svg class="icon arrow-down" aria-label="Arrow Down" role="img">
-                                    <use href="<?= $this->asset('img/icons-sprite.svg') ?>#icon-arrow-down"></use>
-                                </svg>
-                            </span>
+                            <div class="header-cell__top-row">
+                                <span>Stock</span>
+                                <div class="dropdown-container">
+                                    <button class="dropdown-container__btn" aria-expanded="false"
+                                        aria-controls="advanced-selection">
+                                        <svg class="icon arrow-down" aria-hidden="true">
+                                            <use href="<?= $this->asset('img/icons-sprite.svg') ?>#icon-arrow-down">
+                                            </use>
+                                        </svg>
+                                    </button>
+
+                                    <div id="advanced-selection" class="dropdown-container__dropdown" hidden>
+                                        <!-- Advanced selection options -->
+                                    </div>
+                                </div>
+                            </div>
+                            <span class="header-cell__hint-text"></span>
                         </div>
 
                     </th>
                     <th scope="col" class="table__head--row-cell">
                         <div class="header-cell">
-                            <span>Price</span>
-                            <span class="icon-container">
-                                <svg class="icon arrow-down" aria-label="Arrow Down" role="img">
-                                    <use href="<?= $this->asset('img/icons-sprite.svg') ?>#icon-arrow-down"></use>
-                                </svg>
-                            </span>
-                        </div>
+                            <div class="header-cell__top-row">
+                                <!-- Header label -->
+                                <span>Price</span>
+                                <!-- Separate dropdown for advanced selection -->
+                                <div class="dropdown-container">
+                                    <button class="dropdown-container__btn" aria-expanded="false"
+                                        aria-controls="advanced-selection">
+                                        <svg class="icon arrow-down" aria-hidden="true">
+                                            <use href="<?= $this->asset('img/icons-sprite.svg') ?>#icon-arrow-down">
+                                            </use>
+                                        </svg>
+                                    </button>
 
+                                    <div id="advanced-selection" class="dropdown-container__dropdown" hidden>
+                                        <!-- Advanced selection options -->
+                                    </div>
+                                </div>
+                            </div>
+                            <span class="header-cell__hint-text"></span>
+                        </div>
                     </th>
                     <th scope="col" class="table__head--row-cell">
                         <div class="header-cell">
-                            <span>Status</span>
-                            <span class="icon-container">
-                                <svg class="icon arrow-down" aria-label="Arrow Down" role="img">
-                                    <use href="<?= $this->asset('img/icons-sprite.svg') ?>#icon-arrow-down"></use>
-                                </svg>
-                            </span>
-                        </div>
+                            <div class="header-cell__top-row">
+                                <!-- Header label -->
+                                <span>Status</span>
+                                <!-- Separate dropdown for advanced selection -->
+                                <div class="dropdown-container">
+                                    <button class="dropdown-container__btn" aria-expanded="false"
+                                        aria-controls="advanced-selection">
+                                        <svg class="icon arrow-down" aria-hidden="true">
+                                            <use href="<?= $this->asset('img/icons-sprite.svg') ?>#icon-arrow-down">
+                                            </use>
+                                        </svg>
+                                    </button>
 
+                                    <div id="advanced-selection" class="dropdown-container__dropdown" hidden>
+                                        <!-- Advanced selection options -->
+                                    </div>
+                                </div>
+                            </div>
+                            <span class="header-cell__hint-text"></span>
+                        </div>
                     </th>
                     <th scope="col" class="table__head--row-cell">
-                        <div class="header-cell">
-                            <span>Added</span>
-                            <span class="icon-container">
-                                <svg class="icon arrow-down" aria-label="Arrow Down" role="img">
-                                    <use href="<?= $this->asset('img/icons-sprite.svg') ?>#icon-arrow-down"></use>
-                                </svg>
-                            </span>
-                        </div>
 
+                        <div class="header-cell">
+                            <div class="header-cell__top-row">
+                                <!-- Header label -->
+                                <span>Added</span>
+                                <!-- Separate dropdown for advanced selection -->
+                                <div class="dropdown-container">
+                                    <button class="dropdown-container__btn" aria-expanded="false"
+                                        aria-controls="advanced-selection">
+                                        <svg class="icon arrow-down" aria-hidden="true">
+                                            <use href="<?= $this->asset('img/icons-sprite.svg') ?>#icon-arrow-down">
+                                            </use>
+                                        </svg>
+                                    </button>
+
+                                    <div id="advanced-selection" class="dropdown-container__dropdown" hidden>
+                                        <!-- Advanced selection options -->
+                                    </div>
+                                </div>
+                            </div>
+                            <span class="header-cell__hint-text"></span>
+                        </div>
                     </th>
                     <th scope="col" class="table__head--row-cell" aria-label="Actions">
                         <span class="header-cell">Action</span>
@@ -166,12 +228,12 @@ $this->start('head'); ?>
             <tbody class="table__body" aria-describedby="table-desc">
                 <tr class="table__body--row">
                     <th scope="row" class="table__body--row-cell">
-                        <div class="body-cell-product">
+                        <div class="body-cell-product body-cell-product--checkbox">
                             <input type="checkbox" id="product-1" name="products[]" value="1">
                             <label for="product-1" class="body-cell-product__label">
-                                <div class="img-container">
+                                <span class="img-container">
                                     <img src="../../../assets/img/ecommerce/ipad9.png" alt="" class="image">
-                                </div>
+                                </span>
 
                                 <ul class="text-container">
                                     <li class="text-container__name">Product A</li>
@@ -233,12 +295,12 @@ $this->start('head'); ?>
 
                 <tr class="table__body--row">
                     <th scope="row" class="table__body--row-cell">
-                        <div class="body-cell-product">
+                        <div class="body-cell-product body-cell-product--checkbox">
                             <input type="checkbox" id="product-2" name="products[]" value="2">
                             <label for="product-2" class="body-cell-product__label">
-                                <div class="img-container">
+                                <span class="img-container">
                                     <img src="../../../assets/img/ecommerce/camera.png" alt="" class="image">
-                                </div>
+                                </span>
 
                                 <ul class="text-container">
                                     <li class="text-container__name">Product B</li>
@@ -345,6 +407,6 @@ $this->start('head'); ?>
 <?php $this->end(); ?>
 <?php $this->start('footer') ?>
 <!----------custom--------->
-<?= $this->js('path') ?>
+<?= $this->js('js/backend/pages/products-list-main') ?>
 
 <?php $this->end();

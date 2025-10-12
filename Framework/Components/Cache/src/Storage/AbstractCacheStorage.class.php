@@ -16,7 +16,7 @@ abstract class AbstractCacheStorage implements IterableStorageInterface
      *
      * @var string
      */
-    protected string $cacheDirectory = CACHE_DIR;
+    protected string $cacheDirectory;
 
     /**
      * A file extension to use for each cache entry.
@@ -51,6 +51,7 @@ abstract class AbstractCacheStorage implements IterableStorageInterface
     {
         $this->envConfigurations = $envConfigurations;
         $this->options = $options;
+        $this->cacheDirectory = ROOT_DIR . $envConfigurations->getFileCacheBasePath();
     }
 
     /**
@@ -112,7 +113,7 @@ abstract class AbstractCacheStorage implements IterableStorageInterface
      * @return void
      * @api
      */
-    public function next() : void
+    public function next(): void
     {
         if ($this->cacheFilesIterator === null) {
             $this->rewind();
@@ -160,7 +161,7 @@ abstract class AbstractCacheStorage implements IterableStorageInterface
      * @return void
      * @api
      */
-    public function rewind() : void
+    public function rewind(): void
     {
         if ($this->cacheFilesIterator === null) {
             $this->cacheFilesIterator = new DirectoryIterator($this->cacheDirectory);

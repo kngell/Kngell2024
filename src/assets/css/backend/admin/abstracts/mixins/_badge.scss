@@ -1,0 +1,157 @@
+@use "sass:map";
+@use "css/backend/admin/abstracts/variables" as *;
+@use "css/backend/admin/abstracts/functions" as *;
+
+// ---------------------
+// Mixins
+// ---------------------
+
+// Colors
+@mixin badge-colors($bg, $color) {
+  background-color: $bg;
+  color: $color;
+}
+
+@mixin badge-size($token, $padding: 0.2rem 0.8rem) {
+  font-size: map-deep-get($token, font-size);
+  font-weight: map-deep-get($token, font-weight);
+  line-height: map-deep-get($token, line-height);
+  letter-spacing: map-deep-get($token, letter-spacing);
+  padding: $padding;
+  height: calc(#{map-deep-get($token, line-height)} + 0.2rem + 0.8rem);
+}
+
+// Optional icon inside badge
+@mixin badge-icon($position: left, $size: 1em, $gap: 0.4rem) {
+  display: inline-flex;
+  align-items: center;
+  gap: $gap;
+  flex-direction: if($position == right, row-reverse, row);
+
+  .badge__icon {
+    width: $size;
+    height: $size;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+  }
+}
+
+// Base badge styles (common to all badges)
+@mixin badge-base($border-radius: map-deep-get($radius, full)) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: $border-radius;
+  white-space: nowrap;
+}
+
+// Original badge mixin (clean, only for predefined variants)
+@mixin badge(
+  $variant: neutral,
+  $size: md,
+  $has-icon: false,
+  $icon-position: left,
+  $icon-size: 1em,
+  $icon-gap: 0.4rem
+) {
+  @include badge-base();
+
+  // Size handling
+  @if $size == sm {
+    @include badge-size(map-deep-get($text-s, semibold), 0.15rem 0.6rem);
+  } @else if $size == md {
+    @include badge-size(map-deep-get($text-m, semibold), 0.2rem 0.8rem);
+  } @else if $size == lg {
+    @include badge-size(map-deep-get($text-l, semibold), 0.25rem 1rem);
+  }
+
+  // Variant handling (only predefined variants)
+  @if $variant == neutral {
+    @include badge-colors(
+      map-deep-get($color-neutral, gray, gray-100),
+      map-deep-get($color-neutral, black, black-600)
+    );
+  } @else if $variant == success {
+    @include badge-colors(
+      map-deep-get($color-secondary, green, green-50),
+      map-deep-get($color-secondary, green, green-500)
+    );
+  } @else if $variant == error {
+    @include badge-colors(
+      map-deep-get($color-secondary, red, red-50),
+      map-deep-get($color-secondary, red, red-500)
+    );
+  } @else if $variant == warning {
+    @include badge-colors(
+      map-deep-get($color-secondary, yellow, yellow-50),
+      map-deep-get($color-secondary, yellow, yellow-500)
+    );
+  } @else if $variant == info {
+    @include badge-colors(
+      map-deep-get($color-secondary, blue, blue-50),
+      map-deep-get($color-secondary, blue, blue-500)
+    );
+  }
+
+  // Icon handling
+  @if $has-icon {
+    @include badge-icon($icon-position, $icon-size, $icon-gap);
+  }
+}
+
+// NEW: Custom badge mixin for complete customization
+@mixin badge-custom(
+  $bg: null,
+  $color: null,
+  $size: md,
+  $border-radius: map-deep-get($radius, full),
+  $padding: null,
+  $has-icon: false,
+  $icon-position: left,
+  $icon-size: 1em,
+  $icon-gap: 0.4rem,
+  $font-size: null,
+  $font-weight: null,
+  $border: null
+) {
+  @include badge-base($border-radius);
+
+  // Size handling with custom padding option
+  @if $size == sm {
+    @include badge-size(map-deep-get($text-s, semibold), if($padding, $padding, 0.15rem 0.6rem));
+  } @else if $size == md {
+    @include badge-size(map-deep-get($text-m, semibold), if($padding, $padding, 0.2rem 0.8rem));
+  } @else if $size == lg {
+    @include badge-size(map-deep-get($text-l, semibold), if($padding, $padding, 0.25rem 1rem));
+  }
+
+  // Custom colors (required parameters)
+  @if $bg != null and $color != null {
+    @include badge-colors($bg, $color);
+  } @else {
+    @warn "badge-custom mixin requires both $bg and $color parameters for custom styling.";
+  }
+
+  // Additional custom properties
+  @if $font-size {
+    font-size: $font-size;
+  }
+  @if $font-weight {
+    font-weight: $font-weight;
+  }
+  @if $border {
+    border: $border;
+  }
+
+  // Icon handling
+  @if $has-icon {
+    @include badge-icon($icon-position, $icon-size, $icon-gap);
+  }
+}

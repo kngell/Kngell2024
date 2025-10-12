@@ -9,18 +9,18 @@ class FileInformation extends SplFileInfo
         parent::__construct($path);
     }
 
-    protected function getTargetedFile(string $directory, string|null $name) : self
+    protected function getTargetedFile(string $directory, string|null $name): self
     {
         FileManager::createDir($directory);
         if (! is_writable($directory)) {
             throw new FileException("Unable to write into directory {$directory}.");
         }
-        $fileName = StringUtils::isBlanc($name) ? $this->getBasename() : $name;
+        $fileName = StringUtils::isBlank($name) ? $this->getBasename() : $name;
         $targetPath = $directory . $fileName;
         return new self($targetPath);
     }
 
-    protected function getContent() : string
+    protected function getContent(): string
     {
         $content = file_get_contents($this->getPathname());
         if ($content === false) {
@@ -29,9 +29,9 @@ class FileInformation extends SplFileInfo
         return $content;
     }
 
-    protected function hasTargetedFile(string $directory, string|null $name) : self|bool
+    protected function hasTargetedFile(string $directory, string|null $name): self|bool
     {
-        $fileName = StringUtils::isBlanc($name) ? $this->getBasename() : $name;
+        $fileName = StringUtils::isBlank($name) ? $this->getBasename() : $name;
         $targetPath = $directory . $fileName;
         if (file_exists($targetPath)) {
             return new self($targetPath);

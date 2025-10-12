@@ -25,7 +25,7 @@ readonly class RouteDispatcher
 
     public function __construct(
         private RouteArgumentGenerator $routeArgumentGenerator,
-        private array $middlewares
+        private array $middlewares,
     ) {
     }
 
@@ -37,7 +37,7 @@ readonly class RouteDispatcher
         string $url,
         App $app,
         array $params,
-        Request $request
+        Request $request,
     ): string|Response {
         try {
             $arguments = ! empty($params) ? $params : $this->routeArgumentGenerator->generate($route, $request);

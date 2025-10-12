@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 class HtmlBlockElement extends AbstractHtmlComponent
 {
-    protected string $htmlBlock;
+    public function __construct(string $htmlBlock = '')
+    {
+        $this->htmlBlock = $htmlBlock;
+    }
 
     public function generate(): string
     {
@@ -16,6 +19,7 @@ class HtmlBlockElement extends AbstractHtmlComponent
 
     /**
      * @param string $htmlBlock
+     *
      * @return HtmlBlockElement
      */
     public function get(string $htmlBlockPth): self
@@ -24,7 +28,7 @@ class HtmlBlockElement extends AbstractHtmlComponent
         return $this;
     }
 
-    public function content(string $htmlContent) : self
+    public function content(string $htmlContent): self
     {
         $this->htmlBlock = $htmlContent;
         return $this;

@@ -33,7 +33,7 @@ final class AppConfig
     {
     }
 
-    final public function setup() : self
+    final public function setup(): self
     {
         $this->setConfig(YamlFile::get('app'))
             ->setErrorHandler(E_ALL)
@@ -45,7 +45,7 @@ final class AppConfig
         return $this;
     }
 
-    public static function getInstance() : self
+    public static function getInstance(): self
     {
         if (! isset(static::$instance)) {
             static::$instance = new static();
@@ -119,7 +119,7 @@ final class AppConfig
      */
     public function setCache(?string $newCacheDriver = null, bool $isGloabl = false, ?string $globalKey = null): self
     {
-        $this->cache = (! empty($this->config['cache']) ? $this->config['cache'] : (new CacheConfig)->baseConfiguration());
+        $this->cache = (! empty($this->config['cache']) ? $this->config['cache'] : (new CacheConfig())->baseConfiguration());
         $this->newCacheDriver = ($newCacheDriver !== null) ? $newCacheDriver : $this->getDefaultCacheDriver();
         $this->isCacheGlobal = $isGloabl;
         $this->globalCacheKey = $globalKey;

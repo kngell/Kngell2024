@@ -2,297 +2,344 @@
 
 declare(strict_types=1);
 
-/**
- * QueryResult Class.
- *
- * Handles the storage and rendering of database query results
- */
-class QueryResult implements Countable
+class QueryResult implements Countable, IteratorAggregate
 {
-    /** @var array<string, int> Map of return types to PDO fetch constants */
-    private const FETCH_TYPE_MAP = [
-        'object' => PDO::FETCH_OBJ,
-        'class' => PDO::FETCH_CLASS,
-    ];
-    /** @var mixed Store for query results */
-    private mixed $results;
-
-    /** @var int Number of rows affected/returned */
-    private int $rowCount = 0;
+    private QueryResultConfig $config;
+    private QueryResultFetcher $fetcher;
+    private QueryResultFormatter $formatter;
+    private bool $isExecuted = false;
+    private string $operation = 'all';
+    private QueryResultPaginator $paginator;
 
     /** @var PDOStatement The PDO statement object */
-    private PDOStatement $_query;
+    private PDOStatement $pdoStatement;
 
-    /** @var string|null Type of return value expected */
-    private ?string $returnType = null;
+    private int $rowCount = 0;
+
+    public function __construct(
+        private DataMapperInterface $dataMapper,
+        private Entity $entity,
+    ) {
+        $this->initializeComponents();
+        $this->initializeQueryStatement();
+    }
 
     /**
-     * Constructor.
-     *
-     * @param DataMapperInterface $mapper The data mapper interface
-     * @param Entity $entity The entity model
-     * @throws RuntimeException If unable to get query statement
+     * Destructor to ensure resources are freed.
      */
-    public function __construct(private DataMapperInterface $mapper, private Entity $entity)
+    public function __destruct()
     {
-        try {
-            $this->_query = $mapper->getQueryStatement();
-        } catch (Throwable $e) {
-            throw new RuntimeException('Failed to initialize QueryResult: ' . $e->getMessage(), 0, $e);
+        $this->close();
+    }
+
+    /**
+     * Magic method for backward compatibility with old method names.
+     *
+     * @deprecated Use explicit methods instead
+     */
+    public function __call(string $method, array $arguments): mixed
+    {
+        $methodMap = [
+            'single' => 'getSingle',
+            'first' => 'getFirst',
+            'all' => 'getAll',
+            'rowCount' => 'getRowCount',
+        ];
+
+        if (isset($methodMap[$method])) {
+            trigger_error(
+                "Method {$method}() is deprecated. Use {$methodMap[$method]}() instead.",
+                E_USER_DEPRECATED,
+            );
+            return $this->{$methodMap[$method]}(...$arguments);
         }
+
+        throw new BadMethodCallException("Method {$method} does not exist in " . static::class);
+    }
+
+    public function all(): array
+    {
+        $this->operation = 'all';
+        $this->ensureExecuted();
+
+        $results = $this->fetcher->fetchAll();
+        return $this->paginator->applyPagination($results, 'all');
+    }
+
+    public function last(): mixed
+    {
+        $this->operation = 'last';
+        $this->ensureExecuted();
+
+        if ($this->paginator->getLastLimit() !== null && $this->paginator->getLastLimit() > 1) {
+            $results = $this->fetcher->fetchAll();
+            $limited = array_slice($results, -$this->paginator->getLastLimit());
+            return $limited[0] ?? null;
+        }
+
+        $results = $this->fetcher->fetchAll();
+        return !empty($results) ? end($results) : null;
+    }
+
+    public function single(): mixed
+    {
+        $this->operation = 'single';
+        return $this->fetcher->fetchSingle();
+    }
+
+    public function execute(string|array|null $fetchOptions = null): self
+    {
+        if ($this->isExecuted) {
+            throw new QueryResultException('Query has already been executed');
+        }
+
+        try {
+            $this->config->processFetchOptions($fetchOptions, $this->entity);
+            $this->rowCount = $this->pdoStatement->rowCount();
+            $this->isExecuted = true;
+            return $this;
+        } catch (PDOException $exception) {
+            throw new QueryResultException(
+                'Failed to execute query: ' . $exception->getMessage(),
+                (int) $exception->getCode(),
+                $exception,
+            );
+        }
+    }
+
+    public function asArray(): mixed
+    {
+        return $this->formatter->asArray();
+    }
+
+    // Formatting methods
+    public function asClass(?string $entityClass = null): mixed
+    {
+        return $this->formatter->asClass($entityClass);
+    }
+
+    public function asColumn(int $columnIndex = 0): array
+    {
+        return $this->formatter->asColumn($columnIndex);
+    }
+
+    public function asKeyPairs(): array
+    {
+        return $this->formatter->asKeyPairs();
+    }
+
+    public function asObject(): mixed
+    {
+        return $this->formatter->asObject();
+    }
+
+    /**
+     * Close the cursor to free up resources.
+     */
+    public function close(): void
+    {
+        if (isset($this->pdoStatement)) {
+            $this->pdoStatement->closeCursor();
+        }
+    }
+
+    /**
+     * Get the number of rows affected/returned.
+     *
+     * @return int
+     */
+    public function count(): int
+    {
+        $this->ensureExecuted();
+        return $this->rowCount;
+    }
+
+    public function exists(): bool
+    {
+        return $this->count() > 0;
+    }
+
+    public function first(): mixed
+    {
+        $this->operation = 'first';
+        $this->ensureExecuted();
+
+        if ($this->paginator->getLimit() !== null && $this->paginator->getLimit() > 1) {
+            $results = $this->fetcher->fetchAll();
+            $limited = array_slice($results, 0, $this->paginator->getLimit());
+            return $limited[0] ?? null;
+        }
+
+        return $this->fetcher->fetchFirst();
+    }
+
+    /**
+     * Get iterator for foreach support.
+     *
+     * @throws QueryResultException
+     *
+     * @return Traversable
+     */
+    public function getIterator(): Traversable
+    {
+        return new ArrayIterator($this->all());
     }
 
     /**
      * Get the last insert ID from database.
      *
-     * @param string|null $name Optional name of the sequence object
-     * @return string|false The last insert ID or false on failure
+     * @param string|null $sequenceName Optional name of the sequence object
+     *
+     * @throws QueryResultException
+     *
+     * @return string
      */
-    public function getLastInsertId(string|null $name = null): string|false
+    public function getLastInsertId(?string $sequenceName = null): string
     {
         try {
-            return $this->mapper->getConnexion()->open()->lastInsertId($name);
-        } catch (PDOException $e) {
-            $this->logError('Error getting last insert ID', $e);
-            return false;
+            $id = $this->dataMapper->getConnexion()->open()->lastInsertId($sequenceName);
+
+            if ($id === false) {
+                throw new QueryResultException('Failed to retrieve last insert ID');
+            }
+
+            return $id;
+        } catch (PDOException $exception) {
+            throw new QueryResultException(
+                'Error getting last insert ID: ' . $exception->getMessage(),
+                (int) $exception->getCode(),
+                $exception,
+            );
         }
     }
 
-    /**
-     * Set up and execute the query to get results.
-     *
-     * @param string|array|null $params Optional parameters for fetching
-     * @param string|null $className Optional class name for object mapping
-     * @return self
-     */
-    public function getResults(string|array|null $params = null, string|null $className = null): self
+    public function getOperation(): string
     {
-        try {
-            [$mode, $className, $constructorArgs] = $this->params($params, $className);
-            $mode = $this->returnType($mode);
-            $this->fetchMode($mode, $className, $constructorArgs);
-            $this->rowCount = $this->_query->rowCount();
-            return $this;
-        } catch (PDOException $e) {
-            $this->logError('Error getting query results', $e);
-            $this->rowCount = 0;
-            return $this;
-        }
+        return $this->operation;
     }
 
-    /**
-     * Check if the result set is empty.
-     *
-     * @return bool True if empty, false otherwise
-     */
-    public function isEmpty(): bool
+    public function getEntity(): Entity
     {
-        return $this->_query->rowCount() === 0;
+        return $this->entity;
     }
 
-    /**
-     * Get row count as results.
-     * Implements Countable interface.
-     *
-     * @return int Number of rows
-     */
-    public function count(): int
-    {
-        $this->returnType = 'count';
-        $this->results = $this->readResults();
-        return (int) $this->results;
-    }
+    // =========================================
+    // BACKWARD COMPATIBILITY METHODS
+    // =========================================
 
     /**
-     * Get a single record.
+     * Backward compatibility with old getResults() method.
      *
-     * @return array|object|null A single record or null if none found
+     * @deprecated Use execute() method instead
      */
-    public function single(): array|object|null
+    public function getResults(string|array|null $params = null, ?string $className = null): self
     {
-        $this->returnType = 'single';
-        $this->results = $this->readResults();
-        return $this->results;
-    }
-
-    /**
-     * Get first record from result set.
-     *
-     * @return array|object|null First record or null if none found
-     */
-    public function first(): array|object|null
-    {
-        $this->returnType = 'first';
-        $this->results = $this->readResults();
-        return $this->results;
-    }
-
-    /**
-     * Get all records from result set.
-     *
-     * @return array All records
-     */
-    public function all(): array
-    {
-        $this->returnType = 'all';
-        $this->results = $this->readResults();
-        return (array) $this->results;
+        $fetchOptions = $this->config->convertLegacyParams($params, $className, $this->entity);
+        return $this->execute($fetchOptions);
     }
 
     /**
      * Get row count from the query.
      *
-     * @return int Number of rows
+     * @return int
      */
-    public function rowCount(): int
+    public function getRowCount(): int
     {
         return $this->rowCount;
     }
 
     /**
+     * Check if the result set is empty.
+     *
+     * @throws QueryResultException
+     *
+     * @return bool
+     */
+    public function isEmpty(): bool
+    {
+        $this->ensureExecuted();
+        return $this->rowCount === 0;
+    }
+
+    public function setLastLimit(int $limit): QueryResultPaginator
+    {
+        return $this->paginator->setLastLimit($limit);
+    }
+
+    // Pagination methods
+    public function setLimit(int $limit): QueryResultPaginator
+    {
+        return $this->paginator->setLimit($limit);
+    }
+
+    /**
+     * @param string $operation
+     *
+     * @return QueryResult
+     */
+    public function setOperation(string $operation): self
+    {
+        $this->operation = $operation;
+        return $this;
+    }
+
+    public function setPagination(int $page, int $perPage): QueryResultPaginator
+    {
+        return $this->paginator->setPagination($page, $perPage);
+    }
+
+    /**
      * Get the boolean result of the query execution.
      *
-     * @return bool True if query was successful, false otherwise
+     * @return bool
      */
-    public function getQueryResult(): bool
+    public function wasSuccessful(): bool
     {
-        return $this->mapper->getQueryResult();
+        return $this->dataMapper->getQueryResult();
+    }
+
+    private function fetchResults(string $operation, ?int $limit = null): mixed
+    {
+        $this->ensureExecuted();
+        return $this->fetcher->fetchResults($operation, $limit);
+    }
+
+    private function page(int $page, int $perPage): array
+    {
+        $this->ensureExecuted();
+        return $this->fetcher->fetchPage($page, $perPage);
     }
 
     /**
-     * Process parameters based on type.
+     * Ensure query has been executed.
      *
-     * @param string|array|null $params The parameters to process
-     * @param string|null $className Optional class name
-     * @return array [mode, className, constructorArgs]
+     * @throws QueryResultException
      */
-    private function params(string|array|null $params = null, string|null $className = null): array
+    private function ensureExecuted(): void
     {
-        return match (true) {
-            is_string($params) => $this->stringOptions($params, $className),
-            is_array($params) => $this->arrayOptions($params),
-            default => ['', null, null],
-        };
-    }
-
-    /**
-     * Process string parameters.
-     *
-     * @param string $params The string parameters
-     * @param string|null $className Optional class name
-     * @return array [mode, className, constructorArgs]
-     */
-    private function stringOptions(string $params, string|null $className = null): array
-    {
-        if ($params === 'class') {
-            $className = $className ?? $this->entity::class;
+        if (!$this->isExecuted) {
+            throw new QueryResultException('Query must be executed before accessing results');
         }
-        return [$params, $className, null];
     }
 
-    /**
-     * Process array parameters.
-     *
-     * @param array $params The array parameters
-     * @return array [mode, className, constructorArgs]
-     */
-    private function arrayOptions(array $params): array
+    private function initializeComponents(): void
     {
-        if (array_key_exists('class', $params)) {
-            $constructorArgs = $params['constructorArgs'] ?? null;
-            return [key($params), $params[key($params)], $constructorArgs];
-        }
-        return ['', null, null];
+        $this->config = new QueryResultConfig($this->entity);
+        $this->paginator = new QueryResultPaginator();
     }
 
-    /**
-     * Read results based on return type.
-     *
-     * @return mixed The query results
-     */
-    private function readResults(): mixed
+    private function initializeQueryStatement(): void
     {
         try {
-            return match ($this->returnType) {
-                'count' => $this->_query->rowCount(),
-                'single' => $this->_query->fetch(),
-                'first' => $this->getFirstRecord(),
-                'all' => $this->_query->fetchAll(),
-                default => $this->_query->fetchAll()
-            };
-        } catch (PDOException $e) {
-            $this->logError('Error reading results', $e);
-            return match ($this->returnType) {
-                'count' => 0,
-                'single', 'first' => null,
-                default => []
-            };
+            $this->pdoStatement = $this->dataMapper->getQueryStatement();
+            $this->fetcher = new QueryResultFetcher($this->pdoStatement, $this->config);
+            $this->formatter = new QueryResultFormatter($this, $this->config);
+        } catch (Throwable $exception) {
+            throw new QueryResultException(
+                'Failed to initialize QueryResult: ' . $exception->getMessage(),
+                0,
+                $exception,
+            );
         }
-    }
-
-    /**
-     * Get the first record from fetchAll results safely.
-     *
-     * @return array|object|null First record or null if none
-     */
-    private function getFirstRecord(): array|object|null
-    {
-        $results = $this->_query->fetchAll();
-        return ! empty($results) ? $results[0] : null;
-    }
-
-    /**
-     * Set the fetch mode for the query.
-     *
-     * @param int $type The PDO fetch mode
-     * @param string|null $className Optional class name for object mapping
-     * @param array|null $constructorArgs Optional constructor arguments
-     * @return void
-     */
-    private function fetchMode(int $type, string|null $className = null, ?array $constructorArgs = null): void
-    {
-        try {
-            if ($className !== null) {
-                if ($constructorArgs !== null) {
-                    $this->_query->setFetchMode($type, $className, $constructorArgs);
-                } else {
-                    $this->_query->setFetchMode($type, $className);
-                }
-            } else {
-                $this->_query->setFetchMode($type);
-            }
-        } catch (PDOException $e) {
-            $this->logError('Error setting fetch mode', $e);
-            $this->_query->setFetchMode(PDO::FETCH_ASSOC);
-        }
-    }
-
-    /**
-     * Convert string return type to PDO fetch constant.
-     *
-     * @param string|null $type The string type
-     * @return int The PDO fetch constant
-     */
-    private function returnType(?string $type): int
-    {
-        return self::FETCH_TYPE_MAP[$type] ?? PDO::FETCH_ASSOC;
-    }
-
-    /**
-     * Log error with standardized format.
-     *
-     * @param string $message Error message prefix
-     * @param Throwable $exception The exception that occurred
-     * @return void
-     */
-    private function logError(string $message, Throwable $exception): void
-    {
-        error_log(sprintf(
-            '%s: %s [File: %s, Line: %d]',
-            $message,
-            $exception->getMessage(),
-            $exception->getFile(),
-            $exception->getLine()
-        ));
     }
 }

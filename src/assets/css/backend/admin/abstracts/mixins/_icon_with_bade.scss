@@ -12,6 +12,9 @@
   $icon-size: 4rem,
   $icon-color: map-deep-get($color-neutral, black, black-500),
   $padding: 0.8rem,
+  $align-self: true,
+  $icon-container-bg: false,
+  $border-color: false,
   $border-radius: map-deep-get($radius, s),
   $badge-bg: map-deep-get($color-secondary, red, red-500),
   $badge-color: map-deep-get($color-neutral, white),
@@ -23,7 +26,9 @@
   $badge-line-height: 1.36,
   $badge-letter-spacing: 0.05px,
   $with-badge: true,
-  $badge-position: top-right // top-right, top-left, bottom-right, bottom-left
+  $badge-position: top-right,
+  // top-right, top-left, bottom-right, bottom-left
+  $content-type: icon // icon, image, or both
 ) {
   width: $icon-size;
   height: $icon-size;
@@ -32,14 +37,35 @@
   padding: $padding;
   align-items: center;
   gap: $padding;
-  align-self: stretch;
+  @if $align-self {
+    align-self: stretch;
+  }
+  @if $icon-container-bg {
+    background-color: $icon-container-bg;
+  }
   border-radius: $border-radius;
+  @if $border-color {
+    border: 0.4rem solid $border-color;
+  }
   position: relative;
 
-  .icon {
-    width: 100%;
-    height: 100%;
-    color: $icon-color;
+  // Handle different content types
+  @if $content-type == icon or $content-type == both {
+    .icon {
+      width: 100%;
+      height: 100%;
+      color: $icon-color;
+      flex-shrink: 0;
+    }
+  }
+
+  @if $content-type == image or $content-type == both {
+    .image {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      flex-shrink: 0;
+    }
   }
 
   @if $with-badge {
@@ -70,7 +96,9 @@
         left: $badge-offset;
         bottom: $badge-offset;
       }
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
 
       &:hover {
         transform: scale(1.05);

@@ -7,13 +7,6 @@
   flex-direction: column;
   align-items: flex-start;
   align-self: stretch;
-  border-right: 1px solid map-deep-get($color-neutral, gray, gray-50);
-  background-color: map-deep-get($color-neutral, white);
-  box-shadow: 0.4rem 0 3rem 0 rgba(131, 98, 234, 0.05);
-  transition: all 0.3s ease-in-out;
-  overflow-y: auto; // changed from hidden
-  overflow-x: hidden; // keep horizontal hidden
-  text-wrap: nowrap;
 
   .logo-box {
     display: inline-flex;
@@ -111,9 +104,6 @@
               width: 2.2rem;
               height: 2.2rem;
               transition: all 0.3s ease-in-out;
-              &.rotated {
-                rotate: 180deg;
-              }
             }
             span {
               flex: 1 0 0;
@@ -125,6 +115,9 @@
             &:hover {
               background-color: map-deep-get($color-primary, primary-50);
               color: map-deep-get($color-primary, primary-500);
+              .icon {
+                fill: map-deep-get($color-primary, primary-500);
+              }
             }
           }
           &--dropdown-menu {
@@ -134,7 +127,9 @@
             grid-template-columns: 1fr;
             grid-template-rows: 0;
             overflow: hidden;
-            transition: grid-template-rows 0.3s ease, max-height 0.3s ease;
+            transition:
+              grid-template-rows 0.3s ease,
+              max-height 0.3s ease;
 
             & > .wrapper {
               position: relative;
@@ -160,7 +155,9 @@
                     font-weight: map-deep-get($text-m, semibold, font-weight);
                     line-height: map-deep-get($text-m, semibold, line-height);
                     letter-spacing: map-deep-get($text-m, semibold, letter-spacing);
-                    transition: background-color 0.2s ease, color 0.2s ease;
+                    transition:
+                      background-color 0.2s ease,
+                      color 0.2s ease;
                     &:hover {
                       background-color: map-deep-get($color-primary, primary-50);
                       color: map-deep-get($color-primary, primary-500);
@@ -175,25 +172,33 @@
                 }
               }
             }
-
-            &.show {
-              grid-template-rows: 1fr;
-            }
           }
           &.active {
             .menu-list__item--link,
             .menu-list__item--dropdown-button {
               background-color: map-deep-get($color-primary, primary-500);
               color: map-deep-get($color-neutral, white);
-            }
-          }
-          &.active.opened {
-            .menu-list__item--link,
-            .menu-list__item--dropdown-button {
-              background-color: map-deep-get($color-primary, primary-50);
-              color: map-deep-get($color-primary, primary-500);
               .icon {
-                fill: map-deep-get($color-primary, primary-500);
+                fill: map-deep-get($color-neutral, white);
+              }
+              &:hover {
+                background-color: map-deep-get($color-primary, primary-600);
+              }
+            }
+            &.opened {
+              .menu-list__item--link,
+              .menu-list__item--dropdown-button {
+                background-color: map-deep-get($color-primary, primary-50);
+                color: map-deep-get($color-primary, primary-500);
+                .icon {
+                  fill: map-deep-get($color-primary, primary-500);
+                }
+                .icon.arrow-down {
+                  rotate: 180deg;
+                }
+              }
+              .menu-list__item--dropdown-menu {
+                grid-template-rows: 1fr;
               }
             }
           }

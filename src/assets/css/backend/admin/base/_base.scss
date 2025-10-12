@@ -2,6 +2,7 @@
 @use "css/backend/admin/abstracts" as *;
 
 /*--------------------- BASE ------------------*/
+
 *,
 *::after,
 *::before {
@@ -15,9 +16,17 @@ html {
 body {
   box-sizing: border-box;
   background-color: map-deep-get($color-neutral, gray, gray-25);
+  overflow: hidden;
+  height: 100%;
 }
 input {
   @include input-reset;
+}
+textarea {
+  @include textarea-reset;
+}
+fieldset {
+  @include reset-fieldset;
 }
 button {
   @include button-reset;
@@ -28,6 +37,9 @@ ul {
 
 a {
   @include a-reset;
+}
+select {
+  @include select-reset;
 }
 
 @for $i from 1 through 6 {

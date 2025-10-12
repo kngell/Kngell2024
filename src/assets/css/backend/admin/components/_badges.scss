@@ -3,13 +3,13 @@
 /*--------------- BADGES -------------*/
 
 // ---------------------
-// Badge component
+// Badge component (using original mixin)
 // ---------------------
 .badge {
   @include badge(); // Default neutral, md size, no icon
 
   // ---------------------
-  // Variants
+  // Variants (predefined)
   // ---------------------
   &--success {
     @include badge($variant: success);
@@ -55,5 +55,73 @@
     &-right {
       @include badge($has-icon: true, $icon-position: right);
     }
+  }
+}
+
+// ---------------------
+// CUSTOM BADGES (using new badge-custom mixin)
+// ---------------------
+.badge-custom {
+  // Base custom badge class
+  @include badge-custom($bg: #666, $color: white); // Default custom style
+
+  // ---------------------
+  // Custom color variants
+  // ---------------------
+  &--primary {
+    @include badge-custom($bg: #007bff, $color: white);
+  }
+
+  &--purple {
+    @include badge-custom($bg: #6f42c1, $color: white);
+  }
+
+  &--orange {
+    @include badge-custom($bg: #fd7e14, $color: white);
+  }
+
+  &--teal {
+    @include badge-custom($bg: #20c997, $color: white);
+  }
+
+  // ---------------------
+  // Custom shape variants
+  // ---------------------
+  &--pill {
+    @include badge-custom($bg: #666, $color: white, $border-radius: 50px);
+  }
+
+  &--square {
+    @include badge-custom($bg: #666, $color: white, $border-radius: 4px);
+  }
+
+  &--rounded {
+    @include badge-custom($bg: #666, $color: white, $border-radius: 8px);
+  }
+
+  // ---------------------
+  // Custom size variants
+  // ---------------------
+  &--compact {
+    @include badge-custom($bg: #666, $color: white, $size: sm, $padding: 0.1rem 0.4rem);
+  }
+
+  &--large {
+    @include badge-custom($bg: #666, $color: white, $size: lg, $padding: 0.4rem 1.2rem);
+  }
+
+  // ---------------------
+  // Special custom variants
+  // ---------------------
+  &--outline {
+    @include badge-custom($bg: transparent, $color: #666, $border: 2px solid #666);
+  }
+
+  &--gradient {
+    @include badge-custom($bg: linear-gradient(45deg, #667eea, #764ba2), $color: white);
+  }
+
+  &--bold {
+    @include badge-custom($bg: #333, $color: white, $font-weight: bold, $font-size: 1.1em);
   }
 }

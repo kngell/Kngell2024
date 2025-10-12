@@ -33,7 +33,7 @@ readonly class CookieObject
         ?string $domain = null,
         bool $secure = false,
         bool $httpOnly = false,
-        ?SameSite $sameSite = null
+        ?SameSite $sameSite = null,
     ) {
         $this->validateName($name);
         $this->name = $name;
@@ -46,7 +46,7 @@ readonly class CookieObject
         $this->sameSite = $sameSite;
     }
 
-    public function getId() : string
+    public function getId(): string
     {
         return "{$this->name};{$this->domain};{$this->path}";
     }
@@ -91,9 +91,9 @@ readonly class CookieObject
         return $this->sameSite;
     }
 
-    private function validateName(string $name) : void
+    private function validateName(string $name): void
     {
-        if (StringUtils::isBlanc($name)) {
+        if (StringUtils::isBlank($name)) {
             throw new InvalidArgumentException('The cookie name cannot be empty.');
         }
         // if (strpbrk($name, self::RESERVED_CHARS_LIST)) {

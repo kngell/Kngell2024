@@ -6,7 +6,7 @@
     produces: text/xml
   ResponseStatus:
     HttpStatusCode: HTTP_OK
-/product/{slug:[\w-]+}:
+/products/{slug:[\w-]+}:
   controller: products
   method: show
 /home/index:
@@ -115,7 +115,7 @@
   method: show
 /{controller}/create:
   method: create
-  middleware: trim
+  # middleware: trim
   httpMethod: post
 /{controller}/handleForm:
   method: handleForm

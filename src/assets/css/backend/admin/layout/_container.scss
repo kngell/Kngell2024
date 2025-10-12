@@ -1,2 +1,18 @@
 @use "css/backend/admin/abstracts" as *;
 /*------------------- CONTAINER -----------------*/
+
+.container {
+  width: 144rem; // Exact Figma page frame width
+  margin: 0 auto;
+  padding: 0; // No side padding like Figma
+
+  // Responsive fallback
+  @include respond-below(xl) {
+    width: 100%;
+    max-width: 144rem;
+  }
+
+  @include respond-below(lg) {
+    padding: 0 2rem; // Only add padding on small screens
+  }
+}

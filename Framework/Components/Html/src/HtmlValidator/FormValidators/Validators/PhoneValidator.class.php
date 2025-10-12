@@ -19,23 +19,23 @@ class PhoneValidator extends AbstractValidator
     public function __construct(
         private readonly string $display,
         private readonly mixed $inputValue,
-        private readonly mixed $ruleValue
+        private readonly mixed $ruleValue,
     ) {
     }
 
-    public function validate(): string|bool
+    public function validate(): array|string|bool
     {
         if (empty($this->inputValue)) {
             return false; // Let RequiredValidator handle empty values
         }
 
-        if (! is_string($this->inputValue)) {
+        if (!is_string($this->inputValue)) {
             return $this->erroMessage(sprintf(self::ERROR_MESSAGE, $this->display));
         }
 
         $format = is_string($this->ruleValue) ? $this->ruleValue : 'simple';
 
-        if (! $this->isValidPhoneNumber($this->inputValue, $format)) {
+        if (!$this->isValidPhoneNumber($this->inputValue, $format)) {
             return $this->erroMessage(sprintf(self::ERROR_MESSAGE, $this->display));
         }
 

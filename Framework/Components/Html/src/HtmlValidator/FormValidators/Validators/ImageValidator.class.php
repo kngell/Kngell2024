@@ -18,9 +18,9 @@ class ImageValidator extends AbstractValidator
     {
     }
 
-    public function validate(): string|bool
+    public function validate(): array|string|bool
     {
-        if (! preg_match('/^[A-Za-z0-9_-]*$/', $this->inputValue)) {
+        if (!preg_match('/^[A-Za-z0-9_-]*$/', $this->inputValue)) {
             return $this->erroMessage(sprintf(self::ERROR_MESSAGE, $this->display));
         }
         return true;

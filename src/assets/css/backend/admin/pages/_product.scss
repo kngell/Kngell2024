@@ -1,0 +1,300 @@
+@use "css/backend/admin/abstracts" as *;
+
+/*--------------- PRODUCT ADD -------------*/
+
+.product {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0; // ✅ critical for nested scroll
+  overflow: hidden;
+  gap: 2.4rem;
+
+  &__header {
+    display: flex;
+    align-items: flex-end;
+    gap: 2.4rem;
+    align-self: stretch;
+    flex: 0 0 auto;
+    .title {
+      @include page-title;
+    }
+    .user-action {
+      display: flex;
+      align-items: flex-start;
+      gap: 1.6rem;
+    }
+  }
+  &__body {
+    flex: 1 1 auto;
+    min-height: 0; // allows scroll inside
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto; // only form scrolls
+    &-frm {
+      flex: 1 1 auto;
+      display: grid;
+      gap: 2.4rem;
+
+      position: relative;
+      @include respond-above(md) {
+        grid-template-columns: 1fr auto;
+        grid-template-areas: "left right";
+      }
+
+      &--left {
+        grid-area: left;
+        .frm-section {
+          &.general-information,
+          &.media {
+            grid-template-columns: 1fr;
+          }
+          &.pricing,
+          &.inventory,
+          &.variation {
+            grid-template-columns: repeat(2, 1fr);
+          }
+          &.shipping {
+            grid-template-columns: repeat(4, 1fr);
+            .frm-section__body {
+              .input-box.blue-check {
+                @include form-field(
+                  $types: checkbox,
+                  $options: (
+                    checked-bg-color: map-deep-get($color-primary, primary-500),
+                    check-color: map-deep-get($color-neutral, white),
+                    label-text-style: (
+                      $text-m,
+                      medium,
+                      (color: map-deep-get($color-primary, primary-500)),
+                    ),
+                  )
+                );
+              }
+            }
+          }
+        }
+      }
+      &--right {
+        grid-area: right;
+        .frm-section {
+          &.status,
+          &.category {
+            grid-template-columns: 1fr;
+          }
+
+          .title-group {
+            display: flex;
+            align-items: center;
+            gap: 1.2rem;
+            width: 100%;
+            .frm-section__title {
+              flex: 1;
+            }
+            .frm-section__draft {
+              @include badge-custom(
+                $bg: map-deep-get($color-neutral, gray, gray-50),
+                $color: map-deep-get($color-neutral, black, black-500),
+                $padding: 0.4rem 1.2rem
+              );
+            }
+          }
+        }
+      }
+      &--left,
+      &--right {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2.4rem;
+        .frm-section {
+          // display: flex;
+          display: grid;
+          padding: 2.4rem;
+          // flex-direction: column;
+          // align-items: center;
+          gap: 1.4rem;
+          align-self: stretch;
+          border-radius: map-deep-get($radius, s);
+          border: 1px solid map-deep-get($color-neutral, gray, gray-100);
+          background-color: map-deep-get($color-neutral, white);
+
+          /* Hard Shadow */
+          box-shadow: $hard-shadow;
+
+          &__title {
+            align-self: stretch;
+            @include text-style(
+              $display-xs,
+              medium,
+              (
+                color: map-deep-get($color-neutral, black, black-800),
+              )
+            );
+          }
+          &__body {
+            display: grid;
+            // display: flex;
+            // flex-direction: column;
+            // align-items: flex-start;
+            grid-template-columns: inherit;
+            gap: 1.4rem;
+            .input-box {
+              @include form-field(
+                $types: (
+                  text,
+                  textarea,
+                  file,
+                  video,
+                  checkbox,
+                  select,
+                  currency,
+                ),
+                $options: (
+                  floating: false,
+                  padding: 0.8rem 1.2rem,
+                  background: map-deep-get($color-neutral, gray, gray-25),
+                  border-color: map-deep-get($color-neutral, gray, gray-100),
+                  textarea-min-height: 14rem,
+                  icon-size: 2.4rem,
+                  label-text-style: (
+                    $text-m,
+                    medium,
+                    (color: map-deep-get($color-neutral, black, black-600)),
+                  ),
+                  placeholder-text-style: (
+                    $text-m,
+                    regular,
+                    (color: map-deep-get($color-neutral, gray, gray-400)),
+                  ),
+                  input-text-style: (
+                    $text-m,
+                    regular,
+                    (color: map-deep-get($color-neutral, black, black-600)),
+                  ),
+                  media-title-style: (
+                    $text-m,
+                    medium,
+                    (color: map-deep-get($color-neutral, black, black-600)),
+                  ),
+                  media-text-style: (
+                    $text-m,
+                    regular,
+                    (color: map-deep-get($color-neutral, gray, gray-400)),
+                  ),
+                )
+              );
+              .tag-preview {
+                display: flex;
+                align-items: flex-start;
+                gap: 0.8rem;
+                flex: 1 0 0;
+                position: absolute;
+                left: 0.8rem;
+                background-color: map-deep-get($color-neutral, gray, gray-25);
+              }
+            }
+            .variation-group {
+              display: grid;
+              grid-template-columns: repeat(3, 1fr);
+              align-items: stretch;
+              gap: 1.4rem;
+              .variation-attributes {
+                grid-column: -1 /-3;
+                display: flex;
+                align-items: stretch;
+                gap: 1.4rem;
+              }
+
+              .button-container {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+              }
+            }
+          }
+        }
+      }
+      &--right {
+        width: 26.4rem;
+      }
+    }
+  }
+  &__footer {
+    flex-shrink: 0;
+    flex: 0 0 auto;
+    position: sticky;
+    bottom: 0;
+    z-index: 1000;
+    display: flex;
+    padding: 1.6rem 2.4rem;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.6rem;
+    align-self: stretch;
+    border-top: 1px solid map-deep-get($color-neutral, gray, gray-100);
+    background-color: map-deep-get($color-neutral, white);
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+
+    @include respond-below(md) {
+      flex-direction: column;
+      align-items: stretch;
+      padding: 1.2rem;
+    }
+    .completeness {
+      display: flex;
+      align-items: center;
+      gap: 1.6rem;
+      flex: 1 0 0;
+
+      &__text {
+        @include text-style(
+          $text-l,
+          medium,
+          (
+            color: map-deep-get($color-neutral, black, black-700),
+          )
+        );
+
+        @include respond-below(sm) {
+          display: none;
+        }
+      }
+
+      &__progress-container {
+        @include progress-bar(
+          $width: 20rem,
+          $height: 0.6rem,
+          $progress-color: map-deep-get($color-primary, primary-500),
+          $background-color: map-deep-get($color-neutral, gray, gray-100),
+          $show-percentage: true,
+          $percentage-position: outside,
+          $container-gap: 1rem
+        );
+        // Responsive widths
+        @include respond-below(md) {
+          width: 15rem;
+          .completeness-progress {
+            width: 15rem;
+          }
+        }
+
+        @include respond-below(sm) {
+          width: 10rem;
+          .completeness-progress {
+            width: 10rem;
+          }
+        }
+      }
+    }
+    .buttons {
+      display: flex;
+      align-items: center;
+      gap: 1.6rem;
+
+      @include respond-below(md) {
+        justify-content: space-between;
+      }
+    }
+  }
+}

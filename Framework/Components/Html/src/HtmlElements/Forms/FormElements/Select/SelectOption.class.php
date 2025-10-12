@@ -1,17 +1,37 @@
 <?php
 
 declare(strict_types=1);
-class SelectOption extends FormElement
+class SelectOption extends AbstractHtmlComponent
 {
-    public function __construct(private string $value, private string $content)
+    private bool $disabled;
+    private bool $selected;
+    private string $key;
+
+    public function __construct(string $key, string $content)
     {
-        echo 'hello from select option';
+        $this->key = $key;
+        $this->content = $content;
     }
 
-    public function makeForm(): string
+    public function generate(): string
     {
-        $option = '<option  value=' . $this->value;
+        $option = '<option  value=' . $this->key;
+        if ($this->hasValue() && $this->getValue() === $this->key) {
+            $option .= ' Selected';
+        }
         $option .= '>' . $this->content;
         return $option . '</option>';
+    }
+
+    public function disabled(bool $disabled = true): self
+    {
+        $this->disabled = $disabled;
+        return $this;
+    }
+
+    public function selected(bool $selected = true): self
+    {
+        $this->selected = $selected;
+        return $this;
     }
 }
