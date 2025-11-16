@@ -6,29 +6,55 @@ abstract class AbstractSessionStorage
 {
     use SessionTrait;
 
-    // private ?string $sessionPath = 'session_dir';
+    private bool $sessionStarted = false;
+
+    public function __construct(
+        protected SessionEnvironment $sessionEnvironment,
+        private SuperGlobalsInterface $globals,
+    ) {
+        $this->initializeSession();
+    }
 
     /**
-     * abstract class constructor.
-     *
-     * @param SessionEnvironment $sessionEnvironment
+     * Regenerate session ID (for login, privilege changes).
      */
-    public function __construct(protected SessionEnvironment $sessionEnvironment, private SuperGlobalsInterface $globals)
+    public function regenerate(): bool
     {
-        $this->iniSet();
-        // Destroy any existing sessions started with session.auto_start
-        if ($this->isSessionStarted()) {
-            session_unset();
-            session_destroy();
+        if ($this->sessionStarted) {
+            return session_regenerate_id(true);
         }
-        $this->start();
-        // $this->cleanSessionPath();
+        return false;
+    }
+
+    /**
+     * Destroy session (for logout).
+     */
+    public function destroy(): bool
+    {
+        if ($this->sessionStarted) {
+            $_SESSION = [];
+            if (ini_get('session.use_cookies')) {
+                $params = session_get_cookie_params();
+                setcookie(
+                    $this->getSessionName(),
+                    '',
+                    time() - 42000,
+                    $params['path'],
+                    $params['domain'],
+                    $params['secure'],
+                    $params['httponly'],
+                );
+            }
+            return session_destroy();
+        }
+        return false;
     }
 
     /**
      * Set the name of the session.
      *
      * @param string $sessionName
+     *
      * @return void
      */
     public function setSessionName(string $sessionName): void
@@ -36,130 +62,99 @@ abstract class AbstractSessionStorage
         session_name($sessionName);
     }
 
-    /**
-     * Return the current session name.
-     *
-     * @return string
-     */
     public function getSessionName(): string
     {
         return session_name();
     }
 
-    /**
-     * Set the name of the session ID.
-     *
-     * @param string $sessionID
-     * @return void
-     */
-    public function setSessionID(string $sessionID): void
-    {
-        session_id($sessionID);
-    }
-
-    /**
-     * Return the current session ID.
-     *
-     * @return string
-     */
-    public function getSessionID(): string
+    public function getSessionId(): string
     {
         return session_id();
     }
 
-    /**
-     * Prevent session within the cli. Even though we can't run sessions within
-     * the command line. also we checking we have a session id and its not empty
-     * else return false.
-     *
-     * @return bool
-     */
     public function isSessionStarted(): bool
     {
-        return php_sapi_name() !== 'cli' && $this->getSessionID() !== '';
+        return $this->sessionStarted;
     }
 
-    /**
-     * Start our session if we haven't already have a php session.
-     *
-     * @return void
-     */
-    private function startSession()
+    private function initializeSession(): void
     {
-        if (session_status() == PHP_SESSION_NONE) {
-            session_save_path(ROOT_DIR . DS . $this->sessionEnvironment->storagePath() . DS);
-            session_start();
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            return;
         }
+
+        // Don't auto-start if headers already sent
+        if (headers_sent()) {
+            error_log('Headers already sent, cannot start session');
+            return;
+        }
+
+        // Set session configuration
+        $this->configureSession();
+
+        // Start session
+        session_start();
+
+        error_log('Session started: ' . session_id());
     }
 
-    /**
-     * Define our session_set_cookie_params method via the $this->options parameters which
-     * will be define within our core config directory.
-     *
-     * @return void
-     */
-    private function start(): void
+    private function cookiesParams(): array
     {
-        $this->setSessionName($this->sessionEnvironment->getSessionName());
-        $cookie_Params = $this->cookiesParams();
-        session_set_cookie_params($cookie_Params);
-        $this->startSession();
-        if ($this->validateSession()) {
-            if (! $this->preventSessionHijack()) {
-                $_SESSION = [];
-                $_SESSION['IPaddress'] = $this->globals->server('remote_addr'); //$_SERVER['REMOTE_ADDR'];
-                $_SESSION['userAgent'] = $this->globals->server('http_user_agent'); //$_SERVER['HTTP_USER_AGENT'];
-            } elseif (rand(1, 100) <= 5) { // Give a 5% chance of the session id changing on any request
-                $this->sessionRegeneration();
-            }
-        } else {
-            $_SESSION = [];
-            session_destroy();
-            $this->startSession(); // restart session
-        }
-    }
-
-    /**
-     * Override PHP default session runtime configurations.
-     *
-     * @return void
-     */
-    private function iniSet(): void
-    {
-        foreach ($this->sessionEnvironment->getSessionRuntimeConfigurations() as $option) {
-            $sessionKey = str_replace('session.', '', $option);
-            if ($option && array_key_exists($sessionKey, $this->sessionEnvironment->getConfig())) {
-                ini_set($option, $this->sessionEnvironment->getSessionIniValues($sessionKey));
-            }
-        }
-    }
-
-    private function cookiesParams() : array
-    {
-        $cookies_params = session_get_cookie_params();
-        $liftime = $this->sessionEnvironment->getLifetime();
-        if ($cookies_params['lifetime'] === 0) {
-            $liftime = $cookies_params['lifetime'];
-        }
-        return [
-            'lifetime' => $liftime,
+        $params = [
+            'lifetime' => $this->sessionEnvironment->getLifetime(),
             'path' => $this->sessionEnvironment->getPath(),
             'domain' => $this->sessionEnvironment->getDomain(),
             'secure' => $this->sessionEnvironment->isSecure(),
             'httponly' => $this->sessionEnvironment->isHttpOnly(),
         ];
+
+        // Add SameSite parameter if supported (PHP 7.3+)
+        if (version_compare(PHP_VERSION, '7.3.0', '>=')) {
+            $params['samesite'] = $this->sessionEnvironment->getSameSite();
+        }
+
+        return $params;
     }
 
-    // private function cleanSessionPath(): void
-    // {
-    //     $fileList = $this->fileSyst->listAllFiles($this->sessionEnvironment->storagePath());
-    //     if ($fileList && is_array($fileList)) {
-    //         $sid = session_id();
-    //         foreach ($fileList as $file) {
-    //             if (str_replace('sess_', '', $file) !== session_id()) {
-    //                 $this->fileSyst->removeFile($this->sessionEnvironment->storagePath(), $file);
-    //             }
-    //         }
-    //     }
-    // }
+    private function configureSession(): void
+    {
+        // Set session name
+        session_name($this->sessionEnvironment->getSessionName());
+
+        // Set session save path
+        $savePath = $this->sessionEnvironment->getFullStoragePath();
+        if (!is_dir($savePath)) {
+            mkdir($savePath, 0755, true);
+        }
+        if (is_writable($savePath)) {
+            session_save_path($savePath);
+        }
+
+        // Set cookie parameters
+        $cookieParams = $this->cookiesParams();
+        session_set_cookie_params($cookieParams);
+
+        // Set INI settings
+        foreach ($this->sessionEnvironment->getSessionRuntimeConfigurations() as $option) {
+            $sessionKey = str_replace('session.', '', $option);
+            $value = $this->sessionEnvironment->getSessionIniValues($sessionKey);
+            if ($value !== null) {
+                ini_set($option, (string) $value);
+            }
+        }
+    }
+
+    /**
+     * Basic session security - standard for ecommerce.
+     */
+    private function initializeSessionSecurity(): void
+    {
+        // Only set these once per session
+        if (!isset($_SESSION['_initialized'])) {
+            $_SESSION['_initialized'] = true;
+            $_SESSION['_ip'] = $this->globals->server('REMOTE_ADDR') ?? 'unknown';
+            $_SESSION['_user_agent'] = $this->globals->server('HTTP_USER_AGENT') ?? 'unknown';
+            $_SESSION['_created'] = time();
+        }
+    }
 }

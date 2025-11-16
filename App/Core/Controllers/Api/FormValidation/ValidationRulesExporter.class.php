@@ -10,6 +10,10 @@ class ValidationRulesExporter
         'required', 'min', 'max', 'pattern', 'numeric',
         'min_value', 'max_value', 'required_if', 'lte', 'gte',
         'array', 'max_items', 'min_items',
+        // File validation rules
+        'mimes', 'file_size', 'upload_limit', 'post_limit', 'max_files',
+        // Additional rules you might need
+        'integer', 'decimal', 'boolean', 'email', 'url', 'date', 'time',
     ];
 
     private const array SERVER_ONLY_RULES = [
@@ -30,7 +34,6 @@ class ValidationRulesExporter
     public function exportForClient(string $rulesFilePath, ?string $outputPath = null): array
     {
         $cacheKey = $this->generateCacheKey($rulesFilePath);
-        // $this->cache->delete($cacheKey);
 
         // Try to get from cache first
         $cachedData = $this->cache->get($cacheKey);

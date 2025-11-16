@@ -1,7 +1,7 @@
 <?php
 
 declare(strict_types=1);
-class DatabaseEnvironmentConfig
+final class DatabaseEnvironmentConfig
 {
     private array|Closure $credentials = [];
     private string $driver;
@@ -12,7 +12,7 @@ class DatabaseEnvironmentConfig
         $this->driver = $driver;
     }
 
-    public function getCredentials() : array
+    public function getCredentials(): array
     {
         if ($this->credentials instanceof Closure) {
             $this->credentials = $this->credentials->__invoke();
@@ -41,18 +41,20 @@ class DatabaseEnvironmentConfig
     /**
      * --------------------------------------------
      * Check for Valid credentials.
+     *
      *@param string driver
+     *
      * @return array
      */
     private function isCredentialsValid(string $driver)
     {
-        if (empty($driver) && ! is_string($driver)) {
+        if (empty($driver) && !is_string($driver)) {
             throw new DataMapperInvalidArgumentException('Invalid Argument! This is missing or invalid Data type');
         }
-        if (! is_array($this->credentials)) {
+        if (!is_array($this->credentials)) {
             throw new DataMapperInvalidArgumentException('Invalid Credentials!');
         }
-        if (! in_array('driver', array_keys($this->credentials))) {
+        if (!in_array('driver', array_keys($this->credentials))) {
             throw new DataMapperInvalidArgumentException('Invalid or unsupported driver');
         }
     }

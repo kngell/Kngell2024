@@ -33,7 +33,7 @@
             ws = new WebSocket(wsUrl);
 
             ws.onopen = function() {
-                console.log("🔌 WebSocket: Connection opened", {
+                console.log("🔌 WebSocket: Connection opened...", {
                     timestamp: Date.now(),
                     connectionCount: (window._wsConnectionCount = (window._wsConnectionCount || 0) + 1)
                 });
@@ -48,7 +48,7 @@
             };
 
             ws.onclose = function(event) {
-                console.log("🔌 WebSocket: Connection closed", {
+                console.log("🔌 WebSocket: Connection closed...", {
                     code: event.code,
                     reason: event.reason,
                     wasClean: event.wasClean
@@ -64,39 +64,6 @@
                 console.error("🔌 WebSocket: Error", error);
             };
         }
-
-        // function connectWebSocket() {
-        //     ws = new WebSocket(wsUrl);
-
-        //     ws.onopen = function() {
-        //         console.log('[Custom Reload] WebSocket connection opened.');
-        //     };
-
-        //     ws.onmessage = function(event) {
-        //         const data = JSON.parse(event.data);
-        //         if (data.type === 'full-reload') {
-        //             console.log(`[Custom Reload] Full reload triggered by server. Reason: ${data.reason}`);
-        //             // The page will reload, so no need for explicit ws.close() here.
-        //             window.location.reload(true); // Forces a full reload
-        //         }
-        //         // Add any other message types if you later decide to handle them differently
-        //     };
-
-        //     ws.onclose = function(event) {
-        //         console.log('[Custom Reload] WebSocket connection closed.', event.code, event.reason);
-        //         // Attempt to reconnect after a short delay if the closure wasn't intentional (e.g., manual reload)
-        //         // This is crucial for situations where the server might restart or if the reload somehow fails
-        //         if (!event.wasClean && event.code !== 1000) { // Code 1000 is normal closure
-        //             console.log('[Custom Reload] Attempting to reconnect...');
-        //             setTimeout(connectWebSocket, 3000); // Try reconnecting after 3 seconds
-        //         }
-        //     };
-
-        //     ws.onerror = function(error) {
-        //         console.error('[Custom Reload] WebSocket error:', error);
-        //         ws.close(); // Close on error to trigger onclose and reconnection attempt
-        //     };
-        // }
 
         connectWebSocket(); // Initial connection
     })();

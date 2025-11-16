@@ -8,11 +8,14 @@ class EventManager extends AbstractEventManager
     {
     }
 
-    public function notify(string|EventInterface $event, ?Object $object, bool $debug = false) : ?object
+    public function notify(string|EventInterface $event, ?Object $object, bool $debug = false): ?object
     {
         $eventResults = [];
+
         $event = $this->getEvent($event, $object);
+
         $this->listeners->checkEvent(name: $event->getName());
+
         $listeners = $this->getListenersForEvent(event: $event);
         foreach ($listeners as ['callback' => $listener]) {
             /** @var EventListenerInterface */
@@ -25,18 +28,18 @@ class EventManager extends AbstractEventManager
         return $event;
     }
 
-    public function add(string $eventName, EventListenerInterface $listener, int $priority = 0) : self
+    public function add(string $eventName, EventListenerInterface $listener, int $priority = 0): self
     {
         $this->listeners->add($eventName, $listener, $priority);
         return $this;
     }
 
-    public function remove(EventInterface $event, string $listener) : void
+    public function remove(EventInterface $event, string $listener): void
     {
         $this->listeners->remove($event, $listener);
     }
 
-    private function getListenersForEvent(EventInterface $event) : iterable
+    private function getListenersForEvent(EventInterface $event): iterable
     {
         /** @var array */
         $listeners = $this->listeners->getListenersForEvent(event: $event);

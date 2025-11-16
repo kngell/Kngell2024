@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Psr\Log\LoggerInterface;
+
 final readonly class ContainerClassRegistrator
 {
     private function __construct()
@@ -47,16 +49,18 @@ final readonly class ContainerClassRegistrator
         }
     }
 
-    private static function params(array|Closure $concrete, string $abstract)
+    private static function params(array|Closure $concrete, string $abstract): array
     {
         if ($concrete instanceof Closure) {
             return [$abstract, $concrete];
         }
+
         if (count($concrete) === 1) {
             return [$abstract, $concrete[0]];
         }
+
         $class = $concrete[0];
-        if (! is_string($class)) {
+        if (!is_string($class)) {
             $class = $abstract;
         } else {
             unset($concrete[0]);
@@ -65,7 +69,7 @@ final readonly class ContainerClassRegistrator
         return [$class, $concrete];
     }
 
-    private static function bindClasses() : array
+    private static function bindClasses(): array
     {
         return [
             ApiClientInterface::class => CurlApiGateway::class,
@@ -81,17 +85,37 @@ final readonly class ContainerClassRegistrator
                 $middlewares = YamlFile::get('middlewares');
                 return new RouteDispatcher($routeArgumentGenerator, $middlewares);
             },
-            DatabaseEnvironmentConfig::class => [function () {
-                return YamlFile::get('database');
-            }, 'mysql'],
+            DatabaseEnvironmentConfig::class => [
+                function () {
+                    return YamlFile::get('database');
+                }, 'mysql'],
             ListenerProviderInterface::class => [ListenerProvider::class, YamlFile::get('eventListener')],
             MailerFacade::class => function () {
                 return YamlFile::get('email_settings');
             },
+            ProductFormCreator::class => ProductFormCreator::class,
+            FileSearchInterface::class => FileSearchManager::class,
+            FileUploadComponentInterface::class => UploadService::class,
+            FileContentInterface::class => FileContentManager::class,
+            DirectoryInterface::class => DirectoryManager::class,
+            FileOperationsInterface::class => FileOperationsManager::class,
+
+            VariationBuilderInterface::class => DatabaseVariationBuilder::class,
+            ChangeTrackerInterface::class => ChangeTracker::class,
+            CurrencyLookupInterface::class => CurrencyService::class,
+            CurrencyCodeProviderInterface::class => CurrencyCodeProvider::class,
+            RegionContextInterface::class => RegionContext::class,
+            LoggerInterface::class => CustomLogger::class,
+
+            SessionInterface::class => Session::class,
+            SqlCompositeQueryBuilderInterface::class => QueryBuilder::class,
+            // // Concrete form classes
+            // ProductFormConfirmation::class => ProductFormConfirmation::class,
+            // BulkProductForm::class => BulkProductForm::class,
         ];
     }
 
-    private static function singletonClasses(App $app) : array
+    private static function singletonClasses(App $app): array
     {
         return [
             SuperGlobalsInterface::class => SuperGlobals::class,
@@ -100,12 +124,10 @@ final readonly class ContainerClassRegistrator
             DatabaseConnectionInterface::class => PDOConnection::class,
             UserModel::class => UserModel::class,
             FlashInterface::class => Flash::class,
-            TokenInterface::class => Token::class,
             ViewInterface::class => View::class,
             CollectionInterface::class => Collection::class,
             SessionEnvironment::class => SessionEnvironment::class,
             SessionStorageInterface::class => NativeSessionStorage::class,
-            SessionInterface::class => Session::class,
             CacheStorageInterface::class => NativeCacheStorage::class,
             CookieStoreInterface::class => NativeCookieStore::class,
             CookieInterface::class => Cookie::class,
@@ -113,10 +135,23 @@ final readonly class ContainerClassRegistrator
             HashInterface::class => [Hash::class, function () use ($app) {
                 return $app->getAppConfig()->getConfig()['security'];
             }],
-            FileUploadInterface::class => ImagesUpload::class,
+
             RouteMatcher::class => RouteMatcher::class,
             RouteArgumentGenerator::class => RouteArgumentGenerator::class,
             RouteResponseGenerator::class => RouteResponseGenerator::class,
+
+            // Form-related singletons
+            HtmlBuilder::class => HtmlBuilder::class,
+            FieldRenderer::class => FieldRenderer::class,
+            FieldGroupRenderer::class => FieldGroupRenderer::class,
+            SectionRenderer::class => SectionRenderer::class,
+            ButtonBuilder::class => ButtonBuilder::class,
+            IconBuilder::class => IconBuilder::class,
+            FieldIdGenerator::class => FieldIdGenerator::class,
+            TokenInterface::class => Token::class,
+            NavigationHistoryService::class => NavigationHistoryService::class,
+            RememberPreviousPageMiddleware::class => RememberPreviousPageMiddleware::class,
+            TypeNormalizerInterface::class => DefaultTypeNormalizer::class,
         ];
     }
 
@@ -175,6 +210,42 @@ final readonly class ContainerClassRegistrator
         foreach ($infrastructureServices as $service) {
             $app->tag($service, 'infrastructure');
         }
+
+        // Form factories - THIS IS THE KEY PART!
+        $formFactories = [
+            MainProductFormFactory::class,
+            DeleteProductFormFactory::class,
+            BulkProductFormFactory::class,
+        ];
+
+        foreach ($formFactories as $factory) {
+            // Tag each factory with both specific and interface tags
+            $app->tag($factory, 'form_factories');
+            $app->tag($factory, FormFactoryInterface::class);
+        }
+
+        $regionContext = [
+            AcceptLanguageRegionContext::class,
+            GeoIPRegionContext::class,
+            HeaderRegionContext::class,
+            QueryParameterRegionContext::class,
+            SessionRegionContext::class,
+        ];
+        foreach ($regionContext as $context) {
+            $app->tag($context, 'contexts');
+            $app->tag($context, RegionContextResolutionInterface::class);
+        }
+
+        // Other form services
+        $formServices = [
+            ProductFormCreator::class,
+            FormSectionManager::class,
+            FormProgressCalculator::class,
+            VariationBuilderInterface::class,
+        ];
+        foreach ($formServices as $service) {
+            $app->tag($service, 'forms');
+        }
     }
 
     /**
@@ -208,6 +279,9 @@ final readonly class ContainerClassRegistrator
             MailerInterface::class => 'mailer',
             FileUploadInterface::class => 'uploader',
             EventManagerInterface::class => 'events',
+
+            // Form aliases
+            ProductFormCreator::class => 'form.creator',
         ];
 
         foreach ($aliases as $abstract => $alias) {

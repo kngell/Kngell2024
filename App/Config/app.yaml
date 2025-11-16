@@ -44,22 +44,20 @@ theme_builder:
 #=============================================================================
 session:
   session_name: "kngellSession"
-  # idle_time: 600 # 10min idle
-  cookie_lifetime: 0 #1600 session expires in 10min if left idle
+  cookie_lifetime: 0
   path: /
   domain: "localhost"
-  cookie_secure: 0
-  cookie_httponly: 0
-  cookie_samesite:
+  cookie_secure: false
+  cookie_httponly: true
+  cookie_samesite: "Lax"
   gc_maxlifetime: 1440
   gc_probability: 1
   gc_divisor: 100
   use_cookies: 1
   use_only_cookies: 1
   use_trans_sid: 0
-  # globalized: true
   default_driver: native_storage
-  save_path: session_dir
+  save_path: storage/sessions
   save_handler: files
   drivers:
     native_storage:
@@ -70,7 +68,6 @@ session:
       default: false
     pdo_storage:
       class: PdoSessionStorage
-
 #============================================
 # Validation messages - Centralized for both client and server
 #============================================
@@ -124,8 +121,15 @@ validation:
     # File validators
     file: "%s must be a file."
     image: "%s must be an image."
-    mimes: "%s must be a file of type: %s."
     max_size: "%s must not be larger than %s kilobytes."
+
+    # File validators
+    file_size: '"%s" (%s) exceeds maximum file size (%s)'
+    upload_limit: '"%s" (%s) exceeds server file size limit (%s)'
+    post_limit: "Total upload size (%s) exceeds server limit (%s). Please upload fewer files."
+    max_files: "Too many files for %s. Selected %s files, maximum allowed is %s."
+    mimes: "File '%s' has invalid extension '%s'. Allowed extensions: %s."
+    image_type: "File '%s' must be a valid image file."
 
     # String validators
     alpha: "%s must contain only letters."
@@ -160,7 +164,12 @@ validation:
       min_value: "Stock quantity cannot be negative."
     weight:
       min_value: "Weight cannot be negative."
-
+    main_image:
+      file_size: "Main image must be smaller than %s."
+    img_gallery:
+      file_size: "Gallery images must be smaller than %s each."
+    main_video:
+      file_size: "Main video must be smaller than %s."
   # CSS classes for error display
   classes:
     hint:
@@ -251,8 +260,8 @@ cache:
       default: false
 
 # SECURITY CONFIGURATIONS
-#=============================================================================
-#=============================================================================
+#========================================
+#==========================================
 security:
   password_pattern: '(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}'
   url_pattern: "https?://.+"
@@ -271,9 +280,47 @@ security:
     argon2i: PASSWORD_ARGON2I
     argon2id: PASSWORD_ARGON2ID] # other options are [default, bcrypt, argon2i and argon2iD]
 
+  excluded_paths:
+    # Paths that should NEVER be set as the 'previous_url' (due to POST/security/internal logic)
+    # This will be used by RememberPreviousPageMiddleware
+    previous_url_ignore:
+      - /login
+      - /logout
+      - /auth-user
+      - /signup
+      - /register
+      - /forgot
+      - /reset-pw
+      - /forgot-pw
+      - /password/reset/
+      - /signup/activate/
+      - /create-payment
+      - /api
+      - /_restrict
+      - /_404_error
+      - /_500_error
+      - /_client_error
+      - /_dev_error
+      - /restore-cart
+      - /user-from-cookie
+      - /public/assets/
+      - /.well-known/
+      - /assets/
+
+    # Paths that should NEVER be redirected to, even on failure (e.g., error pages, API endpoints).
+    # This will be used by CsrfTokenMiddleware::isSafeRedirectUrl
+    safe_redirect_exclude:
+      - /login
+      - /logout
+      - /api
+      - /_restrict
+      - /_404_error
+      - /_500_error
+      - /_client_error
+      - /_dev_error
 # DATABASE CONFIGURATIONS
-#=============================================================================
-#=============================================================================
+#===============================================
+#===============================================
 database:
   default_driver: "mysql"
   drivers:
@@ -304,6 +351,16 @@ logger_handler:
   console: ConsoleLoggerHandler
   echo: EchoLoggerHandler
 
+# Region
+
+# Default_region is used to set the default region for the application. This is primarily used
+# for applications that have multi region support. This setting will help the application to
+# determine which region to load by default. This can be useful for applications that need to
+# cater to different regions and need to load region specific settings, content, and functionality
+# based on the user's location. By setting a default region, the application can ensure that users
+# are presented with the most relevant information and options for their region. This can help to
+default_region: EU
+# manage content and functionality based on the user's region.
 # Disallowed controllers prevent the any controller in the array list from being inserted into the database
 # this primarily governs the admin panel control menu. As not all controller class is suited to have a
 # menu item. If you want a particular controller to not be accessible from the admin menu. You will need to

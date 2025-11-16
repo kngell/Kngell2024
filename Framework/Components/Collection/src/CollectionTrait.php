@@ -31,11 +31,12 @@ trait CollectionTrait
         'pop',
         'shift',
         'empty',
+        'count',
     ];
 
     public function __get($key)
     {
-        if (! in_array($key, self::$proxies)) {
+        if (!in_array($key, self::$proxies)) {
             throw new BaseException("Property [{$key}] does not exist on this collection instance.");
         }
 
@@ -46,9 +47,10 @@ trait CollectionTrait
      * add a method to the array of proxies.
      *
      * @param string $method
+     *
      * @return void
      */
-    public function proxy(string $method) : void
+    public function proxy(string $method): void
     {
         static::$proxies[] = $method;
     }
@@ -57,24 +59,12 @@ trait CollectionTrait
      * Cast $items.
      *
      * @param mixed $items
+     *
      * @return array
      */
     public function arrayableItems($items): array
     {
         return (array) $items;
-    }
-
-    /**
-     * Checks whether the input array is of an associative array type.
-     *
-     * @param array $inputArray
-     * @return bool
-     */
-    public static function isAssoc(array $inputArray)
-    {
-        $keys = array_keys($inputArray);
-
-        return array_keys($keys) !== $keys;
     }
 
     /**
@@ -103,6 +93,7 @@ trait CollectionTrait
      * Return the default value of the given value.
      *
      * @param  mixed  $value
+     *
      * @return mixed
      */
     public function value($value, ...$args)
@@ -116,6 +107,7 @@ trait CollectionTrait
      * @param  iterable  $array
      * @param  callable|null  $callback
      * @param  mixed  $default
+     *
      * @return mixed
      */
     public function first($array, ?callable $callback = null, $default = null)
@@ -144,9 +136,10 @@ trait CollectionTrait
      *
      * @param array $input
      * @param callable $callback
+     *
      * @return mixed
      */
-    public function where(array $input, callable $callback) : mixed
+    public function where(array $input, callable $callback): mixed
     {
         return array_filter($input, $callback, ARRAY_FILTER_USE_BOTH);
     }
@@ -157,5 +150,19 @@ trait CollectionTrait
 
     public function flattenRecursively()
     {
+    }
+
+    /**
+     * Checks whether the input array is of an associative array type.
+     *
+     * @param array $inputArray
+     *
+     * @return bool
+     */
+    public static function isAssoc(array $inputArray)
+    {
+        $keys = array_keys($inputArray);
+
+        return array_keys($keys) !== $keys;
     }
 }

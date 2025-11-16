@@ -9,8 +9,11 @@ class Flash implements FlashInterface
 
     /** @var string */
     protected const FLASH_KEY = 'flash_message';
+    protected const INPUT_KEY = 'old_input';
+
     /** @var string */
     protected string $flashKey;
+
     /** @var ?SessionInterface */
     protected ?SessionInterface $session;
 
@@ -34,6 +37,7 @@ class Flash implements FlashInterface
 
     /**
      * @param object $session
+     *
      * @return self
      */
     public function getSessionObject(object $session): self
@@ -45,10 +49,12 @@ class Flash implements FlashInterface
     /**
      * @param string $message
      * @param null|FlashType $type
-     * @return void
+     *
      * @throws SessionInvalidArgumentException
+     *
+     * @return void
      */
-    public function add(string $message, ?FlashType $type = null) : void
+    public function add(string $message, ?FlashType $type = null): void
     {
         /* Apply default constants to flash type */
         if ($type === null) {
@@ -62,7 +68,7 @@ class Flash implements FlashInterface
             [
                 'message' => $message,
                 'type' => $type,
-            ]
+            ],
         );
     }
 
@@ -78,12 +84,63 @@ class Flash implements FlashInterface
         }
     }
 
-    public function getSession() : SessionInterface
+    public function addFormInput(
+        string $formAction,
+        array $postData,
+        array $formErrors = [],
+        array $fileData = [],
+    ): void {
+        $formAction = $this->normalizeFormAction($formAction);
+        $formKey = 'form_' . md5(ltrim($formAction, DS));
+
+        if (!empty($postData)) {
+            $this->session->set($formKey . '_values', $postData);
+        }
+        if (!empty($formErrors)) {
+            $this->session->set($formKey . '_errors', $formErrors);
+        }
+        if (!empty($fileData)) {
+            $this->session->set($formKey . '_files', $fileData);
+        }
+    }
+
+    public function getOldInput(?string $key = null): mixed
+    {
+        $input = $this->session->flush(self::INPUT_KEY);
+
+        if ($key !== null && is_array($input)) {
+            return $input[$key] ?? null;
+        }
+        return $input;
+    }
+
+    public function flushForm(string $formAction): array
+    {
+        $formAction = $this->normalizeFormAction($formAction);
+        $formKey = 'form_' . md5($formAction);
+
+        $values = $this->session->flush($formKey . '_values') ?? [];
+        $errors = $this->session->flush($formKey . '_errors') ?? [];
+        $files = $this->session->flush($formKey . '_files') ?? [];
+        return [
+            'values' => $values,
+            'errors' => $errors,
+            'files' => $files,
+        ];
+    }
+
+    public function getSession(): SessionInterface
     {
         return $this->session;
     }
 
-    private function formatMessage(array $flashMsg) : string
+    private function normalizeFormAction(string $formAction): string
+    {
+        // $formAction = DS . ltrim($formAction, '/');
+        return rtrim($formAction, DS);
+    }
+
+    private function formatMessage(array $flashMsg): string
     {
         $flashMsg = ArrayUtils::first($flashMsg);
         $msg = "<div id='message' class='alert alert-" . $flashMsg['type']->value . ' alert-dismissible fade show text-center' . "' role='alert'>";

@@ -6,6 +6,7 @@ trait ControllerGettersAndSetters
 {
     /**
      * @param Request $request
+     *
      * @return Controller
      */
     public function setRequest(Request $request): self
@@ -24,6 +25,7 @@ trait ControllerGettersAndSetters
 
     /**
      * @param ViewInterface $view
+     *
      * @return Controller
      */
     public function setView(ViewInterface $view): self
@@ -34,6 +36,7 @@ trait ControllerGettersAndSetters
 
     /**
      * @param Response $response
+     *
      * @return Controller
      */
     public function setResponse(Response $response): self
@@ -45,6 +48,7 @@ trait ControllerGettersAndSetters
 
     /**
      * @param TokenInterface $token
+     *
      * @return Controller
      */
     public function setToken(TokenInterface $token): self
@@ -55,6 +59,7 @@ trait ControllerGettersAndSetters
 
     /**
      * @param FlashInterface $flash
+     *
      * @return Controller
      */
     public function setFlash(FlashInterface $flash): self
@@ -65,6 +70,7 @@ trait ControllerGettersAndSetters
 
     /**
      * @param SessionInterface $session
+     *
      * @return Controller
      */
     public function setSession(SessionInterface $session): self
@@ -83,6 +89,7 @@ trait ControllerGettersAndSetters
 
     /**
      * @param EventManagerInterface $eventManager
+     *
      * @return Controller
      */
     public function setEventManager(EventManagerInterface $eventManager): self
@@ -101,11 +108,24 @@ trait ControllerGettersAndSetters
 
     /**
      * @param HtmlBuilder $builder
+     *
      * @return Controller
      */
     public function setBuilder(HtmlBuilder $builder): self
     {
         $this->builder = $builder;
+        return $this;
+    }
+
+    /**
+     * @param NavigationHistoryService $navigationHistory
+     *
+     * @return Controller
+     */
+    public function setNavigationHistory(NavigationHistoryService $navigationHistory): Controller
+    {
+        $this->navigationHistory = $navigationHistory;
+
         return $this;
     }
 
@@ -135,6 +155,7 @@ trait ControllerGettersAndSetters
 
     /**
      * @param CacheInterface $cache
+     *
      * @return Controller
      */
     public function setCache(CacheInterface $cache): self
@@ -153,6 +174,7 @@ trait ControllerGettersAndSetters
 
     /**
      * @param CookieInterface $cookie
+     *
      * @return Controller
      */
     public function setCookie(CookieInterface $cookie): self
@@ -168,6 +190,7 @@ trait ControllerGettersAndSetters
 
     /**
      * @param Model $model
+     *
      * @return void
      */
     protected function currentModel(Model $model): void

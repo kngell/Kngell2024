@@ -18,7 +18,7 @@ class GrantControllerAccessMiddleware implements MiddlewareInterface
         private RouteInfo $route,
         private SessionInterface $session,
         private AclGroupModel $aclGroup,
-        private FlashInterface $flash
+        private FlashInterface $flash,
     ) {
         $this->acl = json_decode(file_get_contents(APP . 'acl.json'), true);
     }
@@ -77,7 +77,7 @@ class GrantControllerAccessMiddleware implements MiddlewareInterface
 
         // If access is granted, check if it's explicitly denied
         if ($accessGranted) {
-            $accessGranted = ! $this->checkExplicitlyDenied($userAcls);
+            $accessGranted = !$this->checkExplicitlyDenied($userAcls);
         } else {
             $accessGranted = true;
         }
@@ -95,18 +95,19 @@ class GrantControllerAccessMiddleware implements MiddlewareInterface
         $method = $this->route->getMethod()->getName();
 
         // If requireLogin middleware is specified, we defer access control to it
-        if (isset($this->route->getRouteParams()['middleware']) &&
-            str_contains($this->route->getRouteParams()['middleware'], 'requireLogin')) {
+        $routeParams = $this->route->getRouteParams();
+        if (isset($routeParams['middleware']) &&
+            is_array($routeParams['middleware']) && in_array('requireLogin', $routeParams['middleware'])) {
             return true;
         }
 
         // Check if any of the user's ACL groups allow access
         $allowAccess = false;
         foreach ($userAcls as $level) {
-            if (! array_key_exists($level, $this->acl)) {
+            if (!array_key_exists($level, $this->acl)) {
                 $allowAccess = true;
             }
-            if (! array_key_exists($controller, $this->acl[$level])) {
+            if (!array_key_exists($controller, $this->acl[$level])) {
                 $allowAccess = true;
                 continue;
             }
@@ -131,7 +132,7 @@ class GrantControllerAccessMiddleware implements MiddlewareInterface
 
         foreach ($userAcls as $level) {
             $denied = $this->getDeniedControllers($level);
-            if (empty($denid) || ! array_key_exists($controller, $denied)) {
+            if (empty($denid) || !array_key_exists($controller, $denied)) {
                 $accessDenied = false;
                 continue;
             }

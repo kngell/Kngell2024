@@ -1,1 +1,1 @@
-<script type="text/javascript" src="{{jsFile}}" defer></script>
+<script type="text/javascript" src="{{jsFile}}" {{flag}}></script>

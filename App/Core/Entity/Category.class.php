@@ -2,178 +2,263 @@
 
 declare(strict_types=1);
 
-class Category extends Entity
+class Category extends Entity implements TimestampableInterface, SoftDeletableInterface
 {
-    #[EntityFieldId(name: 'category_id')]
-    private string $categoryId;
-    private string $categoryName;
-    private string $description;
-    private string $media;
-    private string $createdAt;
-    private string $updatedAt;
-    private string $categoryStatus;
-    private int $deleted;
-    private int $parentCategoryId;
+    use EntityTimestampableTrait;
+    use SoftDeletableTrait;
+
+    #[EntityFieldId(name: 'cat_id')]
+    private string $id;
+
+    private string $name;
+    private string $slug;
+    private int $parentId;
+    private int $level = 0;
+    private null|string $path = null;
+    private null|int $orderIndex = 0;
+    private bool $isActive = true;
+    private null|string $metaTitle;
+    private null|string $meta_description;
+    private null|string $description;
+    private null|string $imageUrl;
 
     /**
      * @return string
      */
-    public function getCategoryId(): string
+    public function getId(): string
     {
-        return $this->categoryId;
+        return $this->id;
     }
 
     /**
-     * @param string $categoryId
+     * @param string $id
+     *
      * @return Category
      */
-    public function setCategoryId(string $categoryId): self
+    public function setId(string $id): Category
     {
-        $this->categoryId = $categoryId;
+        $this->id = $id;
+
         return $this;
     }
 
     /**
      * @return string
      */
-    public function getCategoryName(): string
+    public function getName(): string
     {
-        return $this->categoryName;
+        return $this->name;
     }
 
     /**
-     * @param string $categoryName
+     * @param string $name
+     *
      * @return Category
      */
-    public function setCategoryName(string $categoryName): self
+    public function setName(string $name): Category
     {
-        $this->categoryName = $categoryName;
+        $this->name = $name;
+
         return $this;
     }
 
     /**
      * @return string
      */
-    public function getDescription(): string
+    public function getSlug(): string
+    {
+        return $this->slug;
+    }
+
+    /**
+     * @param string $slug
+     *
+     * @return Category
+     */
+    public function setSlug(string $slug): Category
+    {
+        $this->slug = $slug;
+
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getParentId(): int
+    {
+        return $this->parentId;
+    }
+
+    /**
+     * @param int $parentId
+     *
+     * @return Category
+     */
+    public function setParentId(int $parentId): Category
+    {
+        $this->parentId = $parentId;
+
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getLevel(): int
+    {
+        return $this->level;
+    }
+
+    /**
+     * @param int $level
+     *
+     * @return Category
+     */
+    public function setLevel(int $level): Category
+    {
+        $this->level = $level;
+
+        return $this;
+    }
+
+    /**
+     * @return null|string
+     */
+    public function getPath(): ?string
+    {
+        return $this->path;
+    }
+
+    /**
+     * @param null|string $path
+     *
+     * @return Category
+     */
+    public function setPath(?string $path): Category
+    {
+        $this->path = $path;
+
+        return $this;
+    }
+
+    /**
+     * @return null|int
+     */
+    public function getOrderIndex(): ?int
+    {
+        return $this->orderIndex;
+    }
+
+    /**
+     * @param null|int $orderIndex
+     *
+     * @return Category
+     */
+    public function setOrderIndex(?int $orderIndex): Category
+    {
+        $this->orderIndex = $orderIndex;
+
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIsActive(): bool
+    {
+        return $this->isActive;
+    }
+
+    /**
+     * @param bool $isActive
+     *
+     * @return Category
+     */
+    public function setIsActive(bool $isActive): Category
+    {
+        $this->isActive = $isActive;
+
+        return $this;
+    }
+
+    /**
+     * @return null|string
+     */
+    public function getMetaTitle(): ?string
+    {
+        return $this->metaTitle;
+    }
+
+    /**
+     * @param null|string $metaTitle
+     *
+     * @return Category
+     */
+    public function setMetaTitle(?string $metaTitle): Category
+    {
+        $this->metaTitle = $metaTitle;
+
+        return $this;
+    }
+
+    /**
+     * @return null|string
+     */
+    public function getMeta_description(): ?string
+    {
+        return $this->meta_description;
+    }
+
+    /**
+     * @param null|string $meta_description
+     *
+     * @return Category
+     */
+    public function setMeta_description(?string $meta_description): Category
+    {
+        $this->meta_description = $meta_description;
+
+        return $this;
+    }
+
+    /**
+     * @return null|string
+     */
+    public function getDescription(): ?string
     {
         return $this->description;
     }
 
     /**
-     * @param string $description
+     * @param null|string $description
+     *
      * @return Category
      */
-    public function setDescription(string $description): self
+    public function setDescription(?string $description): Category
     {
         $this->description = $description;
+
         return $this;
     }
 
     /**
-     * @return string
+     * @return null|string
      */
-    public function getMedia(): string
+    public function getImageUrl(): ?string
     {
-        return $this->media;
+        return $this->imageUrl;
     }
 
     /**
-     * @param string $media
+     * @param null|string $imageUrl
+     *
      * @return Category
      */
-    public function setMedia(string $media): self
+    public function setImageUrl(?string $imageUrl): Category
     {
-        $this->media = $media;
-        return $this;
-    }
+        $this->imageUrl = $imageUrl;
 
-    /**
-     * @return string
-     */
-    public function getCreatedAt(): string
-    {
-        return $this->createdAt;
-    }
-
-    /**
-     * @param string $createdAt
-     * @return Category
-     */
-    public function setCreatedAt(string $createdAt): self
-    {
-        $this->createdAt = $createdAt;
-        return $this;
-    }
-
-    /**
-     * @return string
-     */
-    public function getUpdatedAt(): string
-    {
-        return $this->updatedAt;
-    }
-
-    /**
-     * @param string $updatedAt
-     * @return Category
-     */
-    public function setUpdatedAt(string $updatedAt): self
-    {
-        $this->updatedAt = $updatedAt;
-        return $this;
-    }
-
-    /**
-     * @return string
-     */
-    public function getCategoryStatus(): string
-    {
-        return $this->categoryStatus;
-    }
-
-    /**
-     * @param string $categoryStatus
-     * @return Category
-     */
-    public function setCategoryStatus(string $categoryStatus): self
-    {
-        $this->categoryStatus = $categoryStatus;
-        return $this;
-    }
-
-    /**
-     * @return int
-     */
-    public function getDeleted(): int
-    {
-        return $this->deleted;
-    }
-
-    /**
-     * @param int $deleted
-     * @return Category
-     */
-    public function setDeleted(int $deleted): self
-    {
-        $this->deleted = $deleted;
-        return $this;
-    }
-
-    /**
-     * @return int
-     */
-    public function getParentCategoryId(): int
-    {
-        return $this->parentCategoryId;
-    }
-
-    /**
-     * @param int $parentCategoryId
-     * @return Category
-     */
-    public function setParentCategoryId(int $parentCategoryId): self
-    {
-        $this->parentCategoryId = $parentCategoryId;
         return $this;
     }
 }

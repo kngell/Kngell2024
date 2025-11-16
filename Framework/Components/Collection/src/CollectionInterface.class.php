@@ -11,14 +11,17 @@ interface CollectionInterface extends Countable, IteratorAggregate, ArrayAccess
      */
     public function all(): array;
 
-    public function first(callable|null $callback = null, $default = null) : mixed;
+    public function first(callable|null $callback = null, $default = null): mixed;
 
-    public function last() : mixed;
+    public function last(): mixed;
+
+    public function removeLast(): mixed;
 
     /**
      * Checks whether a given key exists within the collection.
      *
      * @param mixed $key
+     *
      * @return bool
      */
     public function has(mixed $key): bool;
@@ -34,18 +37,20 @@ interface CollectionInterface extends Countable, IteratorAggregate, ArrayAccess
      * Run a map over each items.
      *
      * @param callable $callback
+     *
      * @return static
      */
     public function map(callable $callback): static;
 
     public function avg();
 
-    public function shuffle() : static;
+    public function shuffle(): static;
 
     /**
      * Calculates the sum of values within the specified array.
      *
      * @param array $array
+     *
      * @return static
      */
     public function sum(): static;
@@ -59,6 +64,7 @@ interface CollectionInterface extends Countable, IteratorAggregate, ArrayAccess
      *
      * @param mixed $from
      * @param mixed $to
+     *
      * @return static
      */
     public function range($from, $to): static;
@@ -67,6 +73,7 @@ interface CollectionInterface extends Countable, IteratorAggregate, ArrayAccess
      * Merge the collection with the given argument.
      *
      * @param mixed $items
+     *
      * @return static
      */
     public function merge(mixed $items): static;
@@ -75,6 +82,7 @@ interface CollectionInterface extends Countable, IteratorAggregate, ArrayAccess
      * Recursively merge the collection with the given argument.
      *
      * @param mixed $items
+     *
      * @return static
      */
     public function mergeRecursive(mixed $items): static;
@@ -90,6 +98,7 @@ interface CollectionInterface extends Countable, IteratorAggregate, ArrayAccess
      * Push elements on the end of the collection items.
      *
      * @param mixed ...$values
+     *
      * @return self
      */
     public function push(...$values): self;
@@ -113,6 +122,7 @@ interface CollectionInterface extends Countable, IteratorAggregate, ArrayAccess
      *
      * @param [type] $offset
      * @param [type] $length
+     *
      * @return static
      */
     public function slice(int $offset, $length = null): static;
@@ -135,6 +145,7 @@ interface CollectionInterface extends Countable, IteratorAggregate, ArrayAccess
      * Add an item to the collection.
      *
      * @param mixed $item
+     *
      * @return self
      */
     public function add(mixed $item): self;
@@ -143,13 +154,14 @@ interface CollectionInterface extends Countable, IteratorAggregate, ArrayAccess
      * Remove the item from the collection.
      *
      * @param string $key
+     *
      * @return void
      */
     public function remove(string $key): void;
 
-    public function removeByValue(mixed $value) : void;
+    public function removeByValue(mixed $value): void;
 
-    public function updateValue(mixed $oldValue, mixed $NewValue) : void;
+    public function updateValue(mixed $oldValue, mixed $NewValue): void;
 
     /**
      * Removes duplicate entry from the collection items.
@@ -162,6 +174,7 @@ interface CollectionInterface extends Countable, IteratorAggregate, ArrayAccess
      * Returns the items in the collection which is not within the specified index array.
      *
      * @param mixed $items
+     *
      * @return static
      */
     public function diff(mixed $items): static;
@@ -170,6 +183,7 @@ interface CollectionInterface extends Countable, IteratorAggregate, ArrayAccess
      * Returns the items in the collection which is not within the the specified associative array.
      *
      * @param mixed $items
+     *
      * @return static
      */
     public function diffAssoc(mixed $items): static;
@@ -180,6 +194,7 @@ interface CollectionInterface extends Countable, IteratorAggregate, ArrayAccess
      *
      * @param mixed $items
      * @param callable $callback
+     *
      * @return static
      */
     public function diffAssocUsing(mixed $items, callable $callback): static;
@@ -189,6 +204,7 @@ interface CollectionInterface extends Countable, IteratorAggregate, ArrayAccess
      * index array.
      *
      * @param mixed $items
+     *
      * @return static
      */
     public function diffKeys(mixed $items): static;
@@ -199,25 +215,26 @@ interface CollectionInterface extends Countable, IteratorAggregate, ArrayAccess
      *
      * @param mixed $items
      * @param callable $callback
+     *
      * @return static
      */
     public function diffKeysUsing(mixed $items, callable $callback): static;
 
     public function filter(?callable $callback = null): static;
 
-    public function valueExists(mixed $value) : bool;
+    public function valueExists(mixed $value): bool;
 
-    public function getObjectWithValue(string $id, mixed $value) : array;
+    public function getObjectWithValue(string $id, mixed $value): array;
 
-    public function isEmpty() : bool;
+    public function isEmpty(): bool;
 
-    public function addAll(array $parameters) : self;
+    public function addAll(array $parameters): self;
 
     public function clear(string $key): void;
 
-    public function getWithDefault(string $key, mixed $defaultValue) : mixed;
+    public function getWithDefault(string $key, mixed $defaultValue): mixed;
 
     public function get(mixed $key): mixed;
 
-    public function replace(mixed $newValues, mixed $oldValue) : void;
+    public function replace(mixed $newValues, mixed $oldValue): void;
 }

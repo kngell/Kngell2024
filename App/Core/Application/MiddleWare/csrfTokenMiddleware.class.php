@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 class CsrfTokenMiddleware implements MiddlewareInterface
 {
-    private const string PREVIOUS_URL_SESSION_KEY = 'previous_url';
     private const string DEFAULT_REDIRECT_URL = '/';
 
     private const array STATE_CHANGING_METHODS = [
@@ -22,14 +21,15 @@ class CsrfTokenMiddleware implements MiddlewareInterface
 
     public function __construct(
         private readonly TokenInterface $token,
-        private readonly FlashInterface $flash
+        private readonly FlashInterface $flash,
+        private array $safeRedirectExclude,
     ) {
     }
 
     public function process(Request $request, RequestHandlerInterface $next): Response|string
     {
         if ($this->requiresCsrfValidation($request)) {
-            if (! $this->validateCsrfToken($request)) {
+            if (!$this->validateCsrfToken($request)) {
                 return $this->handleCsrfFailure($request);
             }
         }
@@ -40,7 +40,7 @@ class CsrfTokenMiddleware implements MiddlewareInterface
     private function requiresCsrfValidation(Request $request): bool
     {
         return $this->isStateChangingMethod($request->getMethod())
-            && ! $this->isExemptPath($request->getRequestedUri());
+            && !$this->isExemptPath($request->getRequestedUri());
     }
 
     private function isStateChangingMethod(HttpMethod $method): bool
@@ -62,8 +62,12 @@ class CsrfTokenMiddleware implements MiddlewareInterface
     {
         $postData = $request->getPost()->getAll();
 
+        if (empty($postData)) {
+            return false;
+        }
+
         // Check if CSRF token exists in the request
-        if (! isset($postData['csrfToken']) || empty($postData['csrfToken'])) {
+        if (!isset($postData['csrfToken']) || empty($postData['csrfToken'])) {
             return false;
         }
 
@@ -72,9 +76,18 @@ class CsrfTokenMiddleware implements MiddlewareInterface
 
     private function handleCsrfFailure(Request $request): RedirectResponse
     {
+        $postData = $request->getPost()->getAll();
+
+        $this->flash->addFormInput(
+            $request->getRequestedUri(),
+            $postData,
+            [],
+            $request->getFiles()->all(),
+        );
+
         $this->flash->add(
-            'Security token mismatch. Please try submitting the form again.',
-            FlashType::DANGER
+            'Security token mismatch or expired. Please try submitting the form again.',
+            FlashType::DANGER,
         );
 
         $redirectUrl = $this->determineRedirectUrl($request);
@@ -84,40 +97,52 @@ class CsrfTokenMiddleware implements MiddlewareInterface
 
     private function determineRedirectUrl(Request $request): string
     {
-        $session = $this->flash->getSession();
+        $currentUri = $request->getRequestedUri();
 
-        // Try to get the previous URL from session
-        $previousUrl = $session->get(self::PREVIOUS_URL_SESSION_KEY);
-
-        // If no previous URL or it's the same as current (to avoid redirect loops)
-        if (! $previousUrl || $previousUrl === $request->getRequestedUri()) {
-            return self::DEFAULT_REDIRECT_URL;
+        if ($this->isSafeRedirectUrl($currentUri)) {
+            return $currentUri;
         }
+        $session = $this->flash->getSession();
+        $previousUrl = $session->get('previous_url');
 
-        // Validate that the previous URL is safe (same origin)
-        if ($this->isSafeRedirectUrl($previousUrl)) {
+        if ($previousUrl && $this->isSafeRedirectUrl($previousUrl)) {
             return $previousUrl;
         }
-
         return self::DEFAULT_REDIRECT_URL;
     }
 
+    // isSafeRedirectUrl (REFINED)
     private function isSafeRedirectUrl(string $url): bool
     {
-        // Only allow relative URLs or URLs from the same domain
-        if (str_starts_with($url, '/') && ! str_starts_with($url, '//')) {
-            return true;
+        if (str_starts_with($url, '/') && !str_starts_with($url, '//')) {
+            return !$this->isExcludedPath($url);
         }
 
-        // For absolute URLs, check if they're from the same domain
         $parsedUrl = parse_url($url);
-        if ($parsedUrl === false || ! isset($parsedUrl['host'])) {
+        if ($parsedUrl === false || !isset($parsedUrl['host'])) {
             return false;
         }
 
-        // Get current domain from server variables
         $currentHost = $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? '';
 
-        return $parsedUrl['host'] === $currentHost;
+        // Check if the scheme and host match
+        if ($parsedUrl['host'] !== $currentHost) {
+            return false;
+        }
+
+        $path = $parsedUrl['path'] ?? '/';
+        return !$this->isExcludedPath($path);
+    }
+
+    private function isExcludedPath(string $uri): bool
+    {
+        $excludePaths = $this->safeRedirectExclude;
+
+        foreach ($excludePaths as $path) {
+            if (str_starts_with($uri, $path)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

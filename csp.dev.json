@@ -6,5 +6,6 @@
   "font-src": "'self' data: https://localhost https://localhost:3003",
   "connect-src": "'self' ws://localhost:3003 wss://localhost:3003 ws://127.0.0.1:3003 wss://127.0.0.1:3003 https://localhost https://localhost:3003",
   "frame-src": "'self' https://localhost https://localhost:3003",
-  "worker-src": "'self' blob: https://localhost https://localhost:3003"
+  "worker-src": "'self' blob: https://localhost https://localhost:3003",
+  "media-src": "'self' blob: data: https://localhost https://localhost:3003"
 }

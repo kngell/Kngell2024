@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 class QueryResultFormatter
 {
+    private array $tableAlias = [];
+
     public function __construct(
         private QueryResult $queryResult,
         private QueryResultConfig $config,
+        private ChangeTrackerInterface $changeTracker,
+        private TypeNormalizerInterface $normalizer,
     ) {
     }
 
@@ -23,9 +27,12 @@ class QueryResultFormatter
         };
     }
 
-    public function asClass(?string $entityClass = null): mixed
+    public function asClass(?string $entityClass = null, array $joinConfig = []): mixed
     {
-        $this->queryResult->execute(['mode' => 'class', 'class' => $entityClass ?? $this->queryResult->getEntity()::class]);
+        $entityClass = $entityClass ?? $this->queryResult->getEntity()::class;
+        $this->queryResult->execute(['mode' => 'class', 'class' => $entityClass,
+            'constructor_args' => $this->config->getConstructorArgs(),
+        ]);
 
         return match ($this->queryResult->getOperation()) {
             'all' => $this->queryResult->all(),
@@ -59,5 +66,17 @@ class QueryResultFormatter
             'last' => $this->queryResult->last(),
             default => $this->queryResult->all()
         };
+    }
+
+    /**
+     * @param array $tableAlias
+     *
+     * @return QueryResultFormatter
+     */
+    public function setTableAlias(array $tableAlias): QueryResultFormatter
+    {
+        $this->tableAlias = $tableAlias;
+
+        return $this;
     }
 }

@@ -564,18 +564,7 @@
      <div class="input-box__hint-text invalid-feedback">Base Price is required.</div>
  </div>
 
- <div class="input-box__container--currency-combo">
-     <span class="input-box__prefix--currency"><select class="input-box__select" name="currency">
-             <option value="USD">USD</option>
-             <option value="EUR">EUR</option>
-             <option value="GBP">GBP</option>
-         </select>
-     </span>
-     <input type="number" class="input-box__input is-invalid" id="product-frm-base_price-6" name="price"
-         placeholder="0.00">
 
- </div>
- <div class="input-box__hint-text invalid-feedback">Base Price is required.</div>
  <!-- Checkbox layout -->
  <div class="input-box span-all">
      <input type="checkbox" name="allow-backorders" id="allow-backorders" class="input-box__input" />
@@ -681,3 +670,43 @@
                                          'type' => 'text',
                                      ];
                                      ?>
+ <!-- Input File image -->
+ <div class="input-box">
+     <h6 class="input-box__media-title">Photo</h6>
+     <div class="input-box__media-upload">
+         <div class="media-preview empty">
+             <div class="media-preview__item">
+                 <div class="media-preview__item--img-container">
+                     <img class="image" src="#" alt="Product Image Camera">
+                     <div class="icon-container">
+                         <svg class="icon success" role="img" aria-label="Success">
+                             <use href="/public/assets/img/icons-sprite.svg#icon-success"></use>
+                         </svg>
+                     </div>
+                     <button class="btn btn--danger-light btn-md-compact btn--icon-only">
+                         <span class="btn__icon"><svg class="icon cancel" role="img" aria-label="Cancel">
+                                 <use href="/public/assets/img/icons-sprite.svg#icon-cancel"></use>
+                             </svg>
+                         </span>
+                     </button>
+                 </div>
+
+
+             </div>
+         </div>
+         <input type="file" class="media-file" id="product-frm-image-gallery-4" accept="image/*" name="img_gallery"
+             multiple="">
+         <div class="media-avatar">
+             <svg class="icon" role="img" aria-label="Media Photo Avatar">
+                 <use href="/public/assets/img/icons-sprite.svg#icon-mediaphoto"></use>
+             </svg>
+         </div>
+         <span class="media-text">Drag and drop image here, or click to browse
+         </span>
+         <label class="btn btn--secondary btn--md-compact" for="product-frm-image-gallery-4">
+             <span class="btn__label">Add
+                 Image
+             </span>
+         </label>
+     </div>
+ </div>

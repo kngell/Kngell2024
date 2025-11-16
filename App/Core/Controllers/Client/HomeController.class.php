@@ -3,12 +3,13 @@
 declare(strict_types=1);
 class HomeController extends Controller
 {
-    public function __construct(private UserModel $user, private TestFormCreator $frm, private Validator $validator)
+    public function __construct(private UserModel $user, TestFormCreator $frm, private Validator $validator)
     {
         $this->currentModel($user);
+        $this->frm = $frm;
     }
 
-    public function index() : string
+    public function index(): string
     {
         $this->pageTitle('Home');
         return $this->render('index');

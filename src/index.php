@@ -10,7 +10,8 @@ if (is_file($autoload)) {
 }
 
 try {
-    $app = App::getInstance();
+    // $app = App::getInstance();
+    $app = new App();
     $app->boot()->run();
 } catch (Throwable $e) {
     ErrorHandling::exceptionHandle($e);

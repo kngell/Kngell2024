@@ -1,0 +1,17 @@
+Options -Indexes -ExecCGI
+
+<FilesMatch "\.(php|phtml|phar)$">
+    Deny from all
+</FilesMatch>
+
+# Allow common static file types
+<FilesMatch "\.(pdf|csv|xlsx|json|xml|txt|log|zip)$">
+    Allow from all
+</FilesMatch>
+
+# No caching for dynamic static files
+<IfModule mod_headers.c>
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+    Header set Pragma "no-cache"
+    Header set Expires 0
+</IfModule>

@@ -9,11 +9,11 @@ abstract class AbstractValidatorCreator
     protected array $messages;
     protected array $customRules = [];
 
-    abstract public function create(string $ruleName, string $display, mixed $inputValue, mixed $ruleValue): ?AbstractValidator;
+    abstract public function create(string $ruleName, string $display, mixed $inputValue, mixed $ruleValue, string $fieldName): ?AbstractValidator;
 
-    public function run(string $ruleName, string $display, mixed $inputValue, mixed $ruleValue): array|string|bool
+    public function run(string $ruleName, string $display, mixed $inputValue, mixed $ruleValue, string $fieldName): array|string|bool
     {
-        $validator = $this->create($ruleName, $display, $inputValue, $ruleValue);
+        $validator = $this->create($ruleName, $display, $inputValue, $ruleValue, $fieldName);
 
         if ($validator === null) {
             throw ValidationException::validatorNotInitialized(); // Rule not applicable

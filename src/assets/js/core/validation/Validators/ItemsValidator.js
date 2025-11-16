@@ -1,7 +1,7 @@
 import BaseValidator from "../BaseValidator.js";
 import ValidatorFactory from "js/core/validation/factory/ValidatorFactory";
 
-import { BrowserLogger } from "js/utils/BrowserLogger";
+import BrowserLogger from "js/utils/BrowserLogger";
 const logger = new BrowserLogger("ItemsValidator");
 
 export default class ItemsValidator extends BaseValidator {

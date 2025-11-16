@@ -8,6 +8,7 @@ interface SessionStorageInterface
      * session_name wrapper with explicit argument to set a session_name.
      *
      * @param string $sessionName
+     *
      * @return void
      */
     public function setSessionName(string $sessionName): void;
@@ -18,14 +19,6 @@ interface SessionStorageInterface
      * @return string
      */
     public function getSessionName(): string;
-
-    /**
-     * session_id wrapper with explicit argument to set a session_id.
-     *
-     * @param string $sessionID
-     * @return void
-     */
-    public function setSessionID(string $sessionID): void;
 
     /**
      * session_id wrapper which returns the current session id.
@@ -39,8 +32,10 @@ interface SessionStorageInterface
      *
      * @param string $key   The key of the item to store.
      * @param mixed  $value The value of the item to store. Must be serializable.
-     * @return void
+     *
      * @throws BaseIna MUST be thrown if the $key string is not a legal value.
+     *
+     * @return void
      */
     public function setSession(string $key, mixed $value): void;
 
@@ -49,8 +44,10 @@ interface SessionStorageInterface
      *
      * @param string $key   The key of the item to store.
      * @param mixed  $value The value of the item to store. Must be serializable.
-     * @return void
+     *
      * @throws SessionInvalidArgumentException MUST be thrown if the $key string is not a legal value.
+     *
+     * @return void
      */
     public function setArraySession(string $key, mixed $value): void;
 
@@ -59,8 +56,10 @@ interface SessionStorageInterface
      *
      * @param string $key   The key of the item to store.
      * @param mixed  $default the default value to return if the request value can't be found
-     * @return mixed
+     *
      * @throws SessionInvalidArgumentException MUST be thrown if the $key string is not a legal value.
+     *
+     * @return mixed
      */
     public function getSession(string $key, mixed $default = null): mixed;
 
@@ -68,8 +67,10 @@ interface SessionStorageInterface
      * Removes the value for the specified key from the session.
      *
      * @param string $key   The key of the item that will be unset.
-     * @return void
+     *
      * @throws SessionInvalidArgumentException
+     *
+     * @return void
      */
     public function deleteSession(string $key): void;
 
@@ -85,24 +86,18 @@ interface SessionStorageInterface
      *
      * @param string $key - The key to retrieve and remove the value for.
      * @param mixed $default - The default value to return if the requested value cannot be found
+     *
      * @return mixed
      */
     public function flushSession(string $key, mixed $default = null): mixed;
 
     /**
-     * Determines whether an item is present in the session.
-     *
-     * @param string $key The session item key.
-     * @return bool
-     * @throws SessionInvalidArgumentException  MUST be thrown if the $key string is not a legal value.
-     */
-    public function hasSession(string $key): bool;
-
-    /**
      * Check for exists Session
      * ----------------------------------------------------.
+     *
      * @param string $key
+     *
      * @return bool
      */
-    public function SessionExists(string $key) :bool;
+    public function SessionExists(string $key): bool;
 }

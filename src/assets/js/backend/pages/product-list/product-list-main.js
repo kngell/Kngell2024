@@ -1,4 +1,4 @@
-import { BrowserLogger } from "js/utils/BrowserLogger.js";
+import BrowserLogger from "js/utils/BrowserLogger.js";
 import ProductListCheckboxManager from "js/backend/shared/ProducListCheckboxManager.js";
 
 const logger = new BrowserLogger("ProductListMain");

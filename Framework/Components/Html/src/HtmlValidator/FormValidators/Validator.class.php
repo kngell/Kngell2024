@@ -15,10 +15,13 @@ final class Validator implements ValidatorInterface
     private array $inputFields = [];
     private array $validatedData = [];
     private ?ValidationResult $lastResult = null;
+    private static FileSearchInterface $searchManager;
 
     public function __construct(
         private readonly ValidationConfig $config,
+        private readonly FileSearchInterface $file,
     ) {
+        self::$searchManager = $this->file;
     }
 
     public function validate(array $inputFields, string $rules, ?Model $model = null): ValidationResult
@@ -98,7 +101,7 @@ final class Validator implements ValidatorInterface
 
     private function initializeValidation(array $inputFields, string $ruleFileName, ?Model $model): void
     {
-        $rulesFile = FileManager::get(APP . 'Forms', $ruleFileName . '.yaml');
+        $rulesFile = $this->file->findFile(APP . 'Html', $ruleFileName . '.yaml')->getPathname();
 
         if (!$rulesFile || !file_exists($rulesFile)) {
             throw ValidationException::rulesFileNotFound($ruleFileName);
@@ -254,7 +257,7 @@ final class Validator implements ValidatorInterface
         }
 
         try {
-            return $this->validatorCreator->run($ruleName, $display, $inputValue, $ruleValue);
+            return $this->validatorCreator->run($ruleName, $display, $inputValue, $ruleValue, $fieldName);
         } catch (InvalidArgumentException $e) {
             // Unknown rule - log and skip
             error_log("Unknown validation rule '{$ruleName}' for field '{$fieldName}': " . $e->getMessage());
@@ -382,7 +385,7 @@ final class Validator implements ValidatorInterface
      */
     public static function create(?ValidationConfig $config = null): self
     {
-        return new self($config ?? self::createDefaultConfig());
+        return new self($config ?? self::createDefaultConfig(), self::$searchManager);
     }
 
     /**
@@ -395,7 +398,7 @@ final class Validator implements ValidatorInterface
             stopOnFirstError: true, // Override default
             validateAllFields: self::DEFAULT_VALIDATE_ALL_FIELDS,
             skipMissingFields: self::DEFAULT_SKIP_MISSING_FIELDS,
-        ));
+        ), self::$searchManager);
     }
 
     /**
@@ -409,7 +412,7 @@ final class Validator implements ValidatorInterface
             validateAllFields: self::DEFAULT_VALIDATE_ALL_FIELDS,
             skipMissingFields: self::DEFAULT_SKIP_MISSING_FIELDS,
             validationGroups: $groups,
-        ));
+        ), self::$searchManager);
     }
 
     /**
@@ -422,7 +425,7 @@ final class Validator implements ValidatorInterface
             stopOnFirstError: self::DEFAULT_STOP_ON_ERROR,
             validateAllFields: true, // Override default
             skipMissingFields: false, // Override default
-        ));
+        ), self::$searchManager);
     }
 
     /**

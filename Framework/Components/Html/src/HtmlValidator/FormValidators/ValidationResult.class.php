@@ -10,7 +10,7 @@ final readonly class ValidationResult
     public function __construct(
         private array $errors = [],
         private array $validatedData = [],
-        private bool $stopOnFirstError = false
+        private bool $stopOnFirstError = false,
     ) {
     }
 
@@ -21,7 +21,7 @@ final readonly class ValidationResult
 
     public function hasErrors(): bool
     {
-        return ! empty($this->errors);
+        return !empty($this->errors);
     }
 
     public function getErrors(): array

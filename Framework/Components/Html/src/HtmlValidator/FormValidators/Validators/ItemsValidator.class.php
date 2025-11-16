@@ -11,7 +11,8 @@ class ItemsValidator extends AbstractValidator
         private readonly string $display, // This is the main field name like "variations"
         private readonly mixed $inputValue,
         private readonly mixed $ruleValue,
-        private ?AbstractValidatorCreator $validatorCreator = null,
+        private ?AbstractValidatorCreator $validatorCreator,
+        private string $fieldName,
     ) {
         $this->parentFieldPath = $display; // Use the display name as the initial parent path
     }
@@ -96,6 +97,7 @@ class ItemsValidator extends AbstractValidator
             $value,
             $itemsRule,
             $this->validatorCreator,
+            $this->fieldName,
         );
         $nestedValidator->setParentFieldPath($currentFieldPath);
 
@@ -116,7 +118,7 @@ class ItemsValidator extends AbstractValidator
 
             // Use the validator creator to create and run the validator
             try {
-                $validator = $this->validatorCreator->create($ruleName, $display, $value, $ruleValue);
+                $validator = $this->validatorCreator->create($ruleName, $display, $value, $ruleValue, $this->fieldName);
                 if ($validator !== null) {
                     $error = $validator->validate();
                     if ($error !== false && $error !== null) {

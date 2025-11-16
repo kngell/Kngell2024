@@ -4,38 +4,45 @@ declare(strict_types=1);
 
 class ViewEnvironment
 {
-    private const string VIEW_DIRECTORY = VIEW;
     private string $appPath;
     private Assets $assets;
 
-    public function __construct(string $appPath, Assets $assets)
+    public function __construct(string $appPath, Assets $assets, private FileSearchInterface $file)
     {
         $this->assets = $assets;
         $this->appPath = $appPath;
     }
 
-    public function getLayoutPath() : string
+    public function getLayoutPath(): string
     {
-        return self::VIEW_DIRECTORY . 'Layout';
+        return VIEW . 'Layout';
     }
 
-    public function getFile(string $fileName) : string|bool
+    public function getFile(string $fileName): string
     {
-        $directory = self::VIEW_DIRECTORY;
-        if (! str_contains($fileName, $this->appPath)) {
+        $directory = VIEW;
+        if (!str_contains($fileName, $this->appPath)) {
             $directory = $directory . $this->appPath;
         }
-        return FileManager::get($directory, $fileName);
+
+        try {
+            $fileInfo = $this->file->findViewFile($directory, $fileName);
+            return $fileInfo->getPathname();
+        } catch (ViewNotFoundException $e) {
+            throw new ViewException("View not found: {$fileName} in directory: {$directory}");
+        } catch (AmbiguousViewException $e) {
+            throw new ViewException("Multiple views match: {$fileName}. " . $e->getMessage());
+        }
     }
 
-    public function getCss(string|null $path = null) : string
+    public function getCss(string|null $path = null): string
     {
         return $this->assets->getCss($path);
     }
 
-    public function getJs(string|null $path) : string
+    public function getJs(string|null $path, string $flag): string
     {
-        return $this->assets->getJs($path);
+        return $this->assets->getJs($path, $flag);
     }
 
     /**

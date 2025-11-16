@@ -40,7 +40,7 @@ readonly class RouteDispatcher
         Request $request,
     ): string|Response {
         try {
-            $arguments = ! empty($params) ? $params : $this->routeArgumentGenerator->generate($route, $request);
+            $arguments = !empty($params) ? $params : $this->routeArgumentGenerator->generate($route, $request);
 
             // Bind route information for dependency injection
             $app->instance('current.route', $route);
@@ -96,7 +96,7 @@ readonly class RouteDispatcher
         $this->ensureAuthMiddlewareFirst($middlewareNames);
 
         return array_map(function ($name) use ($app, $route) {
-            if (! array_key_exists($name, $this->middlewares)) {
+            if (!array_key_exists($name, $this->middlewares)) {
                 throw new UnexpectedValueException("Middleware $name not found in the configuration route settings");
             }
 
@@ -131,7 +131,7 @@ readonly class RouteDispatcher
 
         $hasAuthMiddleware = in_array('auth', $middlewareNames);
 
-        if ($hasAuthRelatedMiddleware && ! $hasAuthMiddleware) {
+        if ($hasAuthRelatedMiddleware && !$hasAuthMiddleware) {
             // Add auth middleware at the beginning
             array_unshift($middlewareNames, 'auth');
         } elseif ($hasAuthMiddleware && $hasAuthRelatedMiddleware) {
@@ -186,7 +186,14 @@ readonly class RouteDispatcher
     private function extractRouteMiddlewares(array $params): array
     {
         if (isset($params['middleware'])) {
-            return explode('|', $params['middleware']);
+            if (is_array($params['middleware'])) {
+                return $params['middleware'];
+            }
+            if (is_string($params['middleware'])) {
+                return explode('|', $params['middleware']);
+            } else {
+                return [];
+            }
         }
         return [];
     }
@@ -230,7 +237,8 @@ readonly class RouteDispatcher
             ->setEventManager($app->resolve(EventManagerInterface::class))
             ->setBuilder($app->resolve(HtmlBuilder::class))
             ->setCache($app->getCache())
-            ->setCookie($app->getCookie());
+            ->setCookie($app->getCookie())
+            ->setNavigationHistory($app->resolve(NavigationHistoryService::class));
     }
 
     /**

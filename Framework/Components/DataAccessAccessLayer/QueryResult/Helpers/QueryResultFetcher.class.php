@@ -7,6 +7,7 @@ class QueryResultFetcher
     public function __construct(
         private PDOStatement $pdoStatement,
         private QueryResultConfig $config,
+        private QueryResultHydrator $hydrator,
     ) {
     }
 
@@ -22,18 +23,62 @@ class QueryResultFetcher
     /**
      * Get all records from result set.
      */
+    // public function fetchAll(): array
+    // {
+    //     $this->configureFetchMode();
+    //     $results = $this->pdoStatement->fetchAll();
+
+    //     return is_array($results) ? $results : [];
+    // }
+    // In QueryResultFetcher.php (Updated fetchAll method)
+
+    /**
+     * Get all records from result set, using the Hydrator for Entities.
+     */
     public function fetchAll(): array
     {
         $this->configureFetchMode();
+        // if ($this->config->getFetchMode() === 'class') {
+        //     // $this->pdoStatement->setFetchMode(PDO::FETCH_ASSOC);
+        //     $rawResults = $this->pdoStatement->fetchAll();
+
+        //     $entityPrototype = $this->config->getEntity();
+        //     $hydratedResults = [];
+
+        //     foreach ($rawResults as $rawRow) {
+        //         $hydratedResults[] = $this->hydrator->hydrateAndTrack($rawRow, $entityPrototype);
+        //     }
+
+        //     return $hydratedResults;
+        // }
+
         $results = $this->pdoStatement->fetchAll();
         return is_array($results) ? $results : [];
     }
 
-    /**
-     * Get first record from result set.
-     */
+    // /**
+    //  * Get first record from result set.
+    //  */
+    // public function fetchFirst(): mixed
+    // {
+    //     $this->configureFetchMode();
+    //     $result = $this->pdoStatement->fetch();
+    //     return $result ?: null;
+    // }
     public function fetchFirst(): mixed
     {
+        // if ($this->config->getFetchMode() === 'class') {
+        //     $this->pdoStatement->setFetchMode(PDO::FETCH_ASSOC);
+        //     $rawResult = $this->pdoStatement->fetch();
+
+        //     if ($rawResult) {
+        //         $entityPrototype = $this->config->getEntity();
+        //         // Hydrate and Track the single raw row
+        //         return $this->hydrator->hydrateAndTrack($rawResult, $entityPrototype);
+        //     }
+        //     return null;
+        // }
+
         $this->configureFetchMode();
         $result = $this->pdoStatement->fetch();
         return $result ?: null;

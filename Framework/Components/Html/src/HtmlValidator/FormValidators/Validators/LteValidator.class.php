@@ -9,18 +9,22 @@ class LteValidator extends AbstractValidator
         private readonly string $display,
         private readonly mixed $inputValue,
         private readonly mixed $ruleValue,
+        private readonly array $allData, // ← ADD THIS
     ) {
     }
 
     public function validate(): array|string|bool
     {
-        if (!$this->isEmpty($this->inputValue) && $this->inputValue > $this->ruleValue) {
-            return $this->errorMessage(
-                sprintf($this->errorParams['message'], $this->display, $this->ruleValue),
-                $this->errorParams['classes'],
-            );
-        }
+        $comparisonValue = $this->allData[$this->ruleValue] ?? null;
 
+        if (!$this->isEmpty($this->inputValue) && !$this->isEmpty($comparisonValue)) {
+            if ($this->inputValue > $comparisonValue) {
+                return $this->errorMessage(
+                    sprintf($this->errorParams['message'], $this->display, $comparisonValue),
+                    $this->errorParams['classes'],
+                );
+            }
+        }
         return false;
     }
 

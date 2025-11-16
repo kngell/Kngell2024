@@ -12,7 +12,7 @@ declare(strict_types=1);
 class AuthMiddleware implements MiddlewareInterface
 {
     public function __construct(
-        private SessionInterface $session
+        private SessionInterface $session,
     ) {
     }
 
@@ -22,11 +22,12 @@ class AuthMiddleware implements MiddlewareInterface
         $user = $this->authenticateViaToken($request);
 
         // If token authentication failed, try session authentication
-        if (! $user) {
+        if (!$user) {
             $user = $this->authenticateViaSession();
         }
 
         // Make user available for injection in controllers (even if null)
+        // $user = App::diget('current.user');
         App::getInstance()->instance('current.user', $user);
 
         return $next->handle($request);
@@ -39,7 +40,7 @@ class AuthMiddleware implements MiddlewareInterface
     {
         return App::diCall(function (
             TokenInterface $token,
-            UserRepository $users
+            UserRepository $users,
         ) use ($request) {
             // Check for token in various locations:
             // 1. Authorization header

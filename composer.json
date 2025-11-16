@@ -19,7 +19,9 @@
     "symfony/dotenv": "7.3.x-dev",
     "stripe/stripe-php": "^17.4@beta",
     "paypal/paypal-server-sdk": "dev-main",
-    "firebase/php-jwt": "dev-main"
+    "firebase/php-jwt": "dev-main",
+    "geoip2/geoip2": "dev-main",
+    "psr/log": "^3.0@dev"
   },
   "require-dev": {
     "symfony/var-dumper": "^7.1",
@@ -31,6 +33,12 @@
       "Framework/",
       "App/",
       "scripts/src/"
+    ],
+    "exclude-from-classmap": [
+      "Framework/Components/Core/src/Base/Traits/useCase.php",
+      "**/useCase.php",
+      "**/*examples*",
+      "**/*test*"
     ]
   },
   "scripts": {},

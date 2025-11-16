@@ -1,155 +1,167 @@
 <?php
 
 declare(strict_types=1);
-class FileManager
+
+class FileManager implements FileSystemInterface, FileContentInterface, FileOperationsInterface, FileSearchInterface
 {
-    public static function get(string $directory, string $fileToSearch) : string|bool
+    public function __construct(
+        private FileContentInterface $contentManager,
+        private DirectoryInterface $directoryManager,
+        private FileOperationsInterface $operationsManager,
+        private FileSearchInterface $searchManager,
+    ) {
+    }
+
+    public function findViewFile(string $viewsDirectory, string $viewPath): FileInformation
     {
-        $iterator = new RecursiveDirectoryIterator($directory, RecursiveDirectoryIterator::SKIP_DOTS);
-        $ItSearch = new RecursiveIteratorIterator($iterator);
-        foreach ($ItSearch as $file) {
-            $iteratorFile = $file->getBasename('.' . $file->getExtension());
-            $finfo = pathinfo($fileToSearch);
-            if ($file->isFile() && str_contains($file->getPathName(), $fileToSearch) && $iteratorFile === $finfo['filename']) {
-                return $file->getPathName();
-            }
+    }
+
+    public function getAllFiles(string $directory, ?string $extension = null): array
+    {
+    }
+
+    public function getAllAvailableViews(string $viewsDirectory): array
+    {
+    }
+
+    // FileSystemInterface
+    public function exists(string $path): bool
+    {
+        return file_exists($path);
+    }
+
+    public function isReadable(string $path): bool
+    {
+        return is_readable($path);
+    }
+
+    public function isWritable(string $path): bool
+    {
+        return is_writable($path);
+    }
+
+    public function getPermissions(string $path): int
+    {
+        return fileperms($path) & 0777;
+    }
+
+    // FileContentInterface
+    public function read(string $filePath): string
+    {
+        return $this->contentManager->read($filePath);
+    }
+
+    public function write(string $filePath, string $content, bool $append = false): void
+    {
+        $this->contentManager->write($filePath, $content, $append);
+    }
+
+    public function getStream(string $filePath, string $mode = 'r')
+    {
+        return $this->contentManager->getStream($filePath, $mode);
+    }
+
+    public function putStream(string $filePath, $stream): void
+    {
+        $this->contentManager->putStream($filePath, $stream);
+    }
+
+    // FileOperationsInterface
+    public function copy(string $source, string $destination): void
+    {
+        $this->operationsManager->copy($source, $destination);
+    }
+
+    public function move(string $source, string $destination): void
+    {
+        $this->operationsManager->move($source, $destination);
+    }
+
+    public function delete(string $path): void
+    {
+        $this->operationsManager->delete($path);
+    }
+
+    public function getSize(string $path): int
+    {
+        return $this->operationsManager->getSize($path);
+    }
+
+    public function getChecksum(string $path, string $algorithm = 'md5'): string
+    {
+        return $this->operationsManager->getChecksum($path, $algorithm);
+    }
+
+    public function touch(string $path, ?int $time = null, ?int $atime = null): void
+    {
+        $this->operationsManager->touch($path, $time, $atime);
+    }
+
+    // FileSearchInterface
+    public function findFile(
+        string $directory,
+        string $filename,
+        ?string $inDirectoryPath = null,
+    ): ?FileInformation {
+        return $this->searchManager->findFile($directory, $filename);
+    }
+
+    public function findFilesByPattern(string $directory, string $pattern): array
+    {
+        return $this->searchManager->findFilesByPattern($directory, $pattern);
+    }
+
+    public function findFilesByExtension(string $directory, string $extension): array
+    {
+        return $this->searchManager->findFilesByExtension($directory, $extension);
+    }
+
+    public function findFilesByMimeType(string $directory, string $mimeType): array
+    {
+        return $this->searchManager->findFilesByMimeType($directory, $mimeType);
+    }
+
+    // Convenience methods
+    public function getHumanReadableSize(string $path): string
+    {
+        $bytes = $this->getSize($path);
+        return $this->formatBytes($bytes);
+    }
+
+    public function ensureDirectoryExists(string $path, int $permissions = 0755): void
+    {
+        if (!$this->exists($path)) {
+            $this->directoryManager->create($path, $permissions);
         }
-        return false;
     }
 
-    public static function allFilePaths(string $directory) : array
+    public function getFileInformation(string $path): FileInformation
     {
-        $files = [];
-        $iterator = new RecursiveDirectoryIterator($directory, RecursiveDirectoryIterator::SKIP_DOTS);
-        $ItSearch = new RecursiveIteratorIterator($iterator);
-        foreach ($ItSearch as $file) {
-            if ($file->isFile()) {
-                $files[] = $file->getPathName();
-            }
+        if (!$this->exists($path)) {
+            throw new FileException("Path does not exist: {$path}");
         }
-        return $files;
+        return new FileInformation($path);
     }
 
-    public static function dirFilePaths(string $directory) : array
+    private function formatBytes(int $bytes, int $precision = 2): string
     {
-        $files = [];
-        $iterator = new DirectoryIterator($directory);
-        foreach ($iterator as $file) {
-            if ($file->isFile()) {
-                $files[] = $file->getPathName();
-            }
-        }
-        return $files;
+        $units = ['B', 'KB', 'MB', 'GB', 'TB'];
+        $bytes = max($bytes, 0);
+        $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
+        $pow = min($pow, count($units) - 1);
+        $bytes /= pow(1024, $pow);
+
+        return round($bytes, $precision) . ' ' . $units[$pow];
     }
 
-    public static function filePaths(string $directory) : array
+    // Static factory for convenience
+    public static function create(): self
     {
-        $files = [];
-        $handler = opendir($directory);
-        if ($handler) {
-            while (($file = readdir($handler)) !== false) {
-                if ($file !== '.' && $file !== '..') {
-                    $files[] = $directory . DS . $file;
-                }
-            }
-            closedir($handler);
-        }
-        return $files;
-    }
+        $contentManager = new FileContentManager();
+        $directoryManager = new DirectoryManager();
+        $operationsManager = new FileOperationsManager($directoryManager);
+        $searchManager = new FileSearchManager();
 
-    public static function deleteFile(string $file) : bool
-    {
-        if (file_exists($file)) {
-            return unlink($file);
-        }
-        return false;
-    }
-
-    public static function deleteDir(string $dir) : bool
-    {
-        if (! is_dir($dir)) {
-            return false;
-        }
-        $files = array_diff(scandir($dir), ['.', '..']);
-        foreach ($files as $file) {
-            (is_dir("$dir/$file")) ? self::deleteDir("$dir/$file") : unlink("$dir/$file");
-        }
-        return rmdir($dir);
-    }
-
-    public static function createDir(string $dir) : bool
-    {
-        if (is_dir($dir)) {
-            return true;
-        } else {
-            mkdir($dir, 0777, true);
-            chmod($dir, 0777); // Add write permissions
-            return true;
-        }
-        return false;
-    }
-
-    public static function createFile(string $file) : bool
-    {
-        if (! file_exists($file)) {
-            return touch($file);
-        }
-        return false;
-    }
-
-    public static function copyFile(string $source, string $dest) : bool
-    {
-        if (file_exists($source)) {
-            return copy($source, $dest);
-        }
-        return false;
-    }
-
-    public static function moveFile(string $source, string $dest) : bool
-    {
-        if (file_exists($source)) {
-            return rename($source, $dest);
-        }
-        return false;
-    }
-
-    public static function getFileName(string $file) : string
-    {
-        return pathinfo($file, PATHINFO_FILENAME);
-    }
-
-    public static function getFileExtension(string $file) : string
-    {
-        return pathinfo($file, PATHINFO_EXTENSION);
-    }
-
-    public static function getFileSize(string $file) : int
-    {
-        return filesize($file);
-    }
-
-    public static function getFileMimeType(string $file) : string
-    {
-        return mime_content_type($file);
-    }
-
-    public static function getFileInfo(string $file) : array
-    {
-        return pathinfo($file);
-    }
-
-    public static function getFileContent(string $file) : string|false
-    {
-        return file_get_contents($file);
-    }
-
-    public static function putFileContent(string $file, string $content) : bool
-    {
-        return file_put_contents($file, $content) !== false;
-    }
-
-    public static function appendFileContent(string $file, string $content) : bool
-    {
-        return file_put_contents($file, $content, FILE_APPEND) !== false;
+        return new self($contentManager, $directoryManager, $operationsManager, $searchManager);
     }
 }

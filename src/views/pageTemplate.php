@@ -5,10 +5,10 @@ $this->start('head'); ?>
 <?php $this->end(); ?>
 <?php $this->start('body'); ?>
 <main class="main" id="main">
-   <!-- Content -->
+    <!-- Content -->
 
 
-   <!-- Fin Content -->
+    <!-- Fin Content -->
 
 </main>
 <?php $this->end(); ?>

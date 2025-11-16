@@ -9,13 +9,14 @@ abstract class Event implements EventInterface
     private string $name = '';
     private mixed $results = null;
 
-    public function __construct(?Object $object = null, string $name = '')
-    {
+    public function __construct(
+        string $name = '',
+        ?object $object = null,
+        array $params = [],
+    ) {
         $this->object = $object;
-        if ($name === '') {
-            $name = $this::class ?? '';
-        }
-        $this->name = $name;
+        $this->params = $params;
+        $this->name = $name !== '' ? $name : static::class;
     }
 
     public function getName(): string
@@ -38,6 +39,7 @@ abstract class Event implements EventInterface
 
     /**
      * @param mixed $results
+     *
      * @return EventInterface
      */
     public function setResults(mixed $results): self
@@ -47,30 +49,10 @@ abstract class Event implements EventInterface
     }
 
     /**
-     * @param null|object $object
-     * @return EventInterface
-     */
-    public function setObject(?object $object): self
-    {
-        $this->object = $object;
-        return $this;
-    }
-
-    /**
      * @return mixed
      */
     public function getParams(): mixed
     {
         return $this->params;
-    }
-
-    /**
-     * @param string $name
-     * @return EventInterface
-     */
-    public function setName(string $name): self
-    {
-        $this->name = $name;
-        return $this;
     }
 }

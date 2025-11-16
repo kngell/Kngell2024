@@ -20,10 +20,13 @@ class NativeCacheStorage extends AbstractCacheStorage
      * @param string $key
      * @param string $value The data to be stored
      * @param int|null $ttl
-     * @return void
+     *
      * @throws CacheException if the directory does not exist or is not writable
      *                        or exceeds the maximum allowed path length, or if no
      *                        cache frontend has been set.
+     *
+     * @return void
+     *
      * @api
      */
     public function setCache(string $key, string $value, ?int $ttl = null): void
@@ -39,13 +42,16 @@ class NativeCacheStorage extends AbstractCacheStorage
 
     /**
      * @inheritDoc
+     *
      * @param string $key
+     *
      * @return string|bool
      */
     public function getCache(string $key): string|bool
     {
         $this->isCacheValidated($key, false);
         $cacheEntryPathAndFilename = $this->cacheEntryPathAndFilename($key);
+
         if (!file_exists($cacheEntryPathAndFilename)) {
             return false;
         }
@@ -55,17 +61,25 @@ class NativeCacheStorage extends AbstractCacheStorage
 
     /**
      * @inheritDoc
+     *
      * @param string $key
+     *
      * @return bool
      */
     public function hasCache(string $key): bool
     {
         $this->isCacheValidated($key, false);
-        if (!file_exists($this->cacheEntryPathAndFilename($key))) {
+        $cacheFile = $this->cacheEntryPathAndFilename($key);
+
+        if (!file_exists($cacheFile)) {
             return false;
         }
-        $liveTime = (time() - filemtime($this->cacheEntryPathAndFilename($key))) / 60;
-        if (($liveTime > $this->envConfigurations->getMaximumPathLength())) {
+
+        // FIX: Compare against actual TTL, not maximum path length
+        $fileAge = time() - filemtime($cacheFile);
+        $maxAge = $this->envConfigurations->getDefaultLifetime() ?? 3600; // Use actual TTL
+
+        if ($fileAge > $maxAge) {
             return false;
         }
 
@@ -74,6 +88,7 @@ class NativeCacheStorage extends AbstractCacheStorage
 
     /**
      * @inheritDoc
+     *
      * @param string $key
      */
     public function removeCache(string $key): bool
@@ -95,6 +110,7 @@ class NativeCacheStorage extends AbstractCacheStorage
 
     /**
      * @inheritDoc
+     *
      * @throws Exception
      */
     public function flush(): void

@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Brick\Money\Money;
 use Ramsey\Uuid\UuidInterface;
 
 class Product extends Entity implements TimestampableInterface, SoftDeletableInterface
@@ -11,32 +10,120 @@ class Product extends Entity implements TimestampableInterface, SoftDeletableInt
     use SoftDeletableTrait;
 
     #[EntityFieldId(name: 'pdt_id')]
-    private int $id; //Unique product identifier
+    private int $id;
+
     private UuidInterface $publicId;
 
     // 🔒 Required core fields
-    private string $sku; //Stock Keeping Unit (unique product code)
-    private string $name; //Product title
-    private string $slug; //URL-friendly name (for SEO)
-    private Money $price; //Base price
-    private string $currency; //Currency code (e.g., USD, EUR)
-    private ProductStatus $status; //Product lifecycle
-    private StockStatus $stockStatus;  //Availability
-    private bool $is_active = true;
+    private string $sku;
+    private string $name;
+    private string $slug;
+    private ProductStatus $status = ProductStatus::DRAFT;
+    private int $stockStatusId; // Only keep the ID, not the joined entity
+    private bool $isActive = true;
+    private bool $isFeatured = false;
+    private bool $isVirtual = false;
+    private bool $isDownloadable = false;
+    private ProductVisibility $visibility = ProductVisibility::VISIBLE;
 
     // 🟡 Optional fields
-    private ?string $description = null; //Full product description
-    private ?string $shortDescription = null; //Short summary for listing pages
-    private ?int $categoryId = null; //Links to category table
-    private ?int $brandId = null; //Links to brands table
-    private ?Money $comparePrice = null; //Discounted price (nullable)
-    private ?int $stockQuantity = null; //Current inventory
-    private ?Weight $weight = null; //weight for shipping
-    private ?float $length = null; //length for shipping
-    private ?float $width = null; //width for shipping
-    private ?float $height = null; //height for shipping
+    private ?string $description = null;
+    private ?string $shortDescription = null;
+    private ?int $categoryId = null;
+    private ?int $brandId = null;
+    private int $baseCurrencyId = 1;
+    private ?int $taxClassId;
+    private bool $priceIncludesTax = false;
 
-    private ?string $mainImage = null; //Product thumbnail image
+    // 📦 Inventory Management
+    private bool $isTrackStock = true;
+    private int $stockQuantity = 0;
+    private bool $allowBackOrders = false;
+    private int $lowStockThreshold = 5;
+    private int $minOrderQuantity = 1;
+    private int $maxOrderQuantity = 0;
+
+    // ⚖️ Physical Properties
+    private ?Weight $weight = null;
+    private ?Dimensions $dimensions = null;
+
+    // 🖼️ Media
+    private ?string $mainImage = null;
+    private ?string $mainVideo = null;
+
+    // 📦 Shipping
+    private ?int $shippingClassId = null;
+    private bool $requiresShipping = true;
+
+    // 🏷️ Organization
+    private array $tags = [];
+
+    // 📊 Sales & Performance
+    private int $totalSales = 0;
+    private float $averageRating = 0.0;
+    private int $reviewCount = 0;
+
+    // 👤 Audit
+    private ?int $createdBy = null;
+    private ?int $updatedBy = null;
+
+    #[NotPersisted]
+    /** @var ProductRegionalPrice[] */
+    private array $regionalPrices = [];
+
+    /**
+     * Helper method to get price for specific region.
+     */
+    public function getPriceForRegion(string $regionCode): ?ProductRegionalPrice
+    {
+        foreach ($this->regionalPrices as $regionalPrice) {
+            if ($regionalPrice->getRegionCode() === $regionCode) {
+                return $regionalPrice;
+            }
+        }
+        return null;
+    }
+
+    public function hasDimensions(): bool
+    {
+        return $this->dimensions !== null;
+    }
+
+    public function getFormattedDimensions(): ?string
+    {
+        return $this->dimensions?->getFormattedDimensions();
+    }
+
+    public function getVolume(): ?float
+    {
+        return $this->dimensions?->getVolume();
+    }
+
+    // Shipping calculations
+
+    public function getVolumetricWeight(float $factor = 5000): ?float
+    {
+        return $this->dimensions?->getVolumetricWeight($factor);
+    }
+
+    public function calculateShippingCost(?string $destination = 'domestic'): float
+    {
+        // Skip shipping calculation for virtual products
+        if ($this->isVirtual || !$this->requiresShipping) {
+            return 0.00;
+        }
+
+        $calculatorFactory = App::diGet(ShippingCalculatorFactory::class);
+        $calculator = $calculatorFactory->createForProduct($this);
+
+        return $calculator->calculate(
+            $this->weight,
+            $this->dimensions,
+            $this->getVolumetricWeight(),
+            $this->shippingClassId,
+            $destination,
+        );
+    }
 
     /**
      * @return int
@@ -48,11 +135,32 @@ class Product extends Entity implements TimestampableInterface, SoftDeletableInt
 
     /**
      * @param int $id
+     *
      * @return Product
      */
-    public function setId(int $id): self
+    public function setId(int $id): Product
     {
         $this->id = $id;
+
+        return $this;
+    }
+
+    /**
+     * @return UuidInterface
+     */
+    public function getPublicId(): UuidInterface
+    {
+        return $this->publicId;
+    }
+
+    /**
+     * @param UuidInterface $publicId
+     *
+     * @return Product
+     */
+    public function setPublicId(UuidInterface $publicId): Product
+    {
+        $this->publicId = $publicId;
 
         return $this;
     }
@@ -67,9 +175,10 @@ class Product extends Entity implements TimestampableInterface, SoftDeletableInt
 
     /**
      * @param string $sku
+     *
      * @return Product
      */
-    public function setSku(string $sku): self
+    public function setSku(string $sku): Product
     {
         $this->sku = $sku;
 
@@ -86,9 +195,10 @@ class Product extends Entity implements TimestampableInterface, SoftDeletableInt
 
     /**
      * @param string $name
+     *
      * @return Product
      */
-    public function setName(string $name): self
+    public function setName(string $name): Product
     {
         $this->name = $name;
 
@@ -105,49 +215,12 @@ class Product extends Entity implements TimestampableInterface, SoftDeletableInt
 
     /**
      * @param string $slug
+     *
      * @return Product
      */
-    public function setSlug(string $slug): self
+    public function setSlug(string $slug): Product
     {
         $this->slug = $slug;
-
-        return $this;
-    }
-
-    /**
-     * @return Money
-     */
-    public function getPrice(): Money
-    {
-        return $this->price;
-    }
-
-    /**
-     * @param Money $price
-     * @return Product
-     */
-    public function setPrice(Money $price): self
-    {
-        $this->price = $price;
-
-        return $this;
-    }
-
-    /**
-     * @return string
-     */
-    public function getCurrency(): string
-    {
-        return $this->currency;
-    }
-
-    /**
-     * @param string $currency
-     * @return Product
-     */
-    public function setCurrency(string $currency): self
-    {
-        $this->currency = $currency;
 
         return $this;
     }
@@ -162,9 +235,10 @@ class Product extends Entity implements TimestampableInterface, SoftDeletableInt
 
     /**
      * @param ProductStatus $status
+     *
      * @return Product
      */
-    public function setStatus(ProductStatus $status): self
+    public function setStatus(ProductStatus $status): Product
     {
         $this->status = $status;
 
@@ -172,18 +246,11 @@ class Product extends Entity implements TimestampableInterface, SoftDeletableInt
     }
 
     /**
-     * @return StockStatus
-     */
-    public function getStockStatus(): StockStatus
-    {
-        return $this->stockStatus;
-    }
-
-    /**
      * @param StockStatus $stockStatus
+     *
      * @return Product
      */
-    public function setStockStatus(StockStatus $stockStatus): self
+    public function setStockStatus(StockStatus $stockStatus): Product
     {
         $this->stockStatus = $stockStatus;
 
@@ -191,18 +258,11 @@ class Product extends Entity implements TimestampableInterface, SoftDeletableInt
     }
 
     /**
-     * @return bool
-     */
-    public function getIs_active(): bool
-    {
-        return $this->is_active;
-    }
-
-    /**
      * @param bool $is_active
+     *
      * @return Product
      */
-    public function setIs_active(bool $is_active): self
+    public function setIs_active(bool $is_active): Product
     {
         $this->is_active = $is_active;
 
@@ -219,9 +279,10 @@ class Product extends Entity implements TimestampableInterface, SoftDeletableInt
 
     /**
      * @param null|string $description
+     *
      * @return Product
      */
-    public function setDescription(?string $description): self
+    public function setDescription(?string $description): Product
     {
         $this->description = $description;
 
@@ -238,9 +299,10 @@ class Product extends Entity implements TimestampableInterface, SoftDeletableInt
 
     /**
      * @param null|string $shortDescription
+     *
      * @return Product
      */
-    public function setShortDescription(?string $shortDescription): self
+    public function setShortDescription(?string $shortDescription): Product
     {
         $this->shortDescription = $shortDescription;
 
@@ -257,11 +319,32 @@ class Product extends Entity implements TimestampableInterface, SoftDeletableInt
 
     /**
      * @param null|int $categoryId
+     *
      * @return Product
      */
-    public function setCategoryId(?int $categoryId): self
+    public function setCategoryId(?int $categoryId): Product
     {
         $this->categoryId = $categoryId;
+
+        return $this;
+    }
+
+    /**
+     * @return null|int
+     */
+    public function getTaxClassId(): ?int
+    {
+        return $this->taxClassId;
+    }
+
+    /**
+     * @param null|int $taxClassId
+     *
+     * @return Product
+     */
+    public function setTaxClassId(?int $taxClassId): Product
+    {
+        $this->taxClassId = $taxClassId;
 
         return $this;
     }
@@ -276,9 +359,10 @@ class Product extends Entity implements TimestampableInterface, SoftDeletableInt
 
     /**
      * @param null|int $brandId
+     *
      * @return Product
      */
-    public function setBrandId(?int $brandId): self
+    public function setBrandId(?int $brandId): Product
     {
         $this->brandId = $brandId;
 
@@ -286,20 +370,21 @@ class Product extends Entity implements TimestampableInterface, SoftDeletableInt
     }
 
     /**
-     * @return null|Money
+     * @return int
      */
-    public function getComparePrice(): ?Money
+    public function getBaseCurrencyId(): int
     {
-        return $this->comparePrice;
+        return $this->baseCurrencyId;
     }
 
     /**
-     * @param null|Money $comparePrice
+     * @param int $baseCurrencyId
+     *
      * @return Product
      */
-    public function setComparePrice(?Money $comparePrice): self
+    public function setBaseCurrencyId(int $baseCurrencyId): Product
     {
-        $this->comparePrice = $comparePrice;
+        $this->baseCurrencyId = $baseCurrencyId;
 
         return $this;
     }
@@ -307,16 +392,57 @@ class Product extends Entity implements TimestampableInterface, SoftDeletableInt
     /**
      * @return null|int
      */
-    public function getStockQuantity(): ?int
+    public function getStockStatusId(): ?int
+    {
+        return $this->stockStatusId;
+    }
+
+    /**
+     * @param null|int $stockStatusId
+     *
+     * @return Product
+     */
+    public function setStockStatusId(?int $stockStatusId): Product
+    {
+        $this->stockStatusId = $stockStatusId;
+
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIsTrackStock(): bool
+    {
+        return $this->isTrackStock;
+    }
+
+    /**
+     * @param bool $isTrackStock
+     *
+     * @return Product
+     */
+    public function setIsTrackStock(bool $isTrackStock): Product
+    {
+        $this->isTrackStock = $isTrackStock;
+
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getStockQuantity(): int
     {
         return $this->stockQuantity;
     }
 
     /**
-     * @param null|int $stockQuantity
+     * @param int $stockQuantity
+     *
      * @return Product
      */
-    public function setStockQuantity(?int $stockQuantity): self
+    public function setStockQuantity(int $stockQuantity): Product
     {
         $this->stockQuantity = $stockQuantity;
 
@@ -333,68 +459,12 @@ class Product extends Entity implements TimestampableInterface, SoftDeletableInt
 
     /**
      * @param null|Weight $weight
+     *
      * @return Product
      */
-    public function setWeight(?Weight $weight): self
+    public function setWeight(?Weight $weight): Product
     {
         $this->weight = $weight;
-
-        return $this;
-    }
-
-    /**
-     * @return null|float
-     */
-    public function getLength(): ?float
-    {
-        return $this->length;
-    }
-
-    /**
-     * @param null|float $length
-     * @return Product
-     */
-    public function setLength(?float $length): self
-    {
-        $this->length = $length;
-
-        return $this;
-    }
-
-    /**
-     * @return null|float
-     */
-    public function getWidth(): ?float
-    {
-        return $this->width;
-    }
-
-    /**
-     * @param null|float $width
-     * @return Product
-     */
-    public function setWidth(?float $width): self
-    {
-        $this->width = $width;
-
-        return $this;
-    }
-
-    /**
-     * @return null|float
-     */
-    public function getHeight(): ?float
-    {
-        return $this->height;
-    }
-
-    /**
-     * @param null|float $height
-     * @return Product
-     */
-    public function setHeight(?float $height): self
-    {
-        $this->height = $height;
 
         return $this;
     }
@@ -409,11 +479,212 @@ class Product extends Entity implements TimestampableInterface, SoftDeletableInt
 
     /**
      * @param null|string $mainImage
+     *
      * @return Product
      */
-    public function setMainImage(?string $mainImage): self
+    public function setMainImage(?string $mainImage): Product
     {
         $this->mainImage = $mainImage;
+
+        return $this;
+    }
+
+    /**
+     * @return null|int
+     */
+    public function getCreatedBy(): ?int
+    {
+        return $this->createdBy;
+    }
+
+    /**
+     * @param null|int $createdBy
+     *
+     * @return Product
+     */
+    public function setCreatedBy(?int $createdBy): Product
+    {
+        $this->createdBy = $createdBy;
+
+        return $this;
+    }
+
+    /**
+     * @return null|int
+     */
+    public function getUpdatedBy(): ?int
+    {
+        return $this->updatedBy;
+    }
+
+    /**
+     * @param null|int $updatedBy
+     *
+     * @return Product
+     */
+    public function setUpdatedBy(?int $updatedBy): Product
+    {
+        $this->updatedBy = $updatedBy;
+
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getAllowBackOrders(): bool
+    {
+        return $this->allowBackOrders;
+    }
+
+    /**
+     * @param bool $allowBackOrders
+     *
+     * @return Product
+     */
+    public function setAllowBackOrders(bool $allowBackOrders): Product
+    {
+        $this->allowBackOrders = $allowBackOrders;
+
+        return $this;
+    }
+
+    /**
+     * @return array
+     */
+    public function getRegionalPrices(): array
+    {
+        return $this->regionalPrices;
+    }
+
+    /**
+     * @param array $regionalPrices
+     *
+     * @return Product
+     */
+    public function setRegionalPrices(array $regionalPrices): Product
+    {
+        $this->regionalPrices = $regionalPrices;
+
+        return $this;
+    }
+
+    /**
+     * @return null|Dimensions
+     */
+    public function getDimensions(): ?Dimensions
+    {
+        return $this->dimensions;
+    }
+
+    /**
+     * @param null|Dimensions $dimensions
+     *
+     * @return Product
+     */
+    public function setDimensions(?Dimensions $dimensions): Product
+    {
+        $this->dimensions = $dimensions;
+
+        return $this;
+    }
+
+    /**
+     * @return ProductVisibility
+     */
+    public function getVisibility(): ProductVisibility
+    {
+        return $this->visibility;
+    }
+
+    /**
+     * @param ProductVisibility $visibility
+     *
+     * @return Product
+     */
+    public function setVisibility(ProductVisibility $visibility): Product
+    {
+        $this->visibility = $visibility;
+
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIsDownloadable(): bool
+    {
+        return $this->isDownloadable;
+    }
+
+    /**
+     * @param bool $isDownloadable
+     *
+     * @return Product
+     */
+    public function setIsDownloadable(bool $isDownloadable): Product
+    {
+        $this->isDownloadable = $isDownloadable;
+
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIsVirtual(): bool
+    {
+        return $this->isVirtual;
+    }
+
+    /**
+     * @param bool $isVirtual
+     *
+     * @return Product
+     */
+    public function setIsVirtual(bool $isVirtual): Product
+    {
+        $this->isVirtual = $isVirtual;
+
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIsFeatured(): bool
+    {
+        return $this->isFeatured;
+    }
+
+    /**
+     * @param bool $isFeatured
+     *
+     * @return Product
+     */
+    public function setIsFeatured(bool $isFeatured): Product
+    {
+        $this->isFeatured = $isFeatured;
+
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIsActive(): bool
+    {
+        return $this->isActive;
+    }
+
+    /**
+     * @param bool $isActive
+     *
+     * @return Product
+     */
+    public function setIsActive(bool $isActive): Product
+    {
+        $this->isActive = $isActive;
 
         return $this;
     }

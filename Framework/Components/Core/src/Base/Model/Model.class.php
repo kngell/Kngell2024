@@ -5,6 +5,7 @@ declare(strict_types=1);
 abstract class Model
 {
     protected EntityManagerInterface $em;
+    protected Entity $entity;
 
     public function __construct(EntityManagerInterface $entityManager)
     {
@@ -13,6 +14,7 @@ abstract class Model
 
     /**
      * @param Entity|array|string $params
+     *
      * @return QueryResult<Entity>
      */
     public function all(Entity|array|string $params = []): QueryResult
@@ -22,14 +24,22 @@ abstract class Model
         return $this->em->persist()->getQueryResult()->setOperation('all');
     }
 
+    public function one(Entity|array|string $params = []): QueryResult
+    {
+        [$entity, $processedConditions] = $this->conditions($params);
+        $this->em->getRepository($entity)->findOneBy($processedConditions);
+        return $this->em->persist()->getQueryResult()->setOperation('single');
+    }
+
     /**
      * @param int|string $id
+     *
      * @return QueryResult<Entity>
      */
     public function find(int|string $id): QueryResult
     {
         $this->em->getRepository($this->entity())->findByID($id);
-        return $this->em->persist()->getQueryResult();
+        return $this->em->persist()->getQueryResult()->setOperation('single');
     }
 
     /**
@@ -37,6 +47,7 @@ abstract class Model
      *
      * @param array $conditions Optional filtering conditions
      * @param int $limit Number of records to return (default: 1)
+     *
      * @return QueryResult<Entity>
      */
     public function first(array $conditions = [], int $limit = 1): QueryResult
@@ -56,6 +67,7 @@ abstract class Model
      *
      * @param array $conditions Optional filtering conditions
      * @param int $limit Number of records to return (default: 1)
+     *
      * @return QueryResult<Entity>
      */
     public function last(array $conditions = [], int $limit = 1): QueryResult
@@ -77,6 +89,7 @@ abstract class Model
      * @param int $page Page number (1-based)
      * @param int $perPage Records per page
      * @param array $conditions Optional filtering conditions
+     *
      * @return QueryResult<Entity>
      */
     public function page(int $page, int $perPage, array $conditions = []): QueryResult
@@ -94,6 +107,7 @@ abstract class Model
      *
      * @param int $limit Number of records to return
      * @param array $conditions Optional filtering conditions
+     *
      * @return QueryResult<Entity>
      */
     public function get(int $limit, array $conditions = []): QueryResult
@@ -109,7 +123,7 @@ abstract class Model
         [$entity, $conditions] = $this->conditions($params);
 
         // Defensive: if for any reason $entity is not an Entity instance, fallback to entityManager's entity
-        if (! $entity instanceof Entity) {
+        if (!$entity instanceof Entity) {
             $entity = $this->em->getEntity();
         }
 
@@ -136,6 +150,7 @@ abstract class Model
 
     /**
      * @param array|Entity|null $data
+     *
      * @return QueryResult<Entity>
      */
     public function save(array|Entity|null $data = null): QueryResult
@@ -151,7 +166,6 @@ abstract class Model
         }
 
         $entity->touchTimestamps();
-
         if ($this->em->isEntityKeyInitialized()) {
             return $this->update($entity);
         }
@@ -161,6 +175,7 @@ abstract class Model
 
     /**
      * @param Entity|null $entity
+     *
      * @return QueryResult<Entity>
      */
     public function insert(Entity|null $entity = null): QueryResult
@@ -171,6 +186,7 @@ abstract class Model
 
     /**
      * @param Entity|array|string $params
+     *
      * @return QueryResult<Entity>
      */
     public function update(Entity|SoftDeletableInterface|array|string $params = []): QueryResult
@@ -188,7 +204,6 @@ abstract class Model
         return $this->em->persist()->getQueryResult();
     }
 
-
     // /**
     //  * @param Entity|array|string $params
     //  * @return QueryResult<Entity>
@@ -203,8 +218,24 @@ abstract class Model
     public function getTableColumns(string $tableName): string
     {
         $result = $this->showColumns($tableName);
-        $colums = array_column($result->all(), 'Field');
+        $colums = array_column($result->asArray(), 'Field');
         return StringUtils::camelCase('$' . implode(', $', $colums) . ';');
+    }
+
+    /**
+     * @return Entity
+     */
+    public function getEntity(): Entity
+    {
+        return $this->entity;
+    }
+
+    /**
+     * @return EntityManagerInterface
+     */
+    public function getEntityManager(): EntityManagerInterface
+    {
+        return $this->em;
     }
 
     private function showColumns(string|null $tableName = null): QueryResult
@@ -218,6 +249,7 @@ abstract class Model
 
     /**
      * @param Entity|array|string|int $params
+     *
      * @return array{0: Entity, 1: array<string,mixed>}
      */
     private function conditions(Entity|array|string|int $params = []): array
@@ -253,7 +285,6 @@ abstract class Model
         return [$entity, []];
     }
 
-
     // /**
     //  * @param Entity|array|string|int $params
     //  * @return array{0: Entity, 1: array<string, mixed>}
@@ -276,7 +307,6 @@ abstract class Model
     //     return [$entity, []];
     // }
 
-
     // private function conditions(Entity|array|string|int $params = []): array
     // {
     //     return match (true) {
@@ -287,18 +317,19 @@ abstract class Model
     //     };
     // }
 
-
-
-
     // private function idCondition(string|int $id): array
     // {
     //     $fieldId = $this->em->getEntityKeyField();
     //     return $fieldId ? [null, [$fieldId => $id]] : [null, []];
     // }
 
-    private function entity(): Entity
+    private function entity(): ?Entity
     {
         $entityName = str_replace('Model', '', $this::class);
-        return App::diGet($entityName);
+        if (class_exists($entityName)) {
+            $this->entity = App::diGet($entityName);
+            return $this->entity;
+        }
+        return null;
     }
 }

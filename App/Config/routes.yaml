@@ -1,3 +1,128 @@
+# Admin routes group
+admin:
+  _group:
+    prefix: /admin
+    middleware: [auth, admin]
+  /dashboard:
+    controller: admin
+    method: dashboard
+    httpMethod: get
+  /users:
+    controller: admin
+    method: users
+    httpMethod: get
+  /users/{id}:
+    controller: admin
+    method: userDetail
+    httpMethod: get
+  /{controller}/{id+}/{method}:
+# Dynamic routes can be defined in groups too
+admin2:
+  _group:
+    prefix: /admin
+    middleware: [auth, admin]
+  /{controller}/index:
+    method: index
+  /{controller}/show/{id}:
+    method: show
+  /{controller}/create:
+    method: create
+    httpMethod: post
+
+/{controller}/{id}/edit:
+  method: edit
+
+/{controller}/{method}/{id:\d+}:
+  # This will match /products/show/123, /users/edit/456, etc.
+/{controller}/{id:\d+}/{method}:
+
+# API routes group
+api:
+  _group:
+    prefix: /api
+    middleware: [api]
+  /v1/users:
+    controller: api
+    method: getUsers
+    httpMethod: get
+  /v1/products:
+    controller: api
+    method: getProducts
+    httpMethod: get
+  /v1/orders:
+    controller: api
+    method: getOrders
+    httpMethod: get
+
+# E-commerce routes group
+shop:
+  _group:
+    prefix: /shop
+    middleware: [shop]
+  /products:
+    controller: products
+    method: index
+    httpMethod: get
+  /products/{slug}:
+    controller: products
+    method: show
+    httpMethod: get
+  /cart:
+    controller: cart
+    method: index
+    httpMethod: get
+
+# Nested groups example - Admin API
+admin_api:
+  _group:
+    prefix: /admin/api
+    middleware: [auth, admin, api]
+  /users:
+    controller: admin_api
+    method: users
+    httpMethod: get
+  /stats:
+    controller: admin_api
+    method: stats
+    httpMethod: get
+
+# Public routes (no groups)
+/:
+  controller: home
+  method: index
+  httpMethod: get
+
+/home:
+  controller: home
+  method: index
+  httpMethod: get
+
+/about:
+  controller: home
+  method: about
+  httpMethod: get
+
+/contact:
+  controller: home
+  method: contact
+  httpMethod: get
+
+# Authentication routes (could be in a group too)
+/login:
+  controller: login
+  method: index
+  httpMethod: get
+
+/signup:
+  controller: signup
+  method: index
+  httpMethod: get
+
+/auth-user:
+  controller: login
+  method: authenticate-user
+  httpMethod: post
+
 /{title}/{id:\d+}/{page:\d+}:
   controller: products
   method: showPage
@@ -27,14 +152,7 @@
   method: pay
   httpMethod: post
   middleware: requireLogin
-/:
-  controller: home
-  method: index
-  httpMethod: get
-/home:
-  controller: home
-  method: index
-  httpMethod: get
+
 /_404_error:
   controller: errors
   method: e_404
@@ -47,28 +165,12 @@
 /_restrict:
   controller: errors
   method: restrict-access
-/api:
-  controller: api
-  method: index
-  httpMethod: get
 
-/login:
-  controller: login
-  method: index
-  httpMethod: get
-
-/signup:
-  controller: signup
-  method: index
-  httpMethod: get
 /register:
   controller: signup
   method: register
   httpMethod: post
-/auth-user:
-  controller: login
-  method: authenticate-user
-  httpMethod: post
+
 /user-from-cookie:
   controller: login-from-cookie
   method: index
@@ -149,5 +251,3 @@
 /admin/{controller}/{method}:
   middleware: requireLogin
 /{controller}/{method}:
-  # /{controller}/{id:\d+}/{method}:
-  # /{controller}/{method}/{id:\d+}:

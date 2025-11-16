@@ -35,6 +35,21 @@ final readonly class ArrayUtils
         return null;
     }
 
+    public static function isDeepEmpty($value): bool
+    {
+        if (is_array($value)) {
+            foreach ($value as $item) {
+                if (!self::isDeepEmpty($item)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return empty($value);
+        // Customize what you consider "empty"
+        // return empty($value) && $value !== 0 && $value !== '0' && $value !== false;
+    }
+
     public static function isAssoc(array $array): bool
     {
         if ([] === $array) {
@@ -103,28 +118,26 @@ final readonly class ArrayUtils
 
     public static function fromAssocToSequential(array $array): array
     {
-        $newArr = [];
-        if (self::isMultidimentional($array)) {
-            foreach ($array as $key => $value) {
-                if (!is_array($value)) {
-                    $newArr[] = $value;
-                    unset($array[$key]);
-                } elseif (self::isAssoc($value)) {
-                    foreach ($value as $vKey => $vValue) {
-                        $newArr[] = $vKey;
-                        $newArr[] = $vValue;
-                    }
-                    unset($array[$key]);
-                } elseif (self::isSequential($value)) {
-                    $newArr = array_merge($newArr, self::fromAssocToSequential($value));
-                    unset($array[$key]);
-                }
-            }
-            if (empty($array)) {
-                return $newArr;
+        if (!self::isMultidimentional($array)) {
+            return $array;
+        }
+
+        return self::flattenToSequential($array);
+    }
+
+    public static function isStringList(array $array): bool
+    {
+        if (!array_is_list($array)) {
+            return false;
+        }
+
+        foreach ($array as $value) {
+            if (!is_string($value)) {
+                return false;
             }
         }
-        return $array;
+
+        return true;
     }
 
     /**
@@ -289,6 +302,47 @@ final readonly class ArrayUtils
         }
 
         return $merged;
+    }
+
+    private static function flattenAssociativeArray(array $assocArray): array
+    {
+        $result = [];
+
+        foreach ($assocArray as $key => $value) {
+            if (is_string($key)) {
+                // Add both key and value as separate elements
+                $result[] = $key;
+                $result[] = $value;
+            } else {
+                // Numeric key - recursive flatten
+                $result = array_merge($result, self::flattenToSequential([$value]));
+            }
+        }
+
+        return $result;
+    }
+
+    private static function flattenToSequential(array $array): array
+    {
+        $result = [];
+
+        foreach ($array as $value) {
+            if (!is_array($value)) {
+                // Simple value - add directly
+                $result[] = $value;
+                continue;
+            }
+
+            if (self::isAssoc($value)) {
+                // Associative array - flatten key-value pairs
+                $result = array_merge($result, self::flattenAssociativeArray($value));
+            } else {
+                // Sequential array - recursive flatten
+                $result = array_merge($result, self::flattenToSequential($value));
+            }
+        }
+
+        return $result;
     }
 
     private static function setNestedValue(array &$array, array $parts, mixed $value): void

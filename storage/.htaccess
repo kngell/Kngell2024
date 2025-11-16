@@ -1,0 +1,14 @@
+# Deny ALL access to storage by default
+Deny from all
+
+# Allow specific subdirectories that need web access
+<FilesMatch "\.(jpg|jpeg|png|gif|webp|svg|ico|mp4|webm|mp3|wav|ogg|pdf|doc|docx|xls|xlsx|ppt|pptx|txt)$">
+    Allow from all
+</FilesMatch>
+
+# But only from specific subdirectories
+RewriteEngine On
+
+# Allow access only to uploads and static via proper URL rewrites
+RewriteCond %{REQUEST_URI} ^/storage/(?!uploads/|static/)
+RewriteRule ^ - [F]

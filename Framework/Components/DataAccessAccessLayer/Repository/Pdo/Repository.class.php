@@ -109,7 +109,7 @@ class Repository implements RepositoryInterface
 
     private function isArray(array $conditions): bool
     {
-        if (! is_array($conditions)) {
+        if (!is_array($conditions)) {
             throw new RepositoryInvalidArgumentException('Argument Supplied is not an array');
         }
 

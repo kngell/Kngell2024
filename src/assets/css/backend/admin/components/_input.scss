@@ -1,2 +1,49 @@
 @use "css/backend/admin/abstracts" as *;
-/*---------------------- INPUT BOX -------------------*/
+/*-------------- INPUT BOX ---------------*/
+
+.input-box {
+  @include form-field(
+    $types: (
+      text,
+      textarea,
+      file,
+      video,
+      checkbox,
+      select,
+      currency,
+    ),
+    $options: (
+      floating: false,
+      padding: 0.8rem 1.2rem,
+      background: map-deep-get($color-neutral, gray, gray-25),
+      border-color: map-deep-get($color-neutral, gray, gray-100),
+      textarea-min-height: 14rem,
+      icon-size: 2.4rem,
+      label-text-style: (
+        $text-m,
+        medium,
+        (color: map-deep-get($color-neutral, black, black-600)),
+      ),
+      placeholder-text-style: (
+        $text-m,
+        regular,
+        (color: map-deep-get($color-neutral, gray, gray-400)),
+      ),
+      input-text-style: (
+        $text-m,
+        regular,
+        (color: map-deep-get($color-neutral, black, black-600)),
+      ),
+      media-title-style: (
+        $text-m,
+        medium,
+        (color: map-deep-get($color-neutral, black, black-600)),
+      ),
+      media-text-style: (
+        $text-m,
+        regular,
+        (color: map-deep-get($color-neutral, gray, gray-400)),
+      ),
+    )
+  );
+}

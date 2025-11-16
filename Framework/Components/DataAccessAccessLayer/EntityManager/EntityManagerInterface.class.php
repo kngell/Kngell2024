@@ -22,17 +22,29 @@ interface EntityManagerInterface
 
     public function isEntityKeyInitialized(): bool;
 
-    public function getQueryExpr(): MainQuery;
-
-    public function setQueryExpr(MainQuery $queryExpr): self;
+    public function setQueryBuilder(?AbstractQueryBuilder $queryBuilder): self;
 
     public function persist(): self;
 
-    public function getRepository(Entity|string|null $entityName = null): array|RepositoryInterface;
+    public function getRepository(Entity|string|null $entityName = null): array|RepositoryInterface|ProductRegionalPriceRepositoryInterface;
 
     public function getEntityKeyField(): string|bool;
 
     public function getEntityKeyValue(): mixed;
 
     public function getQueryResult(): QueryResult;
+
+    public function beginTransaction(): bool;
+
+    public function commit(): bool;
+
+    public function rollback(): bool;
+
+    public function getTableAlias(): array;
+
+    public function getNormalizer(): TypeNormalizerInterface;
+
+    public function hasData(): bool;
+
+    public function getEntityData(): array;
 }

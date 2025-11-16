@@ -1,17 +1,48 @@
+product.created:
+  - callback: SaveImageGalleryListener
+    priority: 1
+  # - callback: SaveProductCategoryListener
+  #   priority: 3
+  - callback: SaveProductVariationListener
+    priority: 4
+  # - callback: GenerateDefaultRegionalPriceListener
+  #   priority: 5
+  # - callback: IndexProductSearchListener
+  #   priority: 6
+  # - callback: NotifyProductManagerListener
+  #   priority: 7
+
+user.registered:
+  - callback: WelcomeEmailListener
+    priority: 1
+  - callback: AssignDefaultUserRoleListener
+    priority: 2
+  - callback: InitializeUserProfileListener
+    priority: 3
+order.created:
+  - callback: UpdateInventoryStockListener
+    priority: 1
+  - callback: SendOrderConfirmationEmailListener
+    priority: 2
+  - callback: ProcessFulfillmentQueueListener
+    priority: 3
+  - callback: UpdateOrderStatusToProcessingListener
+    priority: 4
+
 ResetPwEvent:
-- callback: BasicEmailListener
-  priority: 1
+  - callback: BasicEmailListener
+    priority: 1
 RegisterEvent:
-- callback: BasicEmailListener
-  priority: 1
+  - callback: BasicEmailListener
+    priority: 1
 LoginEvent:
-- callback: MergeSessionAndDatabaseUserCartListener
-  priority: 1
+  - callback: MergeSessionAndDatabaseUserCartListener
+    priority: 1
 LogoutEvent:
-- callback: DefineNewTokenHashListener
-  priority: 2
-- callback: SaveUserCartIntoLocalStorageListener
-  priority: 1
+  - callback: DefineNewTokenHashListener
+    priority: 2
+  - callback: SaveUserCartIntoLocalStorageListener
+    priority: 1
 PaymentEvent:
-- callback: ClearUserCartListener
-  priority: 1
+  - callback: ClearUserCartListener
+    priority: 1

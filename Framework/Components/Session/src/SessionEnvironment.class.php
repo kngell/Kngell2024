@@ -19,11 +19,13 @@ class SessionEnvironment
      * Main class constructor.
      *
      * @param array $sessionConfig
+     *
      * @return void
      */
     public function __construct(array $sessionConfig = [])
     {
-        if (count($sessionConfig) < 0 || ! is_array($sessionConfig)) {
+        // Fixed: count($sessionConfig) < 0 is always false, use empty() instead
+        if (empty($sessionConfig) || !is_array($sessionConfig)) {
             throw new LogicException('Session environment has failed to load. Ensure your are passing the correct yaml configuration file to the session facade class object');
         }
         $this->sessionConfig = $sessionConfig;
@@ -44,13 +46,10 @@ class SessionEnvironment
      *
      * @return int
      */
-    public function getLifetime(): int|bool
+    public function getLifetime(): int
     {
-        return filter_var($this->getSessionParam('cookie_lifetime'), FILTER_VALIDATE_INT) ?? 120;
-        // $lifetime = (isset($this->getConfig()['cookie_lifetime']) ? filter_var($this->getConfig()['cookie_lifetime'], FILTER_VALIDATE_INT) : 120);
-        // if ($lifetime) {
-        //     return $lifetime;
-        // }
+        $lifetime = filter_var($this->getSessionParam('cookie_lifetime'), FILTER_VALIDATE_INT);
+        return $lifetime !== false ? $lifetime : 120;
     }
 
     /**
@@ -59,7 +58,7 @@ class SessionEnvironment
      *
      * @return string
      */
-    public function getPath(): string|bool
+    public function getPath(): string
     {
         return $this->getSessionParam('path') ?? '/';
     }
@@ -68,32 +67,47 @@ class SessionEnvironment
      * Cookie domain, for example 'www.php.net'. To make cookies visible on all
      * subdomains then the domain must be prefixed with a dot like '.php.net'.
      *
-     * @return string|bool
+     * @return string
      */
-    public function getDomain(): bool|string
+    public function getDomain(): string
     {
-        return $this->getSessionParam('domain') ?? $_SERVER['SERVER_NAME'];
+        return $this->getSessionParam('domain') ?? ($_SERVER['SERVER_NAME'] ?? 'localhost');
     }
 
-    /**
-     * If TRUE cookie will only be sent over secure connections.
-     *
-     * @return bool
-     */
     public function isSecure(): bool
     {
-        return (bool) $this->getSessionParam('cookie_secure') ?? isset($_SERVER['HTTPS']);
+        $configValue = $this->getSessionParam('cookie_secure');
+
+        // Handle different types of values
+        if ($configValue === '1' || $configValue === 1 || $configValue === true) {
+            return true;
+        }
+        if ($configValue === '0' || $configValue === 0 || $configValue === false) {
+            return false;
+        }
+
+        // Auto-detect from HTTPS
+        return isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
     }
 
-    /**
-     * If set to TRUE then PHP will attempt to send the httponly flag when
-     * setting the session cookie.
-     *
-     * @return null|bool
-     */
-    public function isHttpOnly(): ?bool
+    public function isHttpOnly(): bool
     {
-        return (bool) $this->getSessionParam('cookie_httponly');
+        $configValue = $this->getSessionParam('cookie_httponly');
+
+        if ($configValue === '1' || $configValue === 1 || $configValue === true) {
+            return true;
+        }
+        if ($configValue === '0' || $configValue === 0 || $configValue === false) {
+            return false;
+        }
+
+        return true; // Default to true for security
+    }
+
+    public function getSameSite(): string
+    {
+        $sameSite = $this->getSessionParam('cookie_samesite');
+        return in_array($sameSite, ['Lax', 'Strict', 'None']) ? $sameSite : 'Lax';
     }
 
     /**
@@ -103,19 +117,22 @@ class SessionEnvironment
      */
     public function getSessionName(): string
     {
-        return strval($this->getSessionParam('session_name'));
+        return (string) ($this->getSessionParam('session_name') ?? 'kgl_xsf_session');
     }
 
-    public function storagePath() : string
+    public function storagePath(): string
     {
-        return strval($this->getSessionParam('save_path'));
+        return (string) ($this->getSessionParam('save_path') ?? 'storage/sessions');
     }
 
     /**
-     * PHP session runtime configuration strings.
-     *
-     * @return array
+     * Get the session save path with ROOT_DIR.
      */
+    public function getFullStoragePath(): string
+    {
+        return ROOT_DIR . DS . $this->storagePath() . DS;
+    }
+
     public function getSessionRuntimeConfigurations(): array
     {
         return [
@@ -123,38 +140,59 @@ class SessionEnvironment
             'session.gc_divisor',
             'session.gc_probability',
             'session.cookie_lifetime',
-            'session.use_cookies',
             'session.cookie_secure',
             'session.cookie_httponly',
             'session.cookie_samesite',
+            'session.use_cookies',
             'session.use_only_cookies',
+            'session.use_trans_sid',
             'session.save_path',
         ];
     }
 
-    /**
-     * Get the session runtime configuration values from the session environment
-     * object. As the array is index with the 'session.' prefix we must handle this
-     * by removing the prefix. In order to match the configuration values.
-     * Values are fetched using the getConfig() method and simple calling the
-     * config value within the square brackets.
-     *
-     * @param string $option
-     * @return mixed
-     */
     public function getSessionIniValues(string $sessionKey): mixed
     {
         if ($sessionKey === 'save_path') {
-            return strval(ROOT_DIR . DS . $this->getConfig()[$sessionKey]);
+            return $this->getFullStoragePath();
         }
-        return $this->getConfig()[$sessionKey];
+
+        $value = $this->getSessionParam($sessionKey);
+
+        return match($sessionKey) {
+            'cookie_secure' => $this->isSecure() ? '1' : '0',
+            'cookie_httponly' => $this->isHttpOnly() ? '1' : '0',
+            'cookie_samesite' => $this->getSameSite(),
+            'use_cookies' => '1',
+            'use_only_cookies' => '1',
+            'use_trans_sid' => '0',
+            default => $value
+        };
+    }
+
+    /**
+     * Get session driver configuration.
+     */
+    public function getDriverConfig(?string $driver = null): array
+    {
+        $driver = $driver ?? $this->getSessionParam('default_driver') ?? 'native_storage';
+        $drivers = $this->getSessionParam('drivers') ?? [];
+
+        return $drivers[$driver] ?? $drivers['native_storage'] ?? [];
+    }
+
+    /**
+     * Check if session should be globalized.
+     */
+    public function isGlobalized(): bool
+    {
+        return (bool) ($this->getSessionParam('globalized') ?? false);
     }
 
     private function getSessionParam(?string $key = null): mixed
     {
-        if ($key !== null && array_key_exists($key, $this->getConfig())) {
-            return $this->getConfig()[$key];
+        if ($key !== null && array_key_exists($key, $this->sessionConfig)) {
+            return $this->sessionConfig[$key];
         }
-        return false;
+        return null;
     }
 }

@@ -2,24 +2,50 @@
 
 declare(strict_types=1);
 
+use Ramsey\Uuid\Uuid;
+
 class ProductModel extends Model
 {
-    public function __construct(EntityManagerInterface $em)
+    public function save(array|Entity|null $data = null): QueryResult
     {
-        parent::__construct($em);
+        if ($data === null) {
+            throw new InvalidArgumentException('No data to save.');
+        }
+        if ($data instanceof Entity) {
+            $data = $data->toArray();
+        }
+        if (!is_array($data) || !isset($data['name'])) {
+            throw new InvalidArgumentException('Cannot save without product name data.');
+        }
+
+        /** @var UuidInterface $publicId */
+        $publicId = Uuid::uuid4();
+
+        $baseSlug = $this->slugify($data['name']);
+        $slug = $baseSlug;
+        $counter = 0;
+
+        while ($this->one(['slug' => $slug])->exists()) {
+            $counter++;
+            $slug = $baseSlug . '-' . $counter;
+        }
+        $data['public_id'] = $publicId;
+        $data['slug'] = $slug;
+
+        return parent::save($data);
     }
 
-    public function getTotal() : int
+    public function getTotal(): int
     {
-        $this->entityManager->createQueryBuilder()->select('count(name) AS tot')->build();
-        $total = $this->entityManager->persist()->getResults();
+        $this->em->createQueryBuilder()->select('count(name) AS tot')->build();
+        $total = $this->em->persist()->getQueryResult();
         $count = ArrayUtils::first($total->getResults()->all());
         return $count['tot'];
     }
 
-    public function getProducts(int $offset = 0, int $limit = 10) : array
+    public function getProducts(int $offset = 0, int $limit = 10): array
     {
-        $query = $this->entityManager->createQueryBuilder()
+        $query = $this->em->createQueryBuilder()
             ->select()
             ->innerJoin('product_category')
             ->on('product_category.product_id', 'product.id')
@@ -32,15 +58,27 @@ class ProductModel extends Model
             ->orderBy('product.id', 'DESC')
             ->build();
 
-        return $this->entityManager->persist()->getResults()->getResults('object')->all();
+        return $this->em->persist()->getQueryResult()->getResults('object')->all();
     }
 
-    public function getProductById(int $id) : Product|NullObjectInterface
+    public function getProductById(int $id): Product|NullObjectInterface
     {
         $product = $this->find($id);
         if ($product->getQueryResult() && $product->rowCount() > 0) {
             return $product->getResults('class')->single();
         }
         return new NullObject();
+    }
+
+    private function slugify(string $text): string
+    {
+        $text = preg_replace('~[^\pL\d]+~u', '-', $text);
+        $text = iconv('utf-8', 'us-ascii//TRANSLIT', $text);
+        $text = preg_replace('~[^-\w]+~', '', $text);
+        $text = trim($text, '-');
+        $text = preg_replace('~-+~', '-', $text);
+        $text = strtolower($text);
+
+        return empty($text) ? 'n-a-' . substr(Uuid::uuid4()->toString(), 0, 8) : $text;
     }
 }

@@ -2,15 +2,14 @@
 
 declare(strict_types=1);
 
-class StockStatus extends Entity implements TimestampableInterface, SoftDeletableInterface
+class StockStatus extends Entity implements TimestampableInterface
 {
     use EntityTimestampableTrait;
-    use SoftDeletableTrait;
 
-    #[EntityFieldId(name: 'pdt_id')]
+    #[EntityFieldId()]
     private int $id; //Unique product identifier
 
-    private StockStatusCode $code;
+    private StockStatusCode $stockStatusCode;
     private string $label;
     private string $description;
     private int $sortOrder;
@@ -32,25 +31,6 @@ class StockStatus extends Entity implements TimestampableInterface, SoftDeletabl
     {
         $this->id = $id;
 
-        return $this;
-    }
-
-    /**
-     * @return StockStatusCode
-     */
-    public function getCode(): StockStatusCode
-    {
-        return $this->code;
-    }
-
-    /**
-     * @param StockStatusCode $code
-     *
-     * @return StockStatus
-     */
-    public function setCode(StockStatusCode $code): StockStatus
-    {
-        $this->code = $code;
         return $this;
     }
 
@@ -110,6 +90,29 @@ class StockStatus extends Entity implements TimestampableInterface, SoftDeletabl
     {
         $this->sortOrder = $sortOrder;
 
+        return $this;
+    }
+
+    /**
+     * @return StockStatusCode
+     */
+    public function getStockStatusCode(): StockStatusCode
+    {
+        return $this->stockStatusCode;
+    }
+
+    /**
+     * @param string $stockStatusCode
+     *
+     * @return StockStatus
+     */
+    public function setStockStatusCode(string $stockStatusCode): StockStatus
+    {
+        $enum = StockStatusCode::tryFrom($stockStatusCode);
+        if ($enum === null) {
+            throw new InvalidArgumentException("Invalid status value: $stockStatusCode");
+        }
+        $this->stockStatusCode = $enum;
         return $this;
     }
 }

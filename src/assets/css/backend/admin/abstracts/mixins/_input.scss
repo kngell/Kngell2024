@@ -7,38 +7,66 @@
 @use "text-style" as *;
 @use "icon_with_bade" as *;
 
+// Global map to track all included styles
+$_included-styles: () !default;
+$included-file-styles: () !default;
+
+// Helper mixin to include styles only once globally
+@mixin include-once($unique-id) {
+  @if not map.has-key($_included-styles, $unique-id) {
+    $_included-styles: map.merge(
+      $_included-styles,
+      (
+        $unique-id: true,
+      )
+    ) !global;
+    @content;
+  }
+}
+
 @mixin form-field($types: (), $options: ()) {
   $merged-options: map.merge($form-field-defaults, $options);
+  $input-box: map.get($merged-options, "input-box");
 
-  // Base container styles
+  // Base container styles (always include - these shouldn't duplicate)
   @include base-input-box($merged-options);
-
-  // Shared base styles for ALL form fields
   @include form-field-shared-styles($merged-options);
-
-  // Icon handling via data attributes
   @include icon-styles($merged-options);
 
-  // Type-specific styles
+  // Type-specific styles with global once protection
   @each $type in $types {
     @if $type == "select" {
-      @include select-styles($merged-options);
+      @include include-once("select-styles-#{$input-box}") {
+        @include select-styles($merged-options);
+      }
     } @else if $type == "textarea" {
-      @include textarea-styles($merged-options);
+      @include include-once("textarea-styles-#{$input-box}") {
+        @include textarea-styles($merged-options);
+      }
     } @else if $type == "text" or $type == "email" or $type == "password" {
-      @include text-input-styles($merged-options);
+      @include include-once("text-input-styles-#{$input-box}") {
+        @include text-input-styles($merged-options);
+      }
     } @else if list.index(("radio", "checkbox"), $type) {
-      @include non-text-input-styles($type, $merged-options);
+      @include include-once("non-text-input-styles-#{$type}-#{$input-box}") {
+        @include non-text-input-styles($type, $merged-options);
+      }
     } @else if list.index(("file", "video"), $type) {
-      @include file-input-styles($type, $merged-options);
+      @include include-once("file-input-styles-#{$type}-#{$input-box}") {
+        @include file-input-styles($type, $merged-options);
+      }
     } @else if $type == "currency" {
-      @include currency-styles($merged-options);
+      @include include-once("currency-styles-#{$input-box}") {
+        @include currency-styles($merged-options);
+      }
     }
   }
 
   // Floating label logic if enabled
   @if map.get($merged-options, "floating") {
-    @include floating-label-styles($merged-options);
+    @include include-once("floating-label-styles-#{$input-box}") {
+      @include floating-label-styles($merged-options);
+    }
   }
 }
 
@@ -409,44 +437,101 @@
   $label-floating-color: map.get($options, "label-floating-color");
   $icon-size: map.get($options, "icon-size");
 
-  .#{$input-box}__label {
-    position: absolute;
-    top: 50%;
-    left: list.nth($padding, 2);
-    transform: translateY(-50%);
-    pointer-events: none;
-    z-index: 1;
-    background-color: transparent;
-    margin-bottom: 0;
-    transition: all 0.2s ease;
+  // Apply floating labels only to specific input types
+  &:not(:has(.#{$input-box}__select)):not(:has([type="radio"])):not(:has([type="checkbox"])):not(
+      :has([type="file"])
+    ) {
+    .#{$input-box}__label {
+      position: absolute;
+      top: list.nth($padding, 1);
+      left: list.nth($padding, 2);
+      transform: none;
+      pointer-events: none;
+      z-index: 1;
+      background-color: transparent;
+      margin-bottom: 0;
+      transition: all 0.2s ease;
+      line-height: 1.4;
+    }
+
+    // Adjust for prefix icons
+    &[data-icon-prefix] .#{$input-box}__label {
+      left: calc(#{list.nth($padding, 2)} + #{$icon-size} + 0.8rem);
+    }
+
+    // Floating state - label moves up
+    &:focus-within .#{$input-box}__label,
+    &:has(.#{$input-box}__input:not(:placeholder-shown)) .#{$input-box}__label,
+    &:has(.#{$input-box}__textarea:not(:placeholder-shown)) .#{$input-box}__label {
+      top: 0;
+      transform: translateY(-50%);
+      font-size: $label-float-size;
+      color: $label-floating-color;
+      background-color: $background;
+      padding: 0 0.4rem;
+      left: list.nth($padding, 2);
+    }
+
+    // Textarea-specific adjustments
+    &:has(.#{$input-box}__textarea) {
+      .#{$input-box}__label {
+        top: list.nth($padding, 1);
+        transform: none;
+      }
+
+      &:focus-within .#{$input-box}__label,
+      &:has(.#{$input-box}__textarea:not(:placeholder-shown)) .#{$input-box}__label {
+        top: 0;
+        transform: translateY(-50%);
+      }
+    }
+
+    // Adjust floating position for prefix icons
+    &[data-icon-prefix]:focus-within .#{$input-box}__label,
+    &[data-icon-prefix]:has(.#{$input-box}__input:not(:placeholder-shown)) .#{$input-box}__label,
+    &[data-icon-prefix]:has(.#{$input-box}__textarea:not(:placeholder-shown))
+      .#{$input-box}__label {
+      left: list.nth($padding, 2);
+    }
+
+    // PLACEHOLDER BEHAVIOR - REVERSED:
+    // Initial state: placeholder hidden (only label visible)
+    .#{$input-box}__input::placeholder,
+    .#{$input-box}__textarea::placeholder {
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    // When floating/focused: placeholder becomes visible
+    &:focus-within,
+    &:has(.#{$input-box}__input:not(:placeholder-shown)) {
+      .#{$input-box}__input::placeholder,
+      .#{$input-box}__textarea::placeholder {
+        opacity: 0.7;
+      }
+    }
+
+    // When not floating/empty: placeholder hides again
+    &:not(:focus-within):has(.#{$input-box}__input:placeholder-shown) {
+      .#{$input-box}__input::placeholder,
+      .#{$input-box}__textarea::placeholder {
+        opacity: 0;
+      }
+    }
   }
 
-  // Adjust for prefix icons
-  &[data-icon-prefix] .#{$input-box}__label {
-    left: calc(#{list.nth($padding, 2)} + #{$icon-size} + 0.8rem);
-  }
+  // Special handling for select inputs - static labels only
+  &:has(.#{$input-box}__select) {
+    .#{$input-box}__label {
+      position: static;
+      transform: none;
+      margin-bottom: map.get($options, "gap-label-input");
+    }
 
-  // Floating state
-  &:focus-within .#{$input-box}__label,
-  &:has(.#{$input-box}__input:not(:placeholder-shown)) .#{$input-box}__label {
-    top: 0;
-    transform: translateY(-50%);
-    font-size: $label-float-size;
-    color: $label-floating-color;
-    background-color: $background;
-    padding: 0 0.4rem;
-    left: list.nth($padding, 2);
-  }
-
-  // Adjust floating position for prefix icons
-  &[data-icon-prefix]:focus-within .#{$input-box}__label,
-  &[data-icon-prefix]:has(.#{$input-box}__input:not(:placeholder-shown)) .#{$input-box}__label {
-    left: list.nth($padding, 2);
-  }
-
-  // Hide placeholder when floating
-  .#{$input-box}__input::placeholder {
-    opacity: 0;
+    // Select placeholders behave normally
+    .#{$input-box}__select::placeholder {
+      opacity: 1;
+    }
   }
 }
 
@@ -770,115 +855,193 @@
   $media-title-style: map.get($options, "media-title-style");
   $media-text-style: map.get($options, "media-text-style");
 
-  &__media-title {
-    width: 100%;
-    @include apply-text-style($media-title-style, #000);
-  }
+  // Create a unique identifier for this input-box
+  $unique-id: "file-input-#{$input-box}";
 
-  &__media-upload {
-    display: flex;
-    padding: 2.4rem 1.2rem;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 1.6rem;
-    border-radius: map-deep-get($radius, s);
-    border: 1px dashed map-deep-get($color-neutral, gray, gray-100);
-    background-color: map-deep-get($color-neutral, gray, gray-25);
-    .media-preview {
-      display: flex;
-      flex-wrap: wrap; // Allow wrapping
-      justify-content: center; // Align to left
-      align-items: flex-start;
-      gap: 1.6rem;
+  // Only include these styles once per input-box
+  @if not index($included-file-styles, $unique-id) {
+    $included-file-styles: append($included-file-styles, $unique-id) !global;
+
+    &__media-title {
       width: 100%;
-      &__item {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-end;
-        position: relative;
-        margin-bottom: 1rem;
-        &--img-container {
-          @include icon-with-badge(
-            $with-badge: false,
-            $icon-size: 10rem,
-            $padding: 0,
-            $content-type: image,
-            $icon-container-bg: map-deep-get($color-neutral, gray, gray-100),
-            $border-color: transparent
-          );
-          @include transition((border-color, transform));
+      @include apply-text-style($media-title-style, #000);
+    }
 
-          &:hover {
-            border-color: map-deep-get($color-primary, primary-200);
-            transform: scale(1.05);
+    &__media-upload {
+      display: flex;
+      padding: 2.4rem 1.2rem;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 1.6rem;
+      border-radius: map-deep-get($radius, s);
+      border: 1px dashed map-deep-get($color-neutral, gray, gray-100);
+      background-color: map-deep-get($color-neutral, gray, gray-25);
+
+      .media-preview {
+        @include flex-center;
+        flex-wrap: wrap;
+        gap: 1.6rem;
+        // margin-bottom: 1rem;
+
+        &__item {
+          width: fit-content;
+          height: fit-content;
+          display: flex;
+          justify-content: center;
+          border-radius: map.get($options, "radius");
+          position: relative;
+          // margin-bottom: 1rem;
+          // overflow: hidden;
+          // background: map-deep-get($color-neutral, gray, gray-50);
+
+          &--img-container {
+            $border-color: transparent;
+            width: 100%;
+            height: 100%;
+            // aspect-ratio: 1/1;
+            @include transition((border-color, transform));
+            .image {
+              width: 100%;
+              height: 100%;
+              object-fit: contain;
+            }
+            &:hover {
+              border-color: map-deep-get($color-primary, primary-200);
+              transform: scale(1.05);
+            }
+          }
+          &--icon-success {
+            @include icon-with-badge(
+              $with-badge: false,
+              $icon-size: 1.6em,
+              $padding: 0.4em,
+              $content-type: icon,
+              $icon-container-bg: map-deep-get($color-secondary, green, green-100),
+              $border-radius: map-deep-get($radius, full)
+            );
+            position: absolute;
+            right: -0.4em;
+            top: -0.4em;
+            z-index: 2;
+          }
+
+          &--icon-remove {
+            @include icon-with-badge(
+              $with-badge: false,
+              $icon-size: 1.6em,
+              $padding: 0.4em,
+              $content-type: icon,
+              $icon-container-bg: map-deep-get($color-secondary, red, red-100),
+              $icon-color: map-deep-get($color-secondary, red, red-500),
+              $border-radius: map-deep-get($radius, full)
+            );
+            width: 1.6em;
+            height: 1.6em;
+            padding: 0.4em;
+            position: absolute;
+            right: -0.4em;
+            bottom: -0.4em;
+            z-index: 2;
+            opacity: 1;
+            @include transition((background-color, color));
+
+            &:hover {
+              background-color: map-deep-get($color-secondary, red, red-300);
+              color: map-deep-get($color-secondary, red, red-500);
+            }
+          }
+          &--filename,
+          &--filesize {
+            text-align: center;
+            align-self: center;
+          }
+          &--filename {
+            @include apply-text-style($media-text-style, #000);
+            word-break: break-all;
+          }
+          &--filesize {
+            @include apply-text-style(
+              $media-text-style,
+              map-deep-get($color-neutral, gray, gray-400)
+            );
+            font-size: 1.2rem;
+            margin-top: 0.4rem;
           }
         }
-        &--icon-container {
-          @include icon-with-badge(
-            $with-badge: false,
-            $icon-size: 1.6rem,
-            $padding: 0.4rem,
-            $content-type: icon,
-            $icon-container-bg: map-deep-get($color-secondary, green, green-100),
-            $border-radius: map-deep-get($radius, full)
-          );
-          position: absolute;
-          right: -0.4rem;
-          top: -0.4rem;
-          z-index: 2;
-        }
-        &--remove {
-          @include icon-with-badge(
-            $with-badge: false,
-            $icon-size: 1.6rem,
-            $padding: 0.4rem,
-            $content-type: icon,
-            $icon-container-bg: map-deep-get($color-secondary, red, red-100),
-            $icon-color: map-deep-get($color-secondary, red, red-500),
-            $border-radius: map-deep-get($radius, full)
-          );
-          position: absolute;
-          right: -0.4rem;
-          bottom: -0.4rem;
-          z-index: 2;
-          opacity: 1;
-          @include transition((background-color, color));
 
-          &:hover {
-            background-color: map-deep-get($color-secondary, red, red-300);
-            color: map-deep-get($color-secondary, red, red-500);
+        &.main-image {
+          border: 2px solid map.get($options, "accent-color");
+          .media-preview__item {
+            flex-direction: column;
+            max-width: 24rem;
+            padding: 1rem;
+            gap: 1.4rem;
+          }
+        }
+        &.image-gallery {
+          border: 2px solid map.get($options, "accent-color");
+          width: 100%;
+          .media-preview__item {
+            max-width: 12rem;
+            padding: 1rem;
+            flex-direction: column;
           }
         }
       }
-      // Empty state
-      &.empty {
+
+      .media-file {
         display: none;
       }
+
+      .media-avatar {
+        @include icon-with-badge(
+          $icon-size: 5.2rem,
+          $with-badge: false,
+          $border-radius: 50%,
+          $align-self: false,
+          $icon-color: map-deep-get($color-primary, primary-500),
+          $icon-container-bg: map-deep-get($color-primary, primary-100),
+          $border-color: map-deep-get($color-primary, primary-50)
+        );
+      }
+
+      .media-text {
+        @include apply-text-style($media-text-style, #000);
+      }
+
+      &.empty {
+        border: 2px dashed #d1d5db;
+        // padding: 2rem;
+        text-align: center;
+        @include transition;
+        .media-preview {
+          display: none;
+        }
+      }
+
+      &:hover {
+        border-color: map-deep-get($color-neutral, gray, gray-400);
+      }
+      &.drag-over {
+        background-color: #f0f9ff !important;
+        border-color: #3b82f6 !important;
+        border-style: dashed !important;
+      }
+      &.has-media {
+        border: 2px solid #e5e7eb;
+        // padding: 1rem;
+      }
     }
-    .media-file {
-      display: none;
-    }
-    .media-avatar {
-      @include icon-with-badge(
-        $icon-size: 5.2rem,
-        $with-badge: false,
-        $border-radius: 50%,
-        $align-self: false,
-        $icon-color: map-deep-get($color-primary, primary-500),
-        $icon-container-bg: map-deep-get($color-primary, primary-100),
-        $border-color: map-deep-get($color-primary, primary-50)
-      );
-    }
-    .media-text {
-      @include apply-text-style($media-text-style, #000);
-    }
-  }
-  .#{$input-box}.has-error & {
-    &__media-upload {
-      border-color: red;
-      &:focus-within {
-        box-shadow: 0 0 0 2px rgba(red, 0.1);
+
+    // FIXED: Move error styles outside the main block to prevent nesting issues
+    @at-root {
+      .#{$input-box}.has-error .#{$input-box}__media-upload {
+        border-color: red;
+
+        &:focus-within {
+          box-shadow: 0 0 0 2px rgba(red, 0.1);
+        }
       }
     }
   }

@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 require_once 'inc/admin/head.php';
 
-if ($this->request->get('request_uri') !== '/login'):?>
+if ($this->request->getRequestedUri() !== '/login'):?>
 <!----------------Header-------------------->
 <?php require_once 'inc/admin/header.php'; ?>
 <!----------------xNavbar-------------------->

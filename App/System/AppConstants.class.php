@@ -7,7 +7,7 @@ final readonly class AppConstants
     {
     }
 
-    public static function enable() : void
+    public static function enable(): void
     {
         // -----------------------------------------------------------------------
         // SEPARATORS
@@ -30,6 +30,7 @@ final readonly class AppConstants
         defined('UPLOAD_DIR') or define('UPLOAD_DIR', ROOT_DIR . DS . 'public' . DS . 'Upload' . DS);
         defined('FILES') or define('FILES', ROOT_DIR . IMG . 'Upload' . DS);
         defined('COMPONENTS') or define('COMPONENTS', ROOT_DIR . DS . 'Framework' . DS . 'Components' . DS);
+        defined('STORAGE') or define('STORAGE', ROOT_DIR . DS . 'storage' . DS);
         // --------------------------------------------
         // VISITORS, LOGIN & REGISTRATION
         // -----------------------------------------
@@ -54,6 +55,6 @@ final readonly class AppConstants
         //----------------------------------------------
         // Host
         // ---------------------------------------------
-        defined('HOST') or define('HOST', '');//https://localhost:3003
+        defined('HOST') or define('HOST', ''); //https://localhost:3003
     }
 }

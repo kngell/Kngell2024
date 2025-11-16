@@ -14,12 +14,12 @@ class Collection implements CollectionInterface
         $this->items = (array) $items;
     }
 
-    public function isEmpty() : bool
+    public function isEmpty(): bool
     {
         return $this->count === 0;
     }
 
-    public function addAll(array $parameters) : self
+    public function addAll(array $parameters): self
     {
         foreach ($parameters as $key => $value) {
             $this->items[$key] = $value;
@@ -31,6 +31,7 @@ class Collection implements CollectionInterface
      * Add an item to the collection.
      *
      * @param mixed $item
+     *
      * @return self
      */
     public function add(mixed $item): self
@@ -58,6 +59,7 @@ class Collection implements CollectionInterface
      * Checks whether a given key exists within the collection.
      *
      * @param mixed $key
+     *
      * @return bool
      */
     public function has(mixed $key): bool
@@ -65,10 +67,10 @@ class Collection implements CollectionInterface
         return array_key_exists($key, $this->items) && isset($this->items[$key]);
     }
 
-    public function getObjectWithValue(string $id, mixed $value) : array
+    public function getObjectWithValue(string $id, mixed $value): array
     {
         return array_values(
-            array_filter($this->items, fn ($item) => $item->$id === $value)
+            array_filter($this->items, fn ($item) => $item->$id === $value),
         );
     }
 
@@ -82,7 +84,7 @@ class Collection implements CollectionInterface
         return array_keys($this->items);
     }
 
-    public function shuffle() : static
+    public function shuffle(): static
     {
         return new static(shuffle($this->items));
     }
@@ -91,6 +93,7 @@ class Collection implements CollectionInterface
      * Run a map over each items.
      *
      * @param callable $callback
+     *
      * @return static
      */
     public function map(callable $callback): static
@@ -112,6 +115,7 @@ class Collection implements CollectionInterface
      * Calculates the sum of values within the specified array.
      *
      * @param array $array
+     *
      * @return static
      */
     public function sum(): static
@@ -134,6 +138,7 @@ class Collection implements CollectionInterface
      *
      * @param mixed $from
      * @param mixed $to
+     *
      * @return static
      */
     public function range($from, $to): static
@@ -145,6 +150,7 @@ class Collection implements CollectionInterface
      * Merge the collection with the given argument.
      *
      * @param mixed $items
+     *
      * @return static
      */
     public function merge(mixed $items): static
@@ -156,6 +162,7 @@ class Collection implements CollectionInterface
      * Recursively merge the collection with the given argument.
      *
      * @param mixed $items
+     *
      * @return static
      */
     public function mergeRecursive(mixed $items): static
@@ -177,6 +184,7 @@ class Collection implements CollectionInterface
      * Push elements on the end of the collection items.
      *
      * @param mixed ...$values
+     *
      * @return self
      */
     public function push(...$values): self
@@ -211,6 +219,7 @@ class Collection implements CollectionInterface
      *
      * @param [type] $offset
      * @param [type] $length
+     *
      * @return static
      */
     public function slice(int $offset, $length = null): static
@@ -242,17 +251,18 @@ class Collection implements CollectionInterface
      * Remove the item from the collection.
      *
      * @param string|int $key
+     *
      * @return void
      */
     public function remove(string|int $key): void
     {
-        if (! $this->has($key)) {
+        if (!$this->has($key)) {
             return;
         }
         unset($this->items[$key]);
     }
 
-    public function replace(mixed $newValues, mixed $oldValue) : void
+    public function replace(mixed $newValues, mixed $oldValue): void
     {
         $key = $this->getKeyByValue($oldValue);
         $this->items[$key] = $newValues;
@@ -263,7 +273,7 @@ class Collection implements CollectionInterface
         $this->items = [];
     }
 
-    public function updateValue(mixed $oldValue, mixed $NewValue) : void
+    public function updateValue(mixed $oldValue, mixed $NewValue): void
     {
         $key = array_search($oldValue, $this->items, true);
         if ($key === false) {
@@ -275,13 +285,13 @@ class Collection implements CollectionInterface
         $this->items[$key] = $NewValue;
     }
 
-    public function removeByValue(mixed $value) : void
+    public function removeByValue(mixed $value): void
     {
         $key = $this->getKeyByValue($value);
         $this->remove($key);
     }
 
-    public function getKeyByValue(mixed $value) : string
+    public function getKeyByValue(mixed $value): int|string
     {
         $key = array_search($value, $this->items, true);
         if ($key === false) {
@@ -304,6 +314,7 @@ class Collection implements CollectionInterface
      * Returns the items in the collection which is not within the specified index array.
      *
      * @param mixed $items
+     *
      * @return static
      */
     public function diff(mixed $items): static
@@ -315,6 +326,7 @@ class Collection implements CollectionInterface
      * Returns the items in the collection which is not within the the specified associative array.
      *
      * @param mixed $items
+     *
      * @return static
      */
     public function diffAssoc(mixed $items): static
@@ -328,6 +340,7 @@ class Collection implements CollectionInterface
      *
      * @param mixed $items
      * @param callable $callback
+     *
      * @return static
      */
     public function diffAssocUsing(mixed $items, callable $callback): static
@@ -340,6 +353,7 @@ class Collection implements CollectionInterface
      * index array.
      *
      * @param mixed $items
+     *
      * @return static
      */
     public function diffKeys(mixed $items): static
@@ -353,6 +367,7 @@ class Collection implements CollectionInterface
      *
      * @param mixed $items
      * @param callable $callback
+     *
      * @return static
      */
     public function diffKeysUsing(mixed $items, callable $callback): static
@@ -364,6 +379,7 @@ class Collection implements CollectionInterface
      * Run a filter over each of the collection item.
      *
      * @param callable $callback
+     *
      * @return static
      */
     public function filter(?callable $callback = null): static
@@ -380,17 +396,24 @@ class Collection implements CollectionInterface
      *
      * @param  callable|null  $callback
      * @param  mixed  $default
+     *
      * @return mixed
      */
-    public function first(callable|null $callback = null, $default = null) : mixed
+    public function first(callable|null $callback = null, $default = null): mixed
     {
         // return $this-first($this->items, $callback, $default);
-        return ! empty($this->items) ? $this->items[0] : [];
+        return !empty($this->items) ? $this->items[0] : [];
     }
 
-    public function last() : mixed
+    public function last(): mixed
     {
         return end($this->items);
+    }
+
+    public function removeLast(): mixed
+    {
+        // array_pop removes and returns the last element
+        return array_pop($this->items);
     }
 
     /**
@@ -410,7 +433,7 @@ class Collection implements CollectionInterface
         return array_key_exists($key, $this->items) && isset($this->items[$key]);
     }
 
-    public function valueExists(mixed $value, string $keyValue = '') : bool
+    public function valueExists(mixed $value, string $keyValue = ''): bool
     {
         if ($keyValue != '') {
             foreach ($this->items as $key => $val) {
@@ -441,7 +464,7 @@ class Collection implements CollectionInterface
         return $this->offsetGet($key);
     }
 
-    public function getWithDefault(string $key, mixed $defaultValue) : mixed
+    public function getWithDefault(string $key, mixed $defaultValue): mixed
     {
         return $this->offsetGet($key) ?? $defaultValue;
     }
@@ -477,7 +500,7 @@ class Collection implements CollectionInterface
 
     public function flat($array)
     {
-        if (! is_array($array)) {
+        if (!is_array($array)) {
             return false;
         }
         $result = [];

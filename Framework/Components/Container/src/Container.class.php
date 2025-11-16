@@ -16,9 +16,6 @@ declare(strict_types=1);
  */
 class Container implements ContainerInterface
 {
-    /** @var ContainerInterface */
-    protected static ?ContainerInterface $instance = null;
-
     /** @var array<string, BindingDefinition> */
     protected array $bindings = [];
 
@@ -49,6 +46,9 @@ class Container implements ContainerInterface
     /** @var bool */
     protected bool $autoWiring = true;
 
+    /** @var ContainerInterface */
+    protected static ?ContainerInterface $instance = null;
+
     private function __construct()
     {
         $this->resolutionContext = new ResolutionContext();
@@ -60,7 +60,7 @@ class Container implements ContainerInterface
      */
     public function bind(
         string $abstract,
-        Closure|string|null $concrete = null,
+        Closure|string|array|null $concrete = null,
         bool $shared = false,
         mixed $parameters = [],
     ): self {
@@ -119,7 +119,7 @@ class Container implements ContainerInterface
     ): self {
         $this->bind($abstract, $concrete, $shared);
 
-        if (! empty($tags)) {
+        if (!empty($tags)) {
             $this->tag($abstract, $tags);
         }
 
@@ -198,23 +198,6 @@ class Container implements ContainerInterface
         }
 
         return $this;
-    }
-
-    public static function setInstance(?self $container = null): ?ContainerInterface
-    {
-        return static::$instance = $container;
-    }
-
-    /**
-     * Get the global container instance.
-     */
-    public static function getInstance(): ContainerInterface
-    {
-        if (static::$instance === null) {
-            static::$instance = new static();
-        }
-
-        return static::$instance;
     }
 
     /**
@@ -323,7 +306,7 @@ class Container implements ContainerInterface
         $tags = is_array($tags) ? $tags : [$tags];
 
         foreach ($tags as $tag) {
-            if (! isset($this->tags[$tag])) {
+            if (!isset($this->tags[$tag])) {
                 $this->tags[$tag] = [];
             }
             $this->tags[$tag][] = $abstract;
@@ -337,7 +320,7 @@ class Container implements ContainerInterface
      */
     public function tagged(string $tag): array
     {
-        if (! isset($this->tags[$tag])) {
+        if (!isset($this->tags[$tag])) {
             return [];
         }
 
@@ -427,8 +410,8 @@ class Container implements ContainerInterface
         $concrete = $binding ? $binding->getConcrete() : $abstract;
 
         // Handle string/primitive values
-        if (! is_string($concrete) || ! class_exists($concrete)) {
-            if ($binding && ! empty($binding->parameters)) {
+        if (!is_string($concrete) || !class_exists($concrete)) {
+            if ($binding && !empty($binding->parameters)) {
                 return $binding->parameters[0] ?? $concrete;
             }
             return $concrete;
@@ -448,7 +431,7 @@ class Container implements ContainerInterface
             throw ContainerException::cannotResolve($concrete, 'Class does not exist');
         }
 
-        if (! $reflector->isInstantiable()) {
+        if (!$reflector->isInstantiable()) {
             throw ContainerException::cannotResolve($concrete, 'Class is not instantiable');
         }
 
@@ -460,14 +443,37 @@ class Container implements ContainerInterface
             return $this->injectContainerIfNeeded($instance, $reflector);
         }
 
-        // Resolve constructor dependencies
-        $dependencies = $this->resolveConstructorDependencies(
+        // 1. Resolve constructor dependencies
+        // This array contains all resolved values, including the array for the variadic parameter.
+        // E.g., [0 => $arg1, 1 => [$factory1, $factory2]]
+        $resolvedValues = $this->resolveConstructorDependencies(
             $constructor,
             $parameters,
             $binding,
         );
 
-        $instance = $reflector->newInstanceArgs($dependencies);
+        // 2. Prepare the arguments array, handling variadic parameters (THE FIX)
+        $args = [];
+
+        // Iterate over the ReflectionParameters to correctly map the dependencies
+        foreach ($constructor->getParameters() as $index => $parameter) {
+            $resolvedValue = $resolvedValues[$index];
+
+            if ($parameter->isVariadic()) {
+                // If it's a variadic parameter (e.g., ...$Factories), the resolved value
+                // is an array of services. We must unpack this array using array_merge
+                // so that the factories are passed as individual arguments to the constructor.
+                if (is_array($resolvedValue)) {
+                    $args = array_merge($args, $resolvedValue);
+                }
+            } else {
+                // For non-variadic parameters, just add the single value.
+                $args[] = $resolvedValue;
+            }
+        }
+
+        // 3. Instantiate the class using the flattened arguments array
+        $instance = $reflector->newInstanceArgs($args);
         return $this->injectContainerIfNeeded($instance, $reflector);
     }
 
@@ -511,6 +517,26 @@ class Container implements ContainerInterface
 
         // Handle typed parameters
         if ($type instanceof ReflectionNamedType) {
+            // ✅ Check for variadic parameters (e.g. FormFactoryInterface ...$factories)
+            if ($parameter->isVariadic()) {
+                $typeName = $type->getName();
+
+                // Use the interface name itself as the tag
+                if (!empty($this->tags[$typeName] ?? [])) {
+                    return $this->tagged($typeName);
+                }
+
+                // Optionally: fallback to inferred string tag (like 'form_factories')
+                $tagName = $this->inferTagFromType($typeName);
+                if (!empty($this->tags[$tagName] ?? [])) {
+                    return $this->tagged($tagName);
+                }
+
+                // IMPORTANT: Returns an array. This array is unpacked in buildClass.
+                return [];
+            }
+
+            // Fallback to normal typed resolution
             return $this->resolveTypedDependency($parameter, $type);
         }
 
@@ -538,6 +564,19 @@ class Container implements ContainerInterface
             $parameter->getDeclaringClass()?->getName() ?? 'unknown',
             "Cannot resolve parameter [{$name}]",
         );
+    }
+
+    protected function inferTagFromType(string $typeName): string
+    {
+        // Example convention: FormFactoryInterface → form_factories
+        // Convert CamelCase → snake_case and pluralize
+        $short = (new ReflectionClass($typeName))->getShortName();
+        $snake = strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $short));
+
+        // crude pluralization (customize if needed)
+        return str_ends_with($snake, 'y')
+            ? substr($snake, 0, -1) . 'ies'
+            : $snake . 's';
     }
 
     /**
@@ -663,7 +702,7 @@ class Container implements ContainerInterface
         // This is complex and might need specific handling based on your use case
         $types = $type->getTypes();
 
-        if (! empty($types) && $types[0] instanceof ReflectionNamedType) {
+        if (!empty($types) && $types[0] instanceof ReflectionNamedType) {
             try {
                 return $this->resolve($types[0]->getName());
             } catch (Throwable) {
@@ -719,7 +758,7 @@ class Container implements ContainerInterface
      */
     protected function canAutoWire(string $abstract): bool
     {
-        if (! $this->autoWiring) {
+        if (!$this->autoWiring) {
             return false;
         }
 
@@ -766,7 +805,7 @@ class Container implements ContainerInterface
             $property = $reflector->getProperty('container');
             $property->setAccessible(true);
 
-            if (! $property->isInitialized($instance)) {
+            if (!$property->isInitialized($instance)) {
                 $property->setValue($instance, $this);
             }
         }
@@ -779,18 +818,34 @@ class Container implements ContainerInterface
      */
     protected function callWithDependencies(callable|array|string $callback, array $parameters = []): mixed
     {
-        if (! is_array($callback) && ! is_callable($callback)) {
+        if (!is_array($callback) && !is_callable($callback)) {
             throw new InvalidArgumentException('Callback must be callable or array.');
         }
         $reflector = $this->getCallReflector($callback);
-        $dependencies = $this->resolveMethodDependencies($reflector, $parameters);
-        // If it's a method and not public, use reflection to invoke
-        if ($reflector instanceof ReflectionMethod && ! $reflector->isPublic()) {
-            $reflector->setAccessible(true);
-            return $reflector->invokeArgs($callback[0], $dependencies);
+
+        // This array $resolvedValues will look like: [0 => $arg1, 1 => [$param2, $param3, ...]]
+        $resolvedValues = $this->resolveMethodDependencies($reflector, $parameters);
+
+        // Prepare the arguments array, handling variadic parameters (similar fix for method calls)
+        $args = [];
+        foreach ($reflector->getParameters() as $index => $parameter) {
+            $resolvedValue = $resolvedValues[$index];
+
+            // Check for variadic parameters and unpack them
+            if ($parameter->isVariadic() && is_array($resolvedValue)) {
+                $args = array_merge($args, $resolvedValue);
+            } else {
+                $args[] = $resolvedValue;
+            }
         }
 
-        return call_user_func_array($callback, $dependencies);
+        // If it's a method and not public, use reflection to invoke
+        if ($reflector instanceof ReflectionMethod && !$reflector->isPublic()) {
+            $reflector->setAccessible(true);
+            return $reflector->invokeArgs($callback[0], $args);
+        }
+
+        return call_user_func_array($callback, $args);
     }
 
     /**
@@ -798,7 +853,7 @@ class Container implements ContainerInterface
      */
     protected function getCallReflector(callable|array $callback): ReflectionFunctionAbstract
     {
-        if (! is_array($callback) && ! is_callable($callback)) {
+        if (!is_array($callback) && !is_callable($callback)) {
             throw new InvalidArgumentException('Callback must be callable or array.');
         }
 
@@ -822,5 +877,22 @@ class Container implements ContainerInterface
         }
 
         return $dependencies;
+    }
+
+    public static function setInstance(?self $container = null): ?ContainerInterface
+    {
+        return static::$instance = $container;
+    }
+
+    /**
+     * Get the global container instance.
+     */
+    public static function getInstance(): ContainerInterface
+    {
+        if (static::$instance === null) {
+            static::$instance = new static();
+        }
+
+        return static::$instance;
     }
 }

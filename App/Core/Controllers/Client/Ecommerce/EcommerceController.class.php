@@ -6,7 +6,7 @@ class EcommerceController extends Controller
 {
     public function __construct()
     {
-        $this->setLayout('ecommerce');
+        $this->layout('ecommerce');
     }
 
     public function index(): string

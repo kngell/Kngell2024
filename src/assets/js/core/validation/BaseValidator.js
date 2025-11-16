@@ -1,4 +1,4 @@
-import { BrowserLogger } from "js/utils/BrowserLogger";
+import BrowserLogger from "js/utils/logger";
 const logger = new BrowserLogger("BaseValidator");
 
 export default class BaseValidator {

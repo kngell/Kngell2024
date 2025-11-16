@@ -8,38 +8,38 @@ class PratiqueController extends Controller
         $this->setLayout('training');
     }
 
-    public function index() : string
+    public function index(): string
     {
         $this->pageTitle('Exos Pratiques');
         return $this->render('index');
     }
 
-    public function figma() : string
+    public function figma(): string
     {
         $this->pageTitle('Exos Pratiques');
 
         return $this->render('figma');
     }
 
-    public function dropzone() : string
+    public function dropzone(): string
     {
         $this->pageTitle('Dropzone');
         return $this->render('dropzone');
     }
 
-    public function profile() : string
+    public function profile(): string
     {
         $this->pageTitle('Profile');
         return $this->render('profile');
     }
 
-    public function grid() : string
+    public function grid(): string
     {
         $this->pageTitle('Grid');
         return $this->render('grid');
     }
 
-    public function cms() : string
+    public function cms(): string
     {
         $this->pageTitle('CMS');
         $dir = ROOT_DIR . DS . 'App' . DS . 'Data';
@@ -56,10 +56,10 @@ class PratiqueController extends Controller
                         function (string $text): string {
                             return htmlspecialchars($text);
                         },
-                        explode("\n", file_get_contents($dirname . DS . $filename . '.txt'))
+                        explode("\n", file_get_contents($dirname . DS . $filename . '.txt')),
                     );
                 }
-                $image_mime = FileManager::getFileMimeType($file);
+                $image_mime = FileSearchManager::getFileMimeType($file);
                 $data[] = [
                     'img' => 'data:' . $image_mime . ';base64,' . base64_encode(file_get_contents($file)),
                     'title' => is_array($textFile) ? array_shift($textFile) : '',
@@ -70,26 +70,26 @@ class PratiqueController extends Controller
         return $this->render('cms', ['datas' => $data]);
     }
 
-    public function dairy() : string
+    public function dairy(): string
     {
         $this->pageTitle('php Dairy App');
         return $this->render('dairy_app');
     }
 
-    public function dairyNew() : string
+    public function dairyNew(): string
     {
         $this->pageTitle('New entrie');
         return $this->render('dairy_app_new');
     }
 
-    public function dairyAdd() : string
+    public function dairyAdd(): string
     {
         $this->pageTitle('Dairy Add');
         $data = $this->request->getPost()->getAll();
         return $this->render('dairy_app_new');
     }
 
-    public function table() : string
+    public function table(): string
     {
         $this->pageTitle('Table');
         return $this->render('table');

@@ -4,54 +4,87 @@ declare(strict_types=1);
 
 enum ErrorFile: int
 {
+    private const UPLOAD_ERROR_MESSAGES = [
+        // PHP built-in errors only
+        UPLOAD_ERR_OK => 'File uploaded successfully',
+        UPLOAD_ERR_INI_SIZE => "File '%s' exceeds the upload_max_filesize directive (limit: %s)",
+        UPLOAD_ERR_FORM_SIZE => "File '%s' exceeds the MAX_FILE_SIZE directive in the form",
+        UPLOAD_ERR_PARTIAL => "File '%s' was only partially uploaded",
+        UPLOAD_ERR_NO_FILE => 'No file was uploaded',
+        UPLOAD_ERR_NO_TMP_DIR => 'Missing temporary directory',
+        UPLOAD_ERR_CANT_WRITE => "Failed to write file '%s' to disk",
+        UPLOAD_ERR_EXTENSION => 'File upload stopped by PHP extension',
+
+        // System operation errors only
+        1003 => "Could not move file '%s' to destination",
+        1004 => "Could not create file '%s'",
+        1007 => "Directory '%s' is not writable",
+    ];
+
+    public function getErrorMessage(string ...$params): string
+    {
+        $message = self::UPLOAD_ERROR_MESSAGES[$this->value]
+            ?? 'An unknown file upload error occurred';
+
+        if (!empty($params)) {
+            return sprintf($message, ...$params);
+        }
+
+        return $message;
+    }
+
+    public function isSuccess(): bool
+    {
+        return $this === self::UPLOAD_ERR_OK;
+    }
+
+    public function getUserFriendlyMessage(string $fileName = ''): string
+    {
+        return match ($this) {
+            // PHP upload size errors
+            self::UPLOAD_ERR_INI_SIZE,
+            self::UPLOAD_ERR_FORM_SIZE => "File '{$fileName}' is too large",
+
+            // PHP upload errors
+            self::UPLOAD_ERR_PARTIAL => "File '{$fileName}' was only partially uploaded",
+            self::UPLOAD_ERR_NO_FILE => 'Please select a file to upload',
+
+            // System operation errors
+            self::MOVE_OPERATION_FAILED,
+            self::CREATE_OPERATION_FAILED => "Unable to save file '{$fileName}'",
+            self::UPLOAD_ERR_NO_TMP_DIR,
+            self::DIRECTORY_NOT_WRITABLE => 'System error: Unable to save files',
+
+            default => "Error uploading file '{$fileName}'"
+        };
+    }
+
+    public static function fromUploadError(int $errorCode): self
+    {
+        return match ($errorCode) {
+            UPLOAD_ERR_OK => self::UPLOAD_ERR_OK,
+            UPLOAD_ERR_INI_SIZE => self::UPLOAD_ERR_INI_SIZE,
+            UPLOAD_ERR_FORM_SIZE => self::UPLOAD_ERR_FORM_SIZE,
+            UPLOAD_ERR_PARTIAL => self::UPLOAD_ERR_PARTIAL,
+            UPLOAD_ERR_NO_FILE => self::UPLOAD_ERR_NO_FILE,
+            UPLOAD_ERR_NO_TMP_DIR => self::UPLOAD_ERR_NO_TMP_DIR,
+            UPLOAD_ERR_CANT_WRITE => self::UPLOAD_ERR_CANT_WRITE,
+            UPLOAD_ERR_EXTENSION => self::UPLOAD_ERR_EXTENSION,
+            default => throw new InvalidArgumentException("Invalid upload error code: {$errorCode}")
+        };
+    }
+    // KEEP ONLY PHP built-in errors - system level
+    case UPLOAD_ERR_OK = UPLOAD_ERR_OK;
     case UPLOAD_ERR_INI_SIZE = UPLOAD_ERR_INI_SIZE;
     case UPLOAD_ERR_FORM_SIZE = UPLOAD_ERR_FORM_SIZE;
     case UPLOAD_ERR_PARTIAL = UPLOAD_ERR_PARTIAL;
     case UPLOAD_ERR_NO_FILE = UPLOAD_ERR_NO_FILE;
-    case UPLOAD_ERR_CANT_WRITE = UPLOAD_ERR_CANT_WRITE;
     case UPLOAD_ERR_NO_TMP_DIR = UPLOAD_ERR_NO_TMP_DIR;
+    case UPLOAD_ERR_CANT_WRITE = UPLOAD_ERR_CANT_WRITE;
     case UPLOAD_ERR_EXTENSION = UPLOAD_ERR_EXTENSION;
-    case UPLOAD_ERR_OK = UPLOAD_ERR_OK;
-    case UPLOAD_ERR_FILE_TYPE = 1000;
-    case UPLOAD_ERR_FILE_MAX_SIZE = 1001;
-    case UPLOAD_ERR_FILE_MIME = 1002;
-    case UPLOAD_ERR_FILE_MOVE = 1003;
-    case UPLOAD_ERR_FILE_CREATE = 1004;
-    case UPLOAD_ERR_FILE_DELETE = 1005;
-    case UPLOAD_ERR_FILE_NOT_FOUND = 1006;
 
-    private const array UPLOAD_ERROR_MESSAGES = [
-        UPLOAD_ERR_INI_SIZE => "The file '%s' exceeds your upload_max_filesize init directive (limit is '%d' kbites)",
-        UPLOAD_ERR_FORM_SIZE => "The file '%s' exceeds the upload limit defined in your form",
-        UPLOAD_ERR_PARTIAL => "The file '%s' was partially uploaded",
-        UPLOAD_ERR_NO_FILE => 'No file was uploaded',
-        UPLOAD_ERR_CANT_WRITE => "The file '%s' could not be written on disk",
-        UPLOAD_ERR_NO_TMP_DIR => 'The could not be uploaded. Missing temp directory.',
-        UPLOAD_ERR_EXTENSION => 'File upload was stooped by php extension',
-        1000 => 'This file type is not supported',
-        1001 => 'File size exceeded! You cannot load more than 5MB files.',
-        1002 => 'This file type is not supported',
-        1003 => 'The file could not be moved',
-        1004 => 'The file could not be created',
-        1005 => 'The file could not be deleted',
-        1006 => 'The file was not found',
-    ];
-
-    public function getErrMsg(): string
-    {
-        return self::UPLOAD_ERROR_MESSAGES[$this->value] ?? 'Unknown error';
-    }
-
-    //  public function getMessage(): string
-    //  {
-    //      return match ($this) {
-    //          self::UPLOAD_ERR_INI_SIZE => "The file '%s' exceeds your upload_max_filesize init directive (limit is '%d' kbites)",
-    //          self::UPLOAD_ERR_FORM_SIZE => "The file '%s' exceeds the upload limit defined in your form",
-    //          self::UPLOAD_ERR_PARTIAL => "The file '%s' was partially uploaded",
-    //          self::UPLOAD_ERR_NO_FILE => 'No file was uploaded',
-    //          self::UPLOAD_ERR_CANT_WRITE => "The file '%s' could not be written on disk",
-    //          self::UPLOAD_ERR_NO_TMP_DIR => 'The could not be uploaded. Missing temp directory.',
-    //          self::UPLOAD_ERR_EXTENSION => 'File upload was stooped by php extension',
-    //      };
-    //  }
+    // KEEP ONLY system operation errors
+    case MOVE_OPERATION_FAILED = 1003;
+    case CREATE_OPERATION_FAILED = 1004;
+    case DIRECTORY_NOT_WRITABLE = 1007;
 }

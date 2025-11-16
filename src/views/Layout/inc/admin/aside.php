@@ -62,6 +62,11 @@
                                            Edit Product
                                        </a>
                                    </li>
+                                   <li class="dropdown-list__item">
+                                       <a href="/admin/<?= $id ?? ''?>/product-show" class="dropdown-list__item--link">
+                                           Show Product
+                                       </a>
+                                   </li>
                                </ul>
                            </li>
                        </ul>

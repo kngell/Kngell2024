@@ -16,27 +16,28 @@ readonly class Assets
         $this->jsTemplate = file_get_contents(dirname(getcwd()) . '/App/Templates/Script/JsTagTemplate.php');
     }
 
-    public function getCss(string|null $path = null) : string
+    public function getCss(string|null $path = null): string
     {
         $file = $this->getAssets($path);
-        if (! empty($file)) {
+        if (!empty($file)) {
             return str_replace('{{cssFile}}', $file, $this->cssTemplate);
         }
         return '';
     }
 
-    public function getJs(string|null $path) : string
+    public function getJs(string|null $path, string $flag): string
     {
         if ($path !== null) {
             $file = $this->getAssets($path);
-            if (! empty($file)) {
-                return str_replace('{{jsFile}}', $file, $this->jsTemplate);
+            if (!empty($file)) {
+                $scriptTag = str_replace('{{jsFile}}', $file, $this->jsTemplate);
+                return str_replace('{{flag}}', $flag, $scriptTag);
             }
         }
         return '';
     }
 
-    private function getAssets(string|null $path = null) : string
+    private function getAssets(string|null $path = null): string
     {
         if (array_key_exists($path, $this->assets)) {
             return $this->assets[$path];

@@ -6,6 +6,7 @@ class FormValidationApiController extends Controller
 {
     public function __construct(
         private ValidationRulesExporter $rulesExporter,
+        private FileSearchManager $searchFile,
     ) {
     }
 
@@ -21,7 +22,7 @@ class FormValidationApiController extends Controller
             );
         }
 
-        $rulesPath = FileManager::get(APP . 'Forms', "{$rulesFile}.yaml");
+        $rulesPath = $this->searchFile->findFile(APP . 'Forms', "{$rulesFile}.yaml")->getPathname();
 
         if (!file_exists($rulesPath)) {
             return new JsonResponse(

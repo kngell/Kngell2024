@@ -8,6 +8,7 @@ class PDOConnection implements DatabaseConnectionInterface
      * @var array
      */
     private array $credentials;
+
     /**
      * @var PDO
      */
@@ -15,8 +16,10 @@ class PDOConnection implements DatabaseConnectionInterface
 
     /**
      * @param DatabaseEnvironmentConfig $env
-     * @return void
+     *
      * @throws DataMapperInvalidArgumentException
+     *
+     * @return void
      */
     public function __construct(DatabaseEnvironmentConfig $env)
     {
@@ -24,10 +27,11 @@ class PDOConnection implements DatabaseConnectionInterface
     }
 
     /**
-     * @return PDO
      * @throws DatabaseConnexionExceptions
+     *
+     * @return PDO
      */
-    public function open() : PDO
+    public function open(): PDO
     {
         // Set Options
         $options = [
@@ -40,7 +44,7 @@ class PDOConnection implements DatabaseConnectionInterface
             PDO::ATTR_CASE => PDO::CASE_NATURAL,
             PDO::ATTR_ORACLE_NULLS => PDO::NULL_EMPTY_STRING,
         ];
-        if (! isset($this->con) || null === $this->con) {
+        if (!isset($this->con) || null === $this->con) {
             try {
                 $this->con = new PDO($this->credentials['dsn'], $this->credentials['dbUser'], $this->credentials['dbPass'], $options);
             } catch (PDOException $e) {
@@ -53,7 +57,7 @@ class PDOConnection implements DatabaseConnectionInterface
     /**
      * @return void
      */
-    public function close():void
+    public function close(): void
     {
         $this->con = null;
     }
@@ -63,22 +67,25 @@ class PDOConnection implements DatabaseConnectionInterface
      *
      * @return  PDO
      */
-    public function getConnexion() : PDO
+    public function getConnexion(): PDO
     {
         return $this->con;
     }
 
-    public function beginTransaction() : bool
+    public function beginTransaction(): bool
     {
+        if ($this->con === null) {
+            $this->open();
+        }
         return $this->con->beginTransaction();
     }
 
-    public function commit() :  bool
+    public function commit(): bool
     {
         return $this->con->commit();
     }
 
-    public function rollback() : bool
+    public function rollback(): bool
     {
         return $this->con->rollback();
     }

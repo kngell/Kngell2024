@@ -64,6 +64,8 @@ abstract class AbstractHtmlComponent
     protected string $ariaLabel;
     protected bool $ariaHaspopup;
     protected bool $ariaExpanded;
+    protected string $defaultValue;
+    protected bool $controls;
 
     public function setParent(?self $parent)
     {
@@ -115,8 +117,11 @@ abstract class AbstractHtmlComponent
         return $this;
     }
 
-    public function htmlBlock(string $htmlBlock = ''): HtmlBlockElement
+    public function htmlBlock(?string $htmlBlock = ''): HtmlBlockElement
     {
+        if ($htmlBlock === null) {
+            $htmlBlock = '';
+        }
         return new HtmlBlockElement($htmlBlock);
     }
 
@@ -128,6 +133,25 @@ abstract class AbstractHtmlComponent
     public function getErrorMessage(): string
     {
         return $this->errorMessage;
+    }
+
+    public function hasDefaultValue(): bool
+    {
+        return isset($this->defaultValue);
+    }
+
+    public function defaultValue(string $defaultValue): self
+    {
+        $this->defaultValue = $defaultValue;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getDefaultValue(): string
+    {
+        return $this->defaultValue;
     }
 
     public function formValues(array $formValues): self
@@ -169,11 +193,6 @@ abstract class AbstractHtmlComponent
     public function getValue(): mixed
     {
         return $this->value;
-    }
-
-    public function hasValue(): bool
-    {
-        return isset($this->value);
     }
 
     /**
@@ -229,26 +248,51 @@ abstract class AbstractHtmlComponent
 
     protected function getTagAttributes(array $tagAttrs, string $tag): string
     {
-        $html = '<' . $tag;
+        $attributes = [];
+        $attributes[] = '<' . $tag;
 
         foreach ($tagAttrs as $attr => $value) {
             if (
-                in_array($attr, ['content', 'contentUp', 'tag', 'formErrors', 'formValues', 'token', 'position', 'htmlBlock', 'errorMessage', 'level'], true)
+                in_array($attr, ['content', 'contentUp', 'tag', 'formErrors', 'formValues', 'token', 'position', 'htmlBlock', 'errorMessage', 'level', 'key'], true)
                 || is_object($value)
             ) {
                 continue;
             }
-
-            $html .= $this->tagAttribute($attr, $value);
+            $attribute = $this->tagAttribute($attr, $value);
+            !empty($attribute) ? $attributes[] = $attribute : '';
         }
 
         // void tags are closed directly
         if (in_array(strtolower($tag), self::VOID_TAGS, true)) {
-            return $html . ' />';
+            $attributes[] = ' />';
+            return implode('', $attributes);
         }
-
-        return $html . '>';
+        $attributes[] = '>';
+        return implode('', $attributes);
     }
+
+    // protected function getTagAttributes(array $tagAttrs, string $tag): string
+    // {
+    //     $html = '<' . $tag;
+
+    //     foreach ($tagAttrs as $attr => $value) {
+    //         if (
+    //             in_array($attr, ['content', 'contentUp', 'tag', 'formErrors', 'formValues', 'token', 'position', 'htmlBlock', 'errorMessage', 'level'], true)
+    //             || is_object($value)
+    //         ) {
+    //             continue;
+    //         }
+
+    //         $html .= $this->tagAttribute($attr, $value);
+    //     }
+
+    //     // void tags are closed directly
+    //     if (in_array(strtolower($tag), self::VOID_TAGS, true)) {
+    //         return $html . ' />';
+    //     }
+
+    //     return $html . '>';
+    // }
 
     protected function populateField(): void
     {
@@ -258,10 +302,11 @@ abstract class AbstractHtmlComponent
             $this->value = $this->inputValue($this->name, $this->value ?? '');
             if ($this instanceof SelectElement && $this->value) {
                 foreach ($this->children as $child) {
-                    $child->value($this->value);
+                    $child->defaultValue($this->value);
                 }
             }
         }
+
         $this->errorMessage = $strErrors;
     }
 
@@ -289,16 +334,17 @@ abstract class AbstractHtmlComponent
 
     private function tagAttribute(string $key, string|array|bool|int|null $value): string
     {
+        $type = gettype($value);
         return match (true) {
             $this instanceof CheckBoxType && $key === 'value' && $value === 'on' => 'checked',
 
-            $this instanceof SelectOption && in_array($key, ['disabled', 'selected']) => $key,
+            // $this instanceof SelectOption && in_array($key, ['disabled', 'selected']) => ' ' . $key,
 
             // Form action URL
             $key === 'action' => ' ' . $key . '="/' . $value . '"',
 
             // Boolean attributes
-            is_bool($value) => $value ? ' ' . $key : '',
+            $type === 'boolean' => $value === true ? (string) (' ' . $key) : '',
 
             // Custom attributes handled by separate method
             is_array($value) && $key === 'custom' => $this->customAttr($value),
@@ -314,6 +360,7 @@ abstract class AbstractHtmlComponent
                 $this->arrayNotEmpty($value)
                     ? " $key='" . trim(implode($this->separator($key, $value), array_filter($value, fn ($v) => !empty($v) || $v === '0'))) . "'"
                     : '',
+            !is_array($value) && empty($value) && $this instanceof SelectOption => ' ' . $key . "='" . $value . "'",
 
             // Default: string/int values, including '0'
             default =>
@@ -340,6 +387,9 @@ abstract class AbstractHtmlComponent
      */
     private function arrayNotEmpty(array $arr): bool
     {
+        if (empty($arr)) {
+            return false;
+        }
         foreach ($arr as $v) {
             if (is_array($v)) {
                 if ($this->arrayNotEmpty($v)) {

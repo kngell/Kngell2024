@@ -1,6 +1,6 @@
+import BrowserLogger from "js/utils/logger";
 import ValidatorFactory from "js/core/validation/factory/ValidatorFactory";
 
-import { BrowserLogger } from "js/utils/BrowserLogger";
 const logger = new BrowserLogger("Validator");
 
 export default class Validator {
@@ -10,119 +10,76 @@ export default class Validator {
     this.globalSettings = globalSettings;
     this.errors = {};
 
-    logger.debug("✅ Validator initialized with rules", {
-      hasRules: !!rules,
+    logger.debug("✅ Validator initialized", {
       ruleCount: Object.keys(this.rules).length,
-      ruleKeys: Object.keys(this.rules),
     });
-
-    if (Object.keys(this.rules).length > 0) {
-      this.debugActualRulesStructure();
-      this.debugRulesStructure();
-    } else {
-      logger.warn("⚠️ Validator initialized with empty rules");
-    }
-  }
-  debugActualRulesStructure() {
-    logger.debug("🔍 COMPREHENSIVE RULES ANALYSIS");
-
-    // 1. Show the complete rules structure
-    logger.debug("📋 FULL RULES OBJECT:", this.rules);
-
-    // 2. List ALL rule keys to see what's available
-    const ruleKeys = Object.keys(this.rules);
-    logger.debug("🔑 ALL RULE KEYS:", ruleKeys);
-
-    // 3. Check for variations-related rules
-    const variationsKeys = ruleKeys.filter(
-      (key) => key.includes("variation") || key.includes("variant") || key.includes("attribute"),
-    );
-    logger.debug("🎯 VARIATIONS-RELATED KEYS:", variationsKeys);
-
-    // 4. Check for array notation rules (like variations[0][name])
-    const arrayNotationKeys = ruleKeys.filter((key) => key.includes("["));
-    logger.debug("🧩 ARRAY NOTATION KEYS:", arrayNotationKeys);
-
-    // 5. Show examples of what rules exist
-    if (arrayNotationKeys.length > 0) {
-      logger.debug("📝 EXAMPLES OF ARRAY RULES:");
-      arrayNotationKeys.slice(0, 3).forEach((key) => {
-        logger.debug(`   ${key}:`, this.rules[key]);
-      });
-    }
-
-    // 6. Check if we have any nested structures
-    const nestedStructures = ruleKeys.filter(
-      (key) =>
-        this.rules[key] &&
-        typeof this.rules[key] === "object" &&
-        (this.rules[key].items || this.rules[key].array),
-    );
-    logger.debug("🏗️ NESTED STRUCTURES:", nestedStructures);
-  }
-  // Also add this method to check a specific field:
-  debugFieldLookup(fieldName) {
-    logger.debug("🔎 FIELD LOOKUP DEBUG for:", fieldName);
-
-    // Direct lookup
-    logger.debug("📋 Direct lookup result:", this.rules[fieldName]);
-
-    // Parse nested field
-    const nestedMatch = this.parseNestedFieldName(fieldName);
-    logger.debug("🧩 Nested field parsing:", nestedMatch);
-
-    if (nestedMatch) {
-      const { arrayName, index, field } = nestedMatch;
-      logger.debug("🔍 Looking for array rules:", {
-        arrayName,
-        hasArrayRules: !!this.rules[arrayName],
-        arrayRules: this.rules[arrayName],
-      });
-
-      if (this.rules[arrayName] && this.rules[arrayName].items) {
-        logger.debug("📦 Array items structure:", this.rules[arrayName].items);
-
-        if (this.rules[arrayName].items.rules) {
-          logger.debug("🎯 Field rules from nested structure:", {
-            field,
-            fieldRules: this.rules[arrayName].items.rules[field],
-          });
-        }
-      }
-    }
   }
 
+  // validateField(fieldName) {
+  //   const fieldRules = this.getFieldRules(fieldName);
+  //   const value = this.formData[fieldName];
+
+  //   delete this.errors[fieldName];
+
+  //   if (!fieldRules) {
+  //     return true;
+  //   }
+
+  //   let isValid = true;
+
+  //   // Process ALL rules except 'display'
+  //   for (const [ruleName, ruleValue] of Object.entries(fieldRules)) {
+  //     if (ruleName === "display") continue;
+
+  //     const validator = this.createValidator(ruleName, fieldName, value, ruleValue);
+  //     if (validator) {
+  //       try {
+  //         const error = validator.validate(this.formData);
+  //         if (error) {
+  //           this.errors[fieldName] = error;
+  //           isValid = false;
+  //           break;
+  //         }
+  //       } catch (error) {
+  //         logger.error("Validator error", error, { fieldName, ruleName });
+  //       }
+  //     }
+  //   }
+
+  //   return isValid;
+  // }
   validateField(fieldName) {
-    logger.debug("🎯 Starting field validation", { fieldName });
-
     const fieldRules = this.getFieldRules(fieldName);
     const value = this.formData[fieldName];
-
-    logger.debug("📋 Field rules and value", {
-      fieldRules,
-      value,
-      fieldName,
-    });
 
     delete this.errors[fieldName];
 
     if (!fieldRules) {
-      logger.warn("❌ No validation rules found for field", { fieldName });
       return true;
     }
 
-    logger.debug("✅ Rules found, processing validation rules");
-
     let isValid = true;
+
+    logger.debug("🔍 Validating field:", {
+      fieldName,
+      fieldRules: Object.keys(fieldRules),
+      hasMaxFiles: !!fieldRules.max_files,
+      maxFilesValue: fieldRules.max_files,
+      value,
+      valueType: typeof value,
+      isFileList: value instanceof FileList,
+      fileCount: value?.length || 0,
+    });
 
     // Process ALL rules except 'display'
     for (const [ruleName, ruleValue] of Object.entries(fieldRules)) {
       if (ruleName === "display") continue;
 
-      logger.debug("🔄 Processing validation rule", {
+      logger.debug("🔄 Processing rule:", {
+        fieldName,
         ruleName,
         ruleValue,
-        fieldName,
+        value,
       });
 
       const validator = this.createValidator(ruleName, fieldName, value, ruleValue);
@@ -130,30 +87,24 @@ export default class Validator {
         try {
           const error = validator.validate(this.formData);
           if (error) {
-            logger.warn("🚨 Validation failed", {
+            this.errors[fieldName] = error;
+            isValid = false;
+            logger.debug("❌ Validation failed:", {
               fieldName,
               ruleName,
               error,
             });
-            this.errors[fieldName] = error;
-            isValid = false;
             break;
           } else {
-            logger.debug("✅ Validation rule passed", { fieldName, ruleName });
+            logger.debug("✅ Rule passed:", ruleName);
           }
         } catch (error) {
-          logger.error("💥 Validator error", error, { fieldName, ruleName });
+          logger.error("Validator error", error, { fieldName, ruleName });
         }
       } else {
-        logger.warn("⚠️ No validator available for rule", { ruleName, fieldName });
+        logger.debug("⚠️ No validator found for rule:", ruleName);
       }
     }
-
-    logger.debug("📊 Field validation completed", {
-      fieldName,
-      isValid,
-      errors: this.errors,
-    });
 
     return isValid;
   }
@@ -203,7 +154,6 @@ export default class Validator {
     const displayName = findDisplayInRules(this.rules, pathParts);
 
     if (displayName) {
-      logger.debug("✅ Found display name for field", { fieldName, displayName });
       return displayName;
     }
 
@@ -214,138 +164,115 @@ export default class Validator {
     }
 
     // Final fallback: format the field name
-    const fallbackName = this.formatDisplayName(fieldName);
-    logger.debug("⚠️ Using fallback display name", { fieldName, fallbackName });
-    return fallbackName;
+    return this.formatDisplayName(fieldName);
   }
-  // NEW METHOD: Get rules for nested fields
+
   getFieldRules(fieldName) {
-    logger.debug("🔎 Looking up field rules", { fieldName });
+    logger.debug("🔍 getFieldRules called for:", fieldName);
 
     // Direct field rules (like "name", "sku")
     if (this.rules[fieldName]) {
-      logger.debug("✅ Found direct field rules", { fieldName });
+      logger.debug("✅ Found direct rules for:", fieldName);
       return this.rules[fieldName];
     }
 
-    // Parse nested field names like "variations[0][name]"
+    // Parse deeply nested field names like: variations[0][attributes][0][attribute_name]
+    const deeplyNestedMatch = this.parseDeeplyNestedFieldName(fieldName);
+    if (deeplyNestedMatch) {
+      const { arrayName, index, nestedArrayName, nestedIndex, field } = deeplyNestedMatch;
+
+      logger.debug("🎯 Deeply nested field detected:", deeplyNestedMatch);
+
+      // Check if we have array rules with items
+      const arrayRules = this.rules[arrayName];
+      if (arrayRules && arrayRules.items && arrayRules.items.rules) {
+        // Check for nested array rules (attributes array within variations)
+        const nestedArrayRules = arrayRules.items.rules[nestedArrayName];
+        if (nestedArrayRules && nestedArrayRules.items && nestedArrayRules.items.rules) {
+          const fieldRules = nestedArrayRules.items.rules[field];
+          logger.debug("✅ Found deeply nested rules for:", {
+            arrayName,
+            nestedArrayName,
+            field,
+            fieldRules,
+          });
+          return fieldRules;
+        }
+      }
+    }
+
+    // Parse regular nested field names like: variations[0][name]
     const nestedMatch = this.parseNestedFieldName(fieldName);
     if (nestedMatch) {
       const { arrayName, index, field } = nestedMatch;
 
-      logger.debug("🧩 Processing nested field", {
-        fieldName,
-        arrayName,
-        index,
-        field,
-      });
-
       // Check if we have array rules with items
       const arrayRules = this.rules[arrayName];
-      logger.debug("📦 Array rules lookup", {
-        arrayName,
-        hasArrayRules: !!arrayRules,
-        arrayRules,
-      });
-
       if (arrayRules && arrayRules.items && arrayRules.items.rules) {
         const fieldRules = arrayRules.items.rules[field];
-        logger.debug("🎯 Field rules from nested structure", {
-          field,
-          fieldRules,
-        });
+        logger.debug("✅ Found nested rules for:", { arrayName, field, fieldRules });
         return fieldRules;
-      } else {
-        logger.warn("❌ No array items rules found", {
-          arrayName,
-          hasItems: !!(arrayRules && arrayRules.items),
-          hasItemsRules: !!(arrayRules && arrayRules.items && arrayRules.items.rules),
-        });
       }
-    } else {
-      logger.warn("❌ Could not parse nested field name", { fieldName });
     }
 
-    logger.warn("❌ No rules found for field", { fieldName });
+    logger.debug("❌ No rules found for:", fieldName);
+    return null;
+  }
+  parseDeeplyNestedFieldName(fieldName) {
+    // Match patterns like: variations[0][attributes][0][attribute_name]
+    const deeplyNestedRegex = /^(\w+)\[(\d+)\]\[(\w+)\]\[(\d+)\]\[(\w+)\]/;
+    const match = fieldName.match(deeplyNestedRegex);
+
+    if (match) {
+      const result = {
+        arrayName: match[1], // "variations"
+        index: match[2], // "0"
+        nestedArrayName: match[3], // "attributes"
+        nestedIndex: match[4], // "0"
+        field: match[5], // "attribute_name" or "attribute_value"
+      };
+      logger.debug("✅ Parsed as deeply nested field:", result);
+      return result;
+    }
+
+    return null;
+  }
+  parseNestedFieldName(fieldName) {
+    logger.debug("🔄 Parsing nested field:", fieldName);
+
+    // Handle bracket notation: variations[0][name]
+    const bracketRegex = /^(\w+)\[(\d+)\]\[(\w+)\]/;
+    let match = fieldName.match(bracketRegex);
+
+    if (match) {
+      const result = {
+        arrayName: match[1],
+        index: match[2],
+        field: match[3],
+      };
+      logger.debug("✅ Parsed as bracket notation:", result);
+      return result;
+    }
+
+    // Handle dot notation: variations[0].name
+    const dotRegex = /^(\w+)\[(\d+)\]\.(\w+)/;
+    match = fieldName.match(dotRegex);
+
+    if (match) {
+      const result = {
+        arrayName: match[1],
+        index: match[2],
+        field: match[3],
+      };
+      logger.debug("✅ Parsed as dot notation:", result);
+      return result;
+    }
+
+    logger.debug("❌ Could not parse field name:", fieldName);
     return null;
   }
 
-  // NEW METHOD: Parse nested field names
-  parseNestedFieldName(fieldName) {
-    logger.debug("🧩 Parsing nested field name", { fieldName });
-
-    // Match patterns like:
-    // variations[0][name]
-    // variations[0][attributes][0][attribute_name]
-    const regex = /^(\w+)\[(\d+)\]\[(\w+)\]/;
-    const match = fieldName.match(regex);
-
-    logger.debug("🔍 Regex parsing result", {
-      fieldName,
-      match,
-      regex: regex.toString(),
-    });
-
-    if (!match) {
-      logger.debug("❌ Field name doesn't match nested pattern", { fieldName });
-      return null;
-    }
-
-    const arrayName = match[1];
-    const index = match[2];
-    const field = match[3];
-
-    logger.debug("✅ Successfully parsed nested field", {
-      arrayName,
-      index,
-      field,
-    });
-
-    return { arrayName, index, field };
-  }
-
-  // NEW METHOD: Debug rules structure
-  debugRulesStructure() {
-    logger.debug("🔍 VALIDATION RULES STRUCTURE ANALYSIS");
-
-    // Check if variations rules exist
-    if (this.rules.variations) {
-      logger.debug("✅ Top-level 'variations' rules found", this.rules.variations);
-
-      if (this.rules.variations.items) {
-        logger.debug("✅ 'variations.items' found", this.rules.variations.items);
-
-        if (this.rules.variations.items.rules) {
-          logger.debug("✅ 'variations.items.rules' found", this.rules.variations.items.rules);
-
-          // Check specific fields
-          logger.debug("🔎 Checking nested field rules", {
-            name: this.rules.variations.items.rules.name,
-            sku: this.rules.variations.items.rules.sku,
-            variant_type: this.rules.variations.items.rules.variant_type,
-          });
-        } else {
-          logger.error("❌ 'variations.items.rules' is missing");
-        }
-      } else {
-        logger.error("❌ 'variations.items' is missing");
-      }
-    } else {
-      logger.error("❌ Top-level 'variations' rules are missing");
-    }
-
-    // Log all available rule keys for reference
-    logger.debug("📋 All available rule keys", Object.keys(this.rules));
-  }
-
   createValidator(ruleName, fieldName, value, ruleValue) {
-    logger.debug("🔧 Creating validator", {
-      ruleName,
-      fieldName,
-      ruleValue,
-      value,
-    });
-
     const display = this.getFieldDisplayName(fieldName);
     const messageTemplate = this.getMessageTemplate(ruleName);
     const classes = this.getErrorClasses();
@@ -354,8 +281,7 @@ export default class Validator {
       classes: classes,
     };
 
-    // Use ValidatorFactory for all standard validators
-    const standardValidator = ValidatorFactory.createValidator(
+    return ValidatorFactory.createValidator(
       ruleName,
       errorParams,
       display,
@@ -363,10 +289,6 @@ export default class Validator {
       ruleValue,
       this.formData,
     );
-
-    if (standardValidator) {
-      return standardValidator;
-    }
   }
 
   getMessageTemplate(ruleName) {
@@ -403,11 +325,19 @@ export default class Validator {
     this.errors = {};
     let isValid = true;
 
-    for (const fieldName in this.rules) {
+    const allFieldNames = Object.keys(this.formData);
+
+    // Validate each field
+    allFieldNames.forEach((fieldName) => {
       if (!this.validateField(fieldName)) {
         isValid = false;
       }
-    }
+    });
+
+    logger.debug("Validation completed", {
+      isValid,
+      errorCount: Object.keys(this.errors).length,
+    });
 
     return isValid;
   }

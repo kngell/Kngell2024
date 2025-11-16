@@ -5,7 +5,6 @@ class App extends AbstractApp
 {
     public function __construct()
     {
-        // Initialize Container properties since we can't call parent::__construct()
         $this->resolutionContext = new ResolutionContext();
         $this->registerCoreBindings();
 
@@ -36,5 +35,24 @@ class App extends AbstractApp
     public function runError(string $url, array $params = []): void
     {
         $this->run($url, $params);
+    }
+
+    public function isFullyBooted(): bool
+    {
+        foreach ($this->bootMap as $boot => $value) {
+            if ($value === false) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public function reBoot(): void
+    {
+        foreach ($this->bootMap as $boot => $value) {
+            if ($value === false) {
+                $this->$boot();
+            }
+        }
     }
 }

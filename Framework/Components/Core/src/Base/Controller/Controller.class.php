@@ -4,6 +4,7 @@ declare(strict_types=1);
 abstract class Controller
 {
     use ControllerGettersAndSetters;
+    use ValidationTrait;
 
     protected Request $request;
     protected Response $response;
@@ -18,6 +19,7 @@ abstract class Controller
     private ViewInterface $view;
     private string $layout;
     private Model|null $currentModel;
+    private NavigationHistoryService $navigationHistory;
 
     public function __call($name, $args)
     {
@@ -35,11 +37,16 @@ abstract class Controller
 
     public function render(string $templatePath, array $context = []): string
     {
-        $pathParts = explode(DS, $templatePath);
-        if (count($pathParts) === 1) {
-            $templatePath = strtolower(str_replace('Controller', '', $this::class) . DS . $templatePath);
+        try {
+            $pathParts = explode(DS, $templatePath);
+            if (count($pathParts) === 1) {
+                $templatePath = strtolower(str_replace('Controller', '', $this::class) . DS . $templatePath);
+            }
+            $this->view->setRequest($this->request);
+            return $this->view->render($templatePath, $this->context($context));
+        } catch (AmbiguousViewException | ViewNotFoundException $e) {
+            return $this->handleViewError($e, $templatePath);
         }
-        return $this->view->render($templatePath, $this->context($context));
     }
 
     public function redirect(string $url, bool $permanent = true): Response
@@ -90,6 +97,46 @@ abstract class Controller
     {
         $this->eventManager = $eventManager;
         return $this;
+    }
+
+    protected function redirectWithError(string $message, ?string $redirectUrl = null): Response
+    {
+        $this->flash->add($message, FlashType::DANGER);
+
+        $this->navigationHistory->markCurrentUrlAsInvalid();
+        $targetUrl = $redirectUrl ?? $this->navigationHistory->getRedirectUrl();
+
+        return $this->redirect($targetUrl);
+    }
+
+    protected function handleViewError(Exception $e, string $viewPath): string
+    {
+        if ($e instanceof AmbiguousViewException) {
+            // Log the ambiguity for debugging
+            error_log('View ambiguity in ' . static::class . ": {$e->getMessage()}");
+
+            // In development, show helpful error
+            if ($_ENV['APP_ENV'] === 'development') {
+                return "<div style='background: #ffebee; padding: 20px; border: 1px solid #c62828;'>
+                    <h3>Ambiguous View Reference</h3>
+                    <p><strong>Controller:</strong> " . static::class . "</p>
+                    <p><strong>View path:</strong> {$viewPath}</p>
+                    <p><strong>Error:</strong> {$e->getMessage()}</p>
+                    <p>Please specify the full path to disambiguate the view.</p>
+                </div>";
+            }
+
+            // In production, show generic error
+            return $this->render('errors/500', ['message' => 'View configuration error']);
+        }
+
+        if ($e instanceof ViewNotFoundException) {
+            // Let your error controller handle 404s
+            throw $e;
+        }
+
+        // Re-throw other exceptions
+        throw $e;
     }
 
     /**
@@ -159,31 +206,14 @@ abstract class Controller
         return $this->session->get('previous_url');
     }
 
-    protected function deleteFiles(string $dir): void
-    {
-        $files = FileManager::dirFilePaths($dir);
-        foreach ($files as $file) {
-            FileManager::deleteFile($file);
-        }
-    }
-
     protected function form(string $action, array|Entity|bool $formValues = [], array|Entity|bool $formErrors = []): string
     {
-        // Use more specific keys to avoid conflicts
-        $formKey = 'form_' . md5($action); // Unique key per form action
-
-        $values = $this->session->exists($formKey . '_values') ?
-            $this->session->get($formKey . '_values') : $formValues;
-        $errors = $this->session->exists($formKey . '_errors') ?
-            $this->session->get($formKey . '_errors') : $formErrors;
-
-        $form = $this->frm->make($action, $values, $errors);
-
-        // Clear the session data immediately after use
-        $this->session->delete($formKey . '_values');
-        $this->session->delete($formKey . '_errors');
-
-        return $form;
+        $flashedData = $this->flash->flushForm($action);
+        $values = !empty($flashedData['values']) ? $flashedData['values'] : $formValues;
+        $errors = !empty($flashedData['errors']) ? $flashedData['errors'] : $formErrors;
+        $files = !empty($flashedData['files']) ? $flashedData['files'] : [];
+        // Make sure files are passed to the form instance
+        return $this->frm->make($action, $values, $errors, $files);
     }
 
     /**
@@ -234,12 +264,8 @@ abstract class Controller
     private function context(array $context): array
     {
         $this->view->setToken($this->token);
-        $this->view->setRequest($this->request);
         if (isset($this->layout)) {
             $this->view->setLayout($this->layout);
-        }
-        if (str_starts_with($this::class, 'Ecommerce')) {
-            $this->setLayout('ecommerce');
         }
         $navbar = match (true) {
             $this->view->getLayout() === 'default' => DefaultNavbarDecorator::class,

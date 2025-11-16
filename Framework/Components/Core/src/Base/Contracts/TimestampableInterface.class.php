@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 interface TimestampableInterface
 {
-    public function setCreatedAt(DateTimeImmutable $createdAt): self;
+    public function setCreatedAt(DateTimeImmutable $createdAt): TimestampableInterface;
 
-    public function setUpdatedAt(DateTimeImmutable $updatedAt): self;
+    public function setUpdatedAt(?DateTimeImmutable $updatedAt): TimestampableInterface;
 
     public function getCreatedAt(): ?DateTimeImmutable;
 

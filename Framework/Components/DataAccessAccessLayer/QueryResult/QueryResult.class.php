@@ -10,15 +10,21 @@ class QueryResult implements Countable, IteratorAggregate
     private bool $isExecuted = false;
     private string $operation = 'all';
     private QueryResultPaginator $paginator;
+    private QueryResultHydrator $hydrator;
 
     /** @var PDOStatement The PDO statement object */
     private PDOStatement $pdoStatement;
 
     private int $rowCount = 0;
+    private string $lastInsertId;
 
     public function __construct(
         private DataMapperInterface $dataMapper,
         private Entity $entity,
+        private array $tableAlias,
+        private ChangeTrackerInterface $changeTracker,
+        private TypeNormalizerInterface $normalizer,
+        private array $tableMap,
     ) {
         $this->initializeComponents();
         $this->initializeQueryStatement();
@@ -156,6 +162,7 @@ class QueryResult implements Countable, IteratorAggregate
 
     public function exists(): bool
     {
+        $this->asArray();
         return $this->count() > 0;
     }
 
@@ -183,6 +190,14 @@ class QueryResult implements Countable, IteratorAggregate
     public function getIterator(): Traversable
     {
         return new ArrayIterator($this->all());
+    }
+
+    public function isSuccess(): bool
+    {
+        if (!isset($this->lastInsertId)) {
+            $this->lastInsertId = $this->getLastInsertId();
+        }
+        return $this->lastInsertId > 0;
     }
 
     /**
@@ -298,6 +313,26 @@ class QueryResult implements Countable, IteratorAggregate
         return $this->dataMapper->getQueryResult();
     }
 
+    /**
+     * @return QueryResultConfig
+     */
+    public function getConfig(): QueryResultConfig
+    {
+        return $this->config;
+    }
+
+    /**
+     * @param QueryResultConfig $config
+     *
+     * @return QueryResult
+     */
+    public function setConfig(QueryResultConfig $config): QueryResult
+    {
+        $this->config = $config;
+
+        return $this;
+    }
+
     private function fetchResults(string $operation, ?int $limit = null): mixed
     {
         $this->ensureExecuted();
@@ -324,16 +359,37 @@ class QueryResult implements Countable, IteratorAggregate
 
     private function initializeComponents(): void
     {
-        $this->config = new QueryResultConfig($this->entity);
+        $this->config = new QueryResultConfig(
+            $this->entity,
+            $this->tableMap,
+        );
+        $this->config->setConstructorArgs(
+            [
+                $this->tableAlias,
+                $this->tableMap,
+                $this->normalizer,
+                $this->changeTracker,
+            ],
+        );
         $this->paginator = new QueryResultPaginator();
+        $this->hydrator = new QueryResultHydrator(
+            $this->changeTracker,
+            $this->normalizer,
+        );
     }
 
     private function initializeQueryStatement(): void
     {
         try {
             $this->pdoStatement = $this->dataMapper->getQueryStatement();
-            $this->fetcher = new QueryResultFetcher($this->pdoStatement, $this->config);
-            $this->formatter = new QueryResultFormatter($this, $this->config);
+            $this->fetcher = new QueryResultFetcher($this->pdoStatement, $this->config, $this->hydrator);
+            $this->formatter = new QueryResultFormatter(
+                $this,
+                $this->config,
+                $this->changeTracker,
+                $this->normalizer,
+            );
+            $this->formatter->setTableAlias($this->tableAlias);
         } catch (Throwable $exception) {
             throw new QueryResultException(
                 'Failed to initialize QueryResult: ' . $exception->getMessage(),

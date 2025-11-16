@@ -8,4 +8,11 @@ readonly class ResponseStatus
     public function __construct(public HttpStatusCode $statusCode)
     {
     }
+
+    public function toArray(): array
+    {
+        return [
+            'HttpStatusCode' => $this->statusCode->value,
+        ];
+    }
 }

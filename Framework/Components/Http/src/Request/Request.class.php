@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-readonly class Request
+final readonly class Request
 {
     protected HeaderMap $headers;
     protected QueryHttpMap $query;
     protected CustomHttpMap $post;
     protected CustomHttpMap $server;
     protected CookiesMap $cookies;
-    protected FileMap $files;
+    protected FileUploadMap $files;
     protected HttpMethod $method;
     protected string $protocol;
     protected string $requestedUri;
@@ -23,28 +23,31 @@ readonly class Request
         $this->post = new CustomHttpMap($superGlobals->post());
         $this->cookies = CookiesMap::createFromCookieGlobals($superGlobals->cookies());
         $this->headers = HeaderMap::createFromServerGlobals($superGlobals->server());
-        $this->files = new FileMap($superGlobals->files());
+        $this->files = new FileUploadMap($superGlobals->files());
         $this->requestStartTime = (float) $this->server->get('request_time_float') ?? 0;
-        $this->method = HttpMethod::fromString($this->server->get('request_method'));
-        $this->protocol = strtolower($this->server->get('server_protocol'));
-        $this->requestedUri = $superGlobals->server('request_uri');
+        $this->method = HttpMethod::fromString(
+            $this->server->get('request_method') ?? 'GET', // Default fallback
+        );
+
+        $this->protocol = strtolower($this->server->get('server_protocol') ?? 'HTTP/1.1');
+        $this->requestedUri = $superGlobals->server('request_uri') ?? '/';
         $rawContent = file_get_contents('php://input');
-        $this->rawContent = $rawContent !== false && ! StringUtils::isBlank($rawContent) ? $rawContent : null;
-        //$superGlobals->emptyGlobals();
+        $this->rawContent = $rawContent !== false && !StringUtils::isBlank($rawContent) ? $rawContent : null;
+        $superGlobals->emptyGlobals();
     }
 
     public function hasBody(): bool
     {
-        return ! $this->post->isEmpty() || ! StringUtils::isBlank($this->rawContent);
+        return !$this->post->isEmpty() || !StringUtils::isBlank($this->rawContent);
     }
 
     public function hasFormDataBody(): bool
     {
-        if (! $this->hasBody() || ! $this->headers->has(HeaderMap::CONTENT_TYPE_HEADER)) {
+        if (!$this->hasBody() || !$this->headers->has(HeaderMap::CONTENT_TYPE_HEADER)) {
             return false;
         }
         $contentType = strtolower($this->headers->getContentType());
-        return str_starts_with($contentType, 'multipart/formdata');
+        return str_starts_with($contentType, 'multipart/form-data');
     }
 
     public function hasCookies(): bool
@@ -54,7 +57,7 @@ readonly class Request
 
     public function hasXmlBody(): bool
     {
-        if (! $this->hasBody() || ! $this->headers->has(HeaderMap::CONTENT_TYPE_HEADER)) {
+        if (!$this->hasBody() || !$this->headers->has(HeaderMap::CONTENT_TYPE_HEADER)) {
             return false;
         }
         $contentType = strtolower($this->headers->getContentType());
@@ -65,7 +68,7 @@ readonly class Request
 
     public function hasJsonBody(): bool
     {
-        if (! $this->hasBody() || ! $this->headers->has(HeaderMap::CONTENT_TYPE_HEADER)) {
+        if (!$this->hasBody() || !$this->headers->has(HeaderMap::CONTENT_TYPE_HEADER)) {
             return false;
         }
         $contentType = strtolower($this->headers->getContentType());
@@ -75,7 +78,7 @@ readonly class Request
 
     public function hasFormUrlEncodedBody(): bool
     {
-        if (! $this->hasBody() || ! $this->headers->has(HeaderMap::CONTENT_TYPE_HEADER)) {
+        if (!$this->hasBody() || !$this->headers->has(HeaderMap::CONTENT_TYPE_HEADER)) {
             return false;
         }
         $contentType = strtolower($this->headers->getContentType());
@@ -107,7 +110,7 @@ readonly class Request
         return $this->cookies;
     }
 
-    public function getFiles(): FileMap
+    public function getFiles(): FileUploadMap
     {
         return $this->files;
     }
@@ -168,13 +171,6 @@ readonly class Request
 
         return null;
     }
-    // src/Http/Request.php
-
-    // public function isFromWebpackDevServer(): bool
-    // {
-    //     $origin = $this->headers->get('Origin');
-    //     return $origin && str_contains($origin, 'localhost:3003');
-    // }
 
     public function isFromWebpackDevServer(): bool
     {
@@ -187,5 +183,103 @@ readonly class Request
             }
         }
         return false;
+    }
+
+    public function getClientIp(): string
+    {
+        $possibleHeaders = [
+            'HTTP_X_FORWARDED_FOR',
+            'HTTP_X_REAL_IP',
+            'HTTP_CLIENT_IP',
+            'REMOTE_ADDR',
+        ];
+
+        foreach ($possibleHeaders as $header) {
+            $ip = $this->server->get($header);
+            if ($ip && filter_var($ip, FILTER_VALIDATE_IP)) {
+                if ($header === 'HTTP_X_FORWARDED_FOR' && str_contains($ip, ',')) {
+                    $ips = explode(',', $ip);
+                    return trim($ips[0]); 
+                }
+                return $ip;
+            }
+        }
+
+        return '127.0.0.1'; 
+    }
+
+    public function hasRegionParameter(): bool
+    {
+        return $this->getQuery()->has('region') || $this->getPost()->has('region');
+    }
+
+    public function getPreferredLanguage(): string
+    {
+        if (!$this->headers->has('Accept-Language')) {
+            return 'en';
+        }
+
+        $acceptLanguage = $this->headers->get('Accept-Language');
+        $locales = explode(',', (string) $acceptLanguage);
+        $primaryLocale = trim($locales[0]);
+
+        // Extract language code (e.g., "en-US" -> "en")
+        if (str_contains($primaryLocale, '-')) {
+            return strtolower(explode('-', $primaryLocale)[0]);
+        }
+
+        return strtolower($primaryLocale);
+    }
+
+    public function getRegion(): ?string
+    {
+        // 1. Check explicit region parameter (highest priority)
+        $region = $this->getQuery()->get('region') ?? $this->getPost()->get('region');
+        if ($region && is_string($region)) {
+            return strtoupper(trim($region));
+        }
+
+        // 2. Check Accept-Language header
+        $regionFromLanguage = $this->getRegionFromAcceptLanguage();
+        if ($regionFromLanguage) {
+            return $regionFromLanguage;
+        }
+
+        // 3. Check from custom header (e.g., X-Region)
+        $regionFromHeader = $this->headers->get('X-Region');
+        if ($regionFromHeader && is_string($regionFromHeader)) {
+            return strtoupper(trim($regionFromHeader));
+        }
+
+        return null;
+    }
+
+    /**
+     * Extract region from Accept-Language header.
+     */
+    private function getRegionFromAcceptLanguage(): ?string
+    {
+        if (!$this->headers->has('Accept-Language')) {
+            return null;
+        }
+
+        $acceptLanguage = $this->headers->get('Accept-Language');
+        if (empty($acceptLanguage)) {
+            return null;
+        }
+
+        // Parse the first language locale (e.g., "en-US,en;q=0.9" -> "US")
+        $locales = explode(',', (string) $acceptLanguage);
+        $primaryLocale = trim($locales[0]);
+
+        // Extract region from locale (e.g., "en-US" -> "US", "fr-FR" -> "FR")
+        if (str_contains($primaryLocale, '-')) {
+            $parts = explode('-', $primaryLocale);
+            if (isset($parts[1]) && strlen($parts[1]) === 2) {
+                return strtoupper($parts[1]);
+            }
+        }
+
+        return null;
     }
 }

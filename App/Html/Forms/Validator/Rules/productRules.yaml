@@ -1,0 +1,208 @@
+sku:
+  display: SKU
+  required: true
+  min: 3
+  max: 64
+  pattern: "^[A-Za-z0-9-_]+$"
+  unique: ignore_current
+
+name:
+  display: Product Name
+  required: true
+  min: 3
+  max: 255
+
+short_description:
+  display: Product Short Description
+  required_if: status=published
+  min: 3
+
+description:
+  display: Product Description
+  required_if: status=published
+  min: 2
+
+price:
+  display: Base Price
+  required_if: name
+  numeric: true
+  min_value: 0
+
+tax_class_id:
+  display: VAT Class
+  required_if: price
+  numeric: true
+
+compare_price:
+  display: Compare Price
+  numeric: true
+  min_value: 0
+  gte: price
+
+cost_price:
+  display: Cost Price
+  numeric: true
+  min_value: 0
+  gte: price
+
+base_currency_id:
+  display: Base Currency
+  required: true
+  muneric: true
+  min_value: 1
+
+main_image[]:
+  display: Main Image
+  upload_error: true # Check PHP upload errors first
+  required_if: status=published
+  file_size: 5M # Application limit: 5MB per image
+  upload_limit: 10M # PHP upload_max_filesize: 10MB
+  post_limit: 20M # PHP post_max_size: 20MB
+  max_files: 1
+  mimes: image
+
+# img_gallery:
+#   display: Image Gallery
+#   array: true
+#   max_files: 5 # How many files total
+#   max_items: 5 # How many items in array
+#   items:
+#     type: object
+#     rules:
+#       file:
+#         display: Gallery Image
+#         required: true
+#         file_size: 3M # Per file limit
+#         upload_limit: 10M # Per file PHP limit
+#       # You can add other fields like:
+#       caption:
+#         display: Image Caption
+#         max: 255
+#       alt_text:
+#         display: Alt Text
+#         max: 255
+img_gallery[]:
+  display: Image Gallery
+  upload_error: true # Check PHP upload errors first
+  file_size: 5M # 3MB per image
+  upload_limit: 10M # PHP upload_max_filesize per file
+  post_limit: 20M # PHP post_max_size for entire form
+  max_files: 5 # Same as max_files for consistency
+  mimes: image
+
+main_video:
+  display: Main Video
+  file_size: 50M # 50MB for videos (application limit)
+  upload_limit: 10M # PHP upload_max_filesize: 10MB
+  post_limit: 20M # PHP post_max_size: 20MB
+  mimes: video # Allow all video types
+
+documents:
+  display: Supporting Documents
+  array: true
+  file_size: 5M
+  mimes: application/pdf,application/msword,text/plain
+
+weight:
+  display: Weight
+  required_if: is_physical
+  numeric: true # ✅ Added numeric validation
+
+length:
+  display: Length
+  required_if: is_physical
+  numeric: true # ✅ Added numeric validation
+
+width:
+  display: Width
+  required_if: is_physical
+  numeric: true # ✅ Added numeric validation
+
+height:
+  display: Height
+  required_if: is_physical
+  numeric: true # ✅ Added numeric validation
+
+status:
+  display: Product Status
+  required: true
+  pattern: "^(draft|active|archived)$"
+
+is_active:
+  display: Active Flag
+  required: true
+  pattern: "^(0|1|true|false)$"
+
+is_track_stock:
+  display: Track Stock
+  required: true
+  pattern: "^(0|1|true|false|on|off)$"
+
+stock_quantity:
+  display: Stock Quantity
+  required_if: is_track_stock=1
+  integer: true # ✅ Changed from 'numeric' to 'integer'
+  min_value: 0
+
+stock_status_id:
+  display: Stock Status
+  required_if: is_track_stock=1
+  integer: true # ✅ Changed from 'numeric' to 'integer'
+  min_value: 1
+
+variations:
+  array: true
+  max_items: 20
+  items:
+    type: "object"
+    rules:
+      variation_type_id:
+        display: "Variation Type"
+        required: true
+        integer: true
+        min_value: 1
+
+      name:
+        display: "Variation Name"
+        required_if: variant_type
+        min: 1
+        max: 255
+
+      sku:
+        display: "Variation SKU"
+        required: true
+        min: 3
+        max: 64
+        pattern: "^[A-Za-z0-9-_]+$"
+
+      price_modifier:
+        display: "Price Modifier"
+        numeric: true
+
+      stock_quantity:
+        display: "Variation Stock"
+        integer: true
+        min_value: 0
+
+      status:
+        display: "Variation Status"
+        required: true
+        in: ["active", "inactive"]
+
+      attributes:
+        array: true
+        max_items: 10
+        items:
+          type: "object"
+          rules:
+            attribute_name:
+              display: "Attribute Name"
+              required: true
+              min: 1
+              max: 100
+
+            attribute_value:
+              display: "Attribute Value"
+              required: true
+              min: 1
+              max: 255

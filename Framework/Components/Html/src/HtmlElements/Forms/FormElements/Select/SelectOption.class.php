@@ -3,8 +3,10 @@
 declare(strict_types=1);
 class SelectOption extends AbstractHtmlComponent
 {
+    private const string TAG = 'option';
+
     private bool $disabled;
-    private bool $selected;
+    private bool $selected = false;
     private string $key;
 
     public function __construct(string $key, string $content)
@@ -15,12 +17,17 @@ class SelectOption extends AbstractHtmlComponent
 
     public function generate(): string
     {
-        $option = '<option  value=' . $this->key;
-        if ($this->hasValue() && $this->getValue() === $this->key) {
-            $option .= ' Selected';
+        if ($this->hasDefaultValue() && $this->getDefaultValue() === $this->key) {
+            $this->selected = true;
         }
-        $option .= '>' . $this->content;
-        return $option . '</option>';
+        $option = [];
+        $option[] = $this->getTagAttributes(array_merge(['value' => $this->key], get_object_vars($this)), self::TAG);
+
+        // $this->selected ? $option .= ' Selected' : '';
+        $option[] = $this->content ?? '';
+        $option[] = '</option>';
+
+        return implode('', $option);
     }
 
     public function disabled(bool $disabled = true): self

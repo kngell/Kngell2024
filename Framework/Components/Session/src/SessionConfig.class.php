@@ -1,49 +1,26 @@
 <?php
 
 declare(strict_types=1);
-
 final class SessionConfig
 {
-    /** @var string */
-    private const DEFAULT_DRIVER = 'native_storage';
-
     /**
-     * Main session configuration default array settings.
-     *
-     * @return array
+     * Ecommerce-optimized session configuration.
      */
     public static function baseConfiguration(): array
     {
         return [
-            'session_name' => 'kgl_xsf_session',
-            'cookie_lifetime' => 3600,
+            'session_name' => 'kngell_ecom',
+            'cookie_lifetime' => 0, // Session cookie (until browser close)
             'path' => '/',
-            'domain' => 'localhost',
-            'cookie_secure' => false,
+            'domain' => '', // Current domain
+            'cookie_secure' => isset($_SERVER['HTTPS']), // Auto-detect
             'cookie_httponly' => true,
-            'gc_maxlifetime' => '1800',
-            'gc_divisor' => '1',
-            'gc_probability' => '100',
-            'use_cookies' => '1',
-            'globalized' => false,
-            'default_driver' => self::DEFAULT_DRIVER,
-            'save_path' => 'session_dir',
-            'drivers' => [
-                'native_storage' => [
-                    'class' => 'NativeSessionStorage',
-                    'default' => true,
-                ],
-                'array_storage' => [
-                    'class' => 'ArraySessionStorage',
-                    'default' => false,
-
-                ],
-                'pdo_storage' => [
-                    'class' => 'PdoSessionStorage',
-                    'default' => false,
-
-                ],
-            ],
+            'cookie_samesite' => 'Lax',
+            'gc_maxlifetime' => 1800, // 30 minutes
+            'use_cookies' => 1,
+            'use_only_cookies' => 1,
+            'use_strict_mode' => 1,
+            'save_path' => 'storage/sessions',
         ];
     }
 }

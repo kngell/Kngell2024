@@ -18,7 +18,7 @@ class HtmlTagElement extends AbstractHtmlComponent
             $tag .= $this->content;
         }
         $end = '';
-        if (! in_array($this->tag, ['img', 'input', 'br', 'hr', 'meta', 'link', 'base', 'area', 'col', 'embed', 'param', 'source'])) {
+        if (!in_array($this->tag, ['img', 'input', 'br', 'hr', 'meta', 'link', 'base', 'area', 'col', 'embed', 'param', 'source'])) {
             $end = '</' . $this->tag . '>';
         }
         return $tag . $end;
@@ -26,6 +26,7 @@ class HtmlTagElement extends AbstractHtmlComponent
 
     /**
      * @param string|null $content
+     *
      * @return HtmlTagElement
      */
     public function content(?string $content): self
@@ -36,6 +37,7 @@ class HtmlTagElement extends AbstractHtmlComponent
 
     /**
      * @param string $accesskey
+     *
      * @return HtmlTagElement
      */
     public function accesskey(string $accesskey): self
@@ -45,7 +47,19 @@ class HtmlTagElement extends AbstractHtmlComponent
     }
 
     /**
+     * @param bool $controls
+     *
+     * @return HtmlTagElement
+     */
+    public function controls(bool $controls = true): HtmlTagElement
+    {
+        $this->controls = $controls;
+        return $this;
+    }
+
+    /**
      * @param string|null $src
+     *
      * @return HtmlTagElement
      */
     public function src(string|null $src): self
@@ -56,6 +70,7 @@ class HtmlTagElement extends AbstractHtmlComponent
 
     /**
      * @param string $alt
+     *
      * @return HtmlTagElement
      */
     public function alt(string $alt): self
@@ -66,6 +81,7 @@ class HtmlTagElement extends AbstractHtmlComponent
 
     /**
      * @param string ...$class
+     *
      * @return HtmlTagElement
      */
     public function class(string ...$class): self
@@ -76,6 +92,7 @@ class HtmlTagElement extends AbstractHtmlComponent
 
     /**
      * @param string $contenteditable
+     *
      * @return HtmlTagElement
      */
     public function contenteditable(string $contenteditable): self
@@ -86,6 +103,7 @@ class HtmlTagElement extends AbstractHtmlComponent
 
     /**
      * @param string $data
+     *
      * @return HtmlTagElement
      */
     public function data(string $data): self
@@ -96,6 +114,7 @@ class HtmlTagElement extends AbstractHtmlComponent
 
     /**
      * @param string $dir
+     *
      * @return HtmlTagElement
      */
     public function dir(string $dir): self
@@ -106,6 +125,7 @@ class HtmlTagElement extends AbstractHtmlComponent
 
     /**
      * @param string $draggable
+     *
      * @return HtmlTagElement
      */
     public function draggable(string $draggable): self
@@ -116,6 +136,7 @@ class HtmlTagElement extends AbstractHtmlComponent
 
     /**
      * @param string $enterkeyhint
+     *
      * @return HtmlTagElement
      */
     public function enterkeyhint(string $enterkeyhint): self
@@ -126,6 +147,7 @@ class HtmlTagElement extends AbstractHtmlComponent
 
     /**
      * @param bool $hidden
+     *
      * @return HtmlTagElement
      */
     public function hidden(bool $hidden): self
@@ -136,6 +158,7 @@ class HtmlTagElement extends AbstractHtmlComponent
 
     /**
      * @param string $id
+     *
      * @return HtmlTagElement
      */
     public function id(string $id): self
@@ -146,6 +169,7 @@ class HtmlTagElement extends AbstractHtmlComponent
 
     /**
      * @param string $inert
+     *
      * @return HtmlTagElement
      */
     public function inert(string $inert): self
@@ -156,6 +180,7 @@ class HtmlTagElement extends AbstractHtmlComponent
 
     /**
      * @param string $inputmode
+     *
      * @return HtmlTagElement
      */
     public function inputmode(string $inputmode): self
@@ -166,6 +191,7 @@ class HtmlTagElement extends AbstractHtmlComponent
 
     /**
      * @param string $lang
+     *
      * @return HtmlTagElement
      */
     public function lang(string $lang): self
@@ -176,6 +202,7 @@ class HtmlTagElement extends AbstractHtmlComponent
 
     /**
      * @param string $popover
+     *
      * @return HtmlTagElement
      */
     public function popover(string $popover): self
@@ -186,6 +213,7 @@ class HtmlTagElement extends AbstractHtmlComponent
 
     /**
      * @param string $spellcheck
+     *
      * @return HtmlTagElement
      */
     public function spellcheck(string $spellcheck): self
@@ -196,6 +224,7 @@ class HtmlTagElement extends AbstractHtmlComponent
 
     /**
      * @param array $style
+     *
      * @return HtmlTagElement
      */
     public function style(array $style): self
@@ -206,6 +235,7 @@ class HtmlTagElement extends AbstractHtmlComponent
 
     /**
      * @param int $tabindex
+     *
      * @return HtmlTagElement
      */
     public function tabindex(int $tabindex): self
@@ -216,6 +246,7 @@ class HtmlTagElement extends AbstractHtmlComponent
 
     /**
      * @param string $title
+     *
      * @return HtmlTagElement
      */
     public function title(string $title): self
@@ -226,6 +257,7 @@ class HtmlTagElement extends AbstractHtmlComponent
 
     /**
      * @param string $translate
+     *
      * @return HtmlTagElement
      */
     public function translate(string $translate): self

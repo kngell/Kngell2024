@@ -69,6 +69,17 @@ class FormBuilder extends AbstractHtmlElement
     }
 
     /**
+     * @param bool $controls
+     *
+     * @return FormBuilder
+     */
+    public function controls(bool $controls = true): FormBuilder
+    {
+        $this->controls = $controls;
+        return $this;
+    }
+
+    /**
      * @return TextAreaElement
      */
     public function textArea(): TextAreaElement
@@ -333,6 +344,17 @@ class FormBuilder extends AbstractHtmlElement
     public function class(string ...$class): self
     {
         $this->class = $class;
+        return $this;
+    }
+
+    public function removeClass(string $class): self
+    {
+        if (!empty($this->class)) {
+            $key = array_search($class, $this->class, true);
+            if (!$key === false) {
+                unset($this->class[$key]);
+            }
+        }
         return $this;
     }
 

@@ -8,7 +8,7 @@ class QueryResultConfig
     public const FETCH_MODE_MAP = [
         'array' => PDO::FETCH_ASSOC,
         'object' => PDO::FETCH_OBJ,
-        'class' => PDO::FETCH_CLASS,
+        'class' => PDO::FETCH_CLASS | PDO::FETCH_PROPS_LATE,
         'column' => PDO::FETCH_COLUMN,
         'key_pair' => PDO::FETCH_KEY_PAIR,
     ];
@@ -17,7 +17,7 @@ class QueryResultConfig
     private ?array $constructorArgs = null;
     private string $fetchMode = 'array';
 
-    public function __construct(private Entity $entity)
+    public function __construct(private Entity $entity, private array $tableMap)
     {
     }
 
@@ -97,6 +97,14 @@ class QueryResultConfig
         }
 
         return null;
+    }
+
+    /**
+     * @return Entity
+     */
+    public function getEntity(): Entity
+    {
+        return $this->entity;
     }
 
     private function processArrayFetchOptions(array $fetchOptions): void

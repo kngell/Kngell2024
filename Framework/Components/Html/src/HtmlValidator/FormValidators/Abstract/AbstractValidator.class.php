@@ -9,6 +9,6 @@ abstract class AbstractValidator
     protected function errorMessage(string $errMsg, array $class): string
     {
         // $errMsg = nl2br(htmlspecialchars($errMsg));
-        return "<div class='" . implode(' ', $class) . "'>" . $errMsg . '</div>';
+        return "<small class='" . implode(' ', $class) . "'>" . $errMsg . '</small>';
     }
 }

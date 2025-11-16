@@ -4,33 +4,34 @@ declare(strict_types=1);
 
 class EntityManager implements EntityManagerInterface
 {
-    private DataMapperInterface $mapper;
-    private TablesAliasHelper $tableAliasHelper;
-    private Entity $entity;
+    private Entity|CollectionInterface $entity;
     private ReflectionObject $reflector;
     private $repositories = [];
-    private MainQuery $queryExpr;
+    private ?AbstractQueryBuilder $queryBuilder;
     private string $entityFieldId;
+    private array $tableAlias = [];
 
-    public function __construct(DataMapperInterface $mapper, TablesAliasHelper $tableAliasHelper)
-    {
-        $this->mapper = $mapper;
-        $this->tableAliasHelper = $tableAliasHelper;
+    public function __construct(
+        private DataMapperInterface $mapper,
+        private TablesAliasHelper $tableAliasHelper,
+        private TypeNormalizerInterface $normalizer,
+        private ChangeTrackerInterface $changeTracker,
+    ) {
     }
 
-    public function beginTransaction()
+    public function beginTransaction(): bool
     {
-        $this->mapper->beginTransaction();
+        return $this->mapper->beginTransaction();
     }
 
-    public function commit()
+    public function commit(): bool
     {
-        $this->mapper->commit();
+        return $this->mapper->commit();
     }
 
-    public function rollback()
+    public function rollback(): bool
     {
-        $this->mapper->rollback();
+        return $this->mapper->rollback();
     }
 
     public function getConnection(): DatabaseConnectionInterface
@@ -43,37 +44,101 @@ class EntityManager implements EntityManagerInterface
         return new QueryBuilder($this);
     }
 
-    public function getRepository(Entity|string|null $entityName = null): array|RepositoryInterface
+    /**
+     * Improved repository factory with better error handling.
+     */
+    public function getRepository(Entity|string|null $entityName = null): RepositoryInterface|ProductRegionalPriceRepositoryInterface
     {
-        if (null !== $entityName) {
-            if ($entityName instanceof Entity) {
-                $entityName = $entityName::class;
-            }
-
-            if (isset($this->repositories[$entityName])) {
-                return $this->repositories[$entityName];
-            }
-            $repositoryClassName = $entityName . 'Repository';
-            if (class_exists($repositoryClassName)) {
-                $this->repositories[$entityName] = new $repositoryClassName($this);
-                return  $this->repositories[$entityName];
-            }
+        // If no entity name provided, return base repository
+        if ($entityName === null) {
+            return new Repository($this);
         }
-        return new Repository($this);
+
+        // Extract class name from entity instance
+        if ($entityName instanceof Entity) {
+            $entityName = $entityName::class;
+            !isset($this->entity) && !is_object($this->entity) ? new $entityName() : '';
+        }
+
+        // Check if repository already exists
+        if (isset($this->repositories[$entityName])) {
+            return $this->repositories[$entityName];
+        }
+
+        // Try to find repository class
+        $repositoryClassName = $entityName . 'Repository';
+
+        if (!class_exists($repositoryClassName)) {
+            // Fallback to base repository if specific one doesn't exist
+            $this->repositories[$entityName] = new Repository($this);
+        } else {
+            // Create specific repository
+            $this->repositories[$entityName] = new $repositoryClassName($this);
+        }
+
+        return $this->repositories[$entityName];
     }
 
+    /**
+     * Improved persist method with better return handling.
+     */
     public function persist(): self
     {
-        $sql = $this->queryExpr->getQuery();
-        $parameters = $this->queryExpr->getParameters();
-        $bindArray = $this->queryExpr->getBindArr();
-        $mapper = $this->mapper->persist($sql, $parameters, false);
+        if (!$this->queryBuilder) {
+            throw new RuntimeException('No query built to persist');
+        }
+
+        $sql = $this->queryBuilder->getQuery();
+        $parameters = $this->queryBuilder->getParameters();
+        // $bindArray = $this->queryExpr->getBindArr();
+        // $tableAlias = $this->queryExpr->getTableAlias();
+        // $this->tableAlias = $tableAlias;
+
+        $this->mapper->persist($sql, $parameters, false);
         return $this;
+    }
+
+    /**
+     * Helper method for quick entity saving.
+     */
+    public function save(Entity $entity): self
+    {
+        $this->setEntity($entity);
+
+        $properties = $this->getEntityProperties();
+
+        if ($this->isEntityKeyInitialized() && $this->getEntityKeyValue()) {
+            // Update existing entity
+            $keyField = $this->getEntityKeyField();
+            $keyValue = $this->getEntityKeyValue();
+
+            $this->createQueryBuilder()
+                ->update()
+                ->set($properties)
+                ->where([$keyField => $keyValue])
+                ->build();
+        } else {
+            // Insert new entity
+            $this->createQueryBuilder()
+                ->insert($this->table())
+                ->columns((string) array_keys($properties))
+                ->values(array_values($properties))
+                ->build();
+        }
+
+        return $this->persist();
     }
 
     public function getQueryResult(): QueryResult
     {
-        return new QueryResult($this->mapper, $this->entity);
+        return new QueryResult(
+            $this->mapper,
+            $this->entity,
+            $this->queryBuilder->getTableAlias(),
+            $this->changeTracker,
+            $this->normalizer,
+            $this->queryBuilder->getTables(),
+        );
     }
 
     public function assign(array $data): self
@@ -90,11 +155,56 @@ class EntityManager implements EntityManagerInterface
         return $this->entity->getEntityKeyField();
     }
 
+    /**
+     * Improved entity key value retrieval.
+     */
     public function getEntityKeyValue(): mixed
     {
-        $keyField = StringUtils::studlyCaps($this->getEntityKeyField());
-        $method = 'get' . ucfirst($keyField);
-        return $this->reflector->getMethod($method)->invoke($this->entity, $method);
+        $keyField = $this->getEntityKeyField();
+        if (!$keyField) {
+            return null;
+        }
+
+        // Convert to property name format
+        $propertyName = StringUtils::underscoreToStudlyCaps($keyField);
+        $getter = 'get' . $propertyName;
+
+        if ($this->reflector->hasMethod($getter)) {
+            return $this->entity->$getter();
+        }
+
+        // Fallback to direct property access
+        $property = $this->reflector->getProperty($propertyName);
+        $property->setAccessible(true);
+
+        return $property->getValue($this->entity);
+    }
+
+    public function find(int|string $id): ?Entity
+    {
+        $keyField = $this->getEntityKeyField();
+
+        $this->createQueryBuilder()
+            ->select()
+            ->where([$keyField => $id])
+            ->limit(1)
+            ->build();
+        return $this->persist()->getQueryResult()->setOperation('single')->asClass();
+    }
+
+    public function findAll(array $conditions = []): array
+    {
+        $queryBuilder = $this->createQueryBuilder()->select();
+
+        if (!empty($conditions)) {
+            $queryBuilder->where($conditions);
+        }
+
+        $queryBuilder->build();
+
+        $result = $this->persist()->getQueryResult()->setOperation('all')->asClass();
+
+        return $result ?? [];
     }
 
     public function isEntityKeyInitialized(): bool
@@ -110,26 +220,77 @@ class EntityManager implements EntityManagerInterface
         return false;
     }
 
+    /**
+     * Clear query expression (useful for reusing EntityManager).
+     */
+    public function clearQuery(): self
+    {
+        $this->queryBuilder = null;
+        return $this;
+    }
+
+    public function hasEntity(): bool
+    {
+        return isset($this->entity);
+    }
+
+    /**
+     * Improved entity properties extraction.
+     */
     public function getEntityProperties(): array
     {
         $properties = [];
-        $all = $this->reflector->getProperties(ReflectionProperty::IS_PUBLIC | ReflectionProperty::IS_PRIVATE);
-        foreach ($all as $property) {
-            if ($property->isInitialized($this->entity)) {
-                $field = StringUtils::StudlyCapsToUnderscore($property->getName());
-                if ($property->getType()->getName() === 'DateTimeInterface') {
-                    $properties[$field] = $property->getValue($this->entity)->format('Y-m-d H:i:s');
-                } else {
-                    $properties[$field] = $property->getValue($this->entity);
+        $allProperties = $this->reflector->getProperties(
+            ReflectionProperty::IS_PUBLIC |
+            ReflectionProperty::IS_PRIVATE |
+            ReflectionProperty::IS_PROTECTED,
+        );
+
+        foreach ($allProperties as $property) {
+            // Skip properties that aren't initialized
+            if (!$property->isInitialized($this->entity)) {
+                continue;
+            }
+            $notPersistedAttr = $property->getAttributes(NotPersisted::class);
+            if (!empty($notPersistedAttr)) {
+                continue;
+            }
+
+            $property->setAccessible(true);
+            $fieldName = StringUtils::StudlyCapsToUnderscore($property->getName());
+            $value = $property->getValue($this->entity);
+
+            // Handle different value types
+            if ($value instanceof Entity) {
+                // Handle nested entities if needed
+                $keyField = $value->getEntityKeyField();
+                if ($keyField) {
+                    $properties[$fieldName . '_id'] = $value->getFieldValue($keyField);
                 }
+            } else {
+                $properties[$fieldName] = $value;
             }
         }
+
         return $properties;
     }
 
-    public static function create(DataMapperInterface $mapper, TablesAliasHelper $tblh)
+    public function hasData(): bool
     {
-        return new self($mapper, $tblh);
+        return !$this->isEmpty();
+    }
+
+    public function getEntityData(): array
+    {
+        if ($this->entity instanceof Entity) {
+            return $this->getEntityProperties();
+        }
+        $data = [];
+        /** @var Entity $singleEntity */
+        foreach ($this->entity as $singleEntity) {
+            $data[] = $singleEntity->toArray();
+        }
+        return $data;
     }
 
     /**
@@ -172,26 +333,48 @@ class EntityManager implements EntityManagerInterface
     }
 
     /**
-     * Get the value of queryExpr.
-     *
-     * @return MainQuery
+     * @return array
      */
-    public function getQueryExpr(): MainQuery
+    public function getTableAlias(): array
     {
-        return $this->queryExpr;
+        return $this->tableAlias;
     }
 
     /**
-     * Set the value of queryExpr.
-     *
-     * @param MainQuery $queryExpr
-     *
-     * @return self
+     * @return TypeNormalizerInterface
      */
-    public function setQueryExpr(MainQuery $queryExpr): self
+    public function getNormalizer(): TypeNormalizerInterface
     {
-        $this->queryExpr = $queryExpr;
+        return $this->normalizer;
+    }
+
+    /**
+     * @param null|AbstractQueryBuilder $queryBuilder
+     *
+     * @return EntityManager
+     */
+    public function setQueryBuilder(?AbstractQueryBuilder $queryBuilder): EntityManager
+    {
+        $this->queryBuilder = $queryBuilder;
 
         return $this;
+    }
+
+    private function isEmpty(): bool
+    {
+        $properties = $this->getEntityProperties();
+
+        foreach ($properties as $value) {
+            if ($value !== null && $value !== '') {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public static function create(): self
+    {
+        return new self(self::$mapper, self::$tableAliasHelper, self::$normalizer, self::$changeTracker);
     }
 }

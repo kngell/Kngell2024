@@ -54,7 +54,7 @@ class HtmlBuilder extends AbstractHtmlElement
         return match (true) {
             in_array($tag, ['div', 'section', 'body', 'nav', 'ul', 'li', 'dl', 'table', 'thead', 'tbody', 'tr', 'td', 'span', 'th', 'button', 'small', 'svg', 'use']) || preg_match('~[0-9]+~', $tag) => new self($this->token, $tag),
             $tag === 'a' => new HtmlaElement(),
-            in_array($tag, ['p', 'dd', 'dt', 'img', 'i', 'strong']) => new HtmlTagElement($tag),
+            in_array($tag, ['p', 'dd', 'dt', 'img', 'video', 'i', 'strong']) => new HtmlTagElement($tag),
             $tag === 'select' => new SelectElement($this->token)
         };
     }
@@ -109,6 +109,17 @@ class HtmlBuilder extends AbstractHtmlElement
     public function onclick(string $onclick): self
     {
         $this->onclick = $onclick;
+        return $this;
+    }
+
+    public function removeClass(string $class): self
+    {
+        if (!empty($this->class)) {
+            $key = array_search($class, $this->class, true);
+            if (!$key === false) {
+                unset($this->class[$key]);
+            }
+        }
         return $this;
     }
 

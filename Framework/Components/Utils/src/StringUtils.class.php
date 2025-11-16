@@ -58,6 +58,11 @@ final readonly class StringUtils
         return strtolower(self::capsToSeparator($value, '_'));
     }
 
+    public static function underscoreToStudlyCaps(string $value): string
+    {
+        return self::studlyCaps($value);
+    }
+
     public static function camelCaseToSnakeCase(string $input): string
     {
         return strtolower(preg_replace('/[A-Z]/', '_$0', lcfirst($input)));
@@ -143,13 +148,11 @@ final readonly class StringUtils
             case 'a':
             case 'O':
                 return (bool) preg_match("/^{$token}:[0-9]+:/s", $data);
-
             case 'b':
             case 'i':
             case 'd':
                 $end = $strict ? '$' : '';
                 return (bool) preg_match("/^{$token}:[0-9.E+-]+;{$end}/", $data);
-
             default:
                 return false;
         }

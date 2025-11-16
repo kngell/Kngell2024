@@ -17,18 +17,9 @@ FileETag None
     RewriteCond %{REQUEST_FILENAME} !-l
     RewriteRule ^(.*)$ index.php?url=$1 [L,QSA]
 
-    # Security Rules
+    # Security Rules (removed storage from blocked paths)
     RewriteRule ^(\.env|\.git|composer\.(json|lock))$ - [F,L,NC]
-    RewriteRule ^(App|src|webpack|session_dir|Framework|storage|vendor)/(.*)$ - [F,L,NC]
+    RewriteRule ^(App|src|webpack|Framework|vendor|scripts|log|FilesTemplates|docs|dist|bin|Temp|tests|token|tools)/(.*)$ - [F,L,NC]
     RewriteRule \.(md|sql|bak|swp|phps|fla|psd|sh)$ - [F,L,NC]
     RewriteRule "/\.|^\.(?!well-known/)" - [F,L]
 </IfModule>
-
-# <IfModule mod_php.c>
-#     php_flag display_errors Off
-#     php_value max_execution_time 300
-#     php_value post_max_size 128M
-#     php_value upload_max_filesize 128M
-#     php_value session.gc_maxlifetime 1440
-#     php_value opcache.enable 1
-# </IfModule>

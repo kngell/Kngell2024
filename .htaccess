@@ -8,7 +8,7 @@ Options -Indexes -MultiViews
     # Development CSP for static assets when using webpack dev server
     <If "%{HTTP_HOST} == 'localhost:3003' || %{HTTP_HOST} == '127.0.0.1:3003'">
         <FilesMatch "\.(js|css|svg|png|jpg|jpeg|gif|ico|woff|woff2|ttf|eot|mp4|webm|pdf)$">
-            Header set Content-Security-Policy "default-src 'self' data: https://localhost https://localhost:3003; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://localhost https://localhost:3003; style-src 'self' 'unsafe-inline' https://localhost https://localhost:3003; img-src 'self' data: blob: https://localhost https://localhost:3003; font-src 'self' data: https://localhost https://localhost:3003; connect-src 'self' ws://localhost:3003 wss://localhost:3003 ws://127.0.0.1:3003 wss://127.0.0.1:3003 https://localhost https://localhost:3003; frame-src 'self' https://localhost https://localhost:3003; worker-src 'self' blob: https://localhost https://localhost:3003"
+            Header set Content-Security-Policy "default-src 'self' data: https://localhost https://localhost:3003; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://localhost https://localhost:3003; style-src 'self' 'unsafe-inline' https://localhost https://localhost:3003; img-src 'self' data: blob: https://localhost https://localhost:3003; font-src 'self' data: https://localhost https://localhost:3003; connect-src 'self' ws://localhost:3003 wss://localhost:3003 ws://127.0.0.1:3003 wss://127.0.0.1:3003 https://localhost https://localhost:3003; frame-src 'self' https://localhost https://localhost:3003; worker-src 'self' blob: https://localhost https://localhost:3003; media-src 'self' blob: data: https://localhost https://localhost:3003"
         </FilesMatch>
     </If>
 </IfModule>
@@ -25,7 +25,18 @@ Options -Indexes -MultiViews
     RewriteCond %{REQUEST_URI} ^/\.well-known/
     RewriteRule ^ - [L]
 
-    # Redirect to public folder
+    # STORAGE UPLOADS - Serve uploaded files
+    RewriteCond %{REQUEST_URI} ^/uploads/(.*)$
+    RewriteCond /home/kngell/projects/kngell-ecom/storage/uploads/$1 -f
+    RewriteRule ^uploads/(.*)$ /storage/uploads/$1 [L]
+
+    # STATIC FILES - Serve generated static files (exports, reports, etc.)
+    RewriteCond %{REQUEST_URI} ^/static/(.*)$
+    RewriteCond /home/kngell/projects/kngell-ecom/storage/static/$1 -f
+    RewriteRule ^static/(.*)$ /storage/static/$1 [L]
+
+    # Redirect to public folder (catch-all)
+    RewriteCond %{REQUEST_URI} !^/(uploads|static)/
     RewriteCond %{REQUEST_URI} !^/public/
     RewriteRule ^(.*)$ public/$1 [L]
 </IfModule>
