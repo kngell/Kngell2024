@@ -9,16 +9,15 @@ class SqlInsertQuery extends SqlQuery implements SqlInsertQueryBuilderInterface
     private array $values = [];
     private bool $isClosure = false;
 
-    public function __construct(private EntityManagerInterface $em)
+    public function __construct(EntityManagerInterface $em)
     {
-        parent::__construct(SqlStatementType::INSERT);
+        parent::__construct(SqlStatementType::INSERT, $em);
         $this->initializeWithDependencies($em->getTableAliasHelper(), $this->getState());
+        $this->initializeComponents();
     }
 
     public function build(): string
     {
-        $this->initializeComponents();
-
         $this->flowValidator->validate($this->queryFlow, $this->insertMap);
         $this->clauseBuilder->buildAllClauses();
 
@@ -33,29 +32,36 @@ class SqlInsertQuery extends SqlQuery implements SqlInsertQueryBuilderInterface
 
     public function insert(mixed ...$data): self
     {
-        $data = ArrayUtils::first($data);
-        $this->insertMap[__FUNCTION__] = $data;
-        $this->queryFlow[__FUNCTION__] = true;
+        $standardized = $this->standardizer->setContext('insert')->standardize($data);
+
+        $this->insertMap['insert'] = $standardized;
+        $this->queryFlow['insert'] = true;
+
         return $this;
     }
 
     public function columns(string|array ...$columns): self
     {
         try {
-            $columns = ArrayUtils::first($columns);
+            $flattenedColumns = ArrayUtils::flattenArrayRecursive($columns);
 
-            if (empty($columns)) {
+            if (empty($flattenedColumns)) {
                 throw new InvalidArgumentException('Please provide columns to insert');
             }
-
-            if (!ArrayUtils::isStringList($columns)) {
-                throw new InvalidArgumentException('You should insert a list of columns as string');
+            if (isset($this->insertMap['columns'])) {
+                throw new InvalidArgumentException('Columns are already set');
             }
-            $this->insertMap[__FUNCTION__] = $columns;
-            $this->queryFlow[__FUNCTION__] = true;
+
+            if (!ArrayUtils::isStringList($flattenedColumns)) {
+                throw new InvalidArgumentException('All columns must be strings');
+            }
+
+            $this->insertMap['columns'] = $flattenedColumns;
+            $this->columns = $flattenedColumns;
+            $this->queryFlow['columns'] = true;
             return $this;
-        } catch (QueryFlowException $th) {
-            throw new QueryFlowException('Unable to insert columns that are not well formatted');
+        } catch (InvalidArgumentException $e) {
+            throw new QueryFlowException('Unable to insert columns: ' . $e->getMessage(), $e->getCode());
         }
     }
 
@@ -73,39 +79,53 @@ class SqlInsertQuery extends SqlQuery implements SqlInsertQueryBuilderInterface
     public function values(mixed ...$data): self
     {
         try {
-            $data = ArrayUtils::first($data);
-            if (empty($data)) {
+            $standardized = $this->standardizer->setContext('values')->setInsertMap($this->insertMap)->standardize($data);
+
+            if (empty($standardized)) {
                 throw new InvalidArgumentException('Please provide values to insert');
             }
-            $this->values = $data;
-            $this->insertMap[__FUNCTION__] = $data;
-            $this->queryFlow[__FUNCTION__] = true;
+
+            // Validate if we have columns specified
+            if (isset($this->insertMap['columns']) && ArrayUtils::isAssoc($standardized)) {
+                throw new InvalidArgumentException(
+                    'When using columns() method, values() should contain only values, not key/value pairs',
+                );
+            }
+
+            $this->insertMap['values'] = $standardized;
+            $this->values = $standardized;
+            $this->queryFlow['values'] = true;
             return $this;
-        } catch (QueryFlowException $th) {
-            throw new QueryFlowException('Unable to insert data without proper values');
+        } catch (InvalidArgumentException $e) {
+            throw new QueryFlowException('Unable to insert values: ' . $e->getMessage(), $e->getCode());
         }
     }
 
     public function fromSelect(SqlSelectQueryBuilderInterface $selectQuery): self
     {
-        $this->insertMap[__FUNCTION__] = $selectQuery;
-        $this->queryFlow[__FUNCTION__] = true;
+        $this->insertMap['fromSelect'] = $selectQuery;
+        $this->queryFlow['fromSelect'] = true;
         return $this;
     }
 
     public function onDuplicateKeyUpdate(array $updates): self
     {
+        $this->insertMap['onDuplicateKeyUpdate'] = $updates;
+        $this->queryFlow['onDuplicateKeyUpdate'] = true;
         return $this;
     }
 
     public function ignore(): self
     {
+        $this->insertMap['ignore'] = true;
+        $this->queryFlow['ignore'] = true;
         return $this;
     }
 
     public function execute(): array
     {
-        return [];
+        $sql = $this->build();
+        return $this->em->persist()->getQueryResult()->setOperation('all')->asClass();
     }
 
     public function getStatementType(): SqlStatementType
@@ -123,6 +143,11 @@ class SqlInsertQuery extends SqlQuery implements SqlInsertQueryBuilderInterface
         return isset($this->queryFlow['into']);
     }
 
+    public function hasValues(): bool
+    {
+        return isset($this->queryFlow['values']);
+    }
+
     public function hasColumns(): bool
     {
         return isset($this->queryFlow['columns']);
@@ -130,9 +155,8 @@ class SqlInsertQuery extends SqlQuery implements SqlInsertQueryBuilderInterface
 
     public function assumeInsertIntoCurrentTable(): void
     {
-        $entity = $this->em->getEntity();
         if (!$this->hasInto()) {
-            $this->into($this->resolveMainTable($entity));
+            $this->into($this->resolveMainTable());
         }
     }
 
@@ -141,8 +165,14 @@ class SqlInsertQuery extends SqlQuery implements SqlInsertQueryBuilderInterface
         if (!$this->em->hasData()) {
             throw new QueryFlowException('No data defined to insert into the data base');
         }
-        $this->insertMap['insert'] = $this->em->getEntityData();
         $this->queryFlow['insert'] = true;
+        $this->queryFlow['into'] = true;
+        $this->queryFlow['values'] = true;
+    }
+
+    public function assumeInsertDataHasInsertValues(): void
+    {
+        $this->queryFlow['values'] = true;
     }
 
     public function assumeAllColumns(): void

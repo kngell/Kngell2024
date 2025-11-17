@@ -21,4 +21,6 @@ interface SqlCompositeQueryBuilderInterface
     public function getParameters(): array;
 
     public function getQuery(): string;
+
+    public function reset(): void;
 }

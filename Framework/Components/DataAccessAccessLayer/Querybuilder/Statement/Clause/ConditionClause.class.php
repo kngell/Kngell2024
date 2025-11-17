@@ -11,10 +11,10 @@ class ConditionClause extends SqlQuery implements ClauseComponentInterface, Oper
     public function __construct(
         private mixed $conditions,
         string $method,
-        private EntityManagerInterface $em,
+        EntityManagerInterface $em,
     ) {
         $this->clauseContext = SqlBuilderMethodRegistry::getClauseContext($method);
-        parent::__construct($this->clauseContext);
+        parent::__construct($this->clauseContext, $em);
         $this->method = $method;
     }
 
@@ -137,12 +137,14 @@ class ConditionClause extends SqlQuery implements ClauseComponentInterface, Oper
     private function initializeConditionRule(): void
     {
         if (!isset($this->conditionRule)) {
-            $factory = new RulesFactory(
-                $this->em,
-                $this->state,
-            );
+            $registry = new FactoryRegistry($this, $this->em, $this->state);
+            $this->conditionRule = $registry->getRule($this->method, $this->conditions);
+            // $factory = new RulesFactory(
+            //     $this->em,
+            //     $this->state,
+            // );
 
-            $this->conditionRule = $factory->create($this->method, $this->conditions);
+            // $this->conditionRule = $factory->create($this->method, $this->conditions);
         }
     }
 

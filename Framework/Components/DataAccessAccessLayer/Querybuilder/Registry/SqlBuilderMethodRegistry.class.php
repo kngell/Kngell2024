@@ -419,6 +419,13 @@ final class SqlBuilderMethodRegistry
             'link' => SqlConditionLink::AND,
             'operator' => SqlOperator::ARRAY_OVERLAP,
         ],
+        //Insert Clauses
+        'into' => [
+            'clause' => SqlClause::INTO,
+        ],
+        'values' => [
+            'clause' => SqlClause::VALUES,
+        ],
     ];
 
     /**

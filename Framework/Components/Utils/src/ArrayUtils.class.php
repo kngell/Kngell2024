@@ -66,6 +66,20 @@ final readonly class ArrayUtils
         return true;
     }
 
+    // Add this to your ArrayUtils class
+    public static function flatten(array $array): array
+    {
+        $result = [];
+        foreach ($array as $item) {
+            if (is_array($item)) {
+                $result = array_merge($result, self::flatten($item));
+            } else {
+                $result[] = $item;
+            }
+        }
+        return $result;
+    }
+
     public static function flattenArrayRecursive(?array $array = null): array
     {
         $flatArray = [];
@@ -133,6 +147,21 @@ final readonly class ArrayUtils
 
         foreach ($array as $value) {
             if (!is_string($value)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public static function isObjectList(array $array): bool
+    {
+        if (!array_is_list($array)) {
+            return false;
+        }
+
+        foreach ($array as $value) {
+            if (!is_object($value)) {
                 return false;
             }
         }

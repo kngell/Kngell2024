@@ -203,9 +203,9 @@ trait QueryBuilderGettersAndSettersTrait
     }
 
     /**
-     * @return string
+     * @return null|string
      */
-    public function getTable(): string
+    public function getTable(): ?string
     {
         return $this->table;
     }

@@ -10,13 +10,12 @@ class InsertClauseBuilder extends AbstractClauseBuilder implements ClauseBuilder
     public function __construct(
         private SqlInsertQuery $query,
     ) {
-        $insertMap = $this->query->getInsertMap();
-        $this->insertData = new InsertDataBuilder($this->query, $insertMap);
-        $this->em = $this->query->getEntityManager();
     }
 
     public function buildAllClauses(): void
     {
+        $this->initializeProperties();
+
         $this->ensureMinimalFlow();
         $this->validateClauseOrder();
 
@@ -25,6 +24,13 @@ class InsertClauseBuilder extends AbstractClauseBuilder implements ClauseBuilder
                 $this->buildClause($clause);
             }
         }
+    }
+
+    private function initializeProperties(): void
+    {
+        $this->em = $this->query->getEntityManager();
+        $insertMap = $this->query->getInsertMap();
+        $this->insertData = new InsertDataBuilder($this->query, $insertMap);
     }
 
     private function shouldBuildClause(string $clause): bool
@@ -40,10 +46,21 @@ class InsertClauseBuilder extends AbstractClauseBuilder implements ClauseBuilder
             $this->query->assumeInsertIntoCurrentTable();
         }
 
-        // If user has into() but no insert(), assume all columns
-        if ($this->query->hasInto() && !$this->query->hasColumns()) {
-            $this->query->assumeAllColumns();
+        if ($this->query->hasInsert() && !$this->query->hasValues()) {
+            $insertMap = $this->query->getInsertMap();
+            if (array_key_exists('insert', $insertMap) && !ArrayUtils::isDeepEmpty($insertMap['insert'])) {
+                if (!ArrayUtils::isStringList($insertMap['insert'])) {
+                    $this->query->assumeInsertDataHasInsertValues();
+                } else {
+                    throw new InvalidArgumentException("No values are defined for comlumns : {implode(', ', $insertMap)} ");
+                }
+            }
         }
+
+        // If user has into() but no insert(), assume all columns
+        // if ($this->query->hasInto() && !$this->query->hasColumns()) {
+        //     $this->query->assumeAllColumns();
+        // }
 
         // Validate we have at least the minimal required
         if (!$this->query->isClosure() && (!$this->query->hasInsert() || !$this->query->hasInto())) {

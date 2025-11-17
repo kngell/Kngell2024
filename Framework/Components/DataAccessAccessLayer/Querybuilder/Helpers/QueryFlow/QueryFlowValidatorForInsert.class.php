@@ -23,7 +23,8 @@ class QueryFlowValidatorForInsert implements FlowValidatorInterface
     private function validateInsertMap(array $insertMap): void
     {
         if (ArrayUtils::isDeepEmpty($insertMap)) {
-            throw new QueryFlowException('No data to insert');
+            $this->query->assumeEntityManagerHasInsertData();
+            return;
         }
 
         list($table, $insertData, $columnsData, $valuesData) = $this->query->getInsertMapFragments($insertMap);

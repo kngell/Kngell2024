@@ -20,9 +20,9 @@ class SqlSelectQuery extends SqlQuery implements SqlSelectQueryBuilderInterface
     private array $havingConditions = [];
 
     public function __construct(
-        private EntityManagerInterface $em,
+        EntityManagerInterface $em,
     ) {
-        parent::__construct(SqlStatementType::SELECT, $this->columns);
+        parent::__construct(SqlStatementType::SELECT, $em, $this->columns);
         $this->initializeWithDependencies($em->getTableAliasHelper(), $this->getState());
     }
 

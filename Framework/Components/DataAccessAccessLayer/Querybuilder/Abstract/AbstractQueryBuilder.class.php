@@ -25,6 +25,11 @@ abstract class AbstractQueryBuilder
         return $this->queryComponent->getAliasCheck();
     }
 
+    public function reset(): void
+    {
+        $this->queryComponent->resetState();
+    }
+
     public function getTables(): array
     {
         return $this->queryComponent->getTables();

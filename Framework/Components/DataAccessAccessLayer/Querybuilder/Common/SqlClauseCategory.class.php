@@ -32,9 +32,7 @@ enum SqlClauseCategory: string
             self::ORDER_BY => ['orderBy'],
             self::LIMIT => ['limit'],
             self::OFFSET => ['offset'],
-            self::INSERT => ['insert'],
-            self::INTO => ['into'],
-            self::COLUMNS => ['columns'],
+            self::INTO => ['insert', 'into', 'columns'],
             self::VALUES => ['values'],
             // ✅ Add default case to handle any missing cases
             default => []
@@ -84,8 +82,6 @@ enum SqlClauseCategory: string
     case LIMIT = 'limit';
     case OFFSET = 'offset';
 
-    case INSERT = 'insert';
     case INTO = 'into';
-    case COLUMNS = 'columns';
     case VALUES = 'values';
 }

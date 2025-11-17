@@ -177,7 +177,9 @@ abstract class Entity
         foreach ($reflection->getProperties(ReflectionProperty::IS_PRIVATE) as $property) {
             $property->setAccessible(true);
             $propertyName = $property->getName();
-            $array[$propertyName] = $property->getValue($this);
+            if ($property->isInitialized($this)) {
+                $array[$propertyName] = $property->getValue($this);
+            }
 
             // $array[$propertyName] = $value;
 

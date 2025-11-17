@@ -5,33 +5,47 @@ declare(strict_types=1);
 class IntoClause extends SqlQueryComponent implements ClauseComponentInterface
 {
     private const SqlClause CLAUSE = SqlClause::INTO;
+    private const String CLAUSE_PREFIX = 'INSERT ';
 
-    public function __construct(null|String|Closure $table, private EntityManagerInterface $em, private mixed $insertData)
-    {
+    public function __construct(
+        null|string|Closure $table,
+        private EntityManagerInterface $em,
+        private InsertDataBuilder $dataBuilder,
+    ) {
         $this->table = $table;
     }
 
     public function build(): string
     {
         $into = [];
-        $into[] = $this->resolveTable();
-        if ($this->table === null) {
-            throw new InvalidArgumentException('No table to insert Data');
+        $table = $this->resolveTable();
+        if ($table === null) {
+            throw new InvalidArgumentException('No table specified for INSERT');
         }
+        $into[] = $table;
+        $columns = $this->resolveColumns();
 
-        $into[] = $this->resolveColumns();
+        $this->state->table = $table;
 
-        $this->state->table = $this->table;
-        return implode(' ', $into);
+        if (!empty($columns)) {
+            $into[] = "($columns)";
+        }{
+            $this->query = implode(' ', $into);
+            return $this->query;
+        }
+        $this->query = implode(' ', $into);
+
+        return $this->query;
     }
 
-    public function getSqlClause(): ?SqlClause
+    public function getSqlClause(): SqlClause
     {
-        $clause = SqlClause::tryFrom($this->method);
-        if ($clause === self::CLAUSE) {
-            return $clause;
-        }
-        return null;
+        return self::CLAUSE;
+    }
+
+    public function getPrefix(): string
+    {
+        return self::CLAUSE_PREFIX;
     }
 
     private function resolveTable(): ?string
@@ -39,37 +53,25 @@ class IntoClause extends SqlQueryComponent implements ClauseComponentInterface
         if (is_null($this->table)) {
             $entity = $this->em->getEntity();
             if ($entity instanceof Entity) {
-                $this->table = $entity->table();
-                return  $this->table;
+                return $entity->table();
             }
             if ($entity instanceof CollectionInterface) {
-                $this->table = $entity->first()->table();
-                return  $this->table;
+                return $entity->first()->table();
             }
         } elseif (is_string($this->table)) {
             return $this->table;
         } elseif ($this->table instanceof Closure) {
-            //Todo;
+            // TODO: Handle closure
         }
         return null;
     }
 
     private function resolveColumns(): string
     {
-        $insertData = $this->insertData;
-        if (is_null($this->insertData)) {
-            if ($this->em->hasData()) {
-                $insertData = $this->em->getEntityData();
-            }
-        }
-        $isBatchInsert = ArrayUtils::isMultidimentional($insertData) &&
-            ArrayUtils::isSequential($insertData) &&
-            is_array(ArrayUtils::first($insertData));
+        $columns = $this->dataBuilder->getColumns();
 
-        if (!$isBatchInsert) {
-            $columns = array_keys($insertData);
-        } else {
-            $columns = array_keys(ArrayUtils::first($insertData));
+        if (empty($columns)) {
+            return '';
         }
 
         return implode(', ', $columns);

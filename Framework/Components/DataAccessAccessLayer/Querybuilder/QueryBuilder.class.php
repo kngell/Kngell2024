@@ -25,9 +25,9 @@ class QueryBuilder extends AbstractQueryBuilder implements SqlCompositeQueryBuil
         return $query;
     }
 
-    public function insert(string|array|Closure ...$columns): SqlInsertQueryBuilderInterface
+    public function insert(mixed ...$data): SqlInsertQueryBuilderInterface
     {
-        $query = new SqlInsertQuery($this->em)->insert($columns);
+        $query = new SqlInsertQuery($this->em)->insert($data);
         $this->queryComponent = $query;
         $this->em->setQueryBuilder($this);
         return $query;

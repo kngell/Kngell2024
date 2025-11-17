@@ -5,17 +5,21 @@ declare(strict_types=1);
 abstract class SqlQuery extends SqlQueryComponent
 {
     protected CollectionInterface $children;
+    protected null|EntityManagerInterface $em;
     protected null|SqlClause|SqlStatementType $sqlClause;
     protected null|ClauseBuilderInterface $clauseBuilder;
     protected null|FlowValidatorInterface $flowValidator;
+    protected null|DataStandardizerInterface $standardizer;
     protected array $queryFlow = [];
 
     public function __construct(
         null|SqlClause|SqlStatementType $sqlClause,
+        null|EntityManagerInterface $em = null,
         array $initialParameters = [],
     ) {
         parent::__construct();
         $this->sqlClause = $sqlClause;
+        $this->em = $em;
     }
 
     public function build(): string
@@ -32,9 +36,9 @@ abstract class SqlQuery extends SqlQueryComponent
             }
             if ($currentClause !== null && $currentClause !== $previousClause) {
                 $clauseKeyword = str_replace('_', ' ', $currentClause->name);
-
-                // CRITICAL ARCHITECTURAL CHANGE:
-                // We defer adding the WHERE keyword until we know the group is not empty.
+                if (method_exists($child, 'getPrefix')) {
+                    $clauseKeyword = $child->getPrefix() . $clauseKeyword;
+                }
                 if ($currentClause !== SqlClause::WHERE) {
                     $result[] = $clauseKeyword;
                 }
@@ -105,13 +109,16 @@ abstract class SqlQuery extends SqlQueryComponent
             $this->state = new QueryState(parameters: $initialParameters);
         }
         if ($this->sqlClause instanceof SqlStatementType) {
-            $this->clauseBuilder = (new ClauseBuilderFactory($this))->create($this->sqlClause);
-            $this->flowValidator = (new FlowValidatorFactory($this))->create($this->sqlClause);
+            $registry = new FactoryRegistry($this, $this->em, $this->state);
+            $this->clauseBuilder = $registry->getClauseBuilder($this->sqlClause);
+            $this->flowValidator = $registry->getFlowValidator($this->sqlClause);
+            $this->standardizer = $registry->getStandardizer($this->sqlClause);
         }
     }
 
-    protected function resolveMainTable(Entity $entity): string
+    protected function resolveMainTable(): string
     {
+        $entity = $this->em->getEntity();
         if ($entity instanceof Entity) {
             return $entity->table();
         }

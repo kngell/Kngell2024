@@ -71,9 +71,7 @@ enum SqlStatementType: string
                 SqlClauseCategory::OFFSET,
             ],
             self::INSERT => [
-                SqlClauseCategory::INSERT, // For INSERT ... SELECT
-                SqlClauseCategory::INTO,
-                SqlClauseCategory::COLUMNS,
+                SqlClauseCategory::INTO, // For INSERT ... SELECT
                 SqlClauseCategory::VALUES,
             ],
             // ... other statement types
@@ -88,7 +86,7 @@ enum SqlStatementType: string
                 SqlClauseCategory::WHERE, SqlClauseCategory::GROUP_BY, SqlClauseCategory::HAVING,
                 SqlClauseCategory::ORDER_BY, SqlClauseCategory::LIMIT, SqlClauseCategory::OFFSET,
             ],
-            self::INSERT => [SqlClauseCategory::INSERT, SqlClauseCategory::INTO, SqlClauseCategory::COLUMNS, SqlClauseCategory::VALUES],
+            self::INSERT => [SqlClauseCategory::INTO, SqlClauseCategory::VALUES],
             self::UPDATE => [SqlClauseCategory::SELECT, SqlClauseCategory::FROM, SqlClauseCategory::WHERE],
             self::DELETE => [SqlClauseCategory::SELECT, SqlClauseCategory::FROM, SqlClauseCategory::WHERE],
             default => []
