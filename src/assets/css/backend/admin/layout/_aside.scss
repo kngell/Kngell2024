@@ -80,12 +80,20 @@
         flex: 1 0 0;
         align-self: stretch;
 
+        opacity: 0.5;
+        transition: opacity 0.3s ease;
+
+        &.js-ready {
+          opacity: 1;
+        }
+
         &__item {
           display: flex;
           flex-direction: column;
           align-items: center;
           gap: 0.8rem;
           position: relative;
+
           &--link,
           &--dropdown-button {
             display: flex;
@@ -95,16 +103,24 @@
             gap: 0.8rem;
             border-radius: map-deep-get($radius, s);
             text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            background: none;
+
             .icon {
               width: 2.4rem;
               height: 2.4rem;
               flex-shrink: 0;
+              transition: fill 0.2s ease;
             }
+
             .icon.arrow-down {
               width: 2.2rem;
               height: 2.2rem;
               transition: all 0.3s ease-in-out;
             }
+
             span {
               flex: 1 0 0;
               font-size: map-deep-get($text-m, semibold, font-size);
@@ -112,96 +128,158 @@
               line-height: map-deep-get($text-m, semibold, line-height);
               letter-spacing: map-deep-get($text-m, semibold, letter-spacing);
             }
+
             &:hover {
               background-color: map-deep-get($color-primary, primary-50);
               color: map-deep-get($color-primary, primary-500);
+
               .icon {
                 fill: map-deep-get($color-primary, primary-500);
               }
             }
           }
+
+          &.active:not(.has-active-child) {
+            .menu-list__item--link {
+              background-color: map-deep-get($color-primary, primary-500);
+              color: map-deep-get($color-neutral, white);
+
+              .icon {
+                fill: map-deep-get($color-neutral, white);
+              }
+
+              &:hover {
+                background-color: map-deep-get($color-primary, primary-600);
+              }
+            }
+          }
+
           &--dropdown-menu {
             display: grid;
             justify-content: flex-start;
             width: 100%;
             grid-template-columns: 1fr;
-            grid-template-rows: 0;
+            grid-template-rows: 0fr;
             overflow: hidden;
-            transition:
-              grid-template-rows 0.3s ease,
-              max-height 0.3s ease;
 
-            & > .wrapper {
-              position: relative;
-              .dropdown-list {
-                display: flex;
-                flex-direction: column;
-                align-items: stretch;
-                gap: 0.4rem;
+            transition: none;
+
+            .dropdown-wrapper {
+              min-height: 0;
+              display: flex;
+              flex-direction: column;
+              gap: 0.4rem;
+              overflow: hidden;
+
+              .dropdown-list__item {
                 position: relative;
-                &__item {
-                  position: relative;
-                  &--link {
-                    display: flex;
-                    // width: 228px;
-                    padding: 1rem 1.2rem 1rem 4.4rem;
-                    justify-content: flex-start;
-                    align-items: center;
-                    gap: 0.8rem;
-                    border-radius: map-deep-get($radius, s);
+                opacity: 0;
+                transform: translateY(-5px);
+                transition:
+                  opacity 0.2s ease,
+                  transform 0.2s ease;
 
-                    /* Text M/Semibold */
-                    font-size: map-deep-get($text-m, semibold, font-size);
-                    font-weight: map-deep-get($text-m, semibold, font-weight);
-                    line-height: map-deep-get($text-m, semibold, line-height);
-                    letter-spacing: map-deep-get($text-m, semibold, letter-spacing);
-                    transition:
-                      background-color 0.2s ease,
-                      color 0.2s ease;
-                    &:hover {
-                      background-color: map-deep-get($color-primary, primary-50);
-                      color: map-deep-get($color-primary, primary-500);
-                    }
+                &--link {
+                  display: flex;
+                  padding: 1rem 1.2rem 1rem 4.4rem;
+                  justify-content: flex-start;
+                  align-items: center;
+                  gap: 0.8rem;
+                  border-radius: map-deep-get($radius, s);
+                  font-size: map-deep-get($text-m, semibold, font-size);
+                  font-weight: map-deep-get($text-m, semibold, font-weight);
+                  line-height: map-deep-get($text-m, semibold, line-height);
+                  letter-spacing: map-deep-get($text-m, semibold, letter-spacing);
+                  transition:
+                    background-color 0.15s ease,
+                    color 0.15s ease;
+
+                  &:hover {
+                    background-color: map-deep-get($color-primary, primary-50);
+                    color: map-deep-get($color-primary, primary-500);
                   }
-                  &.active {
-                    .dropdown-list__item--link {
-                      background-color: map-deep-get($color-primary, primary-500);
-                      color: map-deep-get($color-neutral, white);
-                    }
+                }
+
+                &.active {
+                  .dropdown-list__item--link {
+                    background-color: map-deep-get($color-primary, primary-500);
+                    color: map-deep-get($color-neutral, white);
+                    transition: none;
                   }
                 }
               }
             }
           }
-          &.active {
-            .menu-list__item--link,
+
+          // When opened by backend on page load
+          &.opened,
+          &.has-active-child {
+            .menu-list__item--dropdown-menu {
+              grid-template-rows: 1fr;
+              transition: grid-template-rows 0.3s ease; // Add transition for user interactions
+
+              .dropdown-wrapper {
+                .dropdown-list__item {
+                  opacity: 1;
+                  transform: translateY(0);
+
+                  // Stagger animation for dropdown items
+                  @for $i from 1 through 10 {
+                    &:nth-child(#{$i}) {
+                      transition-delay: #{($i - 1) * 0.05}s;
+                    }
+                  }
+                }
+              }
+            }
+
             .menu-list__item--dropdown-button {
-              background-color: map-deep-get($color-primary, primary-500);
-              color: map-deep-get($color-neutral, white);
+              background-color: map-deep-get($color-primary, primary-50);
+              color: map-deep-get($color-primary, primary-500);
+
               .icon {
-                fill: map-deep-get($color-neutral, white);
+                fill: map-deep-get($color-primary, primary-500);
               }
-              &:hover {
-                background-color: map-deep-get($color-primary, primary-600);
-              }
-            }
-            &.opened {
-              .menu-list__item--link,
-              .menu-list__item--dropdown-button {
-                background-color: map-deep-get($color-primary, primary-50);
-                color: map-deep-get($color-primary, primary-500);
-                .icon {
-                  fill: map-deep-get($color-primary, primary-500);
-                }
-                .icon.arrow-down {
-                  rotate: 180deg;
-                }
-              }
-              .menu-list__item--dropdown-menu {
-                grid-template-rows: 1fr;
+
+              .icon.arrow-down {
+                rotate: 180deg;
               }
             }
           }
+
+          &.js-opened:not(.has-active-child) {
+            .menu-list__item--dropdown-menu {
+              grid-template-rows: 1fr;
+              transition: grid-template-rows 0.3s ease;
+            }
+          }
+
+          &.has-active-child {
+            .menu-list__item--dropdown-button {
+              cursor: default;
+            }
+          }
+        }
+        &.js-enhanced {
+          &__item {
+            &--dropdown-menu {
+              transition: grid-template-rows 0.3s ease;
+            }
+          }
+        }
+      }
+
+      .menu-list__item--dropdown-button {
+        &:focus-visible {
+          outline: 2px solid map-deep-get($color-primary, primary-500);
+          outline-offset: 2px;
+        }
+      }
+
+      .dropdown-list__item--link {
+        &:focus-visible {
+          outline: 2px solid map-deep-get($color-primary, primary-500);
+          outline-offset: 2px;
         }
       }
     }

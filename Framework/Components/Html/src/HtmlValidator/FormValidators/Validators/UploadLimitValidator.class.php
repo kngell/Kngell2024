@@ -14,34 +14,59 @@ class UploadLimitValidator extends AbstractValidator
 
     public function validate(): array|string|bool
     {
-        if ($this->isEmpty($this->inputValue)) {
-            return false;
+        $phpUploadLimit = $this->parseSize((string) $this->ruleValue);
+        $phpActualLimit = $this->getPhpUploadMaxFilesize();
+
+        if ($phpUploadLimit !== $phpActualLimit) {
+            throw new FileUploadConfigurationException(sprintf(
+                'Configuration mismatch: PHP upload_max_filesize is %s, but rule expects %s',
+                $this->formatBytes($phpActualLimit),
+                $this->formatBytes($phpUploadLimit),
+            ));
         }
+        if (!$this->isEmpty($this->inputValue)) {
+            $files = is_array($this->inputValue) ? $this->inputValue : [$this->inputValue];
 
-        $files = is_array($this->inputValue) ? $this->inputValue : [$this->inputValue];
-        $uploadMaxSize = $this->parseSize($this->ruleValue);
+            foreach ($files as $file) {
+                if ($this->isValidFile($file)) {
+                    $fileSize = $this->getFileSize($file);
 
-        foreach ($files as $file) {
-            if (!$this->isValidFile($file)) {
-                continue;
-            }
-
-            $fileSize = $this->getFileSize($file);
-
-            if ($fileSize > $uploadMaxSize) {
-                return $this->errorMessage(
-                    sprintf(
-                        $this->errorParams['message'],
-                        $this->display,
-                        $this->formatBytes($fileSize),
-                        $this->ruleValue,
-                    ),
-                    $this->errorParams['classes'],
-                );
+                    if ($fileSize > $phpActualLimit) {
+                        // This file will be rejected by PHP before our app even sees it
+                        return $this->errorMessage(
+                            sprintf(
+                                $this->errorParams['message'] ?? '"%s" (%s) exceeds PHP server upload limit (%s). ' .
+                                'The server will reject this file before it reaches the application.',
+                                $this->getFileName($file),
+                                $this->formatBytes($fileSize),
+                                $this->formatBytes($phpActualLimit),
+                            ),
+                            $this->errorParams['classes'],
+                        );
+                    }
+                }
             }
         }
 
         return false;
+    }
+
+    private function getPhpUploadMaxFilesize(): int
+    {
+        return $this->parseSize(ini_get('upload_max_filesize'));
+    }
+
+    private function getFileName(mixed $file): string
+    {
+        if ($file instanceof FileUpload) {
+            return $file->getOriginalName();
+        }
+
+        if (is_array($file) && isset($file['name'])) {
+            return $file['name'];
+        }
+
+        return 'Unknown file';
     }
 
     private function isValidFile(mixed $file): bool
@@ -88,10 +113,5 @@ class UploadLimitValidator extends AbstractValidator
         $i = (int) floor(log($bytes) / log($k));
 
         return number_format($bytes / pow($k, $i), $dm) . ' ' . $sizes[$i];
-    }
-
-    private function isEmpty(mixed $value): bool
-    {
-        return $value === null || $value === '' || $value === [] || $value === '[]';
     }
 }

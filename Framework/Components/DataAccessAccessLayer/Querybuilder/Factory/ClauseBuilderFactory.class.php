@@ -8,7 +8,7 @@ class ClauseBuilderFactory
     private array $factories;
 
     public function __construct(
-        private SqlQueryComponent $component,
+        private SqlComponent $component,
     ) {
         $this->factories = $this->factories();
     }

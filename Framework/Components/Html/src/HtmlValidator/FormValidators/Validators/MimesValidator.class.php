@@ -164,9 +164,4 @@ class MimesValidator extends AbstractValidator
 
         return $file['type'] ?? '';
     }
-
-    private function isEmpty(mixed $value): bool
-    {
-        return $value === null || $value === '' || $value === [] || $value === '[]';
-    }
 }

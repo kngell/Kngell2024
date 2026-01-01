@@ -7,26 +7,23 @@ final class TablesAliasHelper
     private array $tables = [];
     private array $conditionIndex = [];
     private array $logicalToPhysicalMap = [];
-    private array $joinedMap = []; // 🆕 logical_table => joined_table(s)
+    private array $joinedMap = [];
+    private array $nestedRelationships = [];
+    private array $aliasParentMap = [];
     private ?string $table = null;
     private ?string $joinContext = null;
+    private bool $isJoincontext = false;
 
     public function __construct(private Token $token)
     {
     }
 
-    // ------------------------------------------------------------
-    // 🧠  ALIAS RESOLUTION
-    // ------------------------------------------------------------
     public function get(string $tbl, array &$tableAlias, array &$aliasCheck): array
     {
         if (empty($tbl)) {
             throw new InvalidArgumentException('Table name cannot be empty in TablesAliasHelper::get()');
         }
 
-        // if (empty($this->tables)) {
-        //  throw new RuntimeException('Tables must be initialized before generating aliases. Call setTables() first.');
-        // }
         if ($this->joinContext && $this->getPhysicalTable($this->joinContext) === $tbl) {
             if (array_key_exists($this->joinContext, $tableAlias)) {
                 $physicalTable = $this->getPhysicalTable($this->joinContext);
@@ -34,38 +31,29 @@ final class TablesAliasHelper
             }
         }
 
-        // Then check for the table directly
         if (array_key_exists($tbl, $tableAlias)) {
             $physicalTable = $this->getPhysicalTable($tbl);
             return [$physicalTable, $tableAlias[$tbl]];
         }
-        // 🔹 Step 1: Handle existing alias
-        if (array_key_exists($tbl, $tableAlias)) {
-            return [$this->getPhysicalTable($tbl), $tableAlias[$tbl]];
-        }
 
         $physicalTable = $this->getPhysicalTable($tbl);
-        $isJoinContext = str_contains($tbl, '_join_');
-        $baseAlias = $tableAlias[$physicalTable] ?? strtolower($physicalTable[0]);
+        $baseAlias = $this->generateBaseAlias($tbl, $physicalTable, $tableAlias);
         $alias = $baseAlias;
 
-        // 🔹 Step 2: Handle JOINed tables (create numbered alias)
-        if ($isJoinContext) {
-            $alias = $this->generateJoinAlias($baseAlias, $aliasCheck);
+        if ($this->isJoincontext) {
+            $alias = $this->generateJoinAlias($baseAlias, $aliasCheck, $tbl);
+            $this->trackNestedRelationship($tbl, $physicalTable);
         } elseif (isset($tableAlias[$physicalTable])) {
-            // If base alias already exists and not a forced join, reuse
             $alias = $tableAlias[$physicalTable];
         }
 
-        // 🔹 Step 3: Guarantee uniqueness
         $alias = $this->ensureAliasUnique($alias, $aliasCheck);
 
-        // 🔹 Step 4: Save alias and relationships
-        if ($isJoinContext) {
-            $tableAlias[$tbl] = $alias;
-            $this->joinedMap[$this->table][$tbl] = $physicalTable; // Track join relation
-        } else {
-            $tableAlias[$physicalTable] = $alias;
+        $tableAlias[$tbl] = $alias;
+
+        if ($this->isJoincontext && $this->table) {
+            $this->joinedMap[$this->table][$tbl] = $physicalTable;
+            $this->aliasParentMap[$alias] = [$this->table, $tbl];
         }
 
         if (!in_array($alias, $aliasCheck, true)) {
@@ -75,9 +63,6 @@ final class TablesAliasHelper
         return [$physicalTable, $alias];
     }
 
-    // ------------------------------------------------------------
-    // 🧭  TABLE + COLUMN MAPPING
-    // ------------------------------------------------------------
     public function mapTableColumn(string|int $str, array $tables = []): array
     {
         if (is_string($str)) {
@@ -85,7 +70,6 @@ final class TablesAliasHelper
             $parts = explode($separator, $str);
 
             if (count($parts) === 2) {
-                // 🎯 FIX: For explicit table.column references, use as-is
                 $tableColumn = $parts[0];
                 $column = $parts[1];
                 return [$tableColumn, $column];
@@ -93,7 +77,6 @@ final class TablesAliasHelper
 
             if (count($parts) === 1) {
                 $column = $parts[0];
-                // 🎯 FIX: For unqualified columns, use the DEFAULT table (product), not join context
                 $defaultTable = $this->getDefaultTable();
                 return [$defaultTable, $column];
             }
@@ -103,11 +86,11 @@ final class TablesAliasHelper
         return [$defaultTable, (string) $str];
     }
 
-    // ------------------------------------------------------------
-    // 🧱  UTILITIES
-    // ------------------------------------------------------------
-    public function extractColumnName(string $condition): string
+    public function extractColumnName(null|string $condition): string
     {
+        if (is_null($condition)) {
+            return '';
+        }
         $separator = $this->separator($condition);
         $parts = explode($separator, $condition);
         return count($parts) === 2 ? $parts[1] : $parts[0];
@@ -125,27 +108,12 @@ final class TablesAliasHelper
 
         return $name;
     }
-    // public function generateUniqueParameterName(string $leftCondition, array $parameters): string
-    // {
-    //     $columnName = $this->extractColumnName($leftCondition);
-    //     $counter = 1;
-
-    //     do {
-    //         $paramName = 'p' . $counter . '_' . $columnName;
-    //         $counter++;
-    //     } while (array_key_exists($paramName, $parameters) && $counter < 1000);
-
-    //     return $paramName;
-    // }
 
     public function separator(string $str): string
     {
         return strpos($str, '|') !== false ? '|' : '.';
     }
 
-    // ------------------------------------------------------------
-    // 🧩  LOGICAL / PHYSICAL MAPS
-    // ------------------------------------------------------------
     public function getLogicalToPhysicalMap(): array
     {
         return $this->logicalToPhysicalMap;
@@ -171,11 +139,6 @@ final class TablesAliasHelper
 
     public function setTables(array $tables): self
     {
-        // FIX: Removed the check below. The responsibility to enforce tables
-        // existing belongs to the usage methods (like getDefaultTable()), not the setter.
-        // if (empty($tables)) {
-        //     throw new InvalidArgumentException('Tables array cannot be empty');
-        // }
         $this->tables = $tables;
         return $this;
     }
@@ -191,9 +154,6 @@ final class TablesAliasHelper
         return $this->token;
     }
 
-    // ------------------------------------------------------------
-    // 🆕 JOINED MAP ACCESSORS
-    // ------------------------------------------------------------
     public function getJoinedMap(): array
     {
         return $this->joinedMap;
@@ -211,22 +171,82 @@ final class TablesAliasHelper
                in_array($toTable, $this->joinedMap[$fromTable], true);
     }
 
+    public function isJoincontext(bool $isJoincontext = true): TablesAliasHelper
+    {
+        $this->isJoincontext = $isJoincontext;
+        return $this;
+    }
+
+    public function getNestedRelationships(): array
+    {
+        return $this->nestedRelationships;
+    }
+
+    public function getAliasParentMap(): array
+    {
+        return $this->aliasParentMap;
+    }
+
+    public function getParentOfAlias(string $alias): ?array
+    {
+        return $this->aliasParentMap[$alias] ?? null;
+    }
+
+    public function isNestedRelationship(string $tableName): bool
+    {
+        return str_contains($tableName, '.');
+    }
+
+    public function extractParentTable(string $tableName): string
+    {
+        if (str_contains($tableName, '.')) {
+            return explode('.', $tableName, 2)[0];
+        }
+        return $tableName;
+    }
+
+    public function extractChildTable(string $tableName): string
+    {
+        if (str_contains($tableName, '.')) {
+            return explode('.', $tableName, 2)[1];
+        }
+        return $tableName;
+    }
+
+    public function getPhysicalTable(string $tbl): string
+    {
+        if (str_contains($tbl, '.')) {
+            $parts = explode('.', $tbl, 2);
+            return str_replace('_join_', '', $parts[1]);
+        }
+        return str_replace('_join_', '', $tbl);
+    }
+
     private function normalizeParameterName(string $name): string
     {
-        // Convert to lowercase and replace non-alphanumeric with underscores
         return 'p_' . preg_replace('/[^a-zA-Z0-9_]/', '_', strtolower($name));
     }
 
-    private function getPhysicalTable(string $tbl): string
+    private function generateBaseAlias(string $tbl, string $physicalTable, array $tableAlias): string
     {
-        if (str_contains($tbl, '_join_')) {
-            return explode('_join_', $tbl, 2)[0];
+        if ($this->isNestedRelationship($tbl)) {
+            $parentTable = $this->extractParentTable($tbl);
+            $childTable = $this->extractChildTable($tbl);
+
+            $parentAlias = $tableAlias[$parentTable] ?? strtolower($parentTable[0]);
+            return $tableAlias[$childTable] ?? strtolower($childTable[0]);
         }
-        return $tbl;
+
+        return $tableAlias[$physicalTable] ?? strtolower($physicalTable[0]);
     }
 
-    private function generateJoinAlias(string $baseAlias, array $aliasCheck): string
+    private function generateJoinAlias(string $baseAlias, array $aliasCheck, string $tbl): string
     {
+        $parentTable = null;
+        if ($this->isNestedRelationship($tbl)) {
+            $parentTable = $this->extractParentTable($tbl);
+        }
+
         $maxCounter = 1;
 
         foreach ($aliasCheck as $existingAlias) {
@@ -258,11 +278,23 @@ final class TablesAliasHelper
         return $alias;
     }
 
+    private function trackNestedRelationship(string $tableName, string $physicalTable): void
+    {
+        if ($this->isNestedRelationship($tableName)) {
+            $parentTable = $this->extractParentTable($tableName);
+            $childTable = $this->extractChildTable($tableName);
+
+            if (!isset($this->nestedRelationships[$parentTable])) {
+                $this->nestedRelationships[$parentTable] = [];
+            }
+
+            $this->nestedRelationships[$parentTable][$childTable] = $physicalTable;
+        }
+    }
+
     private function getDefaultTable(): string
     {
         if (empty($this->tables)) {
-            // This is the correct place to throw an exception when the tables array is unexpectedly empty,
-            // as the function is trying to USE the table list.
             throw new RuntimeException('No tables available for alias generation. Tables must be set before generating aliases.');
         }
 

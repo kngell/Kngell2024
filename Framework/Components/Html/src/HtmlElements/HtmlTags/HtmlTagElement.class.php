@@ -90,6 +90,16 @@ class HtmlTagElement extends AbstractHtmlComponent
         return $this;
     }
 
+    public function aria(string $name, string ...$props): self
+    {
+        $aria = [];
+        foreach ($props as $prop) {
+            $aria['aria-' . $name] = $prop;
+        }
+        $this->aria = array_merge($this->aria, $aria);
+        return $this;
+    }
+
     /**
      * @param string $contenteditable
      *

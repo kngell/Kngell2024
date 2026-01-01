@@ -5,11 +5,10 @@ class SelectOption extends AbstractHtmlComponent
 {
     private const string TAG = 'option';
 
-    private bool $disabled;
     private bool $selected = false;
     private string $key;
 
-    public function __construct(string $key, string $content)
+    public function __construct(string $key, mixed $content)
     {
         $this->key = $key;
         $this->content = $content;
@@ -39,6 +38,18 @@ class SelectOption extends AbstractHtmlComponent
     public function selected(bool $selected = true): self
     {
         $this->selected = $selected;
+        return $this;
+    }
+
+    public function key(string $key): self
+    {
+        $this->key = $key;
+        return $this;
+    }
+
+    public function value(mixed $value): self
+    {
+        $this->content = $value;
         return $this;
     }
 }

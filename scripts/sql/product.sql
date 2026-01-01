@@ -15,6 +15,7 @@ CREATE TABLE
         category_id BIGINT UNSIGNED NULL COMMENT 'Reference to category table',
         base_currency_id BIGINT UNSIGNED NOT NULL DEFAULT 1 COMMENT 'Default currency for fallback pricing',
         stock_status_id INT UNSIGNED NOT NULL COMMENT 'Reference to stock_status table',
+        status_id INT UNSIGNED NOT NULL DEFAULT 1 COMMENT 'Reference to product_status table',
         -- 🏷️ Tax & Compliance
         tax_class_id INT NOT NULL COMMENT 'Reference to tax_class table - defines VAT/tax category',
         price_includes_tax TINYINT (1) DEFAULT 0 COMMENT 'Whether the product price already includes tax (1) or is tax-exclusive (0)',
@@ -28,16 +29,15 @@ CREATE TABLE
         -- ⚖️ Physical Properties
         weight DECIMAL(10, 3) NULL COMMENT 'Product weight in kilograms',
         dimensions JSON NULL COMMENT 'Product dimensions as JSON: {"length": 30.5, "width": 20.0, "height": 15.0, "unit": "cm"}',
-        -- 🖼️ Media & Presentation (UPDATED - removed image_gallery)
+        -- 🖼️ Media & Presentation
         main_image VARCHAR(255) NULL COMMENT 'Main product image file path or URL',
         main_video VARCHAR(255) NULL COMMENT 'Main product video file path or URL',
         -- 📊 Status & Visibility
-        status ENUM ('draft', 'active', 'archived', 'discontinued') NOT NULL DEFAULT 'draft' COMMENT 'Product lifecycle status',
         is_active BOOLEAN NOT NULL DEFAULT TRUE COMMENT 'Soft delete flag - false means product is deleted',
         is_featured BOOLEAN NOT NULL DEFAULT FALSE COMMENT 'Featured product for promotions',
         is_virtual BOOLEAN NOT NULL DEFAULT FALSE COMMENT 'Whether product is digital/virtual (no shipping)',
         is_downloadable BOOLEAN NOT NULL DEFAULT FALSE COMMENT 'Whether product has downloadable files',
-        visibility ENUM ('visible', 'catalog', 'search', 'hidden') NOT NULL DEFAULT 'visible' COMMENT 'Where product is visible',
+        product_visibility ENUM ('visible', 'catalog', 'search', 'hidden') NOT NULL DEFAULT 'visible' COMMENT 'Where product is visible',
         -- 📦 Shipping
         shipping_class_id BIGINT UNSIGNED NULL COMMENT 'Reference to shipping class for cost calculation',
         requires_shipping BOOLEAN NOT NULL DEFAULT TRUE COMMENT 'Whether product requires shipping',
@@ -49,7 +49,7 @@ CREATE TABLE
         review_count INT DEFAULT 0 COMMENT 'Number of customer reviews',
         -- 👤 Audit Trail
         created_by BIGINT UNSIGNED NULL COMMENT 'User ID who created the product',
-        updated_by BIGINT UNSIGNED NULL COMMENT 'User ID who last updated the product',
+        updated_by BIGUINT UNSIGNED NULL COMMENT 'User ID who last updated the product',
         -- ⏰ Timestamps
         created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Record creation timestamp',
         updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Record last update timestamp',
@@ -61,7 +61,7 @@ CREATE TABLE
         INDEX idx_product_category_id (category_id),
         INDEX idx_product_brand_id (brand_id),
         INDEX idx_product_stock_status_id (stock_status_id),
-        INDEX idx_product_status (status),
+        INDEX idx_product_status_id (status_id),
         INDEX idx_product_is_active (is_active),
         INDEX idx_product_is_featured (is_featured),
         INDEX idx_product_visibility (visibility),
@@ -73,6 +73,7 @@ CREATE TABLE
         CONSTRAINT fk_product_base_currency_id FOREIGN KEY (base_currency_id) REFERENCES currency (id) ON DELETE RESTRICT,
         CONSTRAINT fk_product_tax_class_id FOREIGN KEY (tax_class_id) REFERENCES tax_class (id) ON DELETE RESTRICT,
         CONSTRAINT fk_product_stock_status_id FOREIGN KEY (stock_status_id) REFERENCES stock_status (id) ON DELETE RESTRICT,
+        CONSTRAINT fk_product_status_id FOREIGN KEY (status_id) REFERENCES product_status (id) ON DELETE RESTRICT,
         CONSTRAINT fk_product_shipping_class_id FOREIGN KEY (shipping_class_id) REFERENCES shipping_class (id) ON DELETE SET NULL
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = 'Core product information with enhanced inventory and dimensions management';
 
@@ -86,6 +87,9 @@ ADD CONSTRAINT fk_product_tax_class FOREIGN KEY (tax_class_id) REFERENCES tax_cl
 -- Prevents deleting a tax class if products still use it.
 ALTER TABLE product
 DROP COLUMN tax_class;
+
+ALTER TABLE product
+DROP COLUMN tags;
 
 UPDATE product
 SET
@@ -103,3 +107,42 @@ WHERE
     length IS NOT NULL
     OR width IS NOT NULL
     OR height IS NOT NULL;
+
+INSERT INTO
+    product (
+        public_id,
+        sku,
+        slug,
+        name,
+        short_description,
+        stock_status_id,
+        tax_class_id
+    )
+VALUES
+    (
+        UUID (),
+        'WCH-001',
+        'smart-watch-v2',
+        'Pro Smart Watch v2',
+        'A high-end gadget.',
+        1,
+        1
+    ),
+    (
+        UUID (),
+        'BK-99',
+        'clean-code-book',
+        'Clean Code Book',
+        'Must read for devs.',
+        1,
+        1
+    ),
+    (
+        UUID (),
+        'CHR-04',
+        'ergonomic-chair',
+        'ErgoComfort Office Chair',
+        'Support for your back.',
+        1,
+        1
+    );

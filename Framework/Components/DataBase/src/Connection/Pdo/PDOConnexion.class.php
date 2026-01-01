@@ -38,7 +38,7 @@ class PDOConnection implements DatabaseConnectionInterface
             PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci',
             PDO::ATTR_PERSISTENT => true,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            PDO::ATTR_EMULATE_PREPARES => false,
+            PDO::ATTR_EMULATE_PREPARES => true,
             PDO::MYSQL_ATTR_FOUND_ROWS => true,
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_CASE => PDO::CASE_NATURAL,
@@ -88,5 +88,10 @@ class PDOConnection implements DatabaseConnectionInterface
     public function rollback(): bool
     {
         return $this->con->rollback();
+    }
+
+    public function lastInsertId(string|null $name = null): string|false
+    {
+        return $this->con->lastInsertId($name);
     }
 }

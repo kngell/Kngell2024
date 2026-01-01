@@ -1,54 +1,81 @@
 <?php
 
 declare(strict_types=1);
-class JsonFile
+
+class JsonFile implements ContentSourceInterface
 {
-    private string $content;
-    private bool $isLoaded = false;
-    private string $file;
+    private ?array $parsedContent = null;
+    private FileContentInterface $fileContentManager;
 
-    public function __construct(string $file)
-    {
-        if (file_exists($file)) {
-            $this->content = $this->getContent($file);
-        } elseif (filter_var($file, FILTER_VALIDATE_URL)) {
-            $this->content = $this->getContent($file);
-        } else {
-            json_decode($file, true);
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                throw new RuntimeException("Invalid JSON string provided: {$file}");
-            }
-            $this->content = $file;
-            $this->isLoaded = true;
-        }
+    public function __construct(
+        private string $source,
+        ?FileContentInterface $fileContentManager = null,
+    ) {
+        $this->fileContentManager = $fileContentManager ?? new FileContentManager();
     }
 
-    public function getContentAsArray() : array
+    public function getContent(): string
     {
-        if (empty($this->content)) {
-            throw new RuntimeException("Content is empty for file: {$this->file}");
+        if (filter_var($this->source, FILTER_VALIDATE_URL)) {
+            return $this->getContentFromUrl();
         }
-        if (! $this->isLoaded) {
-            throw new RuntimeException("Content not loaded from file: {$this->file}");
+
+        if (file_exists($this->source)) {
+            return $this->getContentFromFile();
         }
-        return json_decode($this->content, true);
+
+        // Assume it's a JSON string
+        return $this->validateJsonString($this->source);
     }
 
-    public function getContentAsJson() : string
+    public function getContentAsArray(): array
     {
-        if (! $this->isLoaded) {
-            throw new RuntimeException("Content not loaded from file: {$this->file}");
+        if ($this->parsedContent === null) {
+            $content = $this->getContent();
+            $this->parsedContent = json_decode($content, true, 512, JSON_THROW_ON_ERROR);
         }
-        return json_encode($this->content, JSON_PRETTY_PRINT);
+
+        return $this->parsedContent;
     }
 
-    private function getContent(string $file) : string
+    public function clearCache(): void
     {
-        $content = file_get_contents($file);
+        $this->parsedContent = null;
+    }
+
+    private function getContentFromFile(): string
+    {
+        return $this->fileContentManager->read($this->source);
+    }
+
+    private function getContentFromUrl(): string
+    {
+        // FileContentManager could be extended to handle URLs
+        // or we could create a separate UrlContentManager
+        $context = stream_context_create([
+            'http' => [
+                'timeout' => 5,
+                'header' => 'Accept: application/json',
+            ],
+        ]);
+
+        $content = file_get_contents($this->source, false, $context);
         if ($content === false) {
-            throw new RuntimeException("Failed to read file or url: {$file}");
+            throw new RuntimeException("Failed to fetch URL: {$this->source}");
         }
-        $this->isLoaded = true;
+
         return $content;
+    }
+
+    private function validateJsonString(string $jsonString): string
+    {
+        json_decode($jsonString, true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new InvalidArgumentException(
+                'Invalid JSON string: ' . json_last_error_msg(),
+            );
+        }
+
+        return $jsonString;
     }
 }

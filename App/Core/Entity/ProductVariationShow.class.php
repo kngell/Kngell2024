@@ -1,30 +1,31 @@
 <?php
 
 declare(strict_types=1);
-class ProductVariationShow extends Entity
+
+class ProductVariationShow extends Entity implements TimestampableInterface
 {
+    use EntityTimestampableTrait;
+
+    protected const array RELATIONSHIPS = [
+        'stock_status' => StockStatus::class,
+        'variation_attribute' => VariationAttribute::class,
+        'variation_type' => VariationType::class,
+    ];
+
+    #[EntityFieldId()]
+    private int $id;
+
     private string $sku;
     private string $name;
+    private VariationType $variationType;
 
     /** @var VariationAttribute[] */
-    private array $attributes;
+    private array $variationAttribute = [];
 
-    private StockStatus $stockStatus; // StockStatus entity
+    private StockStatus $stockStatus;
     private int $stockQuantity;
-    private bool $allowBackOrders;
-
-    /** @var ProductRegionalPrice[] */
-    private array $regionalPrices = [];
-
-    private ?string $image = null;
-
-    public function isAvailable(): bool
-    {
-        $stockStatusCode = $this->stockStatus->getStockStatusCode();
-
-        return $stockStatusCode === StockStatusCode::IN_STOCK
-            || ($stockStatusCode === StockStatusCode::BACKORDERED && $this->allowBackOrders);
-    }
+    private string $status;
+    private ?float $priceModifier = null;
 
     /**
      * @return string
@@ -67,21 +68,53 @@ class ProductVariationShow extends Entity
     }
 
     /**
-     * @return array
+     * @return VariationType
      */
-    public function getAttributes(): array
+    public function getVariationType(): VariationType
     {
-        return $this->attributes;
+        return $this->variationType;
     }
 
     /**
-     * @param array $attributes
+     * @param VariationType $variationType
      *
      * @return ProductVariationShow
      */
-    public function setAttributes(array $attributes): ProductVariationShow
+    public function setVariationType(VariationType $variationType): ProductVariationShow
     {
-        $this->attributes = $attributes;
+        $this->variationType = $variationType;
+
+        return $this;
+    }
+
+    /**
+     * @return VariationAttribute[]
+     */
+    public function getVariationAttribute(): array
+    {
+        return $this->variationAttribute;
+    }
+
+    // /**
+    //  * @param VariationAttributes[]
+    //  *
+    //  * @return ProductVariationShow
+    //  */
+    // public function setVariationAttributes(array $variationAttributes): ProductVariationShow
+    // {
+    //     $this->variationAttributes = $variationAttributes;
+
+    //     return $this;
+    // }
+
+    /**
+     * @param VariationAttribute $variationAttribute
+     *
+     * @return ProductVariationShow
+     */
+    public function addVariationAttribute(VariationAttribute $variationAttribute): ProductVariationShow
+    {
+        $this->variationAttribute[] = $variationAttribute;
 
         return $this;
     }
@@ -127,61 +160,61 @@ class ProductVariationShow extends Entity
     }
 
     /**
-     * @return bool
+     * @return string
      */
-    public function getAllowBackOrders(): bool
+    public function getStatus(): string
     {
-        return $this->allowBackOrders;
+        return $this->status;
     }
 
     /**
-     * @param bool $allowBackOrders
+     * @param string $status
      *
      * @return ProductVariationShow
      */
-    public function setAllowBackOrders(bool $allowBackOrders): ProductVariationShow
+    public function setStatus(string $status): ProductVariationShow
     {
-        $this->allowBackOrders = $allowBackOrders;
+        $this->status = $status;
 
         return $this;
     }
 
     /**
-     * @return array
+     * @return float|null
      */
-    public function getRegionalPrices(): array
+    public function getPriceModifier(): ?float
     {
-        return $this->regionalPrices;
+        return $this->priceModifier;
     }
 
     /**
-     * @param array $regionalPrices
+     * @param float|null $priceModifier
      *
      * @return ProductVariationShow
      */
-    public function setRegionalPrices(array $regionalPrices): ProductVariationShow
+    public function setPriceModifier(?float $priceModifier): ProductVariationShow
     {
-        $this->regionalPrices = $regionalPrices;
+        $this->priceModifier = $priceModifier;
 
         return $this;
     }
 
     /**
-     * @return null|string
+     * @return int
      */
-    public function getImage(): ?string
+    public function getId(): int
     {
-        return $this->image;
+        return $this->id;
     }
 
     /**
-     * @param null|string $image
+     * @param int $id
      *
      * @return ProductVariationShow
      */
-    public function setImage(?string $image): ProductVariationShow
+    public function setId(int $id): ProductVariationShow
     {
-        $this->image = $image;
+        $this->id = $id;
 
         return $this;
     }

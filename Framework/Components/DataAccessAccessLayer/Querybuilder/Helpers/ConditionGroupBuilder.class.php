@@ -34,7 +34,7 @@ class ConditionGroupBuilder
         return 'AND';
     }
 
-    private function createConditionElement(string $method, array $conditions): ?SqlQueryComponent
+    private function createConditionElement(string $method, array $conditions): ?SqlComponent
     {
         if ($this->containsClosure($conditions)) {
             return $this->hasRegularConditions($conditions)
@@ -45,7 +45,7 @@ class ConditionGroupBuilder
         return new ConditionClause($conditions, $method, $this->em);
     }
 
-    private function addConditionToCollection(SqlQueryComponent $condition, string $logicalLink): void
+    private function addConditionToCollection(SqlComponent $condition, string $logicalLink): void
     {
         if ($this->groupedElements->isEmpty()) {
             $this->addFirstCondition($condition, $logicalLink);
@@ -60,14 +60,14 @@ class ConditionGroupBuilder
         $this->addAndCondition($condition, $logicalLink);
     }
 
-    private function addFirstCondition(SqlQueryComponent $condition, string $logicalLink): void
+    private function addFirstCondition(SqlComponent $condition, string $logicalLink): void
     {
         $condition->setLogicalLink($logicalLink);
         $this->groupedElements->add($condition);
         $this->lastLogicalLink = $logicalLink;
     }
 
-    private function handleOrCondition(SqlQueryComponent $condition): void
+    private function handleOrCondition(SqlComponent $condition): void
     {
         $lastElement = $this->groupedElements->removeLast();
 
@@ -89,7 +89,7 @@ class ConditionGroupBuilder
         $this->lastLogicalLink = 'AND';
     }
 
-    private function addAndCondition(SqlQueryComponent $condition, string $logicalLink): void
+    private function addAndCondition(SqlComponent $condition, string $logicalLink): void
     {
         $condition->setLogicalLink($logicalLink);
         $this->groupedElements->add($condition);
@@ -132,7 +132,7 @@ class ConditionGroupBuilder
         return $mixedGroup;
     }
 
-    private function processPureClosure(array $conditions, string $method): ?SqlQueryComponent
+    private function processPureClosure(array $conditions, string $method): ?SqlComponent
     {
         $nestedElements = $this->processClosuresToElements($conditions);
 
@@ -158,7 +158,7 @@ class ConditionGroupBuilder
         return $parentGroup;
     }
 
-    private function processSingleClosure(Closure $closure, string $method): ?SqlQueryComponent
+    private function processSingleClosure(Closure $closure, string $method): ?SqlComponent
     {
         $nestedQuery = new SqlSelectQuery($this->em);
         $closure($nestedQuery);

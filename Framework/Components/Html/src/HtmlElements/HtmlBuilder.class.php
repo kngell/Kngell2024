@@ -10,9 +10,9 @@ class HtmlBuilder extends AbstractHtmlElement
         parent::__construct($token);
     }
 
-    public function form(): FormBuilder
+    public function form(bool $includeCsrftoken = true): FormBuilder
     {
-        return new FormBuilder($this->token);
+        return new FormBuilder($this->token, $includeCsrftoken);
     }
 
     /**
@@ -49,14 +49,24 @@ class HtmlBuilder extends AbstractHtmlElement
         return new LabelElement($message);
     }
 
-    public function tag(string $tag): self|HtmlaElement|HtmlTagElement
+    public function tag(string $tag): self|HtmlaElement|HtmlTagElement|SelectElement
     {
         return match (true) {
-            in_array($tag, ['div', 'section', 'body', 'nav', 'ul', 'li', 'dl', 'table', 'thead', 'tbody', 'tr', 'td', 'span', 'th', 'button', 'small', 'svg', 'use']) || preg_match('~[0-9]+~', $tag) => new self($this->token, $tag),
+            in_array($tag, ['div', 'section', 'body', 'nav', 'ul', 'li', 'dl', 'table', 'thead', 'tbody', 'tr', 'td', 'span', 'th', 'button', 'small', 'svg', 'use', 'caption', 'colgroup', 'col']) || preg_match('~[0-9]+~', $tag) => new self($this->token, $tag),
             $tag === 'a' => new HtmlaElement(),
             in_array($tag, ['p', 'dd', 'dt', 'img', 'video', 'i', 'strong']) => new HtmlTagElement($tag),
             $tag === 'select' => new SelectElement($this->token)
         };
+    }
+
+    public function select(): SelectElement
+    {
+        return new SelectElement($this->token);
+    }
+
+    public function option(string $key = '', mixed $value = null): SelectOption
+    {
+        return new SelectOption($key, $value);
     }
 
     public function button(string $type = ''): ButtonElement
@@ -178,12 +188,12 @@ class HtmlBuilder extends AbstractHtmlElement
     }
 
     /**
-     * @param string $content
+     * @param null|string|int $content
      * @param bool $contentUp
      *
      * @return HtmlBuilder
      */
-    public function content(string $content, bool $contentUp = true): self
+    public function content(null|string|int $content, bool $contentUp = true): self
     {
         $this->content = $content;
         $this->contentUp = $contentUp;
@@ -205,6 +215,16 @@ class HtmlBuilder extends AbstractHtmlElement
     public function ariaLabel(string $ariaLabel): self
     {
         $this->ariaLabel = $ariaLabel;
+        return $this;
+    }
+
+    public function aria(string $name, string ...$props): self
+    {
+        $aria = [];
+        foreach ($props as $prop) {
+            $aria['aria' . $name] = $prop;
+        }
+        $this->aria = array_merge($this->aria, $aria);
         return $this;
     }
 

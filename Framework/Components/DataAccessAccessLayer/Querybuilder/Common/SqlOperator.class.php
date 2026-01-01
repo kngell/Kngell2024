@@ -2,10 +2,6 @@
 
 declare(strict_types=1);
 
-/**
- * SQL OPERATORS - Complete set of SQL expression components
- * Covers all standard SQL operators across all categories.
- */
 enum SqlOperator: string
 {
     // =============================================
@@ -60,7 +56,6 @@ enum SqlOperator: string
     public function isUnary(): bool
     {
         return in_array($this, [
-            // Null checks
             self::IS_NULL, self::IS_NOT_NULL,
             self::IS_TRUE, self::IS_FALSE, self::IS_UNKNOWN,
             self::IS_NOT_TRUE, self::IS_NOT_FALSE, self::IS_NOT_UNKNOWN,
@@ -142,6 +137,17 @@ enum SqlOperator: string
         // Remove suffix like "_JSON", "_ARR", etc.
         return preg_replace('/_[A-Z0-9]+$/', '', $this->value);
     }
+
+    public static function exists(string $op): bool
+    {
+        foreach (self::cases() as $case) {
+            if ($case->value === $op) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     // LOGICAL
     case AND = 'AND';
     case OR = 'OR';

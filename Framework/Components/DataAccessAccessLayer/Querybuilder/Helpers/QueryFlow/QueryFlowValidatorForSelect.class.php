@@ -3,12 +3,13 @@
 declare(strict_types=1);
 class QueryFlowValidatorForSelect implements FlowValidatorInterface
 {
-    public function __construct(private SqlQueryComponent $query)
+    public function __construct(private SqlComponent $query)
     {
     }
 
     public function validate(array $queryFlow, array $joinMap, array $onConditions = []): void
     {
+        $this->validateWithFlow($queryFlow);
         $this->validateRequiredClauses($queryFlow);
         $this->validateJoinOnPairs($joinMap, $onConditions);
     }
@@ -51,5 +52,24 @@ class QueryFlowValidatorForSelect implements FlowValidatorInterface
             }
         }
         return false;
+    }
+
+    private function validateWithFlow(array $queryFlow): void
+    {
+        $hasWith = isset($queryFlow['with']);
+        $hasSelect = isset($queryFlow['select']);
+        $userFlow = array_keys($queryFlow);
+
+        if ($hasWith && !$hasSelect) {
+            throw new QueryFlowException('WITH clause must be followed by SELECT clause.');
+        }
+
+        if ($hasWith) {
+            $firstMethod = ArrayUtils::first($userFlow);
+
+            if (!in_array($firstMethod, ['with', 'withRecursive'])) {
+                throw new QueryFlowException('WITH clause must be the first clause in the query.');
+            }
+        }
     }
 }

@@ -12,9 +12,15 @@ class SelectElement extends AbstractHtmlElement
         $this->tag = 'select';
     }
 
-    public function option(mixed $value, string $content): self
+    public function option(string $key, mixed $content): self
     {
-        $this->addFormElement(new SelectOption($value, $content));
+        $this->addFormElement(new SelectOption($key, $content));
+        return $this;
+    }
+
+    public function onchange(string $onchange): self
+    {
+        $this->onchange = $onchange;
         return $this;
     }
 

@@ -14,6 +14,7 @@ class QueryState
         public ?string $table = null,
         public ?string $joinContext = null,
         public bool $withAlias = false,
+        public bool $distinct = false,
         public ?string $customAlias = null,
         public bool $isSubquery = false,
         public ?string $subqueryMainTable = null,
@@ -90,6 +91,18 @@ class QueryState
         $new->withAlias = $withAlias;
 
         return $new;
+    }
+
+    /**
+     * @param bool $distinct
+     *
+     * @return QueryState
+     */
+    public function distinct(bool $distinct): QueryState
+    {
+        $this->distinct = $distinct;
+
+        return $this;
     }
 
     /**

@@ -5,13 +5,14 @@ declare(strict_types=1);
 class QueryResultPaginator
 {
     private ?int $lastLimit = null;
-
     private ?int $limit = null;
-
     private ?array $pagination = null;
 
-    public function applyPagination(array $results, string $operation): array
+    public function applyPagination(array $results, string $operation, bool $doneByDatabase = true): array
     {
+        if ($doneByDatabase) {
+            return $results;
+        }
         if ($this->limit !== null && $operation === 'all') {
             return array_slice($results, 0, $this->limit);
         }

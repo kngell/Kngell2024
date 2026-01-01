@@ -94,9 +94,4 @@ class PostLimitValidator extends AbstractValidator
 
         return number_format($bytes / pow($k, $i), $dm) . ' ' . $sizes[$i];
     }
-
-    private function isEmpty(mixed $value): bool
-    {
-        return $value === null || $value === '' || $value === [] || $value === '[]';
-    }
 }

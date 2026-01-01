@@ -32,6 +32,32 @@ admin2:
 /{controller}/{id}/edit:
   method: edit
 
+# /admin/product-edit:
+#   controller: admin
+#   method: productEdit
+#   parameterMapping:
+#     id: ["public_id", "product_id"]
+
+# /api/users/{id}:
+#   controller: api
+#   method: getUser
+#   httpMethod: get
+#   responseBody:
+#     type: JSON
+#     produces: application/json
+#   ResponseStatus:
+#     HttpStatusCode: 200
+
+# /api/users:
+#   controller: api
+#   method: createUser
+#   httpMethod: post
+#   responseBody:
+#     type: JSON
+#     produces: application/json
+#   ResponseStatus:
+#     HttpStatusCode: 201  # Created
+
 /{controller}/{method}/{id:\d+}:
   # This will match /products/show/123, /users/edit/456, etc.
 /{controller}/{id:\d+}/{method}:

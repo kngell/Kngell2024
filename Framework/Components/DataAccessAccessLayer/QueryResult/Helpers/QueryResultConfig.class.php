@@ -13,17 +13,15 @@ class QueryResultConfig
         'key_pair' => PDO::FETCH_KEY_PAIR,
     ];
 
-    private ?string $className = null;
     private ?array $constructorArgs = null;
     private string $fetchMode = 'array';
+    private ?int $columnIndex = null;
 
-    public function __construct(private Entity $entity, private array $tableMap)
-    {
-    }
-
-    public function getClassName(): ?string
-    {
-        return $this->className;
+    public function __construct(
+        private ?string $className,
+        private array $tableAlias,
+        private array $tableMap,
+    ) {
     }
 
     public function getConstructorArgs(): ?array
@@ -38,10 +36,19 @@ class QueryResultConfig
 
     public function getPdoFetchMode(): int
     {
-        return self::FETCH_MODE_MAP[$this->fetchMode] ?? PDO::FETCH_ASSOC;
+        $mode = self::FETCH_MODE_MAP[$this->fetchMode] ?? PDO::FETCH_ASSOC;
+
+        if ($mode === PDO::FETCH_COLUMN && $this->columnIndex !== null) {
+        }
+        return $mode;
     }
 
-    public function processFetchOptions(string|array|null $fetchOptions, Entity $entity): void
+    public function getColumnIndex(): ?int
+    {
+        return $this->columnIndex;
+    }
+
+    public function processFetchOptions(string|array|null $fetchOptions, string $entityClassName): void
     {
         if ($fetchOptions === null) {
             return;
@@ -50,7 +57,7 @@ class QueryResultConfig
         if (is_string($fetchOptions)) {
             $this->fetchMode = $fetchOptions;
             if ($fetchOptions === 'class') {
-                $this->className = $entity::class;
+                $this->className = $entityClassName;
             }
         } elseif (is_array($fetchOptions)) {
             $this->processArrayFetchOptions($fetchOptions);
@@ -71,14 +78,20 @@ class QueryResultConfig
 
     public function setFetchMode(string $fetchMode): self
     {
+        if (!array_key_exists($fetchMode, self::FETCH_MODE_MAP)) {
+            throw new InvalidArgumentException("Invalid fetch mode: $fetchMode");
+        }
         $this->fetchMode = $fetchMode;
         return $this;
     }
 
-    /**
-     * Convert legacy parameters to new fetch options format.
-     */
-    public function convertLegacyParams(string|array|null $params, ?string $className, Entity $entity): ?array
+    public function setColumnIndex(?int $columnIndex): self
+    {
+        $this->columnIndex = $columnIndex;
+        return $this;
+    }
+
+    public function convertLegacyParams(string|array|null $params, ?string $className, string $entity): ?array
     {
         if ($params === null) {
             return null;
@@ -87,7 +100,7 @@ class QueryResultConfig
         if (is_string($params)) {
             $fetchOptions = ['mode' => $params];
             if ($params === 'class') {
-                $fetchOptions['class'] = $className ?? $entity::class;
+                $fetchOptions['class'] = $className ?? $entity;
             }
             return $fetchOptions;
         }
@@ -100,11 +113,27 @@ class QueryResultConfig
     }
 
     /**
-     * @return Entity
+     * @return null|string
      */
-    public function getEntity(): Entity
+    public function getClassName(): ?string
     {
-        return $this->entity;
+        return $this->className;
+    }
+
+    /**
+     * @return array
+     */
+    public function getTableAlias(): array
+    {
+        return $this->tableAlias;
+    }
+
+    /**
+     * @return array
+     */
+    public function getTableMap(): array
+    {
+        return $this->tableMap;
     }
 
     private function processArrayFetchOptions(array $fetchOptions): void
@@ -116,6 +145,10 @@ class QueryResultConfig
         if (isset($fetchOptions['class'])) {
             $this->className = $fetchOptions['class'];
             $this->constructorArgs = $fetchOptions['constructor_args'] ?? null;
+        }
+
+        if (isset($fetchOptions['column_index'])) {
+            $this->columnIndex = (int) $fetchOptions['column_index'];
         }
     }
 }

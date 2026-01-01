@@ -4,39 +4,86 @@ declare(strict_types=1);
 
 class CacheFactory
 {
-    private ContainerInterface $container;
-    private NativeCacheStorage $storage;
-
-    public function __construct(private CacheEnvironmentConfigurations $cacheEnvConfig, ?ContainerInterface $container = null)
+    public function __construct(private CacheEnvironmentConfigurations $envConfigurations, private DirectoryManager $directoryManager, private FileContentManager $fileContentManager)
     {
-        $this->container = $container ?? App::getInstance();
     }
 
     /**
-     * Factory create method which create the cache object and instantiate the storage option
-     * We also set a default storage options which is the NativeCacheStorage. So if the second
-     * argument within the create method is left to null. Then the default cache storage object
-     * will be created and all necessary argument injected within the constructor.
-     *
-     * @param string|null $cacheIdentifier
-     * @param string|null $storage
-     * @param array $options
-     * @return CacheInterface
+     * Create cache instance based on configuration.
      */
     public function create(?string $cacheIdentifier = null, array $options = []): CacheInterface
     {
-        $storageObject = $this->container->get(CacheStorageInterface::class, [
-            'envConfigurations' => $this->cacheEnvConfig,
-            'options' => $options,
-        ]);
-        if (! $storageObject instanceof CacheStorageInterface) {
-            throw new cacheInvalidArgumentException('"' . $this->storage::class . '" is not a valid cache storage object.', 0);
-        }
-        $cacheObject = new Cache($cacheIdentifier, $storageObject, $options);
-        if (! $cacheObject instanceof CacheInterface) {
-            throw new cacheInvalidArgumentException('"' . $cacheObject::class . '" is not a valid cache storage object.', 0);
+        // Use provided identifier or from configuration
+        $identifier = $cacheIdentifier ?? $this->envConfigurations->getCacheIdentifier();
+
+        // Get driver configuration
+        $driverConfig = $this->envConfigurations->getDriverConfig();
+        $defaultDriver = $this->envConfigurations->getDefaultDriver();
+
+        // Get driver class
+        $driverName = $options['driver'] ?? $defaultDriver;
+        $driverClass = $driverConfig[$driverName]['class'] ?? 'NativeCacheStorage';
+
+        // Create storage instance
+        $storage = $this->createStorage($driverClass, $identifier, $options);
+
+        // Create cache instance
+        return new Cache($identifier, $storage, $options);
+    }
+
+    /**
+     * Create storage instance.
+     */
+    private function createStorage(string $driverClass, string $identifier, array $options): CacheStorageInterface
+    {
+        // Ensure class exists
+        if (!class_exists($driverClass)) {
+            throw new CacheException("Cache driver class '{$driverClass}' not found.");
         }
 
-        return $cacheObject;
+        // Create environment configuration for this specific cache
+        $envConfig = new CacheEnvironmentConfigurations($identifier, $this->envConfigurations->getCacheConfig());
+
+        // Create storage instance
+        return new $driverClass($envConfig, $options, $this->directoryManager, $this->fileContentManager);
+    }
+
+    /**
+     * Create specialized cache instances.
+     */
+    public static function createCurrencyCache(): CacheInterface
+    {
+        $config = new CacheEnvironmentConfigurations('currency_cache', [
+            'cache_path' => STORAGE . 'cache/currency/',
+            'cache_expires' => 3600, // 1 hour
+            'use_cache' => true,
+            'default_driver' => 'native_storage',
+        ]);
+
+        $factory = new self($config, new DirectoryManager(), new FileContentManager());
+        return $factory->create();
+    }
+
+    public static function createRegionCache(): CacheInterface
+    {
+        $config = new CacheEnvironmentConfigurations('region_cache', [
+            'cache_path' => DS . 'storage' . DS . 'cache' . DS . 'region' . DS,
+            'default_lifetime' => 7200, // 2 hours
+            'use_cache' => true,
+        ]);
+
+        $factory = new self($config, new DirectoryManager(), new FileContentManager());
+        return $factory->create();
+    }
+
+    public static function createLocaleCache(): CacheInterface
+    {
+        $config = new CacheEnvironmentConfigurations('locale_cache', [
+            'cache_path' => DS . 'storage' . DS . 'cache' . DS . 'locale' . DS,
+            'default_lifetime' => 86400, // 24 hours
+        ]);
+
+        $factory = new self($config, new DirectoryManager(), new FileContentManager());
+        return $factory->create();
     }
 }

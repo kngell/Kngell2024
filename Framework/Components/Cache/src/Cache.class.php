@@ -4,65 +4,93 @@ declare(strict_types=1);
 
 class Cache extends AbstractCache
 {
-    /**
-     * Main class constructor.
-     */
-    public function __construct(?string $cacheIdentifier, ?CacheStorageInterface $storage, array $options)
+    use CacheRememberTrait;
+
+    public function __construct(?string $cacheIdentifier, ?CacheStorageInterface $storage, array $options, private ?SmartSerializerInterface $serializer = null)
     {
         parent::__construct($cacheIdentifier, $storage, $options);
+        if ($this->serializer === null) {
+            $this->serializer = new SmartSerializer(
+                $options['compress'] ?? false,
+                $options['use_igbinary'] ?? false,
+            );
+        }
     }
 
-    /**
-     * @inheritdoc
-     *
-     * @param string $key
-     * @param mixed $value
-     * @param int|null $ttl
-     * @return bool
-     * @throws CacheException
-     */
     public function set(string $key, mixed $value, int|null $ttl = null): bool
     {
         $this->ensureCacheEntryIdentifierIsvalid($key);
+
         try {
-            $this->storage->setCache($key, serialize($value), $ttl);
+            $serializedValue = $this->serializer->serialize($value);
+
+            $isCompressed = false;
+            if ($this->serializer->supportsCompression() && strlen($serializedValue) > 1024) {
+                $serializedValue = $this->serializer->compress($serializedValue);
+                $isCompressed = true;
+            }
+
+            // Prefix with a flag if compressed
+            $finalValue = $isCompressed ? ('C:' . $serializedValue) : $serializedValue;
+
+            // Use $finalValue instead of $serializedValue
+            $this->storage->setCache($key, $finalValue, $ttl);
         } catch (Throwable $throwable) {
-            throw new CacheException('An exception was thrown in retrieving the key from the cache repository.', 0, $throwable);
+            throw new CacheException(
+                'Failed to store cache key: ' . $key,
+                0,
+                $throwable,
+            );
         }
 
         return true;
     }
 
-    /**
-     * @inheritDoc
-     *
-     * @param string $key
-     * @param mixed $default
-     * @return mixed
-     * @throws CacheException
-     */
     public function get(string $key, mixed $default = null): mixed
     {
         $this->ensureCacheEntryIdentifierIsvalid($key);
+
         try {
             $data = $this->storage->getCache($key);
-        } catch (Throwable $throwable) {
-            throw new CacheException('An exception was thrown in retrieving the key from the cache backend.', 0, $throwable);
-        }
-        if ($data === false) {
-            return $default;
-        }
 
-        return unserialize((string) $data);
+            if ($data === false) {
+                return $default;
+            }
+
+            $data = (string) $data;
+
+            if ($this->serializer->supportsCompression() && str_starts_with($data, 'C:')) {
+                $compressedData = substr($data, 2);
+                try {
+                    $data = $this->serializer->decompress($compressedData);
+                } catch (SerializationException $e) {
+                    // Decompression failed, treat as non-compressed or corrupt
+                }
+            }
+
+            return $this->serializer->unserialize($data);
+        } catch (Throwable $throwable) {
+            throw new CacheException(
+                'Failed to retrieve cache key: ' . $key,
+                0,
+                $throwable,
+            );
+        }
     }
 
-    /**
-     * @inheritDoc
-     *
-     * @param string $key
-     * @return bool
-     * @throws CacheException
-     */
+    public function setWithTags(string $key, mixed $value, int|null $ttl = null, array $tags = []): bool
+    {
+        $result = $this->set($key, $value, $ttl);
+
+        if ($result && !empty($tags) && $this->storage instanceof TaggableCacheStorageInterface) {
+            foreach ($tags as $tag) {
+                $this->storage->addKeyToTag($key, $tag, $ttl);
+            }
+        }
+
+        return $result;
+    }
+
     public function delete(string $key): bool
     {
         $this->ensureCacheEntryIdentifierIsvalid($key);
@@ -72,6 +100,43 @@ class Cache extends AbstractCache
             throw new CacheException('An exception was thrown in retrieving the key from the cache backend.', 0, $throwable);
         }
         return true;
+    }
+
+    public function deletePattern(string $pattern): bool
+    {
+        if (method_exists($this->storage, 'deletePattern')) {
+            $deleted = $this->storage->deletePattern($pattern);
+            return $deleted > 0;
+        }
+
+        return false;
+    }
+
+    public function invalidateTags(array $tags): bool
+    {
+        if (!$this->storage instanceof TaggableCacheStorageInterface) {
+            return false;
+        }
+
+        $totalRemoved = 0;
+        foreach ($tags as $tag) {
+            $removed = $this->storage->invalidateTag($tag);
+            $totalRemoved += $removed;
+        }
+
+        return $totalRemoved > 0;
+    }
+
+    public function getStats(): array
+    {
+        if (method_exists($this->storage, 'getStats')) {
+            return $this->storage->getStats();
+        }
+
+        return [
+            'identifier' => $this->cacheIdentifier,
+            'storage_class' => get_class($this->storage),
+        ];
     }
 
     /**
@@ -85,22 +150,70 @@ class Cache extends AbstractCache
         return true;
     }
 
-    /**
-     * @inheritDoc
-     *
-     * @param iterable $keys
-     * @param mixed $default
-     * @return iterable
-     * @throws CacheException
-     */
-    public function getMultiple(iterable $keys, mixed $default = null): iterable
+    public function getRemainingTtl(string $key): ?int
     {
-        $result = [];
-        foreach ($keys as $key) {
-            $result[$key] = $this->get($key, $default);
+        if (method_exists($this->storage, 'getRemainingTtl')) {
+            return $this->storage->getRemainingTtl($key);
         }
 
-        return $result;
+        return null;
+    }
+
+    public function getMultiple(iterable $keys, mixed $default = null): iterable
+    {
+        $keys = is_array($keys) ? $keys : iterator_to_array($keys);
+        $results = [];
+
+        if (method_exists($this->storage, 'getMultiple')) {
+            $rawResults = $this->storage->getMultiple($keys, $default);
+
+            foreach ($rawResults as $key => $data) {
+                if ($data !== false) {
+                    $data = (string) $data;
+                    if ($this->serializer->supportsCompression() && str_starts_with($data, 'C:')) {
+                        $compressedData = substr($data, 2);
+                        try {
+                            $data = $this->serializer->decompress($compressedData);
+                        } catch (Throwable) {
+                        }
+                    }
+
+                    try {
+                        $results[$key] = $this->serializer->unserialize($data);
+                    } catch (Throwable $e) {
+                        $results[$key] = $default;
+                    }
+                } else {
+                    $results[$key] = $default;
+                }
+            }
+
+            return $results;
+        }
+        foreach ($keys as $key) {
+            $results[$key] = $this->get($key, $default);
+        }
+
+        return $results;
+    }
+
+    public function collectGarbage(): bool
+    {
+        if (method_exists($this->storage, 'collectGarbage')) {
+            $this->storage->collectGarbage();
+            return true;
+        }
+
+        return false;
+    }
+
+    public function getKeys(string $pattern = '*'): array
+    {
+        if (method_exists($this->storage, 'getKeys')) {
+            return $this->storage->getKeys($pattern);
+        }
+
+        return [];
     }
 
     /**
@@ -108,8 +221,10 @@ class Cache extends AbstractCache
      *
      * @param iterable $values
      * @param int|null $ttl
-     * @return bool
+     *
      * @throws CacheException
+     *
+     * @return bool
      */
     public function setMultiple(iterable $values, int|null $ttl = null): bool
     {
@@ -121,30 +236,67 @@ class Cache extends AbstractCache
         return $all;
     }
 
-    /**
-     * @inheritdoc
-     * @param iterable $keys
-     * @return bool
-     * @throws CacheException
-     */
     public function deleteMultiple(iterable $keys): bool
     {
-        foreach ($keys as $key) {
-            $this->delete($key);
+        if (method_exists($this->storage, 'deleteMultiple')) {
+            return $this->storage->deleteMultiple($keys);
         }
 
-        return true;
+        $all = true;
+        foreach ($keys as $key) {
+            $all = $this->delete($key) && $all;
+        }
+
+        return $all;
     }
 
     /**
      * @inheritdoc
      *
      * @param string $key
+     *
      * @return bool
      */
     public function exists(string $key): bool
     {
         $this->ensureCacheEntryIdentifierIsvalid($key);
         return $this->storage->hasCache($key);
+    }
+
+    private function isBinary(string $data): bool
+    {
+        return preg_match('~[^\x20-\x7E\t\r\n]~', $data) > 0;
+    }
+
+    private function getCacheFilePath(string $key): string
+    {
+        // This depends on your storage implementation
+        if (method_exists($this->storage, 'cacheEntryPathAndFilename')) {
+            return $this->storage->cacheEntryPathAndFilename($key);
+        }
+        return 'unknown';
+    }
+
+    private function formatBytes(int $bytes, int $precision = 2): string
+    {
+        $units = ['B', 'KB', 'MB', 'GB', 'TB'];
+        $bytes = max($bytes, 0);
+        $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
+        $pow = min($pow, count($units) - 1);
+        $bytes /= pow(1024, $pow);
+
+        return round($bytes, $precision) . ' ' . $units[$pow];
+    }
+
+    /**
+     * Convert wildcard pattern to regex.
+     */
+    private function patternToRegex(string $pattern): string
+    {
+        $pattern = preg_quote($pattern, '/');
+        $pattern = str_replace('\*', '.*', $pattern);
+        $pattern = str_replace('\?', '.', $pattern);
+
+        return '/^' . $pattern . '$/';
     }
 }

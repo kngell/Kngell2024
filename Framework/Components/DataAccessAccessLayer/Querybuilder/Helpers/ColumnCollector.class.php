@@ -4,8 +4,8 @@ declare(strict_types=1);
 class ColumnCollector
 {
     public function __construct(
-        private array $selectMap,
-        private array $joinMap,
+        private array $selectMap = [],
+        private array $joinMap = [],
     ) {
     }
 
@@ -19,15 +19,42 @@ class ColumnCollector
         return $columnMap;
     }
 
+    /**
+     * @param array $selectMap
+     *
+     * @return ColumnCollector
+     */
+    public function setSelectMap(array $selectMap): ColumnCollector
+    {
+        $this->selectMap = $selectMap;
+
+        return $this;
+    }
+
+    /**
+     * @param array $joinMap
+     *
+     * @return ColumnCollector
+     */
+    public function setJoinMap(array $joinMap): ColumnCollector
+    {
+        $this->joinMap = $joinMap;
+
+        return $this;
+    }
+
     private function addSelectColumns(array &$columnMap): void
     {
-        if (isset($this->selectMap['select'])) {
-            $config = $this->selectMap['select'];
-            $columnMap[$config['table'] ?? 'main'] = [
-                'columns' => $config['columns'],
-                'customAlias' => $config['customAlias'],
-                'withAlias' => $config['withAlias'],
-            ];
+        foreach ($this->selectMap as $key => $config) {
+            if (is_string($config['table'])) {
+                $columnMap[$config['table'] ?? 'main'] = [
+                    'columns' => $config['columns'],
+                    'customAlias' => $config['customAlias'],
+                    'withAlias' => $config['withAlias'],
+                ];
+            } else {
+                $columnMap['main'] = $config;
+            }
         }
     }
 

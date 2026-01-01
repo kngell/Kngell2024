@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 class NullObject implements NullObjectInterface
 {
+    public function __construct(private null|Object $object = null)
+    {
+    }
+
     public function __call($name, $arguments)
     {
         // Do nothing or return self for chaining

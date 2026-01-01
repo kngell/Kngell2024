@@ -3,11 +3,6 @@
 declare(strict_types=1);
 class ProductRegionalPriceModel extends Model
 {
-    public function __construct(EntityManagerInterface $em)
-    {
-        parent::__construct($em);
-    }
-
     /**
      * @throws PDOException
      * @throws QueryResultException

@@ -35,6 +35,32 @@ class MaxFilesValidator extends AbstractValidator
         return false;
     }
 
+    protected function isEmpty(mixed $value): bool
+    {
+        if ($value instanceof FileUpload) {
+            return $value->hasError() || $value->getUploadError() === UPLOAD_ERR_NO_FILE;
+        }
+
+        if (is_array($value)) {
+            // Check if it's an empty PHP files array
+            if (isset($value['name'])) {
+                if (is_array($value['name'])) {
+                    foreach ($value['name'] as $index => $name) {
+                        if (!empty($name)) {
+                            return false;
+                        }
+                    }
+
+                    return true;
+                }
+                return empty($value['name']);
+            }
+            return empty($value);
+        }
+
+        return $value === null || $value === '' || $value === '[]';
+    }
+
     private function countValidFiles(): int
     {
         $files = $this->normalizeFiles($this->inputValue);
@@ -124,31 +150,5 @@ class MaxFilesValidator extends AbstractValidator
         }
 
         return false;
-    }
-
-    private function isEmpty(mixed $value): bool
-    {
-        if ($value instanceof FileUpload) {
-            return $value->hasError() || $value->getUploadError() === UPLOAD_ERR_NO_FILE;
-        }
-
-        if (is_array($value)) {
-            // Check if it's an empty PHP files array
-            if (isset($value['name'])) {
-                if (is_array($value['name'])) {
-                    foreach ($value['name'] as $index => $name) {
-                        if (!empty($name)) {
-                            return false;
-                        }
-                    }
-
-                    return true;
-                }
-                return empty($value['name']);
-            }
-            return empty($value);
-        }
-
-        return $value === null || $value === '' || $value === '[]';
     }
 }

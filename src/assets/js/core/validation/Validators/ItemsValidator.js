@@ -1,14 +1,15 @@
+// ItemsValidator.js - final clean version
 import BaseValidator from "../BaseValidator.js";
 import ValidatorFactory from "js/core/validation/factory/ValidatorFactory";
 
-import BrowserLogger from "js/utils/BrowserLogger";
-const logger = new BrowserLogger("ItemsValidator");
-
 export default class ItemsValidator extends BaseValidator {
+  constructor(errorParams, display, value, ruleValue = null, formData = {}) {
+    super(errorParams, display, value, ruleValue);
+    this.parentFieldName = errorParams.fieldName || display;
+  }
+
   validate(formData = {}) {
-    if (!Array.isArray(this.value)) {
-      return null;
-    }
+    if (!Array.isArray(this.value)) return null;
 
     const itemsRule = this.ruleValue;
     if (!itemsRule || itemsRule.type !== "object" || !itemsRule.rules) {
@@ -33,40 +34,61 @@ export default class ItemsValidator extends BaseValidator {
       const fullFieldName = `${this.getParentFieldName()}[${index}][${field}]`;
       const display = fieldRules.display || this.formatDisplayName(field);
 
-      // Handle nested arrays recursively
       if (fieldRules.array && fieldRules.items) {
-        // Create nested ItemsValidator with the same errorParams
         const nestedValidator = new ItemsValidator(
-          this.errorParams, // Pass the same errorParams
+          { ...this.errorParams, fieldName: fullFieldName },
           display,
           fieldValue,
           fieldRules.items,
+          formData,
         );
-        nestedValidator.setParentFieldName(fullFieldName);
         const nestedError = nestedValidator.validate(formData);
-        if (nestedError) {
-          return nestedError;
-        }
+        if (nestedError) return nestedError;
       } else {
-        // Validate individual field rules using ValidatorFactory
         const fieldError = this.validateFieldRules(fieldValue, fieldRules, display, formData);
         if (fieldError) {
-          return fieldError;
+          return {
+            ...fieldError,
+            fieldPath: fullFieldName,
+            displayName: display,
+          };
         }
       }
     }
-
     return null;
   }
 
   validateFieldRules(value, rules, display, formData) {
-    for (const [ruleName, ruleValue] of Object.entries(rules)) {
-      if (ruleName === "display" || ruleName === "array" || ruleName === "items") continue;
+    // Check required first
+    if (rules.required !== undefined) {
+      const requiredValidator = ValidatorFactory.createValidator(
+        "required",
+        { ...this.errorParams, displayName: display },
+        display,
+        value,
+        rules.required,
+        formData,
+      );
 
-      // Use ValidatorFactory with the same errorParams
+      if (requiredValidator) {
+        const error = requiredValidator.validate(formData);
+        if (error) return error;
+      }
+    }
+
+    // Check other rules
+    for (const [ruleName, ruleValue] of Object.entries(rules)) {
+      if (
+        ruleName === "display" ||
+        ruleName === "array" ||
+        ruleName === "items" ||
+        ruleName === "required"
+      )
+        continue;
+
       const validator = ValidatorFactory.createValidator(
         ruleName,
-        this.errorParams, // Pass the same errorParams
+        { ...this.errorParams, displayName: display },
         display,
         value,
         ruleValue,
@@ -75,12 +97,10 @@ export default class ItemsValidator extends BaseValidator {
 
       if (validator) {
         const error = validator.validate(formData);
-        logger.debug(error);
-        if (error) {
-          return error; // This will be a formatted error message using errorParams
-        }
+        if (error) return error;
       }
     }
+
     return null;
   }
 

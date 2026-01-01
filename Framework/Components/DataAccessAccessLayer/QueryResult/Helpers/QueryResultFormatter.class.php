@@ -16,67 +16,120 @@ class QueryResultFormatter
 
     public function asArray(): mixed
     {
+        // Configure and execute once
+        $this->config->setFetchMode('array');
         $this->queryResult->execute(['mode' => 'array']);
 
-        return match ($this->queryResult->getOperation()) {
-            'all' => $this->queryResult->all(),
-            'first' => $this->queryResult->first(),
-            'single' => $this->queryResult->single(),
-            'last' => $this->queryResult->last(),
-            default => $this->queryResult->all()
-        };
+        // Get results based on operation
+        $operation = $this->queryResult->getOperation();
+
+        return $this->getResultsByOperation($operation);
     }
 
-    public function asClass(?string $entityClass = null, array $joinConfig = []): mixed
+    public function asClass(?string $entityClass = null): mixed
     {
-        $entityClass = $entityClass ?? $this->queryResult->getEntity()::class;
-        $this->queryResult->execute(['mode' => 'class', 'class' => $entityClass,
-            'constructor_args' => $this->config->getConstructorArgs(),
-        ]);
+        $entityClass = $entityClass ?? $this->queryResult->getEntity();
 
-        return match ($this->queryResult->getOperation()) {
-            'all' => $this->queryResult->all(),
-            'first' => $this->queryResult->first(),
-            'single' => $this->queryResult->single(),
-            'last' => $this->queryResult->last(),
-            default => $this->queryResult->all()
-        };
+        // Temporarily update config
+        $originalClassName = $this->config->getClassName();
+        $originalMode = $this->config->getFetchMode();
+
+        try {
+            $this->config->setFetchMode('class');
+            $this->config->setClassName($entityClass);
+
+            $this->queryResult->execute([
+                'mode' => 'class',
+                'class' => $entityClass,
+                'constructor_args' => $this->config->getConstructorArgs(),
+            ]);
+
+            $operation = $this->queryResult->getOperation();
+            return $this->getResultsByOperation($operation);
+        } finally {
+            $this->config->setClassName($originalClassName);
+            $this->config->setFetchMode($originalMode);
+        }
     }
 
     public function asColumn(int $columnIndex = 0): array
     {
-        $this->queryResult->execute(['mode' => 'column', 'constructor_args' => [$columnIndex]]);
-        return $this->queryResult->all();
+        // Save original state
+        $originalMode = $this->config->getFetchMode();
+        $originalClassName = $this->config->getClassName();
+        $originalConstructorArgs = $this->config->getConstructorArgs();
+
+        try {
+            // Configure for column fetch
+            $this->config->setFetchMode('column');
+            $this->config->setClassName(null);
+            $this->config->setConstructorArgs([$columnIndex]);
+
+            $this->queryResult->execute(['mode' => 'column']);
+
+            // Direct column fetch
+            return $this->queryResult->fetchColumn($columnIndex);
+        } finally {
+            // Restore original state
+            $this->config->setFetchMode($originalMode);
+            $this->config->setClassName($originalClassName);
+            $this->config->setConstructorArgs($originalConstructorArgs);
+        }
     }
 
     public function asKeyPairs(): array
     {
-        $this->queryResult->execute(['mode' => 'key_pair']);
-        return $this->queryResult->all();
+        // Save original state
+        $originalMode = $this->config->getFetchMode();
+
+        try {
+            $this->config->setFetchMode('key_pair');
+            $this->queryResult->execute(['mode' => 'key_pair']);
+
+            // Direct key pairs fetch
+            return $this->queryResult->fetchKeyPairs();
+        } finally {
+            $this->config->setFetchMode($originalMode);
+        }
     }
 
     public function asObject(): mixed
     {
+        $this->config->setFetchMode('object');
         $this->queryResult->execute(['mode' => 'object']);
 
-        return match ($this->queryResult->getOperation()) {
-            'all' => $this->queryResult->all(),
-            'first' => $this->queryResult->first(),
-            'single' => $this->queryResult->single(),
-            'last' => $this->queryResult->last(),
-            default => $this->queryResult->all()
-        };
+        $operation = $this->queryResult->getOperation();
+        return $this->getResultsByOperation($operation);
+    }
+
+    public function count(): int
+    {
+        // For COUNT(*) queries, use column fetch
+        $columnResults = $this->asColumn(0);
+
+        if (!empty($columnResults) && is_numeric($columnResults[0])) {
+            return (int) $columnResults[0];
+        }
+
+        // Fallback to row count
+        return $this->queryResult->getRowCount();
+    }
+
+    public function setTableAlias(array $tableAlias): self
+    {
+        $this->tableAlias = $tableAlias;
+        return $this;
     }
 
     /**
-     * @param array $tableAlias
-     *
-     * @return QueryResultFormatter
+     * Helper method to get results based on operation type.
      */
-    public function setTableAlias(array $tableAlias): QueryResultFormatter
+    private function getResultsByOperation(string $operation): mixed
     {
-        $this->tableAlias = $tableAlias;
-
-        return $this;
+        return match ($operation) {
+            'first', 'single' => $this->queryResult->first(),
+            'last' => $this->queryResult->last(),
+            default => $this->queryResult->all()
+        };
     }
 }

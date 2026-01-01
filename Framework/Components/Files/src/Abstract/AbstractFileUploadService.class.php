@@ -22,6 +22,7 @@ abstract class AbstractFileUploadService implements FileUploadComponentInterface
 
     public function __construct(
         protected FileMoverService $fileMover,
+        protected FileMetadataService $metadataService,
         Request $request,
         ?string $fieldName = null,
     ) {
@@ -177,19 +178,10 @@ abstract class AbstractFileUploadService implements FileUploadComponentInterface
         return $this->isTemporary;
     }
 
-    /**
-     * Deletes temporary files based on a list of absolute paths.
-     * Used to clean up *all* temporary files that were previously uploaded
-     * but were not part of the final, permanent move.
-     *
-     * @param array<string> $absolutePaths The absolute paths of files to delete.
-     */
     public function deleteAbsoluteTempFiles(array $absolutePaths): void
     {
         foreach ($absolutePaths as $tempPath) {
-            // ESSENTIAL SECURITY CHECK: Only delete files that are inside the dedicated temp directory.
             if (str_starts_with($tempPath, $this->getTempDirectory()) && file_exists($tempPath)) {
-                // Use @ to suppress errors if the file was already deleted by another process (or the permanent move).
                 @unlink($tempPath);
             }
         }
@@ -225,33 +217,7 @@ abstract class AbstractFileUploadService implements FileUploadComponentInterface
         if (empty($this->fileInformation)) {
             return [];
         }
-
-        $fileInfo = [];
-        /** @var FileInformation $fileInfoObj */
-        foreach ($this->fileInformation as $fileInfoObj) {
-            $fileInfo[] = [
-                'web_path' => $fileInfoObj->getWebPath(),
-                'url' => $fileInfoObj->getUrl(),
-                'relative_path' => $fileInfoObj->getRelativePath(),
-                'absolute_path' => $fileInfoObj->getPathname(),
-                'size' => $fileInfoObj->getSize(),
-                'formatted_size' => $fileInfoObj->getFormattedSize(),
-                'mime_type' => $fileInfoObj->getMimeType(),
-                'file_type' => $fileInfoObj->getFileTypeDescription(),
-                'filename' => $fileInfoObj->getFilename(),
-                'extension' => $fileInfoObj->getExtension(),
-                'created_at' => $fileInfoObj->getCreatedAt(),
-                'modified_at' => $fileInfoObj->getModifiedAt(),
-                'hash' => $fileInfoObj->getHash(),
-                'is_image' => $fileInfoObj->isImage(),
-                'is_safe' => $fileInfoObj->isSafeForUpload(),
-                'is_temporary' => $fileInfoObj->isTemporary(),
-                'is_in_storage' => $fileInfoObj->isInStorage(),
-                'is_in_uploads' => $fileInfoObj->isInUploads(),
-            ];
-        }
-
-        return $fileInfo;
+        return $this->metadataService->getBatchMetadata($this->fileInformation);
     }
 
     public function isTempFile(string $path): bool
@@ -282,7 +248,6 @@ abstract class AbstractFileUploadService implements FileUploadComponentInterface
         foreach ($this->errors as $field => $errors) {
             $friendlyErrors[$field] = [];
             foreach ($errors as $error) {
-                // ONLY handle PHP/system errors now
                 if (str_contains($error, 'partially uploaded')) {
                     $friendlyErrors[$field][] = 'File was only partially uploaded';
                 } elseif (str_contains($error, 'No file was uploaded')) {
@@ -292,8 +257,6 @@ abstract class AbstractFileUploadService implements FileUploadComponentInterface
                 } elseif (str_contains($error, 'write file') || str_contains($error, 'move file')) {
                     $friendlyErrors[$field][] = 'Unable to save file';
                 } else {
-                    // For any other errors, just pass them through
-                    // These should be VALIDATION errors from the Validator system
                     $friendlyErrors[$field][] = $error;
                 }
             }
@@ -316,7 +279,6 @@ abstract class AbstractFileUploadService implements FileUploadComponentInterface
     {
         if ($this->mediaPaths) {
             foreach ($this->mediaPaths as $webPath) {
-                // Convert web path back to absolute path for deletion
                 $absolutePath = $this->webPathToAbsolutePath($webPath);
                 if (file_exists($absolutePath)) {
                     unlink($absolutePath);
@@ -347,34 +309,12 @@ abstract class AbstractFileUploadService implements FileUploadComponentInterface
 
     public function getFileMetadata(): array
     {
-        $metadata = [];
-        $uploadedFiles = $this->getUploadedFileInfo();
         $fieldName = rtrim($this->fieldName, '[]');
-        if (!empty($uploadedFiles)) {
-            // Don't nest under field name - return files directly
-            foreach ($uploadedFiles as $fileInfo) {
-                $metadata[] = [
-                    'original_name' => $fileInfo['filename'],
-                    'display_name' => pathinfo($fileInfo['filename'], PATHINFO_FILENAME),
-                    'size' => $fileInfo['size'],
-                    'mime_type' => $fileInfo['mime_type'],
-                    'web_path' => $fileInfo['web_path'],
-                    'upload_infos' => $fileInfo,
-                    'metadata' => [
-                        'mime_type' => $fileInfo['mime_type'],
-                        'is_image' => $fileInfo['is_image'],
-                        'is_temporary' => $fileInfo['is_temporary'],
-                        'is_in_storage' => $fileInfo['is_in_storage'],
-                        'is_in_uploads' => $fileInfo['is_in_uploads'],
-                        'has_error' => false,
-                        'error' => null,
-                    ],
-                    'intended_field' => $fieldName, // Keep track of which field this belongs to
-                ];
-            }
-        }
 
-        return $metadata;
+        return $this->metadataService->getBatchMetadata(
+            $this->fileInformation ?? [],
+            $fieldName,
+        );
     }
 
     public function makePermanent(): bool

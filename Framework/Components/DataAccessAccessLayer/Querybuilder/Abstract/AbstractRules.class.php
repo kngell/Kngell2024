@@ -60,7 +60,7 @@ abstract class AbstractRules
         $method = $this->method;
 
         // Check for explicit operator
-        if (isset($conditions[1]) && is_string($conditions[1]) && Operator::exists(trim($conditions[1]))) {
+        if (isset($conditions[1]) && is_string($conditions[1]) && SqlOperator::exists(trim($conditions[1]))) {
             $op = $conditions[1];
             unset($conditions[1]);
             $conditions = array_values($conditions);
@@ -68,7 +68,7 @@ abstract class AbstractRules
         }
 
         // Use enum mapping
-        $operator = Operator::getOp($method);
+        $operator = SqlBuilderMethodRegistry::getDefaultOperator($method);
         if (!$operator) {
             throw new BadQueryArgumentException(
                 "The query method '{$method}' does not have a mapped operator",
@@ -88,7 +88,7 @@ abstract class AbstractRules
         return ' ' . $link->name . ' ';
     }
 
-    protected function prepareSubQueryState(SqlQueryComponent $component): void
+    protected function prepareSubQueryState(SqlComponent $component): void
     {
         $subqueryState = new QueryState(
             tableAlias: $this->state->tableAlias,
@@ -105,7 +105,7 @@ abstract class AbstractRules
         $component->initializeWithDependencies($this->em->getTableAliasHelper(), $subqueryState);
     }
 
-    protected function mergeSubQueryState(SqlQueryComponent $component): void
+    protected function mergeSubQueryState(SqlComponent $component): void
     {
         $this->state = $this->state->merge($component->getState());
     }

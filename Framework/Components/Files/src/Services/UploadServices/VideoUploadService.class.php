@@ -9,10 +9,11 @@ class VideoUploadService extends AbstractFileUploadService
     public function __construct(
         private VideoProcessor $videoProcessor,
         FileMoverService $fileMover,
+        FileMetadataService $metadataService,
         Request $request,
         ?string $fieldName = null,
     ) {
-        parent::__construct($fileMover, $request, $fieldName);
+        parent::__construct($fileMover, $metadataService, $request, $fieldName);
     }
 
     public function getStorageBaseDirectory(

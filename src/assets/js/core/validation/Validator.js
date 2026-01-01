@@ -1,5 +1,6 @@
 import BrowserLogger from "js/utils/logger";
 import ValidatorFactory from "js/core/validation/factory/ValidatorFactory";
+import { ValidationUtils } from "js/core/validation/utils/ValidationUtils";
 
 const logger = new BrowserLogger("Validator");
 
@@ -15,44 +16,9 @@ export default class Validator {
     });
   }
 
-  // validateField(fieldName) {
-  //   const fieldRules = this.getFieldRules(fieldName);
-  //   const value = this.formData[fieldName];
-
-  //   delete this.errors[fieldName];
-
-  //   if (!fieldRules) {
-  //     return true;
-  //   }
-
-  //   let isValid = true;
-
-  //   // Process ALL rules except 'display'
-  //   for (const [ruleName, ruleValue] of Object.entries(fieldRules)) {
-  //     if (ruleName === "display") continue;
-
-  //     const validator = this.createValidator(ruleName, fieldName, value, ruleValue);
-  //     if (validator) {
-  //       try {
-  //         const error = validator.validate(this.formData);
-  //         if (error) {
-  //           this.errors[fieldName] = error;
-  //           isValid = false;
-  //           break;
-  //         }
-  //       } catch (error) {
-  //         logger.error("Validator error", error, { fieldName, ruleName });
-  //       }
-  //     }
-  //   }
-
-  //   return isValid;
-  // }
   validateField(fieldName) {
     const fieldRules = this.getFieldRules(fieldName);
     const value = this.formData[fieldName];
-
-    delete this.errors[fieldName];
 
     if (!fieldRules) {
       return true;
@@ -60,215 +26,124 @@ export default class Validator {
 
     let isValid = true;
 
-    logger.debug("🔍 Validating field:", {
-      fieldName,
-      fieldRules: Object.keys(fieldRules),
-      hasMaxFiles: !!fieldRules.max_files,
-      maxFilesValue: fieldRules.max_files,
-      value,
-      valueType: typeof value,
-      isFileList: value instanceof FileList,
-      fileCount: value?.length || 0,
-    });
-
-    // Process ALL rules except 'display'
     for (const [ruleName, ruleValue] of Object.entries(fieldRules)) {
       if (ruleName === "display") continue;
-
-      logger.debug("🔄 Processing rule:", {
-        fieldName,
-        ruleName,
-        ruleValue,
-        value,
-      });
 
       const validator = this.createValidator(ruleName, fieldName, value, ruleValue);
       if (validator) {
         try {
           const error = validator.validate(this.formData);
           if (error) {
-            this.errors[fieldName] = error;
+            const errorKey = error.fieldPath || fieldName;
+            delete this.errors[errorKey];
+            this.errors[errorKey] = error;
             isValid = false;
-            logger.debug("❌ Validation failed:", {
-              fieldName,
-              ruleName,
-              error,
-            });
             break;
-          } else {
-            logger.debug("✅ Rule passed:", ruleName);
           }
         } catch (error) {
           logger.error("Validator error", error, { fieldName, ruleName });
         }
-      } else {
-        logger.debug("⚠️ No validator found for rule:", ruleName);
       }
     }
 
     return isValid;
   }
+
   getFieldDisplayName(fieldName) {
-    // Try to find display name in nested rules structure
-    const findDisplayInRules = (rules, pathParts) => {
-      if (pathParts.length === 0) return null;
-
-      const currentPart = pathParts[0];
-      const remainingParts = pathParts.slice(1);
-
-      // Skip numeric array indices
-      if (!isNaN(currentPart)) {
-        return findDisplayInRules(rules, remainingParts);
-      }
-
-      // Check if current part exists in rules
-      if (rules && rules[currentPart]) {
-        // If we have display name and no more parts, return it
-        if (rules[currentPart].display && remainingParts.length === 0) {
-          return rules[currentPart].display;
-        }
-
-        // If we have items rules, search deeper
-        if (rules[currentPart].items && rules[currentPart].items.rules) {
-          return findDisplayInRules(rules[currentPart].items.rules, remainingParts);
-        }
-
-        // If we have direct rules (for nested objects), search deeper
-        if (rules[currentPart].rules) {
-          return findDisplayInRules(rules[currentPart].rules, remainingParts);
-        }
-
-        // If current part has display but we have more parts, continue searching
-        if (remainingParts.length > 0) {
-          return findDisplayInRules(rules[currentPart], remainingParts);
-        }
-      }
-
-      return null;
-    };
-
-    // Parse field name like "variations[0][attributes][0][attribute_name]"
-    const pathParts = fieldName.split(/[\[\]]+/).filter((part) => part !== "");
-
-    // Try to find display name in nested structure
-    const displayName = findDisplayInRules(this.rules, pathParts);
-
-    if (displayName) {
-      return displayName;
-    }
-
-    // Fallback: try to get from field rules directly
-    const fieldRules = this.getFieldRules(fieldName);
-    if (fieldRules && fieldRules.display) {
-      return fieldRules.display;
-    }
-
-    // Final fallback: format the field name
-    return this.formatDisplayName(fieldName);
+    return this.findDisplayInRules(fieldName) || this.formatDisplayName(fieldName);
   }
 
   getFieldRules(fieldName) {
     logger.debug("🔍 getFieldRules called for:", fieldName);
 
-    // Direct field rules (like "name", "sku")
+    // Direct field rules
     if (this.rules[fieldName]) {
       logger.debug("✅ Found direct rules for:", fieldName);
       return this.rules[fieldName];
     }
 
-    // Parse deeply nested field names like: variations[0][attributes][0][attribute_name]
-    const deeplyNestedMatch = this.parseDeeplyNestedFieldName(fieldName);
-    if (deeplyNestedMatch) {
-      const { arrayName, index, nestedArrayName, nestedIndex, field } = deeplyNestedMatch;
+    // Try deeply nested first
+    const deeplyNestedRules = this.getDeeplyNestedRules(fieldName);
+    if (deeplyNestedRules) return deeplyNestedRules;
 
-      logger.debug("🎯 Deeply nested field detected:", deeplyNestedMatch);
-
-      // Check if we have array rules with items
-      const arrayRules = this.rules[arrayName];
-      if (arrayRules && arrayRules.items && arrayRules.items.rules) {
-        // Check for nested array rules (attributes array within variations)
-        const nestedArrayRules = arrayRules.items.rules[nestedArrayName];
-        if (nestedArrayRules && nestedArrayRules.items && nestedArrayRules.items.rules) {
-          const fieldRules = nestedArrayRules.items.rules[field];
-          logger.debug("✅ Found deeply nested rules for:", {
-            arrayName,
-            nestedArrayName,
-            field,
-            fieldRules,
-          });
-          return fieldRules;
-        }
-      }
-    }
-
-    // Parse regular nested field names like: variations[0][name]
-    const nestedMatch = this.parseNestedFieldName(fieldName);
-    if (nestedMatch) {
-      const { arrayName, index, field } = nestedMatch;
-
-      // Check if we have array rules with items
-      const arrayRules = this.rules[arrayName];
-      if (arrayRules && arrayRules.items && arrayRules.items.rules) {
-        const fieldRules = arrayRules.items.rules[field];
-        logger.debug("✅ Found nested rules for:", { arrayName, field, fieldRules });
-        return fieldRules;
-      }
-    }
+    // Try regular nested
+    const nestedRules = this.getNestedRules(fieldName);
+    if (nestedRules) return nestedRules;
 
     logger.debug("❌ No rules found for:", fieldName);
     return null;
   }
-  parseDeeplyNestedFieldName(fieldName) {
-    // Match patterns like: variations[0][attributes][0][attribute_name]
-    const deeplyNestedRegex = /^(\w+)\[(\d+)\]\[(\w+)\]\[(\d+)\]\[(\w+)\]/;
-    const match = fieldName.match(deeplyNestedRegex);
 
-    if (match) {
-      const result = {
-        arrayName: match[1], // "variations"
-        index: match[2], // "0"
-        nestedArrayName: match[3], // "attributes"
-        nestedIndex: match[4], // "0"
-        field: match[5], // "attribute_name" or "attribute_value"
-      };
-      logger.debug("✅ Parsed as deeply nested field:", result);
-      return result;
+  // Helper methods for rule extraction
+  getDeeplyNestedRules(fieldName) {
+    const match = this.parseDeeplyNestedFieldName(fieldName);
+    if (!match) return null;
+
+    const { arrayName, nestedArrayName, field } = match;
+    const arrayRules = this.rules[arrayName];
+
+    if (arrayRules?.items?.rules?.[nestedArrayName]?.items?.rules?.[field]) {
+      logger.debug("✅ Found deeply nested rules:", { arrayName, nestedArrayName, field });
+      return arrayRules.items.rules[nestedArrayName].items.rules[field];
     }
 
     return null;
   }
-  parseNestedFieldName(fieldName) {
-    logger.debug("🔄 Parsing nested field:", fieldName);
 
-    // Handle bracket notation: variations[0][name]
-    const bracketRegex = /^(\w+)\[(\d+)\]\[(\w+)\]/;
-    let match = fieldName.match(bracketRegex);
+  getNestedRules(fieldName) {
+    const match = this.parseNestedFieldName(fieldName);
+    if (!match) return null;
 
-    if (match) {
-      const result = {
-        arrayName: match[1],
-        index: match[2],
-        field: match[3],
-      };
-      logger.debug("✅ Parsed as bracket notation:", result);
-      return result;
+    const { arrayName, field } = match;
+    const arrayRules = this.rules[arrayName];
+
+    if (arrayRules?.items?.rules?.[field]) {
+      logger.debug("✅ Found nested rules:", { arrayName, field });
+      return arrayRules.items.rules[field];
     }
 
-    // Handle dot notation: variations[0].name
-    const dotRegex = /^(\w+)\[(\d+)\]\.(\w+)/;
-    match = fieldName.match(dotRegex);
+    return null;
+  }
 
-    if (match) {
-      const result = {
-        arrayName: match[1],
-        index: match[2],
-        field: match[3],
-      };
-      logger.debug("✅ Parsed as dot notation:", result);
-      return result;
+  findDisplayInRules(fieldName) {
+    const pathParts = fieldName.split(/[\[\]]+/).filter((part) => part !== "");
+    return this.traverseRulesForDisplay(this.rules, pathParts);
+  }
+
+  traverseRulesForDisplay(rules, pathParts) {
+    if (pathParts.length === 0 || !rules) return null;
+
+    const currentPart = pathParts[0];
+    const remainingParts = pathParts.slice(1);
+
+    // Skip numeric array indices
+    if (!isNaN(currentPart)) {
+      return this.traverseRulesForDisplay(rules, remainingParts);
     }
 
-    logger.debug("❌ Could not parse field name:", fieldName);
+    const currentRules = rules[currentPart];
+    if (!currentRules) return null;
+
+    // Found display name at this level
+    if (currentRules.display && remainingParts.length === 0) {
+      return currentRules.display;
+    }
+
+    // Check items rules for arrays
+    if (currentRules.items?.rules) {
+      return this.traverseRulesForDisplay(currentRules.items.rules, remainingParts);
+    }
+
+    // Check nested rules
+    if (currentRules.rules) {
+      return this.traverseRulesForDisplay(currentRules.rules, remainingParts);
+    }
+
+    // Continue deeper if more parts exist
+    if (remainingParts.length > 0) {
+      return this.traverseRulesForDisplay(currentRules, remainingParts);
+    }
+
     return null;
   }
 
@@ -276,9 +151,11 @@ export default class Validator {
     const display = this.getFieldDisplayName(fieldName);
     const messageTemplate = this.getMessageTemplate(ruleName);
     const classes = this.getErrorClasses();
+
     const errorParams = {
       message: messageTemplate,
-      classes: classes,
+      classes,
+      fieldName: fieldName,
     };
 
     return ValidatorFactory.createValidator(
@@ -291,6 +168,59 @@ export default class Validator {
     );
   }
 
+  validateAll() {
+    this.errors = {};
+    let isValid = true;
+
+    // Get unique field names (avoid duplicates)
+    const uniqueFieldNames = new Set();
+
+    Object.keys(this.formData).forEach((fieldName) => {
+      // Skip dot notation if bracket notation exists
+      if (fieldName.includes(".")) {
+        const bracketVersion = fieldName.replace(/\.(\w+)/g, "[$1]");
+        if (this.formData[bracketVersion] !== undefined) {
+          return; // Skip dot notation, use bracket instead
+        }
+      }
+      uniqueFieldNames.add(fieldName);
+    });
+
+    // Validate only unique field names
+    Array.from(uniqueFieldNames).forEach((fieldName) => {
+      if (!this.validateField(fieldName)) {
+        isValid = false;
+      }
+    });
+
+    logger.debug("Validation completed", {
+      isValid,
+      errorCount: Object.keys(this.errors).length,
+      errorKeys: Object.keys(this.errors),
+    });
+
+    return isValid;
+  }
+
+  // validateAll() {
+  //   this.errors = {};
+  //   let isValid = true;
+
+  //   Object.keys(this.formData).forEach((fieldName) => {
+  //     if (!this.validateField(fieldName)) {
+  //       isValid = false;
+  //     }
+  //   });
+
+  //   logger.debug("Validation completed", {
+  //     isValid,
+  //     errorCount: Object.keys(this.errors).length,
+  //   });
+
+  //   return isValid;
+  // }
+
+  // Getter methods (no logic changes needed)
   getMessageTemplate(ruleName) {
     return this.globalSettings.messages?.[ruleName] || this.getDefaultMessage(ruleName);
   }
@@ -315,31 +245,66 @@ export default class Validator {
       lte: "%s must be less than or equal to %s.",
       gte: "%s must be greater than or equal to %s.",
       required_if: "%s is required when %s is present.",
+      array: "%s must be an array.",
+      max_items: "%s cannot have more than %s items.",
+      max_files: "%s cannot have more than %s files.",
+      file_size: "%s file size exceeds the limit.",
+      upload_limit: "%s exceeds upload limit.",
+      post_limit: "%s exceeds post limit.",
+      mimes: "%s file type is not allowed.",
       default: "%s is invalid.",
     };
 
     return defaultMessages[ruleName] || defaultMessages.default;
   }
 
-  validateAll() {
-    this.errors = {};
-    let isValid = true;
+  // Utility methods
+  parseDeeplyNestedFieldName(fieldName) {
+    const deeplyNestedRegex = /^(\w+)\[(\d+)\]\[(\w+)\]\[(\d+)\]\[(\w+)\]/;
+    const match = fieldName.match(deeplyNestedRegex);
+    return match
+      ? {
+          arrayName: match[1],
+          index: match[2],
+          nestedArrayName: match[3],
+          nestedIndex: match[4],
+          field: match[5],
+        }
+      : null;
+  }
 
-    const allFieldNames = Object.keys(this.formData);
+  parseNestedFieldName(fieldName) {
+    // Handle bracket notation: variations[0][name]
+    const bracketRegex = /^(\w+)\[(\d+)\]\[(\w+)\]/;
+    let match = fieldName.match(bracketRegex);
 
-    // Validate each field
-    allFieldNames.forEach((fieldName) => {
-      if (!this.validateField(fieldName)) {
-        isValid = false;
-      }
-    });
+    if (match) {
+      return {
+        arrayName: match[1],
+        index: match[2],
+        field: match[3],
+      };
+    }
 
-    logger.debug("Validation completed", {
-      isValid,
-      errorCount: Object.keys(this.errors).length,
-    });
+    // Handle dot notation: variations[0].name
+    const dotRegex = /^(\w+)\[(\d+)\]\.(\w+)/;
+    match = fieldName.match(dotRegex);
 
-    return isValid;
+    if (match) {
+      return {
+        arrayName: match[1],
+        index: match[2],
+        field: match[3],
+      };
+    }
+
+    return null;
+  }
+
+  formatDisplayName(fieldName) {
+    return fieldName
+      .replace(/[_\-]/g, " ")
+      .replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
   }
 
   getErrors() {
@@ -352,24 +317,5 @@ export default class Validator {
     } else {
       this.errors = {};
     }
-  }
-
-  formatDisplayName(fieldName) {
-    return fieldName
-      .replace(/[_\-]/g, " ")
-      .replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
-  }
-
-  isEmpty(value) {
-    if (value === null || value === undefined || value === "" || value === "[]") {
-      return true;
-    }
-    if (Array.isArray(value) && value.length === 0) {
-      return true;
-    }
-    if (typeof value === "string" && value.trim() === "") {
-      return true;
-    }
-    return false;
   }
 }

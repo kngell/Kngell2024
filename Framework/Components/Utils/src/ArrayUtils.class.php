@@ -46,8 +46,6 @@ final readonly class ArrayUtils
             return true;
         }
         return empty($value);
-        // Customize what you consider "empty"
-        // return empty($value) && $value !== 0 && $value !== '0' && $value !== false;
     }
 
     public static function isAssoc(array $array): bool
@@ -89,10 +87,6 @@ final readonly class ArrayUtils
         return $flatArray;
     }
 
-    /**
-     * Flatten array with proper form field names
-     * Handles nested arrays and ensures proper bracket notation.
-     */
     public static function flattenWithKeys(array $array, string $prefix = ''): array
     {
         $result = [];
@@ -118,6 +112,16 @@ final readonly class ArrayUtils
         return $result;
     }
 
+    public static function containsOnlyInstancesOf(array $array, string $className): bool
+    {
+        foreach ($array as $item) {
+            if (!$item instanceof $className) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     public static function expandFromKeys(array $flatArray): array
     {
         $result = [];
@@ -137,6 +141,39 @@ final readonly class ArrayUtils
         }
 
         return self::flattenToSequential($array);
+    }
+
+    public static function isLikeKeyValuePair(array $data): bool
+    {
+        if (count($data) % 2 !== 0) {
+            return true;
+        }
+        return false;
+    }
+
+    public static function isKeyValueList(array $data): bool
+    {
+        $count = count($data);
+        if ($count % 2 !== 0 || $count < 2) {
+            return false;
+        }
+        for ($i = 0; $i < $count; $i += 2) {
+            if (!is_string($data[$i])) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public static function fromSequentialToAssoc(array $data): array
+    {
+        $result = [];
+        for ($i = 0; $i < count($data); $i += 2) {
+            $result[$data[$i]] = $data[$i + 1];
+        }
+
+        return $result;
     }
 
     public static function isStringList(array $array): bool
@@ -169,9 +206,21 @@ final readonly class ArrayUtils
         return true;
     }
 
-    /**
-     * Check if array is sequential (numeric keys starting from 0).
-     */
+    public static function isArrayList(array $array): bool
+    {
+        if (!array_is_list($array)) {
+            return false;
+        }
+
+        foreach ($array as $value) {
+            if (!is_array($value) || !self::isAssoc($value)) {
+                return false;
+            }
+        }
+
+        return !empty($array);
+    }
+
     public static function isSequential(array $arr): bool
     {
         if (empty($arr)) {
@@ -288,7 +337,7 @@ final readonly class ArrayUtils
     public static function filterSystemFields(array $data): array
     {
         $systemFields = [
-            'csrfToken', 'frm_name', 'public_id', 'form_name',
+            'csrfToken', 'frm_name', 'form_name',
             'form_action', '_token', '_method', 'submit',
         ];
 
@@ -336,12 +385,14 @@ final readonly class ArrayUtils
     private static function flattenAssociativeArray(array $assocArray): array
     {
         $result = [];
-
         foreach ($assocArray as $key => $value) {
             if (is_string($key)) {
                 // Add both key and value as separate elements
                 $result[] = $key;
                 $result[] = $value;
+                if (is_array($value) && self::isSequential($value)) {
+                    return $result;
+                }
             } else {
                 // Numeric key - recursive flatten
                 $result = array_merge($result, self::flattenToSequential([$value]));
@@ -357,7 +408,6 @@ final readonly class ArrayUtils
 
         foreach ($array as $value) {
             if (!is_array($value)) {
-                // Simple value - add directly
                 $result[] = $value;
                 continue;
             }
@@ -365,6 +415,13 @@ final readonly class ArrayUtils
             if (self::isAssoc($value)) {
                 // Associative array - flatten key-value pairs
                 $result = array_merge($result, self::flattenAssociativeArray($value));
+            } elseif (self::isSequential($value) && count($value) === 2) {
+                if (is_string($value[0]) && is_array($value[1])) {
+                    if (self::isSequential($value[1]) || self::isStringList($value[1])) {
+                        return $value;
+                    }
+                }
+                $result = $value;
             } else {
                 // Sequential array - recursive flatten
                 $result = array_merge($result, self::flattenToSequential($value));

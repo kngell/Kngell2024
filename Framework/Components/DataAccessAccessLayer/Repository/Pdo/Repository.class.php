@@ -49,6 +49,10 @@ class Repository implements RepositoryInterface
         }
     }
 
+    public function findByIds(array $conditions = [], ?int $limit = null, ?int $offset = null, ?string $keyField = null): void
+    {
+    }
+
     public function findOneBy(array $conditions = []): void
     {
         if ($this->isArray($conditions)) {
@@ -97,6 +101,20 @@ class Repository implements RepositoryInterface
         }
     }
 
+    public function count(array $conditions): void
+    {
+        $this->em->createQueryBuilder()->select('count(*) As totalRecords')->where($conditions)->build();
+    }
+
+    protected function isArray(array $conditions): bool
+    {
+        if (!is_array($conditions)) {
+            throw new RepositoryInvalidArgumentException('Argument Supplied is not an array');
+        }
+
+        return true;
+    }
+
     private function conditions(array|string $conditions): array
     {
         if (empty($conditions)) {
@@ -105,15 +123,6 @@ class Repository implements RepositoryInterface
             $conditions = [$fieldId => $value];
         }
         return $conditions;
-    }
-
-    private function isArray(array $conditions): bool
-    {
-        if (!is_array($conditions)) {
-            throw new RepositoryInvalidArgumentException('Argument Supplied is not an array');
-        }
-
-        return true;
     }
 
     private function isEmpty(int|string $id): bool

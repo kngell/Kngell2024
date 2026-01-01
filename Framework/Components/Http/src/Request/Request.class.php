@@ -130,6 +130,13 @@ final readonly class Request
         return $this->requestedUri;
     }
 
+    public function getPathFromUri(): string
+    {
+        $parts = parse_url($this->getRequestedUri());
+
+        return $parts['path'] ?? '/';
+    }
+
     public function getRequestStartTime(): float
     {
         return $this->requestStartTime;
@@ -199,13 +206,13 @@ final readonly class Request
             if ($ip && filter_var($ip, FILTER_VALIDATE_IP)) {
                 if ($header === 'HTTP_X_FORWARDED_FOR' && str_contains($ip, ',')) {
                     $ips = explode(',', $ip);
-                    return trim($ips[0]); 
+                    return trim($ips[0]);
                 }
                 return $ip;
             }
         }
 
-        return '127.0.0.1'; 
+        return '127.0.0.1';
     }
 
     public function hasRegionParameter(): bool

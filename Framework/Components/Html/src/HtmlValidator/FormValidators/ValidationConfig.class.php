@@ -20,62 +20,6 @@ final class ValidationConfig
         }
     }
 
-    public static function default(): self
-    {
-        return new self(
-            sanitizeInput: true,
-            stopOnFirstError: false,
-            validateAllFields: false,
-            skipMissingFields: true,
-            sanitizeHtml: true,
-        );
-    }
-
-    public static function stopOnFirstError(): self
-    {
-        return new self(
-            sanitizeInput: true,
-            stopOnFirstError: true,
-            validateAllFields: false,
-            skipMissingFields: true,
-            sanitizeHtml: true,
-        );
-    }
-
-    public static function withGroups(array $groups): self
-    {
-        return new self(
-            sanitizeInput: true,
-            stopOnFirstError: false,
-            validateAllFields: false,
-            skipMissingFields: true,
-            validationGroups: $groups,
-            sanitizeHtml: true,
-        );
-    }
-
-    public static function strict(): self
-    {
-        return new self(
-            sanitizeInput: true,
-            stopOnFirstError: false,
-            validateAllFields: true,
-            skipMissingFields: false,
-            sanitizeHtml: true,
-        );
-    }
-
-    public static function lenient(): self
-    {
-        return new self(
-            sanitizeInput: false,
-            stopOnFirstError: false,
-            validateAllFields: false,
-            skipMissingFields: true,
-            sanitizeHtml: false,
-        );
-    }
-
     // Getter methods
     public function shouldSanitizeInput(): bool
     {
@@ -218,6 +162,62 @@ final class ValidationConfig
             'sanitizeHtml' => $this->sanitizeHtml,
             'messages' => $this->messages,
         ];
+    }
+
+    public static function default(): self
+    {
+        return new self(
+            sanitizeInput: true,
+            stopOnFirstError: false,
+            validateAllFields: false,
+            skipMissingFields: true,
+            sanitizeHtml: true,
+        );
+    }
+
+    public static function stopOnFirstError(): self
+    {
+        return new self(
+            sanitizeInput: true,
+            stopOnFirstError: true,
+            validateAllFields: false,
+            skipMissingFields: true,
+            sanitizeHtml: true,
+        );
+    }
+
+    public static function withGroups(array $groups): self
+    {
+        return new self(
+            sanitizeInput: true,
+            stopOnFirstError: false,
+            validateAllFields: false,
+            skipMissingFields: true,
+            validationGroups: $groups,
+            sanitizeHtml: true,
+        );
+    }
+
+    public static function strict(): self
+    {
+        return new self(
+            sanitizeInput: true,
+            stopOnFirstError: false,
+            validateAllFields: true,
+            skipMissingFields: false,
+            sanitizeHtml: true,
+        );
+    }
+
+    public static function lenient(): self
+    {
+        return new self(
+            sanitizeInput: false,
+            stopOnFirstError: false,
+            validateAllFields: false,
+            skipMissingFields: true,
+            sanitizeHtml: false,
+        );
     }
 
     // Create from array with message service

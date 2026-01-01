@@ -10,3 +10,4 @@ xss: XSSProtectionMiddleware
 getUserCartFromCookie: GetUserCartFromCookieMiddleware
 selectPaymentType: SelectPaymentTypeMiddleware
 auth: AuthMiddleware
+cacheGarbageCollector: CacheGarbageCollectionMiddleware

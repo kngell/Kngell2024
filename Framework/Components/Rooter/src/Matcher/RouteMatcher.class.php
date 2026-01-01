@@ -4,72 +4,37 @@ declare(strict_types=1);
 
 use Ramsey\Collection\Exception\InvalidPropertyOrMethod;
 
-class RouteMatcher
+final class RouteMatcher
 {
-    private array $routes;
     private string $controllerSuffix = 'Controller';
 
-    /**
-     * @param array $routes
-     *
-     * @return void
-     */
-    public function __construct(RouteCollector $routeCollector)
-    {
-        $this->routes = $routeCollector->getRouteObjects();
+    public function __construct(
+        private RoutePatternRegistry $patternRegistry,
+        private ParameterAliasRegistry $aliasses,
+    ) {
     }
-
-    // public function match(Request $request, string $internalUrl): RouteInfo|null
-    // {
-    //     $routePath = $this->normalizeUrl($request, $internalUrl);
-    //     foreach ($this->routes as $route => $params) {
-    //         $pattern = $this->getPatternFromroutePath($route);
-    //         if (preg_match($pattern, $routePath, $matches)) {
-    //             $matches = array_merge(array_filter($matches, 'is_string', ARRAY_FILTER_USE_KEY), $params ?? []);
-    //             if (array_key_exists('httpMethod', $matches)) {
-    //                 $httpMethod = $request->getServer()->get('request_method');
-    //                 if (strtolower($httpMethod) !== strtolower($matches['httpMethod'])) {
-    //                     continue;
-    //                 }
-    //             }
-    //             return $this->routeInfo(
-    //                 $route,
-    //                 $pattern,
-    //                 $matches,
-    //                 $request,
-    //             );
-    //         }
-    //     }
-    //     return null;
-    // }
 
     public function match(Request $request, string $internalUrl): RouteInfo|null
     {
         try {
             $routePath = $this->normalizeUrl($request, $internalUrl);
 
-            foreach ($this->routes as $routePathKey => $route) {
-                // $routePathKey is the configured route path (e.g. '/{controller}/{method}')
-                $pattern = $this->getPatternFromroutePath($routePathKey);
+            $routes = $this->patternRegistry->getRouteObjects();
+            foreach ($routes as $routePathKey => $route) {
+                $pattern = $this->patternRegistry->getPhpPattern($routePathKey);
 
                 if (!preg_match($pattern, $routePath, $rawMatches)) {
                     continue;
                 }
 
-                // Keep only named captures (associative keys)
                 $namedMatches = array_filter($rawMatches, 'is_string', ARRAY_FILTER_USE_KEY);
 
-                // Determine controller and method: prefer explicit values from the Route object,
-                // otherwise fall back to the named captures from the URL.
                 $controller = $route->controller ?? ($namedMatches['controller'] ?? null);
                 $method = $route->method ?? ($namedMatches['method'] ?? null);
 
-                // Merge route properties with captured params. Named captures should override
-                // route defaults when present.
                 $routeParams = method_exists($route, 'toArray') ? $route->toArray() : [];
                 $mergedMatches = array_merge($routeParams, $namedMatches);
 
-                // Ensure controller/method are present in merged matches for downstream use
                 if ($controller !== null) {
                     $mergedMatches['controller'] = $controller;
                 }
@@ -77,7 +42,7 @@ class RouteMatcher
                     $mergedMatches['method'] = $method;
                 }
 
-                // Check HTTP method on the Route object
+                // Check HTTP method
                 if (method_exists($route, 'matchesMethod') && !$route->matchesMethod($request->getMethod())) {
                     continue;
                 }
@@ -91,47 +56,78 @@ class RouteMatcher
         }
     }
 
-    /**
-     * Analyze why a pattern doesn't match a URL.
-     */
-    private function analyzePatternMatch(string $pattern, string $url): void
-    {
-        // Debug helper removed
-    }
-
     private function routeInfo(Route $route, array $matches, Request $request): RouteInfo
     {
         $controller = $this->controller($route->controller, $matches);
         $method = $this->method($controller, $route->method, $matches);
 
+        $responseBody = $this->extractResponseBodyAttribute($method);
+        $responseStatus = $this->extractResponseStatusAttribute($method);
+
+        if ($responseBody === null) {
+            $responseBody = $this->responseBodyFromConfig($matches);
+        }
+        if ($responseStatus === null) {
+            $responseStatus = $this->responseStatusFromConfig($matches);
+        }
+
         return (new RouteInfosBuilder())
             ->withController($controller)
             ->withMethod($method)
-            ->withArguments($this->getRouteArguments($method->getParameters(), $matches))
+            ->withArguments($this->getRouteArguments($method->getParameters()))
             ->withRoutePattern($this->getPatternFromroutePath($route->path))
             ->withPath($this->stripPath($route->path))
             ->withHttpMethod($request->getMethod())
-            ->withResponseBody($route->responseBody)
-            ->withResponseStatus($route->responseStatus)
+            ->withResponseBody($responseBody)
+            ->withResponseStatus($responseStatus)
             ->withRouteParams($matches)
             ->build();
     }
-    // private function routeInfo(string $path, string $pattern, array $matches, Request $request): RouteInfo
-    // {
-    //     $controller = $this->controller($matches);
-    //     $method = $this->method($controller, $matches);
-    //     return  (new RouteInfosBuilder())
-    //         ->withController($controller)
-    //         ->withMethod($method)
-    //         ->withArguments($this->getRouteArguments($method->getParameters(), $matches))
-    //         ->withRoutePattern($pattern)
-    //         ->withPath($this->stripPath($path))
-    //         ->withHttpMethod($request->getMethod())
-    //         ->withResponseBody($this->responseBody($matches))
-    //         ->withResponseStatus($this->responseStatus($matches))
-    //         ->withRouteParams($matches)
-    //         ->build();
-    // }
+
+    private function extractResponseBodyAttribute(ReflectionMethod $method): ResponseBody|null
+    {
+        $attributes = $method->getAttributes(ResponseBody::class);
+
+        if (!empty($attributes)) {
+            return $attributes[0]->newInstance();
+        }
+
+        return null;
+    }
+
+    private function extractResponseStatusAttribute(ReflectionMethod $method): ResponseStatus|null
+    {
+        $attributes = $method->getAttributes(ResponseStatus::class);
+
+        if (!empty($attributes)) {
+            return $attributes[0]->newInstance();
+        }
+
+        return null;
+    }
+
+    private function responseBodyFromConfig(array $matches): ResponseBody|null
+    {
+        foreach ($matches as $key => $value) {
+            if (strtolower($key) === 'responsebody' && isset($value['type'])) {
+                $type = strtoupper($value['type']);
+                $produces = $value['produces'];
+                return new ResponseBody(ResponseBodyType::from($type), $produces);
+            }
+        }
+        return null;
+    }
+
+    private function responseStatusFromConfig(array $matches): ?ResponseStatus
+    {
+        foreach ($matches as $key => $value) {
+            if (strtolower($key) === 'responsestatus' && isset($value['HttpStatusCode'])) {
+                $statusCode = (int) $value;
+                return new ResponseStatus(HttpStatusCode::from($statusCode));
+            }
+        }
+        return null;
+    }
 
     /**
      * @param ReflectionParameter[] $parameters
@@ -142,32 +138,9 @@ class RouteMatcher
     {
         $args = [];
         foreach ($parameters as $parameter) {
-            $args[] = new RouteArguments($parameter);
+            $args[] = new RouteArguments($parameter, $this->aliasses);
         }
         return $args;
-    }
-
-    private function responseBody(array $matches): ResponseBody|null
-    {
-        foreach ($matches as $key => $value) {
-            if (strtolower($key) === 'responsebody') {
-                $type = strtoupper($value['type']);
-                $produces = $value['produces'];
-                return new ResponseBody(ResponseBodyType::from($type), $produces);
-            }
-        }
-        return null;
-    }
-
-    private function responseStatus(array $matches): ?ResponseStatus
-    {
-        foreach ($matches as $key => $value) {
-            if (strtolower($key) === 'responsestatus') {
-                $statusCode = (int) $value;
-                return new ResponseStatus(HttpStatusCode::from($statusCode));
-            }
-        }
-        return null;
     }
 
     private function normalizeUrl(Request $request, string $url): string
@@ -199,21 +172,6 @@ class RouteMatcher
 
         return '#^' . implode('/', $segments) . '$#iu';
     }
-    // private function getPatternFromroutePath(string $route): string
-    // {
-    //     $route = trim($route, DS);
-    //     $segments = explode(DS, $route);
-    //     $segments = array_map(function (string $segment): string {
-    //         if (preg_match("#^\{([a-zA-Z][a-zA-Z0-9]*)\}$#", $segment, $matches)) {
-    //             return '(?<' . $matches[1] . '>[^/]*)';
-    //         }
-    //         if (preg_match("#^\{([a-zA-Z][a-zA-Z0-9]*):(.+)\}$#", $segment, $matches)) {
-    //             return '(?<' . $matches[1] . '>' . $matches[2] . ')';
-    //         }
-    //         return $segment;
-    //     }, $segments);
-    //     return '#^' . implode(DS, $segments) . '$#iu';
-    // }
 
     private function controller(?string $controller, array $matches): string
     {

@@ -15,7 +15,7 @@ class ProductVariation extends Entity implements TimestampableInterface
     private int $variationTypeId;
     private string $name;
     private string $sku;
-    private Money $priceModifier;
+    private ?Money $priceModifier;
     private int $stockQuantity = 0;
     private int $stockStatusId;
     private ProductVariationStatus $status;
@@ -121,9 +121,9 @@ class ProductVariation extends Entity implements TimestampableInterface
     }
 
     /**
-     * @return Money
+     * @return ?Money
      */
-    public function getPriceModifier(): Money
+    public function getPriceModifier(): ?Money
     {
         return $this->priceModifier;
     }
@@ -133,7 +133,7 @@ class ProductVariation extends Entity implements TimestampableInterface
      *
      * @return ProductVariation
      */
-    public function setPriceModifier(Money $priceModifier): ProductVariation
+    public function setPriceModifier(?Money $priceModifier): ProductVariation
     {
         $this->priceModifier = $priceModifier;
 

@@ -27,7 +27,7 @@ enum SqlStatementType: string
         return match($this) {
             self::SELECT => ['select', 'from'],
             self::INSERT => ['insert', 'values'],
-            self::UPDATE => ['update', 'set'],
+            self::UPDATE => ['set', 'where'],
             self::DELETE => ['delete', 'from'],
             default => []
         };
@@ -61,6 +61,7 @@ enum SqlStatementType: string
     {
         return match($this) {
             self::SELECT => [
+                SqlClauseCategory::WITH,
                 SqlClauseCategory::SELECT,
                 SqlClauseCategory::FROM,    // Includes JOINs
                 SqlClauseCategory::WHERE,
@@ -71,10 +72,19 @@ enum SqlStatementType: string
                 SqlClauseCategory::OFFSET,
             ],
             self::INSERT => [
-                SqlClauseCategory::INTO, // For INSERT ... SELECT
+                SqlClauseCategory::INTO,
                 SqlClauseCategory::VALUES,
             ],
-            // ... other statement types
+            self::UPDATE => [
+                SqlClauseCategory::SET,
+                SqlClauseCategory::WHERE,
+                // Note: UPDATE can also have JOINs in some databases
+            ],
+            self::DELETE => [
+                SqlClauseCategory::FROM,
+                SqlClauseCategory::WHERE,
+            ],
+            default => []
         };
     }
 
@@ -82,20 +92,26 @@ enum SqlStatementType: string
     {
         return match($this) {
             self::SELECT => [
+                SqlClauseCategory::WITH,
                 SqlClauseCategory::SELECT, SqlClauseCategory::FROM,
                 SqlClauseCategory::WHERE, SqlClauseCategory::GROUP_BY, SqlClauseCategory::HAVING,
                 SqlClauseCategory::ORDER_BY, SqlClauseCategory::LIMIT, SqlClauseCategory::OFFSET,
             ],
             self::INSERT => [SqlClauseCategory::INTO, SqlClauseCategory::VALUES],
-            self::UPDATE => [SqlClauseCategory::SELECT, SqlClauseCategory::FROM, SqlClauseCategory::WHERE],
-            self::DELETE => [SqlClauseCategory::SELECT, SqlClauseCategory::FROM, SqlClauseCategory::WHERE],
+            self::UPDATE => [
+                SqlClauseCategory::SET,
+                SqlClauseCategory::WHERE,
+                SqlClauseCategory::FROM,
+            ],
+            self::DELETE => [
+                SqlClauseCategory::FROM,
+                SqlClauseCategory::WHERE,
+                SqlClauseCategory::FROM,
+            ],
             default => []
         };
     }
 
-    /**
-     * Validate that a method is allowed for this statement type.
-     */
     public function isMethodAllowed(string $method): bool
     {
         $category = SqlClauseCategory::getCategoryForMethod($method);

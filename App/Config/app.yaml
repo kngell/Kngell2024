@@ -245,7 +245,7 @@ cache:
   use_cache: true
   storage: file
   key: auto
-  cache_path: /Storage/Cache/
+  cache_path: /storage/cache/default/
   cache_expires: 3600
   default_driver: native_storage
   drivers:
@@ -360,6 +360,69 @@ logger_handler:
 # based on the user's location. By setting a default region, the application can ensure that users
 # are presented with the most relevant information and options for their region. This can help to
 default_region: EU
+default_locale: en_US
+builtin_locale_data:
+  en_US:
+  decimal_separator: "."
+  thousands_separator: ","
+  fraction_digits: 2
+  date_format: "m/d/Y"
+  datetime_format: "m/d/Y H:i:s"
+  time_format: "h:i:s A"
+  first_day_of_week: 0
+  currency_position: "before"
+  locale_name: "English (United States)"
+  language: "en"
+  country: "US"
+  en_EU:
+    decimal_separator: ","
+    thousands_separator: "."
+    fraction_digits: 2
+    date_format: "d/m/Y"
+    datetime_format: "d/m/Y H:i:s"
+    time_format: "H:i:s"
+    first_day_of_week: 1
+    currency_position: "after"
+    locale_name: "English (European Union)"
+    language: "en"
+    country: "EU"
+  en_GB:
+    decimal_separator: "."
+    thousands_separator: ","
+    fraction_digits: 2
+    date_format: "d/m/Y"
+    datetime_format: "d/m/Y H:i:s"
+    time_format: "H:i:s"
+    first_day_of_week: 1
+    currency_position: "before"
+    locale_name: "English (United Kingdom)"
+    language: "en"
+    country: "GB"
+  fr_FR:
+    decimal_separator: ","
+    thousands_separator: " "
+    fraction_digits: 2
+    date_format: "d/m/Y"
+    datetime_format: "d/m/Y H:i:s"
+    time_format: "H:i:s"
+    first_day_of_week: 1
+    currency_position: "after"
+    locale_name: "French (France)"
+    language: "fr"
+    country: "FR"
+  de_DE:
+    decimal_separator: ","
+    thousands_separator: "."
+    fraction_digits: 2
+    date_format: "d.m.Y"
+    datetime_format: "d.m.Y H:i:s"
+    time_format: "H:i:s"
+    first_day_of_week: 1
+    currency_position: "after"
+    locale_name: "German (Germany)"
+    language: "de"
+    country: "DE"
+
 # manage content and functionality based on the user's region.
 # Disallowed controllers prevent the any controller in the array list from being inserted into the database
 # this primarily governs the admin panel control menu. As not all controller class is suited to have a

@@ -5,6 +5,7 @@ declare(strict_types=1);
 class TextAreaElement extends AbstractFormDataElement
 {
     private const string TAG = 'textarea';
+
     private int $rows;
     private int $cols;
     private string $autocapitalize;
@@ -16,7 +17,6 @@ class TextAreaElement extends AbstractFormDataElement
     private int $maxlength;
     private int $minlength;
     private bool $autofocus;
-    private bool $disabled;
     private bool $readonly;
     private bool $required;
     private string $wrap;
@@ -36,6 +36,7 @@ class TextAreaElement extends AbstractFormDataElement
 
     /**
      * @param int $rows
+     *
      * @return TextAreaElement
      */
     public function rows(int $rows): self
@@ -46,6 +47,7 @@ class TextAreaElement extends AbstractFormDataElement
 
     /**
      * @param string $content
+     *
      * @return TextAreaElement
      */
     public function content(string $content): self
@@ -56,6 +58,7 @@ class TextAreaElement extends AbstractFormDataElement
 
     /**
      * @param int $cols
+     *
      * @return TextAreaElement
      */
     public function cols(int $cols): self
@@ -66,6 +69,7 @@ class TextAreaElement extends AbstractFormDataElement
 
     /**
      * @param string $autocapitalize
+     *
      * @return TextAreaElement
      */
     public function autocapitalize(string $autocapitalize): self
@@ -76,6 +80,7 @@ class TextAreaElement extends AbstractFormDataElement
 
     /**
      * @param string $autocomplete
+     *
      * @return TextAreaElement
      */
     public function autocomplete(string $autocomplete): self
@@ -86,6 +91,7 @@ class TextAreaElement extends AbstractFormDataElement
 
     /**
      * @param string $autocorrect
+     *
      * @return TextAreaElement
      */
     public function autocorrect(string $autocorrect): self
@@ -96,6 +102,7 @@ class TextAreaElement extends AbstractFormDataElement
 
     /**
      * @param string $dirname
+     *
      * @return TextAreaElement
      */
     public function dirname(string $dirname): self
@@ -106,6 +113,7 @@ class TextAreaElement extends AbstractFormDataElement
 
     /**
      * @param string $form
+     *
      * @return TextAreaElement
      */
     public function form(string $form): self
@@ -116,6 +124,7 @@ class TextAreaElement extends AbstractFormDataElement
 
     /**
      * @param string $placeholder
+     *
      * @return TextAreaElement
      */
     public function placeholder(string $placeholder): self
@@ -126,6 +135,7 @@ class TextAreaElement extends AbstractFormDataElement
 
     /**
      * @param int $maxlength
+     *
      * @return TextAreaElement
      */
     public function maxlength(int $maxlength): self
@@ -136,6 +146,7 @@ class TextAreaElement extends AbstractFormDataElement
 
     /**
      * @param int $minlength
+     *
      * @return TextAreaElement
      */
     public function minlength(int $minlength): self
@@ -146,6 +157,7 @@ class TextAreaElement extends AbstractFormDataElement
 
     /**
      * @param bool $autofocus
+     *
      * @return TextAreaElement
      */
     public function autofocus(bool $autofocus): self
@@ -154,11 +166,7 @@ class TextAreaElement extends AbstractFormDataElement
         return $this;
     }
 
-    /**
-     * @param bool $disabled
-     * @return TextAreaElement
-     */
-    public function disabled(bool $disabled): self
+    public function disabled(bool $disabled = true): self
     {
         $this->disabled = $disabled;
         return $this;
@@ -166,6 +174,7 @@ class TextAreaElement extends AbstractFormDataElement
 
     /**
      * @param bool $readonly
+     *
      * @return TextAreaElement
      */
     public function readonly(bool $readonly): self
@@ -176,6 +185,7 @@ class TextAreaElement extends AbstractFormDataElement
 
     /**
      * @param bool $required
+     *
      * @return TextAreaElement
      */
     public function required(bool $required): self
@@ -186,6 +196,7 @@ class TextAreaElement extends AbstractFormDataElement
 
     /**
      * @param string $spellcheck
+     *
      * @return TextAreaElement
      */
     public function spellcheck(string $spellcheck): self
@@ -196,6 +207,7 @@ class TextAreaElement extends AbstractFormDataElement
 
     /**
      * @param string $wrap
+     *
      * @return TextAreaElement
      */
     public function wrap(string $wrap): self
@@ -206,6 +218,7 @@ class TextAreaElement extends AbstractFormDataElement
 
     /**
      * @param string $id
+     *
      * @return TextAreaElement
      */
     public function id(string $id): self
@@ -216,6 +229,7 @@ class TextAreaElement extends AbstractFormDataElement
 
     /**
      * @param string ...$class
+     *
      * @return TextAreaElement
      */
     public function class(string ...$class): self
@@ -226,6 +240,7 @@ class TextAreaElement extends AbstractFormDataElement
 
     /**
      * @param string $name
+     *
      * @return TextAreaElement
      */
     public function name(string $name): self
@@ -236,6 +251,7 @@ class TextAreaElement extends AbstractFormDataElement
 
     /**
      * @param mixed $value
+     *
      * @return TextAreaElement
      */
     public function value(mixed $value): self

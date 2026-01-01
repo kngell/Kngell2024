@@ -3,7 +3,7 @@
 declare(strict_types=1);
 class GenericQueryFlowValidator implements FlowValidatorInterface
 {
-    public function __construct(private SqlQueryComponent $query)
+    public function __construct(private SqlComponent $query)
     {
     }
 

@@ -6,7 +6,10 @@ trait EntityTimestampableTrait
 {
     protected const string DATE_FORMAT = 'Y-m-d H:i:s';
 
+    #[DisplayFormat(style: 'date')]
     private DateTimeImmutable $createdAt;
+
+    #[DisplayFormat(style: 'date')]
     private ?DateTimeImmutable $updatedAt = null;
 
     /**
@@ -116,33 +119,18 @@ trait EntityTimestampableTrait
         return $this;
     }
 
-    /**
-     * Convert string to DateTimeImmutable with proper error handling.
-     */
-    private function convertToDateTimeImmutable(string $dateString): DateTimeImmutable
+    public function touchTimestamps(): void
     {
-        if ($dateString === '') {
-            throw new InvalidArgumentException('Date string cannot be empty');
-        }
+        if ($this instanceof TimestampableInterface) {
+            $now = new DateTimeImmutable();
 
-        try {
-            // First try the entity's date format
-            $dateTime = DateTimeImmutable::createFromFormat(self::DATE_FORMAT, $dateString);
-            if ($dateTime !== false) {
-                $errors = DateTimeImmutable::getLastErrors();
-                if ($errors === false || ($errors['warning_count'] === 0 && $errors['error_count'] === 0)) {
-                    return $dateTime;
-                }
+            if (method_exists($this, 'setCreatedAt')) {
+                $this->setCreatedAt($now);
             }
 
-            // Fallback to natural parsing
-            return new DateTimeImmutable($dateString);
-        } catch (Throwable $e) {
-            throw new InvalidArgumentException(
-                sprintf('Invalid date format: "%s". Expected format: "%s"', $dateString, self::DATE_FORMAT),
-                0,
-                $e,
-            );
+            if (method_exists($this, 'setUpdatedAt')) {
+                $this->setUpdatedAt($now);
+            }
         }
     }
 }

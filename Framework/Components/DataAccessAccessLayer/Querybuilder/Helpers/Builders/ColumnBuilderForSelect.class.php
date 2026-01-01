@@ -5,7 +5,6 @@ declare(strict_types=1);
 class ColumnBuilderForSelect
 {
     public function __construct(
-        private TablesAliasHelper $helper,
         private bool $selectAsAlias,
     ) {
     }
@@ -47,24 +46,26 @@ class ColumnBuilderForSelect
 
     private function buildComplexColumn(string $column, string $tableAlias): string
     {
-        // For complex expressions, return as-is (they handle their own aliasing)
+        if (ColumnTypeDetector::isCountFunction($column)) {
+            return $this->buildCountColumn($column, $tableAlias);
+        }
         return $column;
     }
 
-    private function buildCountColumn(string $column, string $tableAlias): string
+    private function buildCountColumn(string $column, string $alias): string
     {
         list($AS, $cleanColumn) = $this->extractAsAlias($column);
 
         if (preg_match('#count\((.*?)\)#i', $cleanColumn, $matches)) {
             $innerColumn = $matches[1];
             if ($this->isSimpleColumn($innerColumn)) {
-                $innerColumn = $tableAlias . '.' . $innerColumn;
+                $innerColumn = $alias . '.' . $innerColumn;
             }
             $result = 'COUNT(' . $innerColumn . ')';
             return $result . (!empty($AS) ? ' AS ' . $AS : '');
         }
 
-        return $this->buildSimpleColumn($column, $tableAlias);
+        return $this->buildSimpleColumn($column, $alias);
     }
 
     private function buildFunctionColumn(string $column, string $tableAlias): string

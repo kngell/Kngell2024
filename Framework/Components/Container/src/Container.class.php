@@ -92,6 +92,29 @@ class Container implements ContainerInterface
     }
 
     /**
+     * Register a lazy singleton service.
+     */
+    public function lazy(string $abstract, Closure|string|null $concrete = null): self
+    {
+        return $this->factory($abstract, function ($container) use ($concrete, $abstract) {
+            // Resolve once and cache
+            static $instance = null;
+
+            if ($instance === null) {
+                if ($concrete instanceof Closure) {
+                    $instance = $concrete($container);
+                } elseif (is_string($concrete)) {
+                    $instance = $container->resolve($concrete);
+                } else {
+                    $instance = $container->resolve($abstract);
+                }
+            }
+
+            return $instance;
+        });
+    }
+
+    /**
      * Bind with factory method.
      */
     public function factory(string $abstract, Closure $factory): self
@@ -724,9 +747,9 @@ class Container implements ContainerInterface
         );
     }
 
-    // ============================================================================
+    // =====================================================
     // HELPER METHODS
-    // ============================================================================
+    // =====================================================
 
     /**
      * Get the binding for an abstract type.
@@ -736,10 +759,7 @@ class Container implements ContainerInterface
         return $this->bindings[$abstract] ?? null;
     }
 
-    /**
-     * Get the alias for an abstract type.
-     */
-    protected function getAlias(string $abstract): string
+    protected function getAlias(string $abstract): string|array
     {
         return $this->aliases[$abstract] ?? $abstract;
     }
@@ -803,7 +823,6 @@ class Container implements ContainerInterface
     {
         if ($reflector->hasProperty('container')) {
             $property = $reflector->getProperty('container');
-            $property->setAccessible(true);
 
             if (!$property->isInitialized($instance)) {
                 $property->setValue($instance, $this);
@@ -841,7 +860,6 @@ class Container implements ContainerInterface
 
         // If it's a method and not public, use reflection to invoke
         if ($reflector instanceof ReflectionMethod && !$reflector->isPublic()) {
-            $reflector->setAccessible(true);
             return $reflector->invokeArgs($callback[0], $args);
         }
 

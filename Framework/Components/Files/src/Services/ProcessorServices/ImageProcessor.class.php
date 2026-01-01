@@ -19,14 +19,13 @@ class ImageProcessor implements FileProcessorInterface
     {
         $imageInfo = getimagesize($source->getPathname());
         if ($imageInfo === false) {
-            return null; // Fall back to regular move
+            return null;
         }
 
         [$width, $height, $type] = $imageInfo;
 
-        // Only resize if image is larger than max dimension
         if (max($width, $height) <= $this->maxDimension) {
-            return null; // No processing needed, fall back to regular move
+            return null;
         }
 
         return $this->resizeImage($source->getPathname(), $targetPath, $type);
@@ -68,9 +67,6 @@ class ImageProcessor implements FileProcessorInterface
         );
 
         $this->saveImage($destinationImage, $targetPath, $imageType);
-
-        imagedestroy($sourceImage);
-        imagedestroy($destinationImage);
 
         return $targetPath;
     }

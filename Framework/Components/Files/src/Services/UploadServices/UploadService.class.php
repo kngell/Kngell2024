@@ -11,6 +11,7 @@ class UploadService implements FileUploadCompositeInterface
     public function __construct(
         private ?FileProcessorRegistry $processor,
         private ?FileMoverService $fileMover,
+        private ?FileMetadataService $metadataService,
         private ?Request $request,
         private array $fieldsErrors,
     ) {
@@ -395,6 +396,7 @@ class UploadService implements FileUploadCompositeInterface
             ImageUploadService::class => new ImageUploadService(
                 $this->processor->getProcessor(UploadFileType::IMAGE),
                 $this->fileMover,
+                $this->metadataService,
                 $this->request,
                 $fieldName,
             ),
@@ -407,6 +409,7 @@ class UploadService implements FileUploadCompositeInterface
             VideoUploadService::class => new VideoUploadService(
                 $this->processor->getProcessor(UploadFileType::VIDEO),
                 $this->fileMover,
+                $this->metadataService,
                 $this->request,
                 $fieldName,
             ),
@@ -446,10 +449,11 @@ class UploadService implements FileUploadCompositeInterface
     public static function createFromRequest(
         FileProcessorRegistry $processor,
         FileMoverService $fileMover,
+        FileMetadataService $metadataService,
         Request $request,
         array $fieldErrors,
     ): self {
-        $composite = new self($processor, $fileMover, $request, $fieldErrors);
+        $composite = new self($processor, $fileMover, $metadataService, $request, $fieldErrors);
         $files = $request->getFiles();
 
         foreach ($files->getFieldNames() as $fieldName) {

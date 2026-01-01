@@ -5,19 +5,19 @@ declare(strict_types=1);
 trait QueryBuilderGettersAndSettersTrait
 {
     /**
-     * @return SqlQueryComponent
+     * @return SqlComponent
      */
-    public function getParent(): SqlQueryComponent
+    public function getParent(): SqlComponent
     {
         return $this->parent;
     }
 
     /**
-     * @param SqlQueryComponent $parent
+     * @param SqlComponent $parent
      *
-     * @return SqlQueryComponent
+     * @return SqlComponent
      */
-    public function setParent(?SqlQueryComponent $parent): SqlQueryComponent
+    public function setParent(?SqlComponent $parent): SqlComponent
     {
         $this->parent = $parent;
 
@@ -35,9 +35,9 @@ trait QueryBuilderGettersAndSettersTrait
     /**
      * @param array $tableAlias
      *
-     * @return SqlQueryComponent
+     * @return SqlComponent
      */
-    public function setTableAlias(array $tableAlias): SqlQueryComponent
+    public function setTableAlias(array $tableAlias): SqlComponent
     {
         $this->tableAlias = $tableAlias;
 
@@ -55,9 +55,9 @@ trait QueryBuilderGettersAndSettersTrait
     /**
      * @param array $aliasCheck
      *
-     * @return SqlQueryComponent
+     * @return SqlComponent
      */
-    public function setAliasCheck(array $aliasCheck): SqlQueryComponent
+    public function setAliasCheck(array $aliasCheck): SqlComponent
     {
         $this->aliasCheck = $aliasCheck;
 
@@ -75,9 +75,9 @@ trait QueryBuilderGettersAndSettersTrait
     /**
      * @param array $parameters
      *
-     * @return SqlQueryComponent
+     * @return SqlComponent
      */
-    public function setParameters(array $parameters): SqlQueryComponent
+    public function setParameters(array $parameters): SqlComponent
     {
         $this->parameters = $parameters;
 
@@ -95,9 +95,9 @@ trait QueryBuilderGettersAndSettersTrait
     /**
      * @param array $bindArr
      *
-     * @return SqlQueryComponent
+     * @return SqlComponent
      */
-    public function setBindArr(array $bindArr): SqlQueryComponent
+    public function setBindArr(array $bindArr): SqlComponent
     {
         $this->bindArr = $bindArr;
 
@@ -115,9 +115,9 @@ trait QueryBuilderGettersAndSettersTrait
     /**
      * @param string $query
      *
-     * @return SqlQueryComponent
+     * @return SqlComponent
      */
-    public function setQuery(string $query): SqlQueryComponent
+    public function setQuery(string $query): SqlComponent
     {
         $this->query = $query;
 
@@ -132,9 +132,9 @@ trait QueryBuilderGettersAndSettersTrait
     /**
      * @param array $logicalToPhysicalMap
      *
-     * @return SqlQueryComponent
+     * @return SqlComponent
      */
-    public function setLogicalToPhysicalMap(array $logicalToPhysicalMap): SqlQueryComponent
+    public function setLogicalToPhysicalMap(array $logicalToPhysicalMap): SqlComponent
     {
         $this->logicalToPhysicalMap = $logicalToPhysicalMap;
 
@@ -152,9 +152,9 @@ trait QueryBuilderGettersAndSettersTrait
     /**
      * @param string $method
      *
-     * @return SqlQueryComponent
+     * @return SqlComponent
      */
-    public function setMethod(string $method): SqlQueryComponent
+    public function setMethod(string $method): SqlComponent
     {
         $this->method = $method;
 
@@ -172,9 +172,9 @@ trait QueryBuilderGettersAndSettersTrait
     /**
      * @param array $tables
      *
-     * @return SqlQueryComponent
+     * @return SqlComponent
      */
-    public function setTables(array $tables): SqlQueryComponent
+    public function setTables(array $tables): SqlComponent
     {
         $this->tables = $tables;
 
@@ -192,9 +192,9 @@ trait QueryBuilderGettersAndSettersTrait
     /**
      * @param null|string $joinContext
      *
-     * @return SqlQueryComponent
+     * @return SqlComponent
      */
-    public function setJoinContext(?string $joinContext): SqlQueryComponent
+    public function setJoinContext(?string $joinContext): SqlComponent
     {
         $this->state->joinContext = $joinContext;
         $this->joinContext = $joinContext;
@@ -213,9 +213,9 @@ trait QueryBuilderGettersAndSettersTrait
     /**
      * @param string $table
      *
-     * @return SqlQueryComponent
+     * @return SqlComponent
      */
-    public function setTable(string $table): SqlQueryComponent
+    public function setTable(string $table): SqlComponent
     {
         $this->table = $table;
 
@@ -233,9 +233,9 @@ trait QueryBuilderGettersAndSettersTrait
     /**
      * @param string $customAlias
      *
-     * @return SqlQueryComponent
+     * @return SqlComponent
      */
-    public function setCustomAlias(?string $customAlias): SqlQueryComponent
+    public function setCustomAlias(?string $customAlias): SqlComponent
     {
         $this->customAlias = $customAlias;
 
@@ -253,35 +253,11 @@ trait QueryBuilderGettersAndSettersTrait
     /**
      * @param TablesAliasHelper $helper
      *
-     * @return SqlQueryComponent
+     * @return SqlComponent
      */
-    public function setHelper(TablesAliasHelper $helper): SqlQueryComponent
+    public function setHelper(TablesAliasHelper $helper): SqlComponent
     {
         $this->helper = $helper;
-
-        return $this;
-    }
-
-    /**
-     * @return ?ParameterManager
-     */
-    public function getParameterManager(): ?ParameterManager
-    {
-        if (isset($this->parameterManager)) {
-            return $this->parameterManager;
-        }
-
-        return null;
-    }
-
-    /**
-     * @param ParameterManager $parameterManager
-     *
-     * @return SqlQueryComponent
-     */
-    public function setParameterManager(ParameterManager $parameterManager): SqlQueryComponent
-    {
-        $this->parameterManager = $parameterManager;
 
         return $this;
     }

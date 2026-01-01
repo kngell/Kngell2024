@@ -16,6 +16,8 @@ abstract class Controller
     protected EventManagerInterface $eventManager;
     protected HtmlBuilder $builder;
     protected AbstractFormCreator $frm;
+    protected RegionContextInterface $region;
+    protected TranslatorServiceInterface $translator;
     private ViewInterface $view;
     private string $layout;
     private Model|null $currentModel;
@@ -139,63 +141,6 @@ abstract class Controller
         throw $e;
     }
 
-    /**
-     * Determines if the current page matches the given method name.
-     *
-     * @param string $methodName The method name (typically from __FUNCTION__)
-     * @param array $options Additional options for active link detection:
-     *   - 'exact' (bool): Whether to require exact URL match
-     *   - 'submenu' (bool): Whether this is a submenu item
-     *   - 'additionalPaths' (array): Additional URL patterns to match
-     *
-     * @return array Returns ['active' => ' active'] if active, ['active' => ''] otherwise
-     */
-    protected function activeLink(string $methodName, array $options = []): array
-    {
-        $defaultOptions = [
-            'exact' => false,
-            'submenu' => false,
-            'additionalPaths' => [],
-        ];
-        $options = array_merge($defaultOptions, $options);
-
-        // Convert method name to kebab-case (e.g., productList -> product-list)
-        $methodPath = StringUtils::kebabCase($methodName);
-
-        // Get current controller name in kebab-case (e.g., AdminController -> admin)
-        $currentController = StringUtils::kebabCase(
-            str_replace('Controller', '', (new ReflectionClass($this))->getShortName()),
-        );
-
-        // Build the expected path
-        $expectedPath = DS . $currentController . DS . $methodPath;
-
-        // Get current URL
-        $currentUrl = $this->request->getRequestedUri();
-
-        // Check for exact match
-        if ($options['exact']) {
-            $isActive = $currentUrl === $expectedPath ||
-                       rtrim($currentUrl, '/') === rtrim($expectedPath, '/');
-        }
-        // Check for partial match (default behavior)
-        else {
-            $isActive = str_contains($currentUrl, $expectedPath);
-        }
-
-        // Check against additional paths if provided
-        if (!$isActive && !empty($options['additionalPaths'])) {
-            foreach ($options['additionalPaths'] as $path) {
-                if (str_contains($currentUrl, $path)) {
-                    $isActive = true;
-                    break;
-                }
-            }
-        }
-
-        return $isActive ? ['active' => ' active'] : ['active' => ''];
-    }
-
     protected function getRedirectUrl(): string|null
     {
         if ($this->session->exists('current_url')) {
@@ -206,7 +151,7 @@ abstract class Controller
         return $this->session->get('previous_url');
     }
 
-    protected function form(string $action, array|Entity|bool $formValues = [], array|Entity|bool $formErrors = []): string
+    protected function form(string $action, array|Entity &$formValues = [], array &$formErrors = [], array &$files = []): string
     {
         $flashedData = $this->flash->flushForm($action);
         $values = !empty($flashedData['values']) ? $flashedData['values'] : $formValues;
@@ -269,7 +214,7 @@ abstract class Controller
         }
         $navbar = match (true) {
             $this->view->getLayout() === 'default' => DefaultNavbarDecorator::class,
-            // $this->view->getLayout() === 'admin' => AdminNavbarDecorator::class,
+            $this->view->getLayout() === 'admin' => AdminNavbarDecorator::class,
             default => '',
         };
         return array_merge($context, ['message' => $this->flash->get()], !empty($navbar) ? (new $navbar($this))->page() : []);

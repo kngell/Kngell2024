@@ -1,0 +1,61 @@
+@mixin scrollable(
+  $direction: y,
+  // y | x | both
+  $smooth: true,
+  // smooth scroll behavior
+  $max-size: null,
+  // max-height or max-width depending on direction
+  $scrollbar: true // enable minimal custom scrollbar styling
+) {
+  overflow: auto;
+
+  // Direction handling
+  @if $direction == y {
+    overflow-x: hidden;
+    overflow-y: auto;
+
+    @if $max-size != null {
+      max-height: $max-size;
+    }
+  }
+
+  @if $direction == x {
+    overflow-x: auto;
+    overflow-y: hidden;
+
+    @if $max-size != null {
+      max-width: $max-size;
+    }
+  }
+
+  @if $direction == both {
+    overflow: auto;
+
+    @if $max-size != null {
+      max-height: $max-size;
+      max-width: $max-size;
+    }
+  }
+
+  // Smooth scrolling
+  @if $smooth == true {
+    scroll-behavior: smooth;
+  }
+
+  // Minimal scrollbar styling (webkit only)
+  @if $scrollbar == true {
+    &::-webkit-scrollbar {
+      width: 0.8rem;
+      height: 0.8rem;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background-color: rgba(0, 0, 0, 0.25);
+      border-radius: 1rem;
+    }
+
+    &::-webkit-scrollbar-track {
+      background-color: rgba(0, 0, 0, 0.05);
+    }
+  }
+}

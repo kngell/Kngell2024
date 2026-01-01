@@ -8,7 +8,6 @@ abstract class AbstractInput extends AbstractFormDataElement
     private const string TAG = 'input';
 
     protected bool $readonly;
-    protected bool $disabled;
     protected int $size;
     protected int $maxlength;
     protected mixed $min;
@@ -55,7 +54,7 @@ abstract class AbstractInput extends AbstractFormDataElement
      *
      * @return AbstractInput
      */
-    public function disabled(bool $disabled): self
+    public function disabled(bool $disabled = true): self
     {
         $this->disabled = $disabled;
         return $this;

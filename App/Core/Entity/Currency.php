@@ -2,15 +2,20 @@
 
 declare(strict_types=1);
 
-class Currency extends Entity
+class Currency extends Entity implements TimestampableInterface
 {
+    use EntityTimestampableTrait;
+
     #[EntityFieldId(name: 'currency_id')]
     private int $id;
 
     private string $currencyCode;
     private string $currencyName;
     private string $symbol;
+    private string $currencySymbol;
     private bool $isActive = true;
+    private bool $isDefault = false;
+    private int $fractionDigits = 2;
 
     /**
      * @return int
@@ -108,6 +113,66 @@ class Currency extends Entity
     public function setIsActive(bool $isActive): Currency
     {
         $this->isActive = $isActive;
+
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCurrencySymbol(): string
+    {
+        return $this->currencySymbol;
+    }
+
+    /**
+     * @param string $currencySymbol
+     *
+     * @return Currency
+     */
+    public function setCurrencySymbol(string $currencySymbol): Currency
+    {
+        $this->currencySymbol = $currencySymbol;
+
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIsDefault(): bool
+    {
+        return $this->isDefault;
+    }
+
+    /**
+     * @param bool $isDefault
+     *
+     * @return Currency
+     */
+    public function setIsDefault(bool $isDefault): Currency
+    {
+        $this->isDefault = $isDefault;
+
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getFractionDigits(): int
+    {
+        return $this->fractionDigits;
+    }
+
+    /**
+     * @param int $fractionDigits
+     *
+     * @return Currency
+     */
+    public function setFractionDigits(int $fractionDigits): Currency
+    {
+        $this->fractionDigits = $fractionDigits;
 
         return $this;
     }

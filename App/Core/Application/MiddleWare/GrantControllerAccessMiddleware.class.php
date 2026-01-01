@@ -1,15 +1,6 @@
 <?php
 
 declare(strict_types=1);
-
-/**
- * GrantControllerAccessMiddleware - Handles authorization based on ACL.
- *
- * This middleware is responsible for:
- * 1. Determining user ACL groups
- * 2. Checking if user has permission to access specific controllers and methods
- * 3. Redirecting or denying access when appropriate
- */
 class GrantControllerAccessMiddleware implements MiddlewareInterface
 {
     private array $acl;

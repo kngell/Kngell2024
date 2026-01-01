@@ -4,78 +4,74 @@ declare(strict_types=1);
 
 class QueryResult implements Countable, IteratorAggregate
 {
+    private null|int $lastUpdateId = null;
+    private null|int $lastOperationId = null;
+    private null|string $entityKeyField = null;
     private QueryResultConfig $config;
     private QueryResultFetcher $fetcher;
     private QueryResultFormatter $formatter;
-    private bool $isExecuted = false;
+    private bool $isInitialized = false;
     private string $operation = 'all';
     private QueryResultPaginator $paginator;
     private QueryResultHydrator $hydrator;
-
-    /** @var PDOStatement The PDO statement object */
-    private PDOStatement $pdoStatement;
-
+    private ?PDOStatement $pdoStatement = null;
     private int $rowCount = 0;
-    private string $lastInsertId;
+    private ?string $lastInsertId = null;
+    private bool $isWriteOperation = false;
 
     public function __construct(
         private DataMapperInterface $dataMapper,
-        private Entity $entity,
+        private string $entity,
         private array $tableAlias,
-        private ChangeTrackerInterface $changeTracker,
-        private TypeNormalizerInterface $normalizer,
+        private EntityFactoryInterface $entityFactory,
         private array $tableMap,
     ) {
         $this->initializeComponents();
-        $this->initializeQueryStatement();
+        // Don't initialize statement yet - wait for first fetch
     }
 
-    /**
-     * Destructor to ensure resources are freed.
-     */
     public function __destruct()
     {
         $this->close();
     }
 
     /**
-     * Magic method for backward compatibility with old method names.
-     *
-     * @deprecated Use explicit methods instead
+     * Initialize or re-initialize for a new operation.
      */
-    public function __call(string $method, array $arguments): mixed
+    public function prepare(string $operation = 'all'): self
     {
-        $methodMap = [
-            'single' => 'getSingle',
-            'first' => 'getFirst',
-            'all' => 'getAll',
-            'rowCount' => 'getRowCount',
-        ];
-
-        if (isset($methodMap[$method])) {
-            trigger_error(
-                "Method {$method}() is deprecated. Use {$methodMap[$method]}() instead.",
-                E_USER_DEPRECATED,
-            );
-            return $this->{$methodMap[$method]}(...$arguments);
-        }
-
-        throw new BadMethodCallException("Method {$method} does not exist in " . static::class);
+        $this->operation = $operation;
+        $this->isInitialized = false; // Force re-initialization
+        return $this;
     }
 
     public function all(): array
     {
+        $this->initialize();
         $this->operation = 'all';
-        $this->ensureExecuted();
 
         $results = $this->fetcher->fetchAll();
         return $this->paginator->applyPagination($results, 'all');
     }
 
+    public function first(): mixed
+    {
+        $this->initialize();
+        $this->operation = 'first';
+
+        if ($this->paginator->getLimit() !== null && $this->paginator->getLimit() > 1) {
+            $results = $this->fetcher->fetchAll();
+            $limited = array_slice($results, 0, $this->paginator->getLimit());
+            return $limited[0] ?? null;
+        }
+
+        return $this->fetcher->fetchFirst();
+    }
+
     public function last(): mixed
     {
+        $this->initialize();
         $this->operation = 'last';
-        $this->ensureExecuted();
 
         if ($this->paginator->getLastLimit() !== null && $this->paginator->getLastLimit() > 1) {
             $results = $this->fetcher->fetchAll();
@@ -89,104 +85,73 @@ class QueryResult implements Countable, IteratorAggregate
 
     public function single(): mixed
     {
+        $this->initialize();
         $this->operation = 'single';
         return $this->fetcher->fetchSingle();
     }
 
-    public function execute(string|array|null $fetchOptions = null): self
-    {
-        if ($this->isExecuted) {
-            throw new QueryResultException('Query has already been executed');
-        }
-
-        try {
-            $this->config->processFetchOptions($fetchOptions, $this->entity);
-            $this->rowCount = $this->pdoStatement->rowCount();
-            $this->isExecuted = true;
-            return $this;
-        } catch (PDOException $exception) {
-            throw new QueryResultException(
-                'Failed to execute query: ' . $exception->getMessage(),
-                (int) $exception->getCode(),
-                $exception,
-            );
-        }
-    }
-
     public function asArray(): mixed
     {
+        $this->initialize();
         return $this->formatter->asArray();
     }
 
-    // Formatting methods
     public function asClass(?string $entityClass = null): mixed
     {
+        $this->initialize();
+        $entityClass = $entityClass ?? $this->entity;
         return $this->formatter->asClass($entityClass);
     }
 
     public function asColumn(int $columnIndex = 0): array
     {
+        $this->initialize();
         return $this->formatter->asColumn($columnIndex);
     }
 
     public function asKeyPairs(): array
     {
+        $this->initialize();
         return $this->formatter->asKeyPairs();
     }
 
     public function asObject(): mixed
     {
+        $this->initialize();
         return $this->formatter->asObject();
     }
 
-    /**
-     * Close the cursor to free up resources.
-     */
-    public function close(): void
-    {
-        if (isset($this->pdoStatement)) {
-            $this->pdoStatement->closeCursor();
-        }
-    }
-
-    /**
-     * Get the number of rows affected/returned.
-     *
-     * @return int
-     */
     public function count(): int
     {
-        $this->ensureExecuted();
+        $this->initialize();
+        if ($this->rowCount === 0) {
+            return 0;
+        }
+
+        if ($this->rowCount === 1 && $this->pdoStatement->columnCount() === 1) {
+            $value = $this->pdoStatement->fetchColumn(0);
+            return is_numeric($value) ? (int) $value : $this->rowCount;
+        }
         return $this->rowCount;
     }
 
     public function exists(): bool
     {
-        $this->asArray();
-        return $this->count() > 0;
+        $this->initialize();
+        return $this->rowCount > 0;
     }
 
-    public function first(): mixed
+    public function isEmpty(): bool
     {
-        $this->operation = 'first';
-        $this->ensureExecuted();
-
-        if ($this->paginator->getLimit() !== null && $this->paginator->getLimit() > 1) {
-            $results = $this->fetcher->fetchAll();
-            $limited = array_slice($results, 0, $this->paginator->getLimit());
-            return $limited[0] ?? null;
-        }
-
-        return $this->fetcher->fetchFirst();
+        $this->initialize();
+        return $this->rowCount === 0;
     }
 
-    /**
-     * Get iterator for foreach support.
-     *
-     * @throws QueryResultException
-     *
-     * @return Traversable
-     */
+    public function getRowCount(): int
+    {
+        return $this->rowCount;
+    }
+
     public function getIterator(): Traversable
     {
         return new ArrayIterator($this->all());
@@ -194,31 +159,53 @@ class QueryResult implements Countable, IteratorAggregate
 
     public function isSuccess(): bool
     {
-        if (!isset($this->lastInsertId)) {
-            $this->lastInsertId = $this->getLastInsertId();
+        if ($this->isWriteOperation) {
+            if ($this->dataMapper->getExecutionStatus() === false) {
+                return false;
+            }
+            return true;
         }
-        return $this->lastInsertId > 0;
+        return $this->dataMapper->getExecutionStatus() !== false;
     }
 
-    /**
-     * Get the last insert ID from database.
-     *
-     * @param string|null $sequenceName Optional name of the sequence object
-     *
-     * @throws QueryResultException
-     *
-     * @return string
-     */
-    public function getLastInsertId(?string $sequenceName = null): string
+    public function wasSuccessful(): bool
     {
-        try {
-            $id = $this->dataMapper->getConnexion()->open()->lastInsertId($sequenceName);
+        return $this->isSuccess();
+    }
 
-            if ($id === false) {
-                throw new QueryResultException('Failed to retrieve last insert ID');
+    public function getAffectedRows(): int
+    {
+        return $this->rowCount;
+    }
+
+    public function queryExecuted(): bool
+    {
+        return $this->dataMapper->getExecutionStatus() !== false;
+    }
+
+    public function setLastUpdateId(null|int $lastUpdateId): self
+    {
+        $this->lastUpdateId = $lastUpdateId;
+        return $this;
+    }
+
+    public function getLastInsertId(?string $sequenceName = null): bool|string
+    {
+        $this->initialize();
+
+        if ($this->lastInsertId !== null) {
+            return $this->lastInsertId;
+        }
+
+        try {
+            $id = $this->dataMapper->lastInsertId($sequenceName);
+
+            if ($id === false || $id === '0') {
+                return '';
             }
 
-            return $id;
+            $this->lastInsertId = (string) $id;
+            return $this->lastInsertId;
         } catch (PDOException $exception) {
             throw new QueryResultException(
                 'Error getting last insert ID: ' . $exception->getMessage(),
@@ -228,24 +215,29 @@ class QueryResult implements Countable, IteratorAggregate
         }
     }
 
-    public function getOperation(): string
+    public function close(): void
     {
-        return $this->operation;
+        if ($this->pdoStatement !== null) {
+            $this->pdoStatement->closeCursor();
+        }
     }
 
-    public function getEntity(): Entity
+    /**
+     * Backward compatibility method.
+     */
+    public function execute(string|array|null $fetchOptions = null): self
     {
-        return $this->entity;
-    }
+        $this->initialize();
 
-    // =========================================
-    // BACKWARD COMPATIBILITY METHODS
-    // =========================================
+        if ($fetchOptions !== null) {
+            $this->config->processFetchOptions($fetchOptions, $this->entity);
+        }
+
+        return $this;
+    }
 
     /**
      * Backward compatibility with old getResults() method.
-     *
-     * @deprecated Use execute() method instead
      */
     public function getResults(string|array|null $params = null, ?string $className = null): self
     {
@@ -253,143 +245,188 @@ class QueryResult implements Countable, IteratorAggregate
         return $this->execute($fetchOptions);
     }
 
-    /**
-     * Get row count from the query.
-     *
-     * @return int
-     */
-    public function getRowCount(): int
-    {
-        return $this->rowCount;
-    }
-
-    /**
-     * Check if the result set is empty.
-     *
-     * @throws QueryResultException
-     *
-     * @return bool
-     */
-    public function isEmpty(): bool
-    {
-        $this->ensureExecuted();
-        return $this->rowCount === 0;
-    }
-
-    public function setLastLimit(int $limit): QueryResultPaginator
-    {
-        return $this->paginator->setLastLimit($limit);
-    }
-
-    // Pagination methods
-    public function setLimit(int $limit): QueryResultPaginator
-    {
-        return $this->paginator->setLimit($limit);
-    }
-
-    /**
-     * @param string $operation
-     *
-     * @return QueryResult
-     */
     public function setOperation(string $operation): self
     {
         $this->operation = $operation;
         return $this;
     }
 
-    public function setPagination(int $page, int $perPage): QueryResultPaginator
+    public function getOperation(): string
     {
-        return $this->paginator->setPagination($page, $perPage);
+        return $this->operation;
     }
 
-    /**
-     * Get the boolean result of the query execution.
-     *
-     * @return bool
-     */
-    public function wasSuccessful(): bool
+    public function setLimit(int $limit): self
     {
-        return $this->dataMapper->getQueryResult();
+        $this->paginator->setLimit($limit);
+        return $this;
     }
 
-    /**
-     * @return QueryResultConfig
-     */
+    public function setLastLimit(int $limit): self
+    {
+        $this->paginator->setLastLimit($limit);
+        return $this;
+    }
+
+    public function setPagination(int $page, int $perPage): self
+    {
+        $this->paginator->setPagination($page, $perPage);
+        return $this;
+    }
+
     public function getConfig(): QueryResultConfig
     {
         return $this->config;
     }
 
+    public function fetchColumn(int $columnIndex = 0): array
+    {
+        $this->initialize();
+        return $this->fetcher->fetchColumn($columnIndex);
+    }
+
+    public function fetchKeyPairs(): array
+    {
+        $this->initialize();
+        return $this->fetcher->fetchKeyPairs();
+    }
+
     /**
-     * @param QueryResultConfig $config
+     * @return string
+     */
+    public function getEntity(): string
+    {
+        return $this->entity;
+    }
+
+    public function getQeuryString(): string
+    {
+        return $this->dataMapper->getQueryString();
+    }
+
+    public function getQueryParameters(): array
+    {
+        return $this->dataMapper->getQueryParameters();
+    }
+
+    /**
+     * @return null|int
+     */
+    public function getLastUpdateId(): ?int
+    {
+        return $this->lastUpdateId;
+    }
+
+    /**
+     * @return null|int
+     */
+    public function getLastOperationId(): ?int
+    {
+        return $this->lastOperationId;
+    }
+
+    /**
+     * @param null|int $lastOperationId
      *
      * @return QueryResult
      */
-    public function setConfig(QueryResultConfig $config): QueryResult
+    public function setLastOperationId(?int $lastOperationId): QueryResult
     {
-        $this->config = $config;
+        $this->lastOperationId = $lastOperationId;
 
         return $this;
     }
 
-    private function fetchResults(string $operation, ?int $limit = null): mixed
+    /**
+     * @return null|string
+     */
+    public function getEntityKeyField(): ?string
     {
-        $this->ensureExecuted();
-        return $this->fetcher->fetchResults($operation, $limit);
-    }
-
-    private function page(int $page, int $perPage): array
-    {
-        $this->ensureExecuted();
-        return $this->fetcher->fetchPage($page, $perPage);
+        return $this->entityKeyField;
     }
 
     /**
-     * Ensure query has been executed.
+     * @param null|string $entityKeyField
      *
-     * @throws QueryResultException
+     * @return QueryResult
      */
-    private function ensureExecuted(): void
+    public function setEntityKeyField(?string $entityKeyField): QueryResult
     {
-        if (!$this->isExecuted) {
-            throw new QueryResultException('Query must be executed before accessing results');
+        $this->entityKeyField = $entityKeyField;
+
+        return $this;
+    }
+
+    public function hasResults(): bool
+    {
+        if (!$this->queryExecuted()) {
+            return false;
         }
+
+        $this->initialize();
+        return $this->rowCount > 0;
     }
 
-    private function initializeComponents(): void
+    public function insertSucceeded(): bool
     {
-        $this->config = new QueryResultConfig(
-            $this->entity,
-            $this->tableMap,
-        );
-        $this->config->setConstructorArgs(
-            [
-                $this->tableAlias,
-                $this->tableMap,
-                $this->normalizer,
-                $this->changeTracker,
-            ],
-        );
-        $this->paginator = new QueryResultPaginator();
-        $this->hydrator = new QueryResultHydrator(
-            $this->changeTracker,
-            $this->normalizer,
-        );
+        if (!$this->queryExecuted()) {
+            return false;
+        }
+        return $this->isWriteOperation && $this->isSuccess() && $this->rowCount > 0;
     }
 
-    private function initializeQueryStatement(): void
+    public function updateSucceeded(): bool
     {
+        if (!$this->queryExecuted()) {
+            return false;
+        }
+        return true;
+    }
+
+    public function deleteSucceeded(): bool
+    {
+        if (!$this->queryExecuted()) {
+            return false;
+        }
+        return true;
+    }
+
+    private function initialize(): void
+    {
+        if ($this->isInitialized) {
+            return;
+        }
+
         try {
             $this->pdoStatement = $this->dataMapper->getQueryStatement();
-            $this->fetcher = new QueryResultFetcher($this->pdoStatement, $this->config, $this->hydrator);
+            if (!$this->pdoStatement) {
+                throw new QueryResultException('PDOStatement not available from DataMapper');
+            }
+            $this->rowCount = $this->pdoStatement->rowCount();
+            $queryString = trim($this->getQeuryString());
+            $firstWord = strtoupper(explode(' ', $queryString)[0] ?? '');
+            $this->isWriteOperation = in_array($firstWord, ['INSERT', 'UPDATE', 'DELETE', 'REPLACE']);
+
+            if ($this->isWriteOperation && $firstWord === 'INSERT') {
+                $this->lastInsertId = $this->dataMapper->lastInsertId() ?: null;
+            }
+
+            $this->fetcher = new QueryResultFetcher(
+                $this->pdoStatement,
+                $this->config,
+                $this->hydrator,
+                $this->entityFactory,
+            );
+
+            // Initialize formatter
             $this->formatter = new QueryResultFormatter(
                 $this,
                 $this->config,
-                $this->changeTracker,
-                $this->normalizer,
+                $this->entityFactory->getChangeTracker(),
+                $this->entityFactory->getNormalizer(),
             );
             $this->formatter->setTableAlias($this->tableAlias);
+            $this->isInitialized = true;
         } catch (Throwable $exception) {
             throw new QueryResultException(
                 'Failed to initialize QueryResult: ' . $exception->getMessage(),
@@ -397,5 +434,26 @@ class QueryResult implements Countable, IteratorAggregate
                 $exception,
             );
         }
+    }
+
+    private function initializeComponents(): void
+    {
+        $this->config = new QueryResultConfig(
+            $this->entity,
+            $this->tableAlias,
+            $this->tableMap,
+        );
+        $this->config->setConstructorArgs(
+            [
+                $this->entityFactory->getDependencies(),
+                $this->tableAlias,
+                $this->tableMap,
+            ],
+        );
+        $this->paginator = new QueryResultPaginator();
+        $this->hydrator = new QueryResultHydrator(
+            $this->entityFactory->getChangeTracker(),
+            $this->entityFactory->getNormalizer(),
+        );
     }
 }

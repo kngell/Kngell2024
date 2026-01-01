@@ -1,187 +1,126 @@
-import MenuItem from "js/backend/shared/MenuItem.js";
-import DropdownMenuItem from "js/backend/shared/DropdownMenuItem";
+import BrowserLogger from "js/utils/logger";
+
+const logger = new BrowserLogger("DashboardManager");
 
 export default class DashboardManager {
-  constructor() {
-    this.menuItems = [];
-    this.dropdownItems = [];
-    this.activeItem = null;
-    this.activeDropdownItem = null;
-
-    this.init();
+  constructor(options = {}) {
+    this.debug = options.debug || false;
+    this.isInitialized = false;
   }
 
-  init() {
-    this.setup();
+  static async create(options = {}) {
+    const instance = new DashboardManager(options);
+    await instance.init();
+    return instance;
   }
 
-  // DashboardManager.js
+  async init() {
+    try {
+      this.setup();
+
+      if (this.debug) {
+        logger.debug("DashboardManager initialized");
+      }
+
+      this.isInitialized = true;
+    } catch (error) {
+      console.error("DashboardManager initialization failed:", error);
+    }
+  }
+
   setup() {
-    this.clearAllActiveStates();
+    const menuList = document.querySelector(".menu-list");
+    if (menuList) {
+      menuList.classList.add("js-enhanced");
+      menuList.style.opacity = "1";
+    }
 
-    const allMenuItems = [];
-    const menuItemElements = document.querySelectorAll(".menu-list__item");
+    this.setupDropdownToggles();
 
-    menuItemElements.forEach((itemElement) => {
-      const menuItem = new MenuItem(itemElement, this);
+    this.setupClickTracking();
+  }
 
-      // ✅ Intercept click only if it’s NOT inside a form
-      itemElement.addEventListener("click", (e) => {
-        if (e.target.closest("form")) {
-          return; // Skip menu logic if click is inside a form
+  setupDropdownToggles() {
+    document.querySelectorAll(".menu-list__item--dropdown-button").forEach((button) => {
+      button.addEventListener("click", (e) => {
+        e.preventDefault();
+        const menuItem = button.closest(".menu-list__item");
+
+        if (menuItem.classList.contains("has-active-child")) {
+          return;
+        }
+
+        const isOpening = !menuItem.classList.contains("opened");
+
+        if (isOpening) {
+          this.closeAllDropdownsExcept(menuItem);
+        }
+
+        menuItem.classList.toggle("opened");
+
+        button.setAttribute("aria-expanded", isOpening ? "true" : "false");
+
+        const arrow = button.querySelector(".icon.arrow-down");
+        if (arrow) {
+          arrow.classList.toggle("rotated", isOpening);
+        }
+
+        if (this.debug) {
+          logger.debug(
+            `Dropdown ${isOpening ? "opened" : "closed"}:`,
+            button.querySelector("span")?.textContent,
+          );
         }
       });
-
-      allMenuItems.push(menuItem);
-
-      if (menuItem.dropdownMenu) {
-        const dropdownItemElements = menuItem.dropdownMenu.querySelectorAll(".dropdown-list__item");
-
-        dropdownItemElements.forEach((dropdownElement) => {
-          const dropdownItem = new DropdownMenuItem(dropdownElement, this, menuItem);
-
-          // Same protection for dropdown items
-          dropdownElement.addEventListener("click", (e) => {
-            if (e.target.closest("form")) {
-              return;
-            }
-          });
-
-          allMenuItems.push(dropdownItem);
-        });
-      }
     });
+  }
 
-    this.menuItems = allMenuItems.filter((item) => !(item instanceof DropdownMenuItem));
-    this.dropdownItems = allMenuItems.filter((item) => item instanceof DropdownMenuItem);
-
-    let initialActiveItem = null;
-    const currentUrl = window.location.pathname;
-
-    if (currentUrl === "/admin" || currentUrl === "/admin/") {
-      initialActiveItem = allMenuItems.find(
-        (item) => item.link && item.link.pathname === "/admin/index",
-      );
-    }
-
-    if (!initialActiveItem) {
-      initialActiveItem = allMenuItems.find(
-        (item) => item.link && item.link.pathname === currentUrl,
-      );
-    }
-
-    if (!initialActiveItem && this.menuItems.length > 0) {
-      initialActiveItem = this.menuItems[0];
-    }
-
-    if (initialActiveItem) {
-      if (initialActiveItem instanceof DropdownMenuItem) {
-        this.setActiveDropdownItem(initialActiveItem);
-      } else if (initialActiveItem instanceof MenuItem) {
-        this.setActiveItem(initialActiveItem);
+  closeAllDropdownsExcept(exceptMenuItem = null) {
+    document.querySelectorAll(".menu-list__item").forEach((item) => {
+      if (exceptMenuItem && item === exceptMenuItem) {
+        return;
       }
-    }
 
-    const logoLink = document.getElementById("logo-link");
-    if (logoLink) {
-      logoLink.addEventListener(
-        "click",
-        () => {
-          this.clearAllActiveStates();
-        },
-        false,
-      );
-    }
-  }
-
-  clearAllActiveStates() {
-    this.menuItems.forEach((item) => item.deactivate());
-    this.dropdownItems.forEach((item) => item.deactivate());
-    this.activeItem = null;
-    this.activeDropdownItem = null;
-  }
-
-  setActiveItem(menuItem) {
-    // Clear any previously active states.
-    this.clearAllActiveStates();
-
-    // Activate the new menu item and store it.
-    this.activeItem = menuItem;
-    menuItem.activate();
-
-    // --- FIX FOR PROBLEM: ADDING 'opened' CLASS ---
-    // If the activated item is a dropdown parent, add the 'opened' class
-    // and trigger the dropdown's visual state change.
-    if (menuItem.getType() === "dropdown-parent") {
-      menuItem.element.classList.add("opened");
-      menuItem.isOpened = true;
-
-      // This is optional, but it ensures the arrow rotates
-      const arrow = menuItem.dropdownButton.querySelector(".icon.arrow-down");
-      if (arrow) arrow.classList.add("rotated");
-    } else {
-      // If it's not a dropdown parent, ensure all dropdowns are closed.
-      // This handles the transition from a dropdown to a top-level item.
-      this.closeAllDropdowns();
-    }
-    // --- END FIX ---
-
-    // Update the display for the user.
-    this.updateActiveDisplay(menuItem.getText(), menuItem.getType());
-  }
-
-  setActiveDropdownItem(dropdownItem) {
-    this.clearAllActiveStates();
-    this.activeDropdownItem = dropdownItem;
-    dropdownItem.activate();
-
-    // Activate the parent menu item as well
-    if (dropdownItem.parent) {
-      this.activeItem = dropdownItem.parent;
-      this.activeItem.activate();
-      this.activeItem.element.classList.add("opened"); // Ensure parent is opened
-    }
-    this.updateActiveDisplay(dropdownItem.getText(), "dropdown-item");
-  }
-
-  updateActiveDisplay(text, type) {
-    const displayElement = document.getElementById("current-active-menu");
-    const typeElement = document.getElementById("active-menu-type");
-
-    if (displayElement) {
-      displayElement.textContent = text;
-    }
-
-    if (typeElement) {
-      let typeText = "Type: ";
-      switch (type) {
-        case "top-level":
-          typeText += "Top-level menu item";
-          break;
-        case "dropdown-parent":
-          typeText += "Dropdown parent";
-          break;
-        case "dropdown-item":
-          typeText += "Dropdown item";
-          break;
-        default:
-          typeText += type;
+      if (item.classList.contains("has-active-child")) {
+        return;
       }
-      typeElement.textContent = typeText;
-    }
-  }
 
-  closeAllDropdowns() {
-    this.menuItems.forEach((menuItem) => {
-      if (menuItem.dropdownMenu) {
-        menuItem.dropdownMenu.classList.remove("show");
-        if (menuItem.dropdownButton) {
-          const arrow = menuItem.dropdownButton.querySelector(".icon.arrow-down");
-          if (arrow) arrow.classList.remove("rotated");
+      item.classList.remove("opened");
+
+      const button = item.querySelector(".menu-list__item--dropdown-button");
+      if (button) {
+        button.setAttribute("aria-expanded", "false");
+
+        const arrow = button.querySelector(".icon.arrow-down");
+        if (arrow) {
+          arrow.classList.remove("rotated");
         }
-        menuItem.element.classList.remove("opened");
-        menuItem.isOpened = false;
       }
     });
+  }
+
+  setupClickTracking() {
+    document
+      .querySelectorAll(".menu-list__item--link, .dropdown-list__item--link")
+      .forEach((link) => {
+        link.addEventListener("click", (e) => {
+          const text = link.textContent.trim();
+          const href = link.getAttribute("href");
+
+          if (this.debug) {
+            logger.debug("Menu navigation:", { text, href });
+          }
+        });
+      });
+  }
+
+  trackNavigation(text, href) {
+    if (typeof gtag !== "undefined") {
+      gtag("event", "menu_navigation", {
+        event_category: "Navigation",
+        event_label: text,
+        value: href,
+      });
+    }
   }
 }

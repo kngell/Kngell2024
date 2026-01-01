@@ -4,42 +4,26 @@ declare(strict_types=1);
 
 class InsertClauseBuilder extends AbstractClauseBuilder implements ClauseBuilderInterface
 {
-    private mixed $insertData;
-    private EntityManagerInterface $em;
+    private ProcessedInsertData $processedData;
 
     public function __construct(
         private SqlInsertQuery $query,
     ) {
     }
 
-    public function buildAllClauses(): void
+    protected function initializeProperties(): void
     {
-        $this->initializeProperties();
-
-        $this->ensureMinimalFlow();
-        $this->validateClauseOrder();
-
-        foreach (SqlStatementType::INSERT->getBuildOrder() as $clause) {
-            if ($this->shouldBuildClause($clause)) {
-                $this->buildClause($clause);
-            }
-        }
+        $processor = new InsertDataProcessor($this->query, $this->query->getInsertMap());
+        $this->processedData = $processor->process();
     }
 
-    private function initializeProperties(): void
-    {
-        $this->em = $this->query->getEntityManager();
-        $insertMap = $this->query->getInsertMap();
-        $this->insertData = new InsertDataBuilder($this->query, $insertMap);
-    }
-
-    private function shouldBuildClause(string $clause): bool
+    protected function shouldBuildClause(string $clause): bool
     {
         $userFlow = array_keys($this->query->getQueryFlow());
         return in_array($clause, $userFlow);
     }
 
-    private function ensureMinimalFlow(): void
+    protected function ensureMinimalFlow(): void
     {
         // If user called insert() but no into(), assume current table
         if ($this->query->hasInsert() && !$this->query->hasInto()) {
@@ -52,27 +36,18 @@ class InsertClauseBuilder extends AbstractClauseBuilder implements ClauseBuilder
                 if (!ArrayUtils::isStringList($insertMap['insert'])) {
                     $this->query->assumeInsertDataHasInsertValues();
                 } else {
-                    throw new InvalidArgumentException("No values are defined for comlumns : {implode(', ', $insertMap)} ");
+                    throw new InvalidArgumentException('No values are defined for comlumns :' . implode(', ', $insertMap['insert']));
                 }
             }
         }
 
-        // If user has into() but no insert(), assume all columns
-        // if ($this->query->hasInto() && !$this->query->hasColumns()) {
-        //     $this->query->assumeAllColumns();
-        // }
-
-        // Validate we have at least the minimal required
-        if (!$this->query->isClosure() && (!$this->query->hasInsert() || !$this->query->hasInto())) {
-            throw new QueryFlowException(
-                'Query must have at least INSERT and INTO clauses. ' .
-                'Called insert(): ' . ($this->query->hasInsert() ? 'yes' : 'no') . ', ' .
-                'Called Into(): ' . ($this->query->hasInto() ? 'yes' : 'no'),
-            );
+        // Validate minimal requirements
+        if (!$this->query->isClosure() && !$this->query->hasInto()) {
+            throw new QueryFlowException('INSERT query requires INTO clause or entity with table definition.');
         }
     }
 
-    private function validateClauseOrder(): void
+    protected function validateClauseOrder(): void
     {
         $userFlow = array_keys($this->query->getQueryFlow());
         $statementType = $this->query->getStatementType();
@@ -82,7 +57,7 @@ class InsertClauseBuilder extends AbstractClauseBuilder implements ClauseBuilder
         $this->validateCategoryOrder($userFlow, $categoryOrder);
     }
 
-    private function buildClause(string $clause): void
+    protected function buildClause(string $clause): void
     {
         match($clause) {
             'into' => $this->buildInto(),
@@ -93,23 +68,24 @@ class InsertClauseBuilder extends AbstractClauseBuilder implements ClauseBuilder
 
     private function buildInto(): void
     {
-        $table = $this->query->getTable();
         $into = new IntoClause(
-            $table,
-            $this->em,
-            $this->insertData->getData(),
+            table: $this->query->getTable(),
+            em: $this->query->getEntityManager(),
+            processedData: $this->processedData,
+            method: 'into',
         );
-        $into->setMethod('into');
         $this->query->add($into);
     }
 
     private function buildValues(): void
     {
-        $values = new ValuesClause(
-            $this->em,
-            $this->insertData->getData(),
-        );
-        $values->setMethod('values');
-        $this->query->add($values);
+        if ($this->processedData->hasData()) {
+            $valuesClause = new ValuesClause(
+                em: $this->query->getEntityManager(),
+                processedData: $this->processedData,
+                method: 'values',
+            );
+            $this->query->add($valuesClause);
+        }
     }
 }

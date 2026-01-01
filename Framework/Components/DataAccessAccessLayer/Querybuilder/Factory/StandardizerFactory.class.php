@@ -4,17 +4,22 @@ declare(strict_types=1);
 
 class StandardizerFactory
 {
-    public function __construct(private SqlQueryComponent $query)
+    public function __construct()
     {
     }
 
     public function supports(SqlStatementType $statement): bool
     {
-        return $statement === SqlStatementType::INSERT;
+        return in_array($statement, [SqlStatementType::INSERT, SqlStatementType::SELECT, SqlStatementType::UPDATE]);
     }
 
     public function create(SqlStatementType $statement): DataStandardizerInterface
     {
-        return new InsertDataStandardizer();
+        return match (true) {
+            $statement === SqlStatementType::INSERT => new InsertDataStandardizer(),
+            $statement === SqlStatementType::SELECT => new SelectDataStandardizer(),
+            $statement === SqlStatementType::UPDATE => new UpdateDataStandardizer(),
+            default => new NullObject($this)
+        };
     }
 }

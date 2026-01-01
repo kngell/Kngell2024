@@ -10,10 +10,11 @@ class ImageUploadService extends AbstractFileUploadService
     public function __construct(
         private ImageProcessor $imageProcessor,
         FileMoverService $fileMover,
+        FileMetadataService $metadataService,
         Request $request,
         ?string $fieldName = null,
     ) {
-        parent::__construct($fileMover, $request, $fieldName);
+        parent::__construct($fileMover, $metadataService, $request, $fieldName);
     }
 
     public function getHandledUploadFileType(): UploadFileType

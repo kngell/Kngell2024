@@ -24,11 +24,7 @@ class View implements ViewInterface
             $templatePath = $this->viewEnv->getFile($templatePath);
             return $this->renderViewContent($templatePath, $context);
         } catch (ViewException $ex) {
-            // Log the view error for debugging
-            error_log("View Error: {$ex->getMessage()}");
-
-            // Re-throw to be handled by the controller/error handler
-            throw $ex;
+            throw new ViewException("View Error: {$ex->getMessage()}");
         }
     }
 
@@ -117,7 +113,6 @@ class View implements ViewInterface
         // This populates $this->_head, $this->_body, $this->_footer
         require_once $templatePath;
 
-        // SECOND: Render the layout which uses the captured sections
         if (!isset($this->_layout) || empty($this->_layout)) {
             throw new ViewNotFoundException('Layout not found. Please set a valid layout using setLayout() method.');
         }
@@ -126,8 +121,6 @@ class View implements ViewInterface
         if (!file_exists($layoutPath)) {
             throw new ViewNotFoundException("Layout file '{$this->_layout}.php' not found in layout path.");
         }
-
-        // Capture the final layout output
         ob_start();
         require_once $layoutPath;
         return ob_get_clean();

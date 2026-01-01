@@ -80,36 +80,21 @@ export default class MediaUpload {
   }
 
   handleFiles(files) {
-    // Prevent double processing
-    if (this._processingFiles) {
-      logger.debug("⏸️  Skipping duplicate file processing");
-      return;
-    }
-
+    if (this._processingExternalChange || this._processingFiles) return;
     this._processingFiles = true;
 
     try {
       const isMultiple = this.fileInput.multiple;
-      const allFiles = Array.from(files);
-
-      logger.debug("🔍 Handling files:", {
-        isMultiple: isMultiple,
-        fileCount: allFiles.length,
-        files: allFiles.map((f) => f.name),
-      });
-
-      // Clear previous files for single file inputs
+      let newFiles = Array.from(files);
       if (!isMultiple) {
         this.clearPreview();
+        newFiles = [newFiles[0]];
       }
 
-      // ✅ Add files to preview
-      allFiles.forEach((file) => this.addMediaItem(file));
+      newFiles.forEach((file) => this.addMediaItem(file));
 
-      // ✅ Update file input (this will trigger validation)
-      this.updateFileInput(allFiles);
+      this.updateFileInput(newFiles);
     } finally {
-      // Reset the flag after a short delay to allow the current processing to complete
       setTimeout(() => {
         this._processingFiles = false;
       }, 100);
@@ -120,8 +105,80 @@ export default class MediaUpload {
     const files = Array.from(e.target.files);
     this.handleFiles(files);
   }
+  addMediaItem(file, isValidated = false) {
+    const item = document.createElement("div");
+    item.className = "media-preview__item";
+    item.dataset.filename = file.name;
 
-  // addMediaItem(file) {
+    const objectURL = URL.createObjectURL(file);
+    const isImage = file.type.startsWith("image/");
+    const isVideo = file.type.startsWith("video/");
+
+    // 1. Generate Template
+    let mediaElement = "";
+    if (isImage) {
+      mediaElement = `
+            <img src="" alt="${file.name}" class="image" data-blob-src="${objectURL}">
+            <div class="media-preview__item--loading">Loading...</div>`;
+    } else if (isVideo) {
+      mediaElement = `<video src="${objectURL}" class="video" controls></video>`;
+    } else {
+      mediaElement = `<div class="file-placeholder">${file.name}</div>`;
+    }
+
+    const successIconHtml = isValidated ? this._getSuccessIconHtml() : "";
+
+    item.innerHTML = `
+        <div class="media-preview__item--img-container">${mediaElement}</div>
+        ${successIconHtml}
+        <button class="media-preview__item--icon-remove" type="button" aria-label="Remove ${file.name}">
+            <span class="btn__icon">
+                <svg class="icon cancel"><use href="/public/assets/img/icons-sprite.svg#icon-cancel"></use></svg>
+            </span>
+        </button>
+        <div class="media-preview__item--filename">${file.name}</div>
+        <div class="media-preview__item--filesize">${this.formatFileSize(file.size)}</div>
+    `;
+
+    // 2. Attach Remove Listener Immediately (No setTimeout)
+    const removeBtn = item.querySelector(".media-preview__item--icon-remove");
+    if (removeBtn) {
+      removeBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        this.removeMediaItem(item, objectURL);
+      });
+    }
+
+    // 3. Handle Image Loading Logic
+    if (isImage) {
+      const img = item.querySelector("img.image");
+      const loadingIndicator = item.querySelector(".media-preview__item--loading");
+
+      if (img) {
+        // Define handlers BEFORE setting src
+        img.onload = () => {
+          logger.debug("✅ Image loaded:", file.name);
+          if (loadingIndicator) loadingIndicator.style.display = "none";
+          if (!isValidated) this.addSuccessIcon(item);
+        };
+
+        img.onerror = () => {
+          logger.error("❌ Failed to load image:", file.name);
+          if (loadingIndicator) loadingIndicator.textContent = "Error";
+          URL.revokeObjectURL(objectURL);
+        };
+
+        img.src = objectURL;
+      }
+    } else if (isValidated) {
+      this.addSuccessIcon(item);
+    }
+
+    // 4. Append to UI
+    this.preview.appendChild(item);
+    this.updateUploadArea();
+  }
+  // addMediaItem(file, isValidated = false) {
   //   const item = document.createElement("div");
   //   item.className = "media-preview__item";
   //   item.dataset.filename = file.name;
@@ -134,147 +191,89 @@ export default class MediaUpload {
   //   const isVideo = file.type.startsWith("video/");
 
   //   let mediaElement = "";
+
   //   if (isImage) {
-  //     mediaElement = `<img src="${objectURL}" alt="${file.name}" class="image">`;
+  //     mediaElement = `
+  //     <img src="" alt="${file.name}" class="image" data-blob-src="${objectURL}">
+  //     <div class="media-preview__item--loading">Loading...</div>
+  //   `;
   //   } else if (isVideo) {
   //     mediaElement = `<video src="${objectURL}" class="video" controls></video>`;
   //   } else {
   //     mediaElement = `<div class="file-placeholder">${file.name}</div>`;
   //   }
 
+  //   // Add success icon if file is validated
+  //   const successIcon = isValidated
+  //     ? `
+  //   <div class="media-preview__item--icon-success">
+  //     <svg class="icon success" aria-label="Success" role="img">
+  //       <use href="/public/assets/img/icons-sprite.svg#icon-success"></use>
+  //     </svg>
+  //   </div>
+  // `
+  //     : "";
+
   //   item.innerHTML = `
-  //     <div class="media-preview__item--img-container">
-  //       ${mediaElement}
-  //     </div>
+  //   <div class="media-preview__item--img-container">
+  //     ${mediaElement}
+  //   </div>
 
-  //        <div class="media-preview__item--icon-success">
-  //         <svg class="icon success" aria-label="Success" role="img">
-  //           <use href="/public/assets/img/icons-sprite.svg#icon-success"></use>
-  //         </svg>
-  //       </div>
+  //   ${successIcon}
 
-  //       <button class="media-preview__item--icon-remove" type="button" aria-label="Remove ${file.name}">
-  //         <span class="btn__icon">
-  //           <svg class="icon cancel" aria-label="Cancel" role="img">
-  //             <use href="/public/assets/img/icons-sprite.svg#icon-cancel"></use>
-  //           </svg>
-  //         </span>
-  //       </button>
-  //       <div class="media-preview__item--filename">${file.name}</div>
-  //     <div class="media-preview__item--filesize">${this.formatFileSize(file.size)}</div>
+  //   <button class="media-preview__item--icon-remove" type="button" aria-label="Remove ${file.name}">
+  //     <span class="btn__icon">
+  //       <svg class="icon cancel" aria-label="Cancel" role="img">
+  //         <use href="/public/assets/img/icons-sprite.svg#icon-cancel"></use>
+  //       </svg>
+  //     </span>
+  //   </button>
+  //   <div class="media-preview__item--filename">${file.name}</div>
+  //   <div class="media-preview__item--filesize">${this.formatFileSize(file.size)}</div>
+  // `;
 
-  //   `;
+  //   // Add remove functionality and image loading
 
-  //   // Add remove functionality - wait for DOM to be ready
-  //   setTimeout(() => {
-  //     const removeBtn = item.querySelector(".media-preview__item--icon-remove");
-  //     if (removeBtn) {
-  //       removeBtn.addEventListener("click", () => this.removeMediaItem(item, objectURL));
-  //     } else {
-  //       logger.warn("Remove button not found in media item");
+  //   const removeBtn = item.querySelector(".media-preview__item--icon-remove");
+  //   if (removeBtn) {
+  //     removeBtn.addEventListener("click", () => this.removeMediaItem(item, objectURL));
+  //   }
+
+  //   // Handle image loading
+  //   if (isImage) {
+  //     const img = item.querySelector("img.image");
+  //     const loadingIndicator = item.querySelector(".media-preview__item--loading");
+
+  //     if (img) {
+  //       img.onload = () => {
+  //         logger.debug("✅ Image loaded successfully:", file.name);
+  //         if (loadingIndicator) {
+  //           loadingIndicator.style.display = "none";
+  //         }
+  //         // Add success icon after image loads (if not already added)
+  //         if (!isValidated) {
+  //           this.addSuccessIcon(item);
+  //         }
+  //       };
+
+  //       img.onerror = (e) => {
+  //         logger.error("❌ Failed to load image blob:", file.name, objectURL, e);
+  //         if (loadingIndicator) {
+  //           loadingIndicator.textContent = "Failed to load";
+  //         }
+  //         URL.revokeObjectURL(objectURL);
+  //       };
+
+  //       img.src = objectURL;
   //     }
-  //   }, 0);
+  //   } else if (isValidated) {
+  //     // For non-image files that are validated, ensure success icon is shown
+  //     this.addSuccessIcon(item);
+  //   }
 
   //   this.preview.appendChild(item);
   //   this.updateUploadArea();
   // }
-  addMediaItem(file, isValidated = false) {
-    const item = document.createElement("div");
-    item.className = "media-preview__item";
-    item.dataset.filename = file.name;
-
-    // Create object URL for preview
-    const objectURL = URL.createObjectURL(file);
-
-    // Determine if it's an image or video
-    const isImage = file.type.startsWith("image/");
-    const isVideo = file.type.startsWith("video/");
-
-    let mediaElement = "";
-
-    if (isImage) {
-      mediaElement = `
-      <img src="" alt="${file.name}" class="image" data-blob-src="${objectURL}">
-      <div class="media-preview__item--loading">Loading...</div>
-    `;
-    } else if (isVideo) {
-      mediaElement = `<video src="${objectURL}" class="video" controls></video>`;
-    } else {
-      mediaElement = `<div class="file-placeholder">${file.name}</div>`;
-    }
-
-    // Add success icon if file is validated
-    const successIcon = isValidated
-      ? `
-    <div class="media-preview__item--icon-success">
-      <svg class="icon success" aria-label="Success" role="img">
-        <use href="/public/assets/img/icons-sprite.svg#icon-success"></use>
-      </svg>
-    </div>
-  `
-      : "";
-
-    item.innerHTML = `
-    <div class="media-preview__item--img-container">
-      ${mediaElement}
-    </div>
-    
-    ${successIcon}
-       
-    <button class="media-preview__item--icon-remove" type="button" aria-label="Remove ${file.name}">
-      <span class="btn__icon">
-        <svg class="icon cancel" aria-label="Cancel" role="img">
-          <use href="/public/assets/img/icons-sprite.svg#icon-cancel"></use>
-        </svg>
-      </span>
-    </button>
-    <div class="media-preview__item--filename">${file.name}</div>
-    <div class="media-preview__item--filesize">${this.formatFileSize(file.size)}</div>
-  `;
-
-    // Add remove functionality and image loading
-    setTimeout(() => {
-      const removeBtn = item.querySelector(".media-preview__item--icon-remove");
-      if (removeBtn) {
-        removeBtn.addEventListener("click", () => this.removeMediaItem(item, objectURL));
-      }
-
-      // Handle image loading
-      if (isImage) {
-        const img = item.querySelector("img.image");
-        const loadingIndicator = item.querySelector(".media-preview__item--loading");
-
-        if (img) {
-          img.onload = () => {
-            logger.debug("✅ Image loaded successfully:", file.name);
-            if (loadingIndicator) {
-              loadingIndicator.style.display = "none";
-            }
-            // Add success icon after image loads (if not already added)
-            if (!isValidated) {
-              this.addSuccessIcon(item);
-            }
-          };
-
-          img.onerror = (e) => {
-            logger.error("❌ Failed to load image blob:", file.name, objectURL, e);
-            if (loadingIndicator) {
-              loadingIndicator.textContent = "Failed to load";
-            }
-            URL.revokeObjectURL(objectURL);
-          };
-
-          img.src = objectURL;
-        }
-      } else if (isValidated) {
-        // For non-image files that are validated, ensure success icon is shown
-        this.addSuccessIcon(item);
-      }
-    }, 0);
-
-    this.preview.appendChild(item);
-    this.updateUploadArea();
-  }
 
   // Helper method to add success icon
   addSuccessIcon(item) {
@@ -295,51 +294,54 @@ export default class MediaUpload {
   }
 
   removeMediaItem(item, objectURL) {
-    // Revoke the object URL to free memory
-    URL.revokeObjectURL(objectURL);
+    logger.debug("🗑️ removeMediaItem triggered for:", item.dataset.filename);
 
-    // Remove the item from DOM
-    item.remove();
+    // 1. Memory Cleanup
+    if (objectURL) URL.revokeObjectURL(objectURL);
 
-    // Update the file input and UI state
-    this.updateFileInputAfterRemoval(item.dataset.filename);
+    // 2. Data Cleanup (Do this BEFORE UI removal to stay safe)
+    const filenameToRemove = item.dataset.filename;
+    const dt = new DataTransfer();
+    Array.from(this.fileInput.files).forEach((file) => {
+      if (file.name !== filenameToRemove) {
+        dt.items.add(file);
+      }
+    });
+
+    // 3. UI Cleanup
+    // Forcefully remove the element from the DOM
+    if (item && item.parentNode) {
+      item.parentNode.removeChild(item);
+    } else {
+      item.remove();
+    }
+
+    // 4. Update the input data
+    this.fileInput.files = dt.files;
+
+    // 5. Trigger Validation
+    // Use a flag to ensure handleFiles doesn't catch this change event and re-add the file
+    this._processingExternalChange = true;
+    this.fileInput.dispatchEvent(new Event("change", { bubbles: true }));
+    this._processingExternalChange = false;
+
     this.updateUploadArea();
+    logger.debug(`✅ UI Item removed. Data count: ${this.fileInput.files.length}`);
   }
 
   updateFileInput(files) {
-    logger.debug("=== updateFileInput called ===");
-
-    // Add flag to prevent recursion
-    if (this._updatingFileInput) {
-      logger.debug("⏸️  Skipping recursive updateFileInput call");
-      return;
-    }
-
+    if (this._updatingFileInput) return;
     this._updatingFileInput = true;
 
     try {
-      logger.debug("Input files before:", this.fileInput.files);
-      logger.debug("New files to add:", files);
-
-      // DON'T automatically truncate for single-file inputs
-      // Let the validator handle max_files rule instead
       const dt = new DataTransfer();
 
-      // Add ALL files to DataTransfer (don't truncate)
       files.forEach((file) => dt.items.add(file));
 
       this.fileInput.files = dt.files;
 
-      logger.debug("Files after update (ALL files kept):", {
-        fileCount: this.fileInput.files.length,
-        fileNames: Array.from(this.fileInput.files).map((f) => f.name),
-      });
-
-      // Only trigger change event if we're not already processing one
       if (!this._processingExternalChange) {
-        const changeEvent = new Event("change", { bubbles: true });
-        this.fileInput.dispatchEvent(changeEvent);
-        logger.debug("🎯 File input change event dispatched for validation");
+        this.fileInput.dispatchEvent(new Event("change", { bubbles: true }));
       }
     } finally {
       this._updatingFileInput = false;
@@ -357,19 +359,25 @@ export default class MediaUpload {
     }
 
     this.fileInput.files = dt.files;
+
+    const changeEvent = new Event("change", { bubbles: true });
+    this.fileInput.dispatchEvent(changeEvent);
+
+    logger.debug("🎯 File input change event dispatched after removal", {
+      remaining: this.fileInput.files.length,
+    });
+    // ----------------------
   }
 
   clearPreview() {
-    // Revoke all object URLs first
     const items = this.preview.querySelectorAll(".media-preview__item");
     items.forEach((item) => {
       const img = item.querySelector("img, video");
       if (img && img.src.startsWith("blob:")) {
         URL.revokeObjectURL(img.src);
       }
+      item.remove();
     });
-
-    // Clear the preview container
     this.preview.innerHTML = "";
   }
 

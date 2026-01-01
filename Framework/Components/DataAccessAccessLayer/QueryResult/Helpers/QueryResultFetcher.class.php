@@ -4,196 +4,142 @@ declare(strict_types=1);
 
 class QueryResultFetcher
 {
+    private bool $fetchModeConfigured = false;
+    private bool $fetchModeAsAssociative = false;
+    private ?array $cachedResults = null;
+
     public function __construct(
         private PDOStatement $pdoStatement,
         private QueryResultConfig $config,
         private QueryResultHydrator $hydrator,
+        private EntityFactoryInterface $entityFactory,
     ) {
     }
 
-    /**
-     * Get results with optional limit.
-     */
-    public function get(?int $limit = null): array
-    {
-        $results = $this->fetchAll();
-        return $limit !== null ? array_slice($results, 0, $limit) : $results;
-    }
-
-    /**
-     * Get all records from result set.
-     */
     // public function fetchAll(): array
     // {
     //     $this->configureFetchMode();
-    //     $results = $this->pdoStatement->fetchAll();
+    //     $rows = $this->pdoStatement->fetchAll();
 
-    //     return is_array($results) ? $results : [];
+    //     if ($this->config->getFetchMode() === 'class') {
+    //         return array_map(fn ($row) => $this->hydrate($row), $rows);
+    //     }
+
+    //     return $rows ?: [];
     // }
-    // In QueryResultFetcher.php (Updated fetchAll method)
-
-    /**
-     * Get all records from result set, using the Hydrator for Entities.
-     */
     public function fetchAll(): array
     {
         $this->configureFetchMode();
-        // if ($this->config->getFetchMode() === 'class') {
-        //     // $this->pdoStatement->setFetchMode(PDO::FETCH_ASSOC);
-        //     $rawResults = $this->pdoStatement->fetchAll();
 
-        //     $entityPrototype = $this->config->getEntity();
-        //     $hydratedResults = [];
+        if ($this->cachedResults !== null) {
+            return $this->cachedResults;
+        }
 
-        //     foreach ($rawResults as $rawRow) {
-        //         $hydratedResults[] = $this->hydrator->hydrateAndTrack($rawRow, $entityPrototype);
-        //     }
+        try {
+            $results = $this->pdoStatement->fetchAll();
+        } catch (PDOException $e) {
+            if (strpos($e->getMessage(), 'no result set') !== false) {
+                throw new QueryResultException('Result set exhausted or not available');
+            }
 
-        //     return $hydratedResults;
-        // }
+            throw $e;
+        }
 
-        $results = $this->pdoStatement->fetchAll();
         return is_array($results) ? $results : [];
     }
 
-    // /**
-    //  * Get first record from result set.
-    //  */
-    // public function fetchFirst(): mixed
-    // {
-    //     $this->configureFetchMode();
-    //     $result = $this->pdoStatement->fetch();
-    //     return $result ?: null;
-    // }
     public function fetchFirst(): mixed
     {
-        // if ($this->config->getFetchMode() === 'class') {
-        //     $this->pdoStatement->setFetchMode(PDO::FETCH_ASSOC);
-        //     $rawResult = $this->pdoStatement->fetch();
-
-        //     if ($rawResult) {
-        //         $entityPrototype = $this->config->getEntity();
-        //         // Hydrate and Track the single raw row
-        //         return $this->hydrator->hydrateAndTrack($rawResult, $entityPrototype);
-        //     }
-        //     return null;
-        // }
-
         $this->configureFetchMode();
         $result = $this->pdoStatement->fetch();
+        if ($result !== false) {
+            $this->pdoStatement->execute();
+        }
+
         return $result ?: null;
     }
 
-    /**
-     * Get a single record (alias for fetchFirst).
-     */
     public function fetchSingle(): mixed
     {
         return $this->fetchFirst();
     }
 
-    /**
-     * Get results as key-value pairs.
-     */
     public function fetchKeyPairs(): array
     {
+        // Direct fetch for key pairs
         $results = $this->pdoStatement->fetchAll(PDO::FETCH_KEY_PAIR);
         return is_array($results) ? $results : [];
     }
 
-    /**
-     * Get a column as an array.
-     */
     public function fetchColumn(int $columnIndex = 0): array
     {
+        // Direct fetch for column
         $results = $this->pdoStatement->fetchAll(PDO::FETCH_COLUMN, $columnIndex);
         return is_array($results) ? $results : [];
     }
 
-    /**
-     * Get paginated results.
-     */
     public function fetchPage(int $page, int $perPage): array
     {
         $offset = ($page - 1) * $perPage;
-
-        // Handle special fetch modes
-        if ($this->config->getFetchMode() === 'key_pair') {
-            $results = $this->pdoStatement->fetchAll(PDO::FETCH_KEY_PAIR);
-            return array_slice($results, $offset, $perPage);
-        }
-
-        if ($this->config->getFetchMode() === 'column') {
-            $columnIndex = $this->config->getConstructorArgs()[0] ?? 0;
-            $results = $this->pdoStatement->fetchAll(PDO::FETCH_COLUMN, $columnIndex);
-            return array_slice($results, $offset, $perPage);
-        }
-
-        // For class/array/object modes
         $this->configureFetchMode();
-        $results = $this->pdoStatement->fetchAll();
-        return array_slice($results, $offset, $perPage);
+
+        $allResults = $this->pdoStatement->fetchAll();
+        return array_slice($allResults, $offset, $perPage);
     }
 
-    /**
-     * Apply operation to results (first, limit, etc.).
-     */
-    public function applyOperation(array $results, string $operation, ?int $limit = null): mixed
+    private function hydrate(array $data): Entity
     {
-        $results = $results ?: [];
-
-        return match ($operation) {
-            'all' => $results,
-            'first' => $results[0] ?? null,
-            'limit' => array_slice($results, 0, $limit),
-            default => $results
-        };
+        return $this->entityFactory->createFromDatabase(
+            $this->config->getClassName(),
+            $data,
+            $this->config->getTableAlias() ?? [],
+            $this->config->getTableMap() ?? [],
+        );
     }
 
-    /**
-     * Internal method to handle different fetch operations.
-     */
-    public function fetchResults(string $operation, ?int $limit = null): mixed
-    {
-        // Handle special fetch modes
-        if ($this->config->getFetchMode() === 'key_pair') {
-            $results = $this->pdoStatement->fetchAll(PDO::FETCH_KEY_PAIR);
-            return $this->applyOperation($results, $operation, $limit);
-        }
-
-        if ($this->config->getFetchMode() === 'column') {
-            $columnIndex = $this->config->getConstructorArgs()[0] ?? 0;
-            $results = $this->pdoStatement->fetchAll(PDO::FETCH_COLUMN, $columnIndex);
-            return $this->applyOperation($results, $operation, $limit);
-        }
-
-        // For class/array/object modes
-        $this->configureFetchMode();
-        $results = $this->pdoStatement->fetchAll();
-        return $this->applyOperation($results, $operation, $limit);
-    }
-
-    /**
-     * Configure the PDO fetch mode.
-     */
     private function configureFetchMode(): void
     {
+        if ($this->fetchModeConfigured) {
+            return;
+        }
+
         $pdoFetchMode = $this->config->getPdoFetchMode();
         $className = $this->config->getClassName();
         $constructorArgs = $this->config->getConstructorArgs();
 
         try {
-            if ($className !== null) {
-                if ($constructorArgs !== null) {
-                    $this->pdoStatement->setFetchMode($pdoFetchMode, $className, $constructorArgs);
+            $isClassFetch = ($pdoFetchMode & PDO::FETCH_CLASS) === PDO::FETCH_CLASS;
+
+            if ($isClassFetch && !$this->fetchModeAsAssociative) {
+                // This is a class fetch mode
+                if ($className !== null) {
+                    if (!empty($constructorArgs)) {
+                        $this->pdoStatement->setFetchMode($pdoFetchMode, $className, $constructorArgs);
+                    } else {
+                        $this->pdoStatement->setFetchMode($pdoFetchMode, $className);
+                    }
                 } else {
-                    $this->pdoStatement->setFetchMode($pdoFetchMode, $className);
+                    // No class name provided, fallback to associative
+                    $this->pdoStatement->setFetchMode(PDO::FETCH_ASSOC);
                 }
+            } elseif ($isClassFetch && $this->fetchModeAsAssociative) {
+                $this->pdoStatement->setFetchMode(PDO::FETCH_ASSOC);
+            } elseif ($pdoFetchMode === PDO::FETCH_COLUMN) {
+                // Column fetch needs column index
+                $columnIndex = $this->config->getColumnIndex() ?? 0;
+                $this->pdoStatement->setFetchMode(PDO::FETCH_COLUMN, $columnIndex);
             } else {
+                // All other modes (ASSOC, OBJ, KEY_PAIR) don't need extra arguments
                 $this->pdoStatement->setFetchMode($pdoFetchMode);
             }
+
+            $this->fetchModeConfigured = true;
         } catch (PDOException $exception) {
+            // Fallback to associative array
             $this->pdoStatement->setFetchMode(PDO::FETCH_ASSOC);
+            $this->fetchModeConfigured = true;
+
+            // Re-throw if you want to see the error
             throw new QueryResultException(
                 'Failed to set fetch mode: ' . $exception->getMessage(),
                 (int) $exception->getCode(),

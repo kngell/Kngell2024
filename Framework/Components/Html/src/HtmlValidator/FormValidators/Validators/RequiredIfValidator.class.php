@@ -69,26 +69,4 @@ class RequiredIfValidator extends AbstractValidator
         }
         return (string) $value;
     }
-
-    private function isEmpty(mixed $value): bool
-    {
-        if ($value === null || $value === '') {
-            return true;
-        }
-        if (is_array($value) && empty($value)) {
-            return true;
-        }
-        if (is_string($value) && trim($value) === '') {
-            return true;
-        }
-        // Handle boolean false
-        if ($value === false) {
-            return false; // false is considered a value, not empty
-        }
-        // Handle numeric zero
-        if ($value === 0 || $value === '0') {
-            return false; // zero is considered a value
-        }
-        return false;
-    }
 }

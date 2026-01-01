@@ -31,12 +31,7 @@ export default class MaxFilesValidator extends BaseValidator {
     });
 
     if (files.length > maxFiles) {
-      const error = this.errorMessage(
-        this.errorParams.message,
-        this.display,
-        files.length,
-        maxFiles,
-      );
+      const error = this.errorMessage(this.errorParams.message, this.display, maxFiles);
       logger.debug("🚨 MaxFilesValidator: Validation FAILED", {
         error,
         selectedFiles: files.length,

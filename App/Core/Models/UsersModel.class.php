@@ -6,12 +6,7 @@ class UserModel extends Model
 {
     private const int RESET_PW_EXPIRY = 60 * 60 * 2;
 
-    public function __construct(EntityManagerInterface $em)
-    {
-        parent::__construct($em);
-    }
-
-    public function getUser(string|int $id) : User|bool
+    public function getUser(string|int $id): User|bool
     {
         $user = $this->find($id);
         if ($user->getQueryResult() && $user->count() === 0) {
@@ -20,7 +15,7 @@ class UserModel extends Model
         return $user->getResults('class')->single();
     }
 
-    public function loginAttempts(string $email) : User|null
+    public function loginAttempts(string $email): User|null
     {
         $this->entityManager->createQueryBuilder()->select()
             ->leftJoin('login_attempts', 'COUNT(la_id) as login_attempts', 'timestamp as login_attempts_timestamp')
@@ -29,7 +24,7 @@ class UserModel extends Model
                 'login_attempts|user_id',
                 'login_attempts|timestamp',
                 '>=',
-                time() - 60 * 60
+                time() - 60 * 60,
             )
             ->where('user|email', $email)
             ->groupBy('user|user_id')
@@ -43,7 +38,7 @@ class UserModel extends Model
         return null;
     }
 
-    public function getByEmail(string $email) : User|bool
+    public function getByEmail(string $email): User|bool
     {
         $user = $this->all(['email' => $email]);
         if ($user->getQueryResult() && $user->count() === 0) {
@@ -52,7 +47,7 @@ class UserModel extends Model
         return $user->getResults('class')->single();
     }
 
-    public function saveRegisteredUser(array $data, TokenInterface $token) : QueryResult
+    public function saveRegisteredUser(array $data, TokenInterface $token): QueryResult
     {
         $data = array_merge($data, [
             'activation_hash' => $token->getRememberHash(),
@@ -60,7 +55,7 @@ class UserModel extends Model
         return parent::save($data);
     }
 
-    public function updateUser(array $data, HashInterface $hash) : QueryResult
+    public function updateUser(array $data, HashInterface $hash): QueryResult
     {
         if (array_key_exists('password', $data)) {
             $data['password'] = $hash->password($data['password']);
@@ -69,7 +64,7 @@ class UserModel extends Model
         return parent::save($data);
     }
 
-    public function processPasswordResetRequest(TokenInterface $token, array $userData) : array|bool
+    public function processPasswordResetRequest(TokenInterface $token, array $userData): array|bool
     {
         $user = $this->getByEmail($userData['email']);
         if ($user) {
@@ -86,7 +81,7 @@ class UserModel extends Model
         return false;
     }
 
-    public function getUserByResetPw(string $token) : User|null
+    public function getUserByResetPw(string $token): User|null
     {
         $token = new Token($token);
         $token_hash = $token->getRememberHash();
@@ -94,7 +89,7 @@ class UserModel extends Model
             ->where('password_reset_hash', $token_hash)
             ->build();
         $results = $this->entityManager->persist()->getResults();
-        if (! $results->getQueryResult() && $results->rowCount()) {
+        if (!$results->getQueryResult() && $results->rowCount()) {
             return null;
         }
         /** @var User */
@@ -107,7 +102,7 @@ class UserModel extends Model
         return null;
     }
 
-    public function resetPassword(User $user, array $userData, HashInterface $hash) : bool
+    public function resetPassword(User $user, array $userData, HashInterface $hash): bool
     {
         $result = $this->save([
             'user_id' => $user->getUserId(),
@@ -121,7 +116,7 @@ class UserModel extends Model
         return false;
     }
 
-    public function activateAccount(string $token) : bool
+    public function activateAccount(string $token): bool
     {
         $hash_token = (new Token($token))->getRememberHash();
         $this->entityManager->createQueryBuilder()->update()
@@ -129,7 +124,7 @@ class UserModel extends Model
             ->where('activation_hash', $hash_token)
             ->build();
         $result = $this->entityManager->persist()->getResults();
-        if (! $result->rowCount()) {
+        if (!$result->rowCount()) {
             return false;
         }
         return true;

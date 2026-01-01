@@ -8,11 +8,17 @@ interface SqlCompositeQueryBuilderInterface
 {
     public function select(string|array|Closure ...$columns): SqlSelectQueryBuilderInterface;
 
+    public function with(string $cteTableName, SqlSelectQueryBuilderInterface|Closure $cteBody): SqlSelectQueryBuilderInterface;
+
+    public function withRecursive(string $cteTableName, SqlSelectQueryBuilderInterface|Closure $cteBody): SqlSelectQueryBuilderInterface;
+
+    public function selectWithAlias(string|array|Closure ...$columns): SqlSelectQueryBuilderInterface;
+
     public function insert(mixed ...$data): SqlInsertQueryBuilderInterface;
 
-    public function update(string ...$columns): SqlUpdateQueryBuilderInterface;
+    public function update(null|string|Closure $table = null): SqlUpdateQueryBuilderInterface;
 
-    public function delete(string ...$columns): SqlDeleteQueryBuilderInterface;
+    public function delete(string $table): SqlDeleteQueryBuilderInterface;
 
     public function createTable(string $table): SqlDdlQueryBuilderInterface;
 

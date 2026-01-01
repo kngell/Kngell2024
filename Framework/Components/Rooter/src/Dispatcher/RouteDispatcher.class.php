@@ -9,6 +9,7 @@ readonly class RouteDispatcher
         'auth',
         'grantAccess',
         'crsfToken',
+        'cacheGarbageCollector',
     ];
 
     /**
@@ -25,7 +26,7 @@ readonly class RouteDispatcher
 
     public function __construct(
         private RouteArgumentGenerator $routeArgumentGenerator,
-        private array $middlewares,
+        private array $globalMiddlewares,
     ) {
     }
 
@@ -41,7 +42,6 @@ readonly class RouteDispatcher
     ): string|Response {
         try {
             $arguments = !empty($params) ? $params : $this->routeArgumentGenerator->generate($route, $request);
-
             // Bind route information for dependency injection
             $app->instance('current.route', $route);
             $app->instance('current.url', $url);
@@ -96,11 +96,11 @@ readonly class RouteDispatcher
         $this->ensureAuthMiddlewareFirst($middlewareNames);
 
         return array_map(function ($name) use ($app, $route) {
-            if (!array_key_exists($name, $this->middlewares)) {
+            if (!array_key_exists($name, $this->globalMiddlewares)) {
                 throw new UnexpectedValueException("Middleware $name not found in the configuration route settings");
             }
 
-            $middlewareClass = $this->middlewares[$name];
+            $middlewareClass = $this->globalMiddlewares[$name];
 
             // Use contextual binding for middlewares that need route information
             if (in_array($name, ['auth', 'grantAccess', 'requireLogin'], true)) {
@@ -229,16 +229,18 @@ readonly class RouteDispatcher
     {
         return $controller
             ->setRequest($request)
-            ->setView($app->resolve(ViewInterface::class))
+            ->setView($app->get(ViewInterface::class))
             ->setresponse($app->getResponse())
-            ->setToken($app->resolve(TokenInterface::class))
-            ->setFlash($app->resolve(FlashInterface::class))
+            ->setToken($app->get(TokenInterface::class))
+            ->setFlash($app->get(FlashInterface::class))
             ->setSession($app->getSession())
-            ->setEventManager($app->resolve(EventManagerInterface::class))
-            ->setBuilder($app->resolve(HtmlBuilder::class))
+            ->setEventManager($app->get(EventManagerInterface::class))
+            ->setBuilder($app->get(HtmlBuilder::class))
             ->setCache($app->getCache())
             ->setCookie($app->getCookie())
-            ->setNavigationHistory($app->resolve(NavigationHistoryService::class));
+            ->setNavigationHistory($app->get(NavigationHistoryService::class))
+            ->setRegion($app->get(RegionContextInterface::class))
+            ->setTranslator($app->get(TranslatorServiceInterface::class));
     }
 
     /**

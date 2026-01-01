@@ -49,20 +49,7 @@ class UploadErrorValidator extends AbstractValidator
         return false;
     }
 
-    private function validateFileUpload(FileUpload $file): ?string
-    {
-        $error = $file->getError();
-
-        // Skip if no error or no file
-        if ($error->isSuccess() || $error === ErrorFile::UPLOAD_ERR_NO_FILE) {
-            return null;
-        }
-
-        // Get user-friendly error message
-        return $error->getUserFriendlyMessage($file->getOriginalName());
-    }
-
-    private function isEmpty(mixed $value): bool
+    protected function isEmpty(mixed $value): bool
     {
         if ($value === null || $value === '' || $value === []) {
             return true;
@@ -84,5 +71,18 @@ class UploadErrorValidator extends AbstractValidator
         }
 
         return false;
+    }
+
+    private function validateFileUpload(FileUpload $file): ?string
+    {
+        $error = $file->getError();
+
+        // Skip if no error or no file
+        if ($error->isSuccess() || $error === ErrorFile::UPLOAD_ERR_NO_FILE) {
+            return null;
+        }
+
+        // Get user-friendly error message
+        return $error->getUserFriendlyMessage($file->getOriginalName());
     }
 }

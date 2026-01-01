@@ -1,0 +1,1 @@
+{"__type__":"json","data":{"id":2,"currency_code":"EUR","currency_name":"Euro","symbol":"\u20ac","currency_symbol":"\u20ac","is_active":1,"is_default":0,"fraction_digits":2,"created_at":"2025-12-03 22:01:40","updated_at":"2025-12-03 22:01:40"}}

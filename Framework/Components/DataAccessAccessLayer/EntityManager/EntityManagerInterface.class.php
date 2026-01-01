@@ -6,7 +6,7 @@ interface EntityManagerInterface
 {
     public function createQueryBuilder(): QueryBuilder;
 
-    public function setEntity(Entity $entity): self;
+    public function setEntity(Entity|array|CollectionInterface $entity): self;
 
     public function table(): string;
 
@@ -16,7 +16,7 @@ interface EntityManagerInterface
 
     public function assign(array $data): self;
 
-    public function getEntity(): Entity;
+    public function getEntity(): Entity|CollectionInterface;
 
     public function getEntityProperties(): array;
 
@@ -47,4 +47,8 @@ interface EntityManagerInterface
     public function hasData(): bool;
 
     public function getEntityData(): array;
+
+    public function getDirtyData(): array;
+
+    public function getLastOperationId(): null|int;
 }

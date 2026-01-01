@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 class EntityManager implements EntityManagerInterface
 {
-    private Entity|CollectionInterface $entity;
+    private Entity|array|CollectionInterface $entity;
     private ReflectionObject $reflector;
-    private $repositories = [];
+    private array $repositories = [];
     private ?AbstractQueryBuilder $queryBuilder;
     private string $entityFieldId;
     private array $tableAlias = [];
@@ -14,10 +14,11 @@ class EntityManager implements EntityManagerInterface
     public function __construct(
         private DataMapperInterface $mapper,
         private TablesAliasHelper $tableAliasHelper,
-        private TypeNormalizerInterface $normalizer,
-        private ChangeTrackerInterface $changeTracker,
+        private EntityFactoryInterface $entityFactory,
     ) {
     }
+
+    // ============ TRANSACTION METHODS ============
 
     public function beginTransaction(): bool
     {
@@ -39,111 +40,104 @@ class EntityManager implements EntityManagerInterface
         return $this->mapper->getConnexion();
     }
 
+    // ============ QUERY BUILDING ============
+
     public function createQueryBuilder(): QueryBuilder
     {
         return new QueryBuilder($this);
     }
 
-    /**
-     * Improved repository factory with better error handling.
-     */
-    public function getRepository(Entity|string|null $entityName = null): RepositoryInterface|ProductRegionalPriceRepositoryInterface
+    public function clearQuery(): self
     {
-        // If no entity name provided, return base repository
-        if ($entityName === null) {
-            return new Repository($this);
-        }
-
-        // Extract class name from entity instance
-        if ($entityName instanceof Entity) {
-            $entityName = $entityName::class;
-            !isset($this->entity) && !is_object($this->entity) ? new $entityName() : '';
-        }
-
-        // Check if repository already exists
-        if (isset($this->repositories[$entityName])) {
-            return $this->repositories[$entityName];
-        }
-
-        // Try to find repository class
-        $repositoryClassName = $entityName . 'Repository';
-
-        if (!class_exists($repositoryClassName)) {
-            // Fallback to base repository if specific one doesn't exist
-            $this->repositories[$entityName] = new Repository($this);
-        } else {
-            // Create specific repository
-            $this->repositories[$entityName] = new $repositoryClassName($this);
-        }
-
-        return $this->repositories[$entityName];
-    }
-
-    /**
-     * Improved persist method with better return handling.
-     */
-    public function persist(): self
-    {
-        if (!$this->queryBuilder) {
-            throw new RuntimeException('No query built to persist');
-        }
-
-        $sql = $this->queryBuilder->getQuery();
-        $parameters = $this->queryBuilder->getParameters();
-        // $bindArray = $this->queryExpr->getBindArr();
-        // $tableAlias = $this->queryExpr->getTableAlias();
-        // $this->tableAlias = $tableAlias;
-
-        $this->mapper->persist($sql, $parameters, false);
+        $this->queryBuilder = null;
         return $this;
     }
 
     /**
-     * Helper method for quick entity saving.
+     * @param null|AbstractQueryBuilder $queryBuilder
+     *
+     * @return EntityManager
      */
-    public function save(Entity $entity): self
+    public function setQueryBuilder(?AbstractQueryBuilder $queryBuilder): EntityManager
     {
-        $this->setEntity($entity);
+        $this->queryBuilder = $queryBuilder;
+        return $this;
+    }
 
-        $properties = $this->getEntityProperties();
+    // ============ REPOSITORY MANAGEMENT ============
 
-        if ($this->isEntityKeyInitialized() && $this->getEntityKeyValue()) {
-            // Update existing entity
-            $keyField = $this->getEntityKeyField();
-            $keyValue = $this->getEntityKeyValue();
+    /**
+     * Get repository for entity with proper type handling.
+     */
+    public function getRepository(Entity|CollectionInterface|string|null $entityName = null): RepositoryInterface
+    {
+        $entityClass = $this->resolveEntityClass($entityName);
 
-            $this->createQueryBuilder()
-                ->update()
-                ->set($properties)
-                ->where([$keyField => $keyValue])
-                ->build();
-        } else {
-            // Insert new entity
-            $this->createQueryBuilder()
-                ->insert($this->table())
-                ->columns((string) array_keys($properties))
-                ->values(array_values($properties))
-                ->build();
+        if (isset($this->repositories[$entityClass])) {
+            return $this->repositories[$entityClass];
         }
 
-        return $this->persist();
+        return $this->repositories[$entityClass] = $this->createRepository($entityClass);
     }
 
-    public function getQueryResult(): QueryResult
+    // ============ ENTITY MANAGEMENT ============
+
+    /**
+     * Set entity with proper type validation.
+     */
+    public function setEntity(Entity|array|CollectionInterface $entity): self
     {
-        return new QueryResult(
-            $this->mapper,
-            $this->entity,
-            $this->queryBuilder->getTableAlias(),
-            $this->changeTracker,
-            $this->normalizer,
-            $this->queryBuilder->getTables(),
-        );
+        $this->validateEntityType($entity);
+        $this->entity = $entity;
+
+        if ($entity instanceof Entity) {
+            $this->reflector = new ReflectionObject($entity);
+        } else {
+            $items = $entity->all();
+            if (!empty($items) && $items[0] instanceof Entity) {
+                $this->reflector = new ReflectionObject($items[0]);
+            }
+        }
+
+        return $this;
     }
 
+    public function getEntity(): Entity|CollectionInterface
+    {
+        if (!isset($this->entity)) {
+            throw new DataAccessLayerException('No entity has been set');
+        }
+        return $this->entity;
+    }
+
+    public function hasEntity(): bool
+    {
+        return isset($this->entity);
+    }
+
+    public function getLastOperationId(): null|int
+    {
+        if ($this->isEntityKeyInitialized()) {
+            return $this->getEntityKeyValue();
+        }
+        return null;
+    }
+
+    /**
+     * Assign data to current entity with proper type handling.
+     */
     public function assign(array $data): self
     {
-        $this->entity->assign($data);
+        if (!isset($this->entity)) {
+            throw new DataAccessLayerException('No entity set for assignment');
+        }
+
+        if (ArrayUtils::isAssoc($data)) {
+            $this->assignToSingleEntity($data);
+        } else {
+            $this->assignToCollection($data);
+        }
+
         return $this;
     }
 
@@ -152,11 +146,22 @@ class EntityManager implements EntityManagerInterface
         if (isset($this->entityFieldId)) {
             return $this->entityFieldId;
         }
-        return $this->entity->getEntityKeyField();
+
+        if ($this->entity instanceof Entity) {
+            return $this->entity->getEntityKeyField();
+        }
+
+        // For collections, get key field from first item
+        $items = $this->entity->all();
+        if (!empty($items) && $items[0] instanceof Entity) {
+            return $items[0]->getEntityKeyField();
+        }
+
+        return false;
     }
 
     /**
-     * Improved entity key value retrieval.
+     * Get entity key value with proper reflection.
      */
     public function getEntityKeyValue(): mixed
     {
@@ -165,30 +170,149 @@ class EntityManager implements EntityManagerInterface
             return null;
         }
 
-        // Convert to property name format
+        if ($this->entity instanceof CollectionInterface) {
+            throw new DataAccessLayerException('Cannot get key value from collection');
+        }
+
         $propertyName = StringUtils::underscoreToStudlyCaps($keyField);
         $getter = 'get' . $propertyName;
 
-        if ($this->reflector->hasMethod($getter)) {
-            return $this->entity->$getter();
+        if ($this->reflector->hasMethod($getter) && $this->reflector->getMethod($getter)->isPublic()) {
+            if ($this->entity->isInitialized($propertyName)) {
+                return $this->entity->$getter();
+            }
+        }
+        return null;
+        // // Fallback to direct property access
+        // try {
+        //     if ($this->reflector->hasProperty($propertyName)) {
+        //         $property = $this->reflector->getProperty($propertyName);
+        //         return $property->getValue($this->entity);
+        //     }
+        //     return false;
+        // } catch (ReflectionException $e) {
+        //     throw new DataAccessLayerException(
+        //         "Cannot access key field '{$keyField}' on entity " . $this->entity::class,
+        //     );
+        // }
+    }
+
+    public function isEntityKeyInitialized(): bool
+    {
+        if ($this->entity instanceof CollectionInterface) {
+            return $this->isCollectionKeyInitialized();
         }
 
-        // Fallback to direct property access
-        $property = $this->reflector->getProperty($propertyName);
-        $property->setAccessible(true);
+        $fieldId = $this->entityFieldId ?? $this->getEntityKeyField();
+        if (!$fieldId) {
+            return false;
+        }
+        try {
+            $isInitialize = false;
+            $keyValue = $this->getEntityKeyValue();
+            if ($keyValue) {
+                $isInitialize = true;
+            }
+            if (!$isInitialize) {
+                $keyProperty = $this->entity->getEntityKeyProperty();
+                if ($this->entity->hasProperty($keyProperty)) {
+                    $isInitialize = $this->entity->isInitialized($keyProperty);
+                }
+            }
 
-        return $property->getValue($this->entity);
+            return $isInitialize;
+        } catch (ReflectionException $e) {
+            return false;
+        }
     }
+
+    /**
+     * Extract entity properties with proper type handling.
+     */
+    public function getEntityProperties(): array
+    {
+        if ($this->entity instanceof CollectionInterface) {
+            return $this->getCollectionProperties();
+        }
+
+        return $this->getSingleEntityProperties();
+    }
+
+    // ============ PERSISTENCE & QUERY EXECUTION ============
+
+    public function persist(): self
+    {
+        if (!$this->queryBuilder) {
+            error_log('ERROR: EntityManager::persist() - No query builder set!');
+            throw new RuntimeException('No query built to persist');
+        }
+
+        $sql = $this->queryBuilder->getQuery();
+        $parameters = $this->queryBuilder->getParameters();
+        // dump('Sql: ' . $sql, 'Parameters :' . print_r($parameters, true));
+        $this->mapper->persist($sql, $parameters, false);
+        return $this;
+    }
+
+    public function getQueryResult(): QueryResult
+    {
+        if (!$this->queryBuilder) {
+            throw new RuntimeException('No query built to get results');
+        }
+        return new QueryResult(
+            $this->mapper,
+            $this->resolveEntityClass(),
+            $this->queryBuilder->getTableAlias(),
+            $this->entityFactory,
+            $this->queryBuilder->getLogicalToPhysicalMap(),
+        );
+    }
+
+    /**
+     * Quick save helper for single entity.
+     */
+    public function save(Entity $entity): self
+    {
+        $this->setEntity($entity);
+        $properties = $this->getEntityProperties();
+
+        if ($this->isEntityKeyInitialized() && $this->getEntityKeyValue()) {
+            // Update existing entity
+            $keyField = $this->getEntityKeyField();
+            $keyValue = $this->getEntityKeyValue();
+
+            $this->createQueryBuilder()
+                ->update($this->table())
+                ->set($properties)
+                ->where([$keyField => $keyValue])
+                ->build();
+        } else {
+            // Insert new entity
+            $this->createQueryBuilder()
+                ->insert($this->table())
+                ->columns(array_keys($properties))
+                ->values(array_values($properties))
+                ->build();
+        }
+
+        return $this->persist();
+    }
+
+    // ============ QUERY METHODS ============
 
     public function find(int|string $id): ?Entity
     {
         $keyField = $this->getEntityKeyField();
+        if (!$keyField) {
+            throw new DataAccessLayerException('Entity does not have a key field defined');
+        }
 
         $this->createQueryBuilder()
             ->select()
             ->where([$keyField => $id])
             ->limit(1)
             ->build();
+
         return $this->persist()->getQueryResult()->setOperation('single')->asClass();
     }
 
@@ -203,41 +327,233 @@ class EntityManager implements EntityManagerInterface
         $queryBuilder->build();
 
         $result = $this->persist()->getQueryResult()->setOperation('all')->asClass();
-
         return $result ?? [];
     }
 
-    public function isEntityKeyInitialized(): bool
+    // ============ UTILITY METHODS ============
+
+    public function table(): string
     {
-        $fieldId = $this->entityFieldId ?? $this->getEntityKeyField();
-        $properties = $this->reflector->getProperties(ReflectionProperty::IS_PRIVATE);
-        foreach ($properties as $property) {
-            $prop = StringUtils::StudlyCapsToUnderscore($property->getName());
-            if ($prop === $fieldId && $property->isInitialized($this->entity)) {
-                return true;
+        if ($this->entity instanceof Entity) {
+            return $this->entity->table();
+        }
+
+        // For collections, get table from first item
+        $items = $this->entity->all();
+        if (!empty($items) && $items[0] instanceof Entity) {
+            return $items[0]->table();
+        }
+
+        throw new DataAccessLayerException('Cannot determine table name');
+    }
+
+    public function getEntityData(): array
+    {
+        if ($this->entity instanceof Entity) {
+            return $this->getEntityProperties();
+        }
+
+        $data = [];
+        foreach ($this->entity as $singleEntity) {
+            $data[] = $singleEntity->toArray();
+        }
+        return $data;
+    }
+
+    public function getDirtyData(): array
+    {
+        if ($this->entity instanceof Entity) {
+            return $this->entity->getDirtyData();
+        }
+
+        $data = [];
+        foreach ($this->entity as $singleEntity) {
+            $data[] = $singleEntity->getDirtyData();
+        }
+        return $data;
+    }
+
+    public function hasData(): bool
+    {
+        return !$this->isEmpty();
+    }
+
+    public function getTableAliasHelper(): TablesAliasHelper
+    {
+        return $this->tableAliasHelper;
+    }
+
+    public function getTableAlias(): array
+    {
+        return $this->tableAlias;
+    }
+
+    public function getNormalizer(): TypeNormalizerInterface
+    {
+        return $this->entityFactory->getNormalizer();
+    }
+
+    /**
+     * Resolve entity class name from various input types.
+     */
+    private function resolveEntityClass(Entity|CollectionInterface|string|null $entityName = null): string
+    {
+        if ($entityName === null) {
+            if (!isset($this->entity)) {
+                throw new DataAccessLayerException('No entity set and no entity name provided');
+            }
+            return $this->entity instanceof Entity ? $this->entity::class : $this->getCollectionEntityClass();
+        }
+
+        if ($entityName instanceof Entity) {
+            return $entityName::class;
+        }
+        if ($entityName instanceof CollectionInterface) {
+            $name = $entityName->first();
+            return $name::class;
+        }
+
+        if (!class_exists($entityName)) {
+            throw new DataAccessLayerException("Entity class '{$entityName}' does not exist");
+        }
+
+        return $entityName;
+    }
+
+    /**
+     * Get entity class from collection.
+     */
+    private function getCollectionEntityClass(): string
+    {
+        if (!$this->entity instanceof CollectionInterface) {
+            throw new DataAccessLayerException('Current entity is not a collection');
+        }
+
+        $items = $this->entity->all();
+        if (empty($items)) {
+            throw new DataAccessLayerException('Cannot determine entity class from empty collection');
+        }
+
+        $firstItem = $items[0];
+        if (!$firstItem instanceof Entity) {
+            throw new DataAccessLayerException('Collection contains non-entity items');
+        }
+
+        return $firstItem::class;
+    }
+
+    /**
+     * Create repository instance for entity class.
+     */
+    private function createRepository(string $entityClass): RepositoryInterface
+    {
+        $repositoryClass = $entityClass . 'Repository';
+
+        if (class_exists($repositoryClass)) {
+            return new $repositoryClass($this);
+        }
+
+        // Fallback to base repository
+        return new Repository($this);
+    }
+
+    /**
+     * Validate entity type.
+     */
+    private function validateEntityType(mixed $entity): void
+    {
+        if (!$entity instanceof Entity && !$entity instanceof CollectionInterface) {
+            throw new InvalidArgumentException(
+                'Entity must be an instance of Entity or CollectionInterface',
+            );
+        }
+
+        if ($entity instanceof CollectionInterface) {
+            $this->validateCollectionContents($entity);
+        }
+    }
+
+    /**
+     * Validate that collection contains only Entity instances.
+     */
+    private function validateCollectionContents(CollectionInterface $collection): void
+    {
+        foreach ($collection as $item) {
+            if (!$item instanceof Entity) {
+                throw new InvalidArgumentException(
+                    'Collection must contain only Entity instances',
+                );
+            }
+        }
+    }
+
+    /**
+     * Assign data to single entity.
+     */
+    private function assignToSingleEntity(array $data): void
+    {
+        $this->entity->assign($data);
+    }
+
+    /**
+     * Assign data to collection of entities.
+     */
+    private function assignToCollection(array $data): void
+    {
+        if (ArrayUtils::isSequential($data)) {
+            $collection = new Collection();
+            foreach ($data as $singleDataSet) {
+                // $entity = clone $this->entity;
+                $entity = $this->createNewEntityInstance();
+                $entity->assign($singleDataSet);
+                $collection->add($entity);
+            }
+            $this->entity = $collection;
+        } else {
+            // Single data set for collection - assign to all entities
+            foreach ($this->entity as $entity) {
+                $entity->assign($data);
+            }
+        }
+    }
+
+    /**
+     * Create new entity instance for collection.
+     */
+    private function createNewEntityInstance(): Entity
+    {
+        if (!isset($this->reflector)) {
+            throw new DataAccessLayerException('Cannot create entity instance: no reflector available');
+        }
+        return $this->reflector->newInstance($this->entityFactory, [], []);
+    }
+
+    /**
+     * Check if any entity in collection has initialized key.
+     */
+    private function isCollectionKeyInitialized(): bool
+    {
+        foreach ($this->entity as $entity) {
+            $tempReflector = new ReflectionObject($entity);
+            $fieldId = $entity->getEntityKeyField();
+
+            if ($fieldId) {
+                // $propertyName = StringUtils::underscoreToStudlyCaps($fieldId);
+                try {
+                    $property = $tempReflector->getProperty($fieldId);
+
+                    if ($property->isInitialized($entity)) {
+                        return true;
+                    }
+                } catch (ReflectionException $e) {
+                    continue;
+                }
             }
         }
         return false;
     }
 
-    /**
-     * Clear query expression (useful for reusing EntityManager).
-     */
-    public function clearQuery(): self
-    {
-        $this->queryBuilder = null;
-        return $this;
-    }
-
-    public function hasEntity(): bool
-    {
-        return isset($this->entity);
-    }
-
-    /**
-     * Improved entity properties extraction.
-     */
-    public function getEntityProperties(): array
+    private function getSingleEntityProperties(): array
     {
         $properties = [];
         $allProperties = $this->reflector->getProperties(
@@ -247,122 +563,101 @@ class EntityManager implements EntityManagerInterface
         );
 
         foreach ($allProperties as $property) {
-            // Skip properties that aren't initialized
             if (!$property->isInitialized($this->entity)) {
                 continue;
             }
+
+            // Skip non-persisted properties
             $notPersistedAttr = $property->getAttributes(NotPersisted::class);
             if (!empty($notPersistedAttr)) {
                 continue;
             }
-
-            $property->setAccessible(true);
             $fieldName = StringUtils::StudlyCapsToUnderscore($property->getName());
             $value = $property->getValue($this->entity);
 
-            // Handle different value types
-            if ($value instanceof Entity) {
-                // Handle nested entities if needed
-                $keyField = $value->getEntityKeyField();
-                if ($keyField) {
-                    $properties[$fieldName . '_id'] = $value->getFieldValue($keyField);
-                }
-            } else {
-                $properties[$fieldName] = $value;
-            }
+            $properties[$fieldName] = $this->normalizePropertyValue($value, $fieldName);
         }
 
         return $properties;
     }
 
-    public function hasData(): bool
+    private function getCollectionProperties(): array
     {
-        return !$this->isEmpty();
-    }
+        $collectionProperties = [];
 
-    public function getEntityData(): array
-    {
-        if ($this->entity instanceof Entity) {
-            return $this->getEntityProperties();
+        foreach ($this->entity as $index => $entity) {
+            $reflector = new ReflectionObject($entity);
+            $properties = [];
+
+            $allProperties = $reflector->getProperties(
+                ReflectionProperty::IS_PUBLIC |
+                ReflectionProperty::IS_PRIVATE |
+                ReflectionProperty::IS_PROTECTED,
+            );
+
+            foreach ($allProperties as $property) {
+                if (!$property->isInitialized($entity)) {
+                    continue;
+                }
+
+                $notPersistedAttr = $property->getAttributes(NotPersisted::class);
+                if (!empty($notPersistedAttr)) {
+                    continue;
+                }
+
+                $fieldName = StringUtils::StudlyCapsToUnderscore($property->getName());
+                $value = $property->getValue($entity);
+
+                $properties[$fieldName] = $this->normalizePropertyValue($value, $fieldName);
+            }
+
+            $collectionProperties[$index] = $properties;
         }
-        $data = [];
-        /** @var Entity $singleEntity */
-        foreach ($this->entity as $singleEntity) {
-            $data[] = $singleEntity->toArray();
+
+        return $collectionProperties;
+    }
+
+    /**
+     * Normalize property value for database storage.
+     */
+    private function normalizePropertyValue(mixed $value, string $fieldName): mixed
+    {
+        if ($value instanceof Entity) {
+            // Handle nested entities - store foreign key
+            $keyField = $value->getEntityKeyField();
+            if ($keyField) {
+                $nestedReflector = new ReflectionObject($value);
+                $propertyName = StringUtils::underscoreToStudlyCaps($keyField);
+
+                try {
+                    $property = $nestedReflector->getProperty($propertyName);
+                    return $property->getValue($value);
+                } catch (ReflectionException $e) {
+                    // If we can't access the key, return null
+                    return null;
+                }
+            }
+            return null;
         }
-        return $data;
-    }
 
-    /**
-     * Set the value of entity.
-     *
-     * @param Entity $entity
-     *
-     * @return self
-     */
-    public function setEntity(Entity $entity): self
-    {
-        $this->entity = $entity;
-        $this->reflector = new ReflectionObject($this->entity);
-        return $this;
-    }
+        if ($value instanceof DateTimeInterface) {
+            return $value->format('Y-m-d H:i:s');
+        }
 
-    public function table(): string
-    {
-        return $this->entity->table();
-    }
+        if (is_bool($value)) {
+            return $value ? 1 : 0;
+        }
 
-    /**
-     * Get the value of tableAliasHelper.
-     *
-     * @return TablesAliasHelper
-     */
-    public function getTableAliasHelper(): TablesAliasHelper
-    {
-        return $this->tableAliasHelper;
-    }
-
-    /**
-     * Get the value of entity.
-     *
-     * @return Entity
-     */
-    public function getEntity(): Entity
-    {
-        return $this->entity;
-    }
-
-    /**
-     * @return array
-     */
-    public function getTableAlias(): array
-    {
-        return $this->tableAlias;
-    }
-
-    /**
-     * @return TypeNormalizerInterface
-     */
-    public function getNormalizer(): TypeNormalizerInterface
-    {
-        return $this->normalizer;
-    }
-
-    /**
-     * @param null|AbstractQueryBuilder $queryBuilder
-     *
-     * @return EntityManager
-     */
-    public function setQueryBuilder(?AbstractQueryBuilder $queryBuilder): EntityManager
-    {
-        $this->queryBuilder = $queryBuilder;
-
-        return $this;
+        return $value;
     }
 
     private function isEmpty(): bool
     {
         $properties = $this->getEntityProperties();
+
+        if ($this->entity instanceof CollectionInterface) {
+            return empty($properties);
+        }
 
         foreach ($properties as $value) {
             if ($value !== null && $value !== '') {
@@ -375,6 +670,12 @@ class EntityManager implements EntityManagerInterface
 
     public static function create(): self
     {
-        return new self(self::$mapper, self::$tableAliasHelper, self::$normalizer, self::$changeTracker);
+        // This would need your static dependencies to be available
+        // For now, keeping the original signature
+        return new self(
+            self::$mapper ?? throw new RuntimeException('Mapper not configured'),
+            self::$tableAliasHelper ?? throw new RuntimeException('Table alias helper not configured'),
+            self::$entityFactory ?? throw new RuntimeException('EntityFactory not configured'),
+        );
     }
 }

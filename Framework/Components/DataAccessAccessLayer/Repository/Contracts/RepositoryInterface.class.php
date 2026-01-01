@@ -12,6 +12,8 @@ interface RepositoryInterface
 
     public function findByID(int $id): void;
 
+    public function findByIds(array $conditions = [], ?int $limit = null, ?int $offset = null, ?string $keyField = null): void;
+
     public function findAll(): void;
 
     public function findBy(array $conditions = []): void;
@@ -19,4 +21,6 @@ interface RepositoryInterface
     public function findOneBy(array $conditions = []): void;
 
     public function showColumns(string $tableName): void;
+
+    public function count(array $conditions): void;
 }

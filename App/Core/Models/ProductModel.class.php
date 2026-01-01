@@ -3,35 +3,49 @@
 declare(strict_types=1);
 
 use Ramsey\Uuid\Uuid;
+use Ramsey\Uuid\UuidInterface;
 
 class ProductModel extends Model
 {
-    public function save(array|Entity|null $data = null): QueryResult
+    public function save(mixed $data = null): QueryResult
     {
         if ($data === null) {
             throw new InvalidArgumentException('No data to save.');
         }
-        if ($data instanceof Entity) {
-            $data = $data->toArray();
+        if (is_array($data)) {
+            if (!isset($data['name'])) {
+                throw new InvalidArgumentException('Cannot save without product name.');
+            }
+            if (!ArrayUtils::isAssoc($data)) {
+                throw new InvalidArgumentException('Save data should be an associative array.');
+            }
+            $product = $this->getProductById((int) $data['id']);
+            $product->getChangeTracker()->track($product);
+            /** @var Product */
+            $data = $product->assign($data);
         }
-        if (!is_array($data) || !isset($data['name'])) {
-            throw new InvalidArgumentException('Cannot save without product name data.');
+        if (!$data instanceof Product) {
+            throw new RuntimeException('data to save must be an instance of Product entity.');
         }
-
-        /** @var UuidInterface $publicId */
-        $publicId = Uuid::uuid4();
-
-        $baseSlug = $this->slugify($data['name']);
-        $slug = $baseSlug;
-        $counter = 0;
-
-        while ($this->one(['slug' => $slug])->exists()) {
-            $counter++;
-            $slug = $baseSlug . '-' . $counter;
+        if (!$data->isInitialized('public_id')) {
+            /** @var UuidInterface $publicId */
+            $publicId = Uuid::uuid4();
+            $data->setPublicId($publicId);
         }
-        $data['public_id'] = $publicId;
-        $data['slug'] = $slug;
+        if (!$data->isInitialized('slug')) {
+            $baseSlug = $this->slugify($data->getName());
+            $slug = $baseSlug;
+            $counter = 0;
 
+            while ($this->one(['slug' => $slug])->exists()) {
+                $counter++;
+                $slug = $baseSlug . '-' . $counter;
+            }
+
+            $data->setSlug($slug);
+        }
+        $dirtyData = $data->getDirtyData();
+        dd('dirty data' . var_dump($dirtyData, true));
         return parent::save($data);
     }
 
@@ -63,9 +77,9 @@ class ProductModel extends Model
 
     public function getProductById(int $id): Product|NullObjectInterface
     {
-        $product = $this->find($id);
-        if ($product->getQueryResult() && $product->rowCount() > 0) {
-            return $product->getResults('class')->single();
+        $product = $this->find($id)->asClass();
+        if ($product instanceof Product) {
+            return $product;
         }
         return new NullObject();
     }

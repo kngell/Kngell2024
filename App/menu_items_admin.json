@@ -1,0 +1,55 @@
+{
+  "Dashboard": {
+    "link": "/admin/index",
+    "icon": {
+      "name": "icon-dashboard",
+      "aria": "Icon Dashboard",
+      "class": ["home"]
+    },
+
+    "type": "regular"
+  },
+  "Contact": {
+    "link": "/contact/index",
+    "icon": "icon-email",
+    "type": "regular"
+  },
+  "Product": {
+    "type": "dropdown",
+    "icon-left": {
+      "name": "icon-shopping-bag",
+      "aria": "Product Icon",
+      "class": ["product-icon"]
+    },
+    "icon-right": {
+      "name": "icon-arrow-down",
+      "aria": "DropDown Items",
+      "class": ["arrow-down", "rotated"]
+    },
+
+    "link": "",
+    "dropdown-items": {
+      "Product List": "/admin/product-list",
+      "Add Product": "/admin/product-add",
+      "Edit Product": "/admin/product-edit",
+      "Show Product": "/admin/product-show"
+    }
+  },
+  "Todo List": {
+    "type": "dropdown",
+    "icon-left": "icon-checklist",
+    "icon-right": "icon-arrow-down",
+    "link": "",
+    "dropdown-items": {}
+  },
+  "Calendar": {
+    "link": "/admin/calendar",
+    "icon": "icon-calendar",
+    "type": "regular"
+  },
+  "Profile": {
+    "link": "/admin/calendar",
+    "icon": "icon-person",
+    "type": "regular"
+  }
+}

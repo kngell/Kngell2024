@@ -4,230 +4,125 @@ declare(strict_types=1);
 
 abstract class Model
 {
-    protected EntityManagerInterface $em;
+    protected string $entityClassName;
     protected Entity $entity;
 
-    public function __construct(EntityManagerInterface $entityManager)
-    {
-        $this->em = $entityManager->setEntity($this->entity());
+    public function __construct(
+        protected EntityManagerInterface $em,
+        protected EntityFactoryInterface $factory,
+        private ModelContextInterface $context,
+    ) {
+        $this->entityClassName = $this->resolveEntityClassName();
+        $this->getEntity();
     }
 
-    /**
-     * @param Entity|array|string $params
-     *
-     * @return QueryResult<Entity>
-     */
-    public function all(Entity|array|string $params = []): QueryResult
+    public function __call(string $method, array $arguments): mixed
     {
-        [$entity, $processedConditions] = $this->conditions($params);
-        $this->em->getRepository($entity)->findAll($processedConditions);
-        return $this->em->persist()->getQueryResult()->setOperation('all');
+        try {
+            return $this->context->execute($method, $this->em, $this->entity, $arguments[0] ?? []);
+        } catch (InvalidArgumentException $e) {
+            throw new BadMethodCallException("Method $method does not exist", 0, $e);
+        }
     }
 
-    public function one(Entity|array|string $params = []): QueryResult
+    public function all($params = []): QueryResult
     {
-        [$entity, $processedConditions] = $this->conditions($params);
-        $this->em->getRepository($entity)->findOneBy($processedConditions);
-        return $this->em->persist()->getQueryResult()->setOperation('single');
+        return $this->context->execute('all', $this->em, $this->entity, $params);
     }
 
-    /**
-     * @param int|string $id
-     *
-     * @return QueryResult<Entity>
-     */
-    public function find(int|string $id): QueryResult
+    public function one($params = []): QueryResult
     {
-        $this->em->getRepository($this->entity())->findByID($id);
-        return $this->em->persist()->getQueryResult()->setOperation('single');
+        return $this->context->execute('one', $this->em, $this->entity, $params);
     }
 
-    /**
-     * Get first record(s) with optional conditions.
-     *
-     * @param array $conditions Optional filtering conditions
-     * @param int $limit Number of records to return (default: 1)
-     *
-     * @return QueryResult<Entity>
-     */
+    public function find($id): QueryResult
+    {
+        return $this->context->execute('find', $this->em, $this->entity, $id);
+    }
+
     public function first(array $conditions = [], int $limit = 1): QueryResult
     {
-        [$entity, $processedConditions] = $this->conditions($conditions);
-
-        $this->em->getRepository($entity)->findBy($processedConditions, $limit, 0);
-
-        $queryResult = $this->em->persist()->getQueryResult()->setOperation('first');
-        $queryResult->setLimit($limit);
-
-        return $queryResult;
+        $params = ['conditions' => $conditions, 'limit' => $limit];
+        return $this->context->execute('first', $this->em, $this->entity, $params);
     }
 
-    /**
-     * Get last record(s) with optional conditions.
-     *
-     * @param array $conditions Optional filtering conditions
-     * @param int $limit Number of records to return (default: 1)
-     *
-     * @return QueryResult<Entity>
-     */
     public function last(array $conditions = [], int $limit = 1): QueryResult
     {
-        [$entity, $processedConditions] = $this->conditions($conditions);
-        $this->em->getRepository($entity)->findAll($processedConditions);
-
-        $queryResult = $this->em->persist()->getQueryResult()->setOperation('last');
-
-        // Store that we want the last records
-        $queryResult->setLastLimit($limit);
-
-        return $queryResult;
+        $params = ['conditions' => $conditions, 'limit' => $limit];
+        return $this->context->execute('last', $this->em, $this->entity, $params);
     }
 
-    /**
-     * Get paginated results.
-     *
-     * @param int $page Page number (1-based)
-     * @param int $perPage Records per page
-     * @param array $conditions Optional filtering conditions
-     *
-     * @return QueryResult<Entity>
-     */
     public function page(int $page, int $perPage, array $conditions = []): QueryResult
     {
-        [$entity, $processedConditions] = $this->conditions($conditions);
-
-        $offset = ($page - 1) * $perPage;
-        $this->em->getRepository($entity)->findBy($processedConditions, $perPage, $offset);
-
-        return $this->em->persist()->getQueryResult()->setOperation('all');
+        $params = ['page' => $page, 'perPage' => $perPage, 'conditions' => $conditions];
+        return $this->context->execute('page', $this->em, $this->entity, $params);
     }
 
-    /**
-     * Get specific number of records.
-     *
-     * @param int $limit Number of records to return
-     * @param array $conditions Optional filtering conditions
-     *
-     * @return QueryResult<Entity>
-     */
+    public function ids(int $page, int $perPage, array $conditions = []): QueryResult
+    {
+        $params = ['page' => $page, 'perPage' => $perPage, 'conditions' => $conditions];
+        $keyField = $this->entity->getEntityKeyField();
+        if ($keyField) {
+            $params['keyField'] = $keyField;
+        }
+        return $this->context->execute('ids', $this->em, $this->entity, $params);
+    }
+
     public function get(int $limit, array $conditions = []): QueryResult
     {
-        [$entity, $processedConditions] = $this->conditions($conditions);
-        $this->em->getRepository($entity)->findBy($processedConditions, $limit, 0);
-
-        return $this->em->persist()->getQueryResult()->setOperation('all');
+        $params = ['conditions' => $conditions, 'limit' => $limit];
+        return $this->context->execute('get', $this->em, $this->entity, $params);
     }
 
-    public function delete(Entity|array|string|int $params = []): QueryResult
+    public function save(mixed $data = null): QueryResult
     {
-        [$entity, $conditions] = $this->conditions($params);
+        return $this->context->execute('save', $this->em, $this->entity, $data);
+    }
 
-        // Defensive: if for any reason $entity is not an Entity instance, fallback to entityManager's entity
-        if (!$entity instanceof Entity) {
-            $entity = $this->em->getEntity();
+    public function insert($entity = null): QueryResult
+    {
+        return $this->context->execute('insert', $this->em, $this->entity, $entity);
+    }
+
+    public function update($entityOrConditions = [], array $conditions = []): QueryResult
+    {
+        $params = ['entity' => $entityOrConditions, 'conditions' => $conditions];
+        return $this->context->execute('update', $this->em, $this->entity, $params);
+    }
+
+    public function delete($params = []): QueryResult
+    {
+        return $this->context->execute('delete', $this->em, $this->entity, $params);
+    }
+    // ============ UTILITIES ============
+
+    public function count(array $conditions = []): int
+    {
+        return $this->context->execute('count', $this->em, $this->entity, $conditions)->count();
+    }
+
+    public function exists(array $conditions = []): bool
+    {
+        return $this->count($conditions) > 0;
+    }
+
+    public function registerStrategy(string $name, ModelStrategyInterface $strategy): void
+    {
+        $this->context->register($name, $strategy);
+    }
+
+    public function findOrCreate(array $criteria, array $attributes = []): Entity
+    {
+        $result = $this->one($criteria);
+
+        if (!$result->isEmpty()) {
+            return $result->first();
         }
 
-        if ($entity instanceof SoftDeletableInterface) {
-            // use trait helper
-            $entity->softDelete();
+        $entity = $this->createEntity(array_merge($criteria, $attributes));
+        $this->save($entity);
 
-            // keep timestamps consistent if supported
-            if ($entity instanceof TimestampableInterface) {
-                $entity->setUpdatedAt(new DateTimeImmutable());
-            }
-
-            // make sure entity manager uses this instance (so getEntityProperties() sees changes)
-            $this->em->setEntity($entity);
-
-            // updating the entity will call repository->update(...) and then persist()->getResults()
-            return $this->update($entity);
-        }
-
-        // Hard delete
-        $this->em->getRepository($entity)->delete($conditions);
-        return $this->em->persist()->getQueryResult();
-    }
-
-    /**
-     * @param array|Entity|null $data
-     *
-     * @return QueryResult<Entity>
-     */
-    public function save(array|Entity|null $data = null): QueryResult
-    {
-        if (is_array($data)) {
-            $this->em->assign($data);
-            $entity = $this->em->getEntity();
-        } elseif ($data instanceof Entity) {
-            $entity = $data;
-            $this->em->setEntity($entity);
-        } else {
-            throw new DataAccessLayerException('No Data to save!');
-        }
-
-        $entity->touchTimestamps();
-        if ($this->em->isEntityKeyInitialized()) {
-            return $this->update($entity);
-        }
-
-        return $this->insert($entity);
-    }
-
-    /**
-     * @param Entity|null $entity
-     *
-     * @return QueryResult<Entity>
-     */
-    public function insert(Entity|null $entity = null): QueryResult
-    {
-        $this->em->getRepository($entity)->create();
-        return $this->em->persist()->getQueryResult();
-    }
-
-    /**
-     * @param Entity|array|string $params
-     *
-     * @return QueryResult<Entity>
-     */
-    public function update(Entity|SoftDeletableInterface|array|string $params = []): QueryResult
-    {
-        if ($params instanceof Entity) {
-            $entity = $params;
-            $conditions = []; // Entity already has ID
-        } else {
-            list($entity, $conditions) = $this->conditions($params);
-        }
-
-        // Call repository directly
-        $this->em->getRepository($entity)->update($conditions);
-
-        return $this->em->persist()->getQueryResult();
-    }
-
-    // /**
-    //  * @param Entity|array|string $params
-    //  * @return QueryResult<Entity>
-    //  */
-    // public function update(Entity|array|string $params = []): QueryResult
-    // {
-    //     $conditionResult = $this->conditions($params);
-    //     $this->em->getRepository($conditionResult->entity)->update($conditionResult->conditions);
-    //     return $this->em->persist()->getResults();
-    // }
-
-    public function getTableColumns(string $tableName): string
-    {
-        $result = $this->showColumns($tableName);
-        $colums = array_column($result->asArray(), 'Field');
-        return StringUtils::camelCase('$' . implode(', $', $colums) . ';');
-    }
-
-    /**
-     * @return Entity
-     */
-    public function getEntity(): Entity
-    {
-        return $this->entity;
+        return $entity;
     }
 
     /**
@@ -238,98 +133,23 @@ abstract class Model
         return $this->em;
     }
 
-    private function showColumns(string|null $tableName = null): QueryResult
+    private function resolveEntityClassName(): string
     {
-        if ($tableName === null) {
-            $tableName = strtolower($this->em->getEntity()::class);
+        $className = str_replace('Model', '', static::class);
+        if (!is_subclass_of($className, Entity::class)) {
+            throw new DataAccessLayerException('Could not resolve valid Entity class for model: ' . static::class);
         }
-        $this->em->getRepository()->showColumns($tableName);
-        return $this->em->persist()->getQueryResult();
+        return $className;
     }
 
-    /**
-     * @param Entity|array|string|int $params
-     *
-     * @return array{0: Entity, 1: array<string,mixed>}
-     */
-    private function conditions(Entity|array|string|int $params = []): array
+    private function getEntity(): Entity
     {
-        // If caller passed an Entity instance, return it directly
-        if ($params instanceof Entity) {
-            return [$params, []];
+        if (!isset($this->entity) || $this->entity->isEmpty()) {
+            $this->entity = $this->factory->create(
+                $this->entityClassName,
+            );
         }
-
-        // Fallback to the EM's current entity instance
-        $entity = $this->em->getEntity();
-
-        if (is_array($params)) {
-            return [$entity, $params];
-        }
-
-        if (is_string($params) || is_int($params)) {
-            return $this->idCondition($params);
-        }
-
-        return [$entity, []];
-    }
-
-    private function idCondition(string|int $id): array
-    {
-        $fieldId = $this->em->getEntityKeyField();
-        $entity = $this->em->getEntity();
-
-        if ($fieldId) {
-            return [$entity, [$fieldId => $id]];
-        }
-
-        return [$entity, []];
-    }
-
-    // /**
-    //  * @param Entity|array|string|int $params
-    //  * @return array{0: Entity, 1: array<string, mixed>}
-    //  */
-    // private function conditions(Entity|array|string|int $params = []): array
-    // {
-    //     if ($params instanceof Entity) {
-    //         return [$params, []];
-    //     }
-
-    //     $entity = $this->em->getEntity();
-    //     if (is_array($params)) {
-    //         return [$entity, $params];
-    //     }
-
-    //     if (is_string($params) || is_int($params)) {
-    //         return $this->idCondition($params);
-    //     }
-
-    //     return [$entity, []];
-    // }
-
-    // private function conditions(Entity|array|string|int $params = []): array
-    // {
-    //     return match (true) {
-    //         $params instanceof Entity => [$params, []],
-    //         is_array($params) => [null, $params],
-    //         is_string($params) || is_int($params) => $this->idCondition($params),
-    //         default => [null, []]
-    //     };
-    // }
-
-    // private function idCondition(string|int $id): array
-    // {
-    //     $fieldId = $this->em->getEntityKeyField();
-    //     return $fieldId ? [null, [$fieldId => $id]] : [null, []];
-    // }
-
-    private function entity(): ?Entity
-    {
-        $entityName = str_replace('Model', '', $this::class);
-        if (class_exists($entityName)) {
-            $this->entity = App::diGet($entityName);
-            return $this->entity;
-        }
-        return null;
+        $this->em->setEntity($this->entity);
+        return $this->entity;
     }
 }

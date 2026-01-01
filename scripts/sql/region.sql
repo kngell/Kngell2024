@@ -8,65 +8,23 @@ CREATE TABLE
         is_active BOOLEAN DEFAULT TRUE,
         timezone VARCHAR(50),
         locale VARCHAR(10),
+        default_locale VARCHAR(10) NULL,
         created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        decimal_separator CHAR(1) DEFAULT '.',
+        thousands_separator CHAR(1) DEFAULT ',',
+        date_format VARCHAR(20) DEFAULT 'Y-m-d',
+        datetime_format VARCHAR(30) DEFAULT 'Y-m-d H:i:s',
+        time_format VARCHAR(20) DEFAULT 'H:i:s',
+        first_day_of_week INT DEFAULT 1 COMMENT '0=Sunday, 1=Monday',
         FOREIGN KEY (currency_id) REFERENCES currency (currency_id) ON DELETE RESTRICT
     ) ENGINE = InnoDB;
 
--- Insert region data
-INSERT INTO
-    region (
-        region_code,
-        region_name,
-        currency_id,
-        timezone,
-        locale,
-        created_at,
-        updated_at
-    )
-VALUES
-    (
-        'us',
-        'United States',
-        1,
-        'America/New_York',
-        'en_US',
-        '2024-01-01 00:00:00',
-        '2024-01-01 00:00:00'
-    ),
-    (
-        'eu',
-        'European Union',
-        2,
-        'Europe/Berlin',
-        'de_DE',
-        '2024-01-01 00:00:00',
-        '2024-01-01 00:00:00'
-    ),
-    (
-        'uk',
-        'United Kingdom',
-        3,
-        'Europe/London',
-        'en_GB',
-        '2024-01-01 00:00:00',
-        '2024-01-01 00:00:00'
-    ),
-    (
-        'ca',
-        'Canada',
-        4,
-        'America/Toronto',
-        'en_CA',
-        '2024-01-01 00:00:00',
-        '2024-01-01 00:00:00'
-    ),
-    (
-        'au',
-        'Australia',
-        5,
-        'Australia/Sydney',
-        'en_AU',
-        '2024-01-01 00:00:00',
-        '2024-01-01 00:00:00'
-    );
+ALTER TABLE region
+ADD COLUMN default_locale VARCHAR(10) NULL AFTER locale,
+ADD COLUMN decimal_separator CHAR(1) DEFAULT '.',
+ADD COLUMN thousands_separator CHAR(1) DEFAULT ',',
+ADD COLUMN date_format VARCHAR(20) DEFAULT 'Y-m-d',
+ADD COLUMN datetime_format VARCHAR(30) DEFAULT 'Y-m-d H:i:s',
+ADD COLUMN time_format VARCHAR(20) DEFAULT 'H:i:s',
+ADD COLUMN first_day_of_week INT DEFAULT 1 COMMENT '0=Sunday, 1=Monday';

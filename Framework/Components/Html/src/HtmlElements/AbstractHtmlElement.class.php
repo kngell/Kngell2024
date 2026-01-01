@@ -5,6 +5,7 @@ abstract class AbstractHtmlElement extends AbstractHtmlComponent
 {
     protected CollectionInterface $children;
     protected ?TokenInterface $token;
+    protected bool $includeToken = true;
     protected string $tag;
 
     public function __construct(?TokenInterface $token = null)
@@ -142,7 +143,7 @@ abstract class AbstractHtmlElement extends AbstractHtmlComponent
 
     private function frmName(): string
     {
-        if ($this->tag !== 'form') {
+        if ($this->tag !== 'form' || $this->includeToken === false) {
             return '';
         }
 
@@ -157,7 +158,7 @@ abstract class AbstractHtmlElement extends AbstractHtmlComponent
         $tag = $this->getTagAttributes(get_object_vars($this), $this->tag);
 
         // inject csrf only for forms
-        if ($this->tag === 'form') {
+        if ($this->tag === 'form' && $this->includeToken) {
             $tag .= $this->csrftoken();
         }
 

@@ -3,7 +3,7 @@
 declare(strict_types=1);
 class DataQueryClauseBuilderFactory implements ClauseBuilderFactoryInterface
 {
-    public function __construct(private SqlQueryComponent $component)
+    public function __construct(private SqlComponent $component)
     {
     }
 

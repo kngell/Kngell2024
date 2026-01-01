@@ -191,6 +191,11 @@ final class SqlBuilderMethodRegistry
             'link' => SqlConditionLink::OR,
             'operator' => SqlOperator::BETWEEN,
         ],
+        'unionAll' => [
+            'clause' => SqlClause::SELECT,
+            'link' => null,
+            'operator' => SqlOperator::UNION_ALL,
+        ],
 
         // ==========================================
         // NULL OPERATIONS METHODS
@@ -232,58 +237,58 @@ final class SqlBuilderMethodRegistry
         // ========================================
         'on' => [
             'clause' => SqlClause::FROM, // ON conditions are part of FROM clause
-            'link' => SqlConditionLink::AND,
-            'operator' => SqlOperator::ON,
+            'link' => SqlConditionLink::ON,
+            'operator' => SqlOperator::EQUALS, // SQLOperator::ON
         ],
         'andOn' => [
             'clause' => SqlClause::FROM,
-            'link' => SqlConditionLink::AND,
-            'operator' => SqlOperator::ON,
+            'link' => SqlConditionLink::ON,
+            'operator' => SqlOperator::EQUALS, // SQLOperator::ON
         ],
         'orOn' => [
             'clause' => SqlClause::FROM,
-            'link' => SqlConditionLink::OR,
-            'operator' => SqlOperator::ON,
+            'link' => SqlConditionLink::ON,
+            'operator' => SqlOperator::OR, // SQLOperator::ON
         ],
 
         'onEqualTo' => [
             'clause' => SqlClause::FROM,
-            'link' => SqlConditionLink::AND,
+            'link' => SqlConditionLink::ON,
             'operator' => SqlOperator::EQUALS,
         ],
         'onNotEqualTo' => [
             'clause' => SqlClause::FROM,
-            'link' => SqlConditionLink::AND,
+            'link' => SqlConditionLink::ON,
             'operator' => SqlOperator::NOT_EQUALS,
         ],
         'onLessThan' => [
             'clause' => SqlClause::FROM,
-            'link' => SqlConditionLink::AND,
+            'link' => SqlConditionLink::ON,
             'operator' => SqlOperator::LESS_THAN,
         ],
         'onGreaterThan' => [
             'clause' => SqlClause::FROM,
-            'link' => SqlConditionLink::AND,
+            'link' => SqlConditionLink::ON,
             'operator' => SqlOperator::GREATER_THAN,
         ],
         'onLike' => [
             'clause' => SqlClause::FROM,
-            'link' => SqlConditionLink::AND,
+            'link' => SqlConditionLink::ON,
             'operator' => SqlOperator::LIKE,
         ],
         'onIn' => [
             'clause' => SqlClause::FROM,
-            'link' => SqlConditionLink::AND,
+            'link' => SqlConditionLink::ON,
             'operator' => SqlOperator::IN,
         ],
         'onBetween' => [
             'clause' => SqlClause::FROM,
-            'link' => SqlConditionLink::AND,
+            'link' => SqlConditionLink::ON,
             'operator' => SqlOperator::BETWEEN,
         ],
         'onNull' => [
             'clause' => SqlClause::FROM,
-            'link' => SqlConditionLink::AND,
+            'link' => SqlConditionLink::ON,
             'operator' => SqlOperator::IS_NULL,
         ],
 
@@ -422,9 +427,24 @@ final class SqlBuilderMethodRegistry
         //Insert Clauses
         'into' => [
             'clause' => SqlClause::INTO,
+            'link' => null,
+            'operator' => null,
         ],
         'values' => [
             'clause' => SqlClause::VALUES,
+            'link' => null,
+            'operator' => null,
+        ],
+        //Update Clauses
+        'set' => [
+            'clause' => SqlClause::SET,
+            'link' => null,
+            'operator' => null,
+        ],
+        'from' => [
+            'clause' => SqlClause::FROM,
+            'link' => null,
+            'operator' => null,
         ],
     ];
 

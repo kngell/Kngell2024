@@ -7,7 +7,7 @@ class QueryHttpMap extends Map
     public function get(string|int $key): mixed
     {
         if (null != $key) {
-            if (! isset($this->getAll()[strtolower($key)])) {
+            if (!isset($this->getAll()[strtolower($key)])) {
                 return '';
             }
             return $this->getAll()[strtolower($key)];
@@ -15,7 +15,7 @@ class QueryHttpMap extends Map
         return array_map('strip_tags', $this->getAll() ?? []);
     }
 
-    public function getRouteParameters() : array
+    public function getRouteParameters(): array
     {
         return explode('/', $this->get('url'));
     }

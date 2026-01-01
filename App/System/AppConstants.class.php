@@ -20,7 +20,8 @@ final readonly class AppConstants
         // BASE DIR
         // ----------------------------------------
         defined('CONFIG_PATH') or define('CONFIG_PATH', ROOT_DIR . DS . 'App' . DS . 'Config');
-        defined('CACHE_DIR') or define('CACHE_DIR', ROOT_DIR . DS . 'Cache' . DS);
+        defined('STORAGE') or define('STORAGE', ROOT_DIR . DS . 'storage' . DS);
+        defined('CACHE_DIR') or define('CACHE_DIR', STORAGE . 'cache' . DS);
         defined('LOG_DIR') or define('LOG_DIR', ROOT_DIR . DS . 'Temp' . DS . 'Log');
         defined('APP') or define('APP', ROOT_DIR . DS . 'App' . DS);
         defined('VIEW') or define('VIEW', ROOT_DIR . DS . 'App' . DS . 'Views' . DS);
@@ -30,7 +31,7 @@ final readonly class AppConstants
         defined('UPLOAD_DIR') or define('UPLOAD_DIR', ROOT_DIR . DS . 'public' . DS . 'Upload' . DS);
         defined('FILES') or define('FILES', ROOT_DIR . IMG . 'Upload' . DS);
         defined('COMPONENTS') or define('COMPONENTS', ROOT_DIR . DS . 'Framework' . DS . 'Components' . DS);
-        defined('STORAGE') or define('STORAGE', ROOT_DIR . DS . 'storage' . DS);
+
         // --------------------------------------------
         // VISITORS, LOGIN & REGISTRATION
         // -----------------------------------------

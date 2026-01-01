@@ -2,8 +2,33 @@
 
 declare(strict_types=1);
 
-class AbstractClauseBuilder
+abstract class AbstractClauseBuilder
 {
+    protected ?SqlStatementInterface $sqlStatement = null;
+
+    public function buildAllClauses(?SqlStatementType $type = null): void
+    {
+        $this->initializeProperties();
+
+        $this->ensureMinimalFlow();
+        $this->validateClauseOrder();
+        $this->buildStatement($type);
+    }
+
+    abstract protected function buildStatement(?SqlStatementType $type = null): void;
+
+    protected function initializeProperties(): void
+    {
+    }
+
+    abstract protected function ensureMinimalFlow(): void;
+
+    abstract protected function validateClauseOrder(): void;
+
+    abstract protected function shouldBuildClause(string $clause): bool;
+
+    abstract protected function buildClause(string $clause): void;
+
     protected function validateAllowedMethods(array $userFlow, SqlStatementType $statementType): void
     {
         foreach ($userFlow as $method) {

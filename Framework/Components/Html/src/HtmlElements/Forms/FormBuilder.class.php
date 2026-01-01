@@ -15,10 +15,11 @@ class FormBuilder extends AbstractHtmlElement
     protected string $autocapitalize;
     protected bool $novalidate;
 
-    public function __construct(TokenInterface $token)
+    public function __construct(TokenInterface $token, bool $includeCsrftoken = true)
     {
         parent::__construct($token);
         $this->tag = 'form';
+        $this->includeToken = $includeCsrftoken;
     }
 
     /**
@@ -26,7 +27,7 @@ class FormBuilder extends AbstractHtmlElement
      */
     public function form(): self
     {
-        return new self($this->token);
+        return new self($this->token, $this->includeToken);
     }
 
     #[Override]

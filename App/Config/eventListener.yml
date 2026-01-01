@@ -1,10 +1,10 @@
-product.created:
-  - callback: SaveImageGalleryListener
+product.saved: # Generic event for both create and update
+  - callback: SaveProductImageGalleryListener
     priority: 1
-  # - callback: SaveProductCategoryListener
-  #   priority: 3
   - callback: SaveProductVariationListener
-    priority: 4
+    priority: 2
+  - callback: SaveProductRegionalPriceListener
+    priority: 3
   # - callback: GenerateDefaultRegionalPriceListener
   #   priority: 5
   # - callback: IndexProductSearchListener

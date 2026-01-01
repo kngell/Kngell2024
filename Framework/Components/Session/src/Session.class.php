@@ -7,18 +7,16 @@ class Session implements SessionInterface
     /** @var string */
     protected const SESSION_PATTERN = '/^[a-zA-Z0-9_\.]{1,64}$/';
 
-    /** @var SessionStorageInterface|null */
-    protected ?SessionStorageInterface $storage;
-
+    protected SessionStorageInterface $storage;
     protected string|null $sessionIdentifier;
 
     /**
      * Class constructor.
      *
      * @param string $sessionIdentifier
-     * @param SessionStorageInterface|null $storage
+     * @param SessionStorageInterface $storage
      */
-    public function __construct(string|null $sessionIdentifier = null, ?SessionStorageInterface $storage = null)
+    public function __construct(string|null $sessionIdentifier = null, SessionStorageInterface $storage)
     {
         if ($sessionIdentifier !== null && $this->isSessionKeyValid($sessionIdentifier) === false) {
             throw new SessionInvalidArgumentException($sessionIdentifier . ' is not a valid session name');
@@ -29,6 +27,7 @@ class Session implements SessionInterface
 
     /**
      * Return the storage object.
+     *
      * @return SessionStorageInterface|null
      */
     public function getStorage(): ?SessionStorageInterface
@@ -39,8 +38,10 @@ class Session implements SessionInterface
     /**
      * @param string $key
      * @param mixed $value
-     * @return void
+     *
      * @throws SessionException
+     *
+     * @return void
      */
     public function set(string $key, mixed $value): void
     {
@@ -55,8 +56,10 @@ class Session implements SessionInterface
     /**
      * @param string $key
      * @param mixed $value
-     * @return void
+     *
      * @throws SessionException
+     *
+     * @return void
      */
     public function setArray(string $key, mixed $value): void
     {
@@ -71,8 +74,10 @@ class Session implements SessionInterface
     /**
      * @param string $key
      * @param mixed|null $default
-     * @return mixed
+     *
      * @throws SessionException
+     *
+     * @return mixed
      */
     public function get(string $key, mixed $default = null): mixed
     {
@@ -85,8 +90,10 @@ class Session implements SessionInterface
 
     /**
      * @param string $key
-     * @return bool
+     *
      * @throws SessionException|Throwable
+     *
+     * @return bool
      */
     public function delete(string $key): bool
     {
@@ -102,6 +109,7 @@ class Session implements SessionInterface
     /**
      * Invalidate Session
      * ===============================================.
+     *
      * @return void
      */
     public function invalidate(): void
@@ -112,11 +120,13 @@ class Session implements SessionInterface
     /**
      * Flush the session
      * ================================================.
+     *
      * @param string $key
      * @param [type] $value
+     *
      * @return mixed
      */
-    public function flush(string $key, $value = null) : mixed
+    public function flush(string $key, $value = null): mixed
     {
         $this->ensureSessionKeyIsValid($key);
         try {
@@ -126,15 +136,17 @@ class Session implements SessionInterface
         }
     }
 
-    public function regenerate() : void
+    public function regenerate(): void
     {
         session_regenerate_id(true);
     }
 
     /**
      * @param string $key
-     * @return bool
+     *
      * @throws SessionInvalidArgumentException
+     *
+     * @return bool
      */
     public function exists(string $key): bool
     {
@@ -147,7 +159,7 @@ class Session implements SessionInterface
      *
      * @return string
      */
-    public function uagent_no_version() : string
+    public function uagent_no_version(): string
     {
         $uagent = $_SERVER['HTTP_USER_AGENT'];
         $regx = '/\/[a-zA-z0-9.]+/';
@@ -160,6 +172,7 @@ class Session implements SessionInterface
      * Checks whether our session key is valid according the defined regular expression.
      *
      * @param string $key
+     *
      * @return bool
      */
     protected function isSessionKeyValid(string $key): bool
@@ -171,6 +184,7 @@ class Session implements SessionInterface
      * Checks whether we have session key.
      *
      * @param string $key
+     *
      * @return void
      */
     protected function ensureSessionKeyIsvalid(string $key): void

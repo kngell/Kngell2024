@@ -7,6 +7,9 @@ class Category extends Entity implements TimestampableInterface, SoftDeletableIn
     use EntityTimestampableTrait;
     use SoftDeletableTrait;
 
+    #[NotPersisted()]
+    private CollectionInterface $children;
+
     #[EntityFieldId(name: 'cat_id')]
     private string $id;
 
@@ -259,6 +262,30 @@ class Category extends Entity implements TimestampableInterface, SoftDeletableIn
     {
         $this->imageUrl = $imageUrl;
 
+        return $this;
+    }
+
+    public function initChildren(): void
+    {
+        $this->children = new Collection();
+    }
+
+    /**
+     * @return CollectionInterface
+     */
+    public function getChildren(): CollectionInterface
+    {
+        return $this->children;
+    }
+
+    /**
+     * @param Category $category
+     *
+     * @return Category
+     */
+    public function addChildren(Category $category): Category
+    {
+        $this->children->add($category);
         return $this;
     }
 }

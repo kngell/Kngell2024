@@ -48,11 +48,12 @@ abstract class AbstractHtmlComponent
     protected string $onkeypress;
     protected string $onkeydown;
     protected string $onkeyup;
+    protected string $onchange;
     protected array $formErrors = [];
     protected array $formValues = [];
     protected string $errorMessage = '';
     protected string $htmlBlock;
-    protected ?string $content;
+    protected null|string|int $content;
     protected string|null $src;
     protected string $alt;
     protected string $href;
@@ -64,8 +65,12 @@ abstract class AbstractHtmlComponent
     protected string $ariaLabel;
     protected bool $ariaHaspopup;
     protected bool $ariaExpanded;
+    protected array $aria = [];
     protected string $defaultValue;
     protected bool $controls;
+    protected string $text;
+    protected bool $ariaHidden;
+    protected bool $disabled;
 
     public function setParent(?self $parent)
     {
@@ -100,6 +105,16 @@ abstract class AbstractHtmlComponent
         return $this;
     }
 
+    public function aria(string $name, string ...$props): self
+    {
+        $aria = [];
+        foreach ($props as $prop) {
+            $aria['aria-' . $name] = $prop;
+        }
+        $this->aria = array_merge($this->aria, $aria);
+        return $this;
+    }
+
     public function remove(self $component): self
     {
         return $this;
@@ -117,12 +132,20 @@ abstract class AbstractHtmlComponent
         return $this;
     }
 
-    public function htmlBlock(?string $htmlBlock = ''): HtmlBlockElement
+    public function htmlBlock(?string $htmlBlock = null): HtmlBlockElement
     {
         if ($htmlBlock === null) {
             $htmlBlock = '';
         }
         return new HtmlBlockElement($htmlBlock);
+    }
+
+    public function text(?string $text = null): HtmlTextElement
+    {
+        if ($text === null) {
+            $text = '';
+        }
+        return new HtmlTextElement($text);
     }
 
     public function hasErrorMessage(): bool
@@ -173,6 +196,28 @@ abstract class AbstractHtmlComponent
         return $this;
     }
 
+    /**
+     * @param string $ariaLabel
+     *
+     * @return AbstractHtmlComponent
+     */
+    public function ariaLabel(string $ariaLabel): self
+    {
+        $this->ariaLabel = $ariaLabel;
+        return $this;
+    }
+
+    /**
+     * @param bool $ariaHidden
+     *
+     * @return AbstractHtmlComponent
+     */
+    public function ariaHidden(bool $ariaHidden = true): self
+    {
+        $this->ariaHidden = $ariaHidden;
+        return $this;
+    }
+
     public function getClass(): array
     {
         return $this->class;
@@ -207,6 +252,24 @@ abstract class AbstractHtmlComponent
         return $this;
     }
 
+    public function disabled(bool $disabled = true): self
+    {
+        $this->disabled = $disabled;
+        return $this;
+    }
+
+    public function href(string $href): self
+    {
+        $this->href = $href;
+        return $this;
+    }
+
+    public function id(string $id): self
+    {
+        $this->id = $id;
+        return $this;
+    }
+
     protected function inputErrors(string $name, string $type = ''): string
     {
         $errorStr = '';
@@ -221,13 +284,26 @@ abstract class AbstractHtmlComponent
         return $errorStr;
     }
 
-    protected function inputValue(string $name, mixed $value): mixed
+    // protected function inputValue(string $name, mixed $value): mixed
+    // {
+    //     $value = $value;
+    //     if (isset($this->formValues) && array_key_exists($name, $this->formValues)) {
+    //         $value = $this->imputVal($name);
+    //     }
+    //     return $value;
+    // }
+
+    protected function inputValue(string $name, mixed $default = null): mixed
     {
-        $value = $value;
-        if (isset($this->formValues) && array_key_exists($name, $this->formValues)) {
-            $value = $this->imputVal($name);
+        if (!isset($this->formValues) || !is_array($this->formValues)) {
+            return $default;
         }
-        return $value;
+
+        if (str_contains($name, '.')) {
+            return $this->getNestedValue($name, $default);
+        }
+
+        return array_key_exists($name, $this->formValues) ? $this->imputVal($name) : $default;
     }
 
     protected function inputClassStyle(string $type = '', bool $isError = false): void
@@ -253,7 +329,7 @@ abstract class AbstractHtmlComponent
 
         foreach ($tagAttrs as $attr => $value) {
             if (
-                in_array($attr, ['content', 'contentUp', 'tag', 'formErrors', 'formValues', 'token', 'position', 'htmlBlock', 'errorMessage', 'level', 'key'], true)
+                in_array($attr, ['content', 'contentUp', 'tag', 'formErrors', 'formValues', 'token', 'position', 'htmlBlock', 'errorMessage', 'level', 'key', 'includeToken'], true)
                 || is_object($value)
             ) {
                 continue;
@@ -271,29 +347,6 @@ abstract class AbstractHtmlComponent
         return implode('', $attributes);
     }
 
-    // protected function getTagAttributes(array $tagAttrs, string $tag): string
-    // {
-    //     $html = '<' . $tag;
-
-    //     foreach ($tagAttrs as $attr => $value) {
-    //         if (
-    //             in_array($attr, ['content', 'contentUp', 'tag', 'formErrors', 'formValues', 'token', 'position', 'htmlBlock', 'errorMessage', 'level'], true)
-    //             || is_object($value)
-    //         ) {
-    //             continue;
-    //         }
-
-    //         $html .= $this->tagAttribute($attr, $value);
-    //     }
-
-    //     // void tags are closed directly
-    //     if (in_array(strtolower($tag), self::VOID_TAGS, true)) {
-    //         return $html . ' />';
-    //     }
-
-    //     return $html . '>';
-    // }
-
     protected function populateField(): void
     {
         $strErrors = '';
@@ -308,6 +361,21 @@ abstract class AbstractHtmlComponent
         }
 
         $this->errorMessage = $strErrors;
+    }
+
+    private function getNestedValue(string $path, mixed $default = null): mixed
+    {
+        $keys = explode('.', $path);
+        $value = $this->formValues;
+
+        foreach ($keys as $key) {
+            if (!is_array($value) || !array_key_exists($key, $value)) {
+                return $default;
+            }
+            $value = $value[$key];
+        }
+
+        return $value;
     }
 
     private function imputVal(string $name): mixed
@@ -347,7 +415,7 @@ abstract class AbstractHtmlComponent
             $type === 'boolean' => $value === true ? (string) (' ' . $key) : '',
 
             // Custom attributes handled by separate method
-            is_array($value) && $key === 'custom' => $this->customAttr($value),
+            is_array($value) && in_array($key, ['custom', 'aria']) => $this->customAttr($value),
 
             // Style array
             is_array($value) && $key === 'style' =>

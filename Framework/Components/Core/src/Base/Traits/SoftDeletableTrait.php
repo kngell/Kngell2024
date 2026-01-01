@@ -104,6 +104,13 @@ trait SoftDeletableTrait
         return $this;
     }
 
+    public function touchDeleted(): void
+    {
+        if ($this instanceof SoftDeletableInterface && method_exists($this, 'softDelete')) {
+            $this->softDelete();
+        }
+    }
+
     /**
      * Convert string to DateTimeImmutable with proper error handling.
      */

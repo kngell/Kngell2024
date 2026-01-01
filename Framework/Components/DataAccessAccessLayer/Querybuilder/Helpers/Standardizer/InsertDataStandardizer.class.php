@@ -2,148 +2,112 @@
 
 declare(strict_types=1);
 
-class InsertDataStandardizer implements DataStandardizerInterface
+final class InsertDataStandardizer extends AbstractDataStandardizer
 {
-    private string $context = 'values';
-    private array $insertMap;
-
-    public function __construct(
-        private array $formats = ['associative', 'key_value_list', 'column_list', 'values_list'],
-    ) {
-    }
-
-    public function standardize(array $data): array
+    public function standardize(array $data): InsertPayload
     {
+        $data = $this->getRealData($data);
+
         if (empty($data)) {
-            return [];
+            return new InsertPayload([], []);
+            // throw new InvalidArgumentException('Insert data cannot be empty');
         }
 
-        $data = $this->normalizeMultidimensional($data);
-        $format = $this->detectFormat($data);
-
-        // Use context to resolve ambiguity between column_list and key_value_list
-        if ($format === 'column_list' && $this->context === 'values') {
-            // In values context, treat even string lists as key/value pairs
-            if ($this->couldBeKeyValue($data)) {
-                return $this->convertKeyValueList($data);
-            }
-        }
-
-        return match ($format) {
-            'associative' => $data,
-            'key_value_list' => $this->convertKeyValueList($data),
-            'column_list' => $data,
-            'values_list' => $data,
-            'single_row' => $data,
-            default => throw new InvalidArgumentException("Unsupported data format: $format")
+        return match ($this->method) {
+            'insert' => $this->standardizeInsert($data),
+            'values' => $this->standardizeValues($data),
+            default => throw new InvalidArgumentException("Unsupported insert method: {$this->method}")
         };
     }
 
-    public function getDetectedFormat(array $data): string
+    public function getContext(): string
     {
-        return $this->detectFormat($data);
+        return 'insert';
     }
 
-    public function setContext(string $context): self
+    private function standardizeInsert(array $data): InsertPayload
     {
-        $this->context = $context;
-        return $this;
-    }
-
-    /**
-     * @param array $insertMap
-     *
-     * @return self
-     */
-    public function setInsertMap(array $insertMap): self
-    {
-        $this->insertMap = $insertMap;
-
-        return $this;
-    }
-
-    private function couldBeKeyValue(array $data): bool
-    {
-        return ArrayUtils::isStringList($data) &&
-               count($data) % 2 === 0 &&
-               count($data) >= 2;
-    }
-
-    private function normalizeMultidimensional(array $data): array
-    {
-        if (ArrayUtils::isMultidimentional($data) && count($data) === 1) {
-            $first = ArrayUtils::first($data);
-            if (!ArrayUtils::isMultidimentional($first)) {
-                return $first;
-            } else {
-                return $this->normalizeMultidimensional($first);
-            }
-        }
-        return $data;
-    }
-
-    private function detectFormat(array $data): string
-    {
-        // 1. Check for associative array (always associative regardless of context)
-        if (ArrayUtils::isAssoc($data)) {
-            return 'associative';
-        }
-
-        // 2. Check for key/value list (even count with string keys)
-        if ($this->isKeyValueList($data) && !isset($this->insertMap['columns'])) {
-            if ($this->context === 'values' && isset($this->insertMap['insert']) && ArrayUtils::isStringList($this->insertMap['insert'])) {
-                return 'values_list';
-            }
-            return ArrayUtils::isStringList($data) && $this->context === 'insert' ? 'column_list' : 'key_value_list';
-        }
-
-        // 3. Check for string list (all elements are strings)
+        // 1️⃣ Columns only
         if (ArrayUtils::isStringList($data)) {
-            return $this->context === 'columns' ? 'column_list' : 'key_value_list';
+            return new InsertPayload($data, []);
         }
 
-        // 4. Check for values list (sequential, mixed types, in values context)
-        if (ArrayUtils::isSequential($data) && $this->context === 'values') {
-            return 'values_list';
+        // 2️⃣ Associative array
+        if (ArrayUtils::isAssoc($data)) {
+            return new InsertPayload(array_keys($data), array_values($data));
         }
 
-        // 5. Generic sequential array
-        if (ArrayUtils::isSequential($data)) {
-            return 'single_row';
+        // 3️⃣ Flat key/value list
+        if (ArrayUtils::isKeyValueList($data)) {
+            $assoc = $this->toAssoc($data);
+            return new InsertPayload(array_keys($assoc), array_values($assoc));
         }
 
-        return 'unknown';
-    }
+        // 4️⃣ Pair list ([[col,val],[col=>val],...] or multi-row)
+        if ($this->isPairList($data)) {
+            // Normalize all rows into multi-row values
+            $columns = null;
+            $values = [];
 
-    private function isKeyValueList(array $data): bool
-    {
-        $count = count($data);
-
-        // Must have even number of elements and at least 2
-        if ($count % 2 !== 0 || $count < 2) {
-            return false;
-        }
-
-        // Check that every even index (0, 2, 4...) is a string
-        for ($i = 0; $i < $count; $i += 2) {
-            if (!is_string($data[$i])) {
-                return false;
+            foreach ($data as $row) {
+                $assoc = ArrayUtils::isAssoc($row) ? $row : [$row[0] => $row[1]];
+                if ($columns === null) {
+                    $columns = array_keys($assoc);
+                }
+                $values[] = array_values($assoc);
             }
+
+            return new InsertPayload($columns ?? [], $values);
         }
 
-        return true;
+        // Reject values-only
+        if (ArrayUtils::isSequential($data)) {
+            throw new InvalidArgumentException(
+                'insert() does not accept values-only arrays. Use values() instead.',
+            );
+        }
+
+        throw new InvalidArgumentException('Unsupported insert() data format');
     }
 
-    private function convertKeyValueList(array $keyValueList): array
+    private function standardizeValues(array $data): InsertPayload
     {
-        $result = [];
-
-        for ($i = 0; $i < count($keyValueList); $i += 2) {
-            $key = (string) $keyValueList[$i];
-            $value = $keyValueList[$i + 1];
-            $result[$key] = $value;
+        // Columns already known → values only
+        if (isset($this->map['columns'])) {
+            $values = ArrayUtils::isSequential($data[0] ?? null) ? $data : [$data];
+            return new InsertPayload($this->map['columns'], $values);
         }
 
-        return $result;
+        // Infer columns from associative or pair-list rows
+        if (ArrayUtils::isAssoc($data)) {
+            return new InsertPayload(array_keys($data), [$data]);
+        }
+
+        if ($this->isPairList($data)) {
+            $columns = [];
+            $values = [];
+            foreach ($data as $row) {
+                $assoc = ArrayUtils::isAssoc($row) ? $row : [$row[0] => $row[1]];
+                if (empty($columns)) {
+                    $columns = array_keys($assoc);
+                }
+                $values[] = array_values($assoc);
+            }
+            return new InsertPayload($columns, $values);
+        }
+
+        if (ArrayUtils::isKeyValueList($data)) {
+            $assoc = $this->toAssoc($data);
+            return new InsertPayload(array_keys($assoc), [$assoc]);
+        }
+
+        // Reject columns-only
+        if (ArrayUtils::isStringList($data)) {
+            throw new InvalidArgumentException(
+                'values() does not accept columns-only arrays. Use insert() or columns() instead.',
+            );
+        }
+
+        throw new InvalidArgumentException('Unsupported VALUES data format');
     }
 }

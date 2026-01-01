@@ -10,10 +10,10 @@ final class SessionConfig
     {
         return [
             'session_name' => 'kngell_ecom',
-            'cookie_lifetime' => 0, // Session cookie (until browser close)
+            'cookie_lifetime' => 0,
             'path' => '/',
-            'domain' => '', // Current domain
-            'cookie_secure' => isset($_SERVER['HTTPS']), // Auto-detect
+            'domain' => '',
+            'cookie_secure' => isset($_SERVER['HTTPS']),
             'cookie_httponly' => true,
             'cookie_samesite' => 'Lax',
             'gc_maxlifetime' => 1800, // 30 minutes

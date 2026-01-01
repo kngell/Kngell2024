@@ -2,191 +2,277 @@
 
 declare(strict_types=1);
 
-use Brick\Money\Money;
-
 abstract class Entity
 {
-    protected const string DATE_FORMAT = 'Y-m-d H:i:s';
     protected const array RELATIONSHIPS = [];
 
-    private array $tableAlias = [];
-    private array $tableMap = [];
+    private array $tableAlias;
+    private array $tableMap;
     private array $relatedEntities = [];
     private array $pendingData = [];
+    private array $pendingCollections = [];
     private ?array $cachedFieldMap = null;
 
     public function __construct(
-        array $tableAlias,
-        array $tableMap,
-        private TypeNormalizerInterface $normalizer,
-        private ChangeTrackerInterface $changeTracker,
+        private EntityDependenciesFactoryInterface $dependencies,
+        array $tableAlias = [],
+        array $tableMap = [],
     ) {
         $this->tableAlias = $tableAlias;
         $this->tableMap = $tableMap;
     }
 
+    // --------------------------------------------------------
+    // MAGIC METHODS & HYDRATION (using the protected getters)
+    // --------------------------------------------------------
     public function __set(string $name, mixed $value): void
     {
-        $name = $this->realName($name);
+        $isRelation = isset(static::RELATIONSHIPS[$name]);
+
+        if ($isRelation && is_array($value) && !ArrayUtils::isArrayList($value)) {
+            $this->getRelationManager()->hydrateRelatedEntity(
+                entity: $this,
+                dbRelationName: $name,
+                field: '_all_data',
+                value: $value,
+                tableAlias: $this->tableAlias,
+                tableMap: $this->tableMap,
+                relatedEntities: $this->relatedEntities,
+            );
+            return;
+        }
+
+        $name = $this->getRelationManager()->resolveRealName(
+            $this,
+            $name,
+            $this->tableAlias,
+            $this->tableMap,
+            static::RELATIONSHIPS,
+        );
 
         if (str_contains($name, '.')) {
-            [$relationName, $field] = explode('.', $name, 2);
+            $parts = explode('.', $name);
 
-            if (isset(static::RELATIONSHIPS[$relationName])) {
-                $this->hydrateRelatedEntity($relationName, $field, $value);
-                return;
+            $currentPath = '';
+            foreach ($parts as $i => $part) {
+                $currentPath = $currentPath ? $currentPath . '.' . $part : $part;
+
+                if (isset(static::RELATIONSHIPS[$currentPath])) {
+                    $remainingPath = implode('.', array_slice($parts, $i + 1));
+
+                    $this->getRelationManager()->hydrateRelatedEntity(
+                        entity: $this,
+                        dbRelationName: $currentPath,
+                        field: $remainingPath,
+                        value: $value,
+                        tableAlias: $this->tableAlias,
+                        tableMap: $this->tableMap,
+                        relatedEntities: $this->relatedEntities,
+                    );
+                    return;
+                }
             }
         }
 
-        if ($this->hasActiveRelationships()) {
+        if ($this->getRelationManager()->hasActiveRelationships($this, $this->tableAlias, $this->relatedEntities)) {
             $this->pendingData[$name] = $value;
         } else {
-            $this->denormalizeAndSetProperty($name, $value);
+            $this->getHydrator()->denormalizeAndSetProperty($this, $name, $value);
         }
+    }
+
+    public function debugPendingCollections(): array
+    {
+        return [
+            'pendingCollections' => $this->pendingCollections,
+            'relatedEntities' => $this->relatedEntities,
+            'relationships' => static::RELATIONSHIPS,
+        ];
     }
 
     public function assign(array $data): self
     {
-        $reflection = CustomReflection::getInstance($this)->getObject();
-
-        $properties = $reflection->getProperties();
-
-        foreach ($data as $key => $value) {
-            $propertyName = StringUtils::camelCase($key);
-            $property = $this->findPropertyByName($properties, $propertyName);
-
-            if ($property) {
-                $setterMethod = 'set' . ucfirst($propertyName);
-                $convertedValue = $this->normalizer->normalizeForClientToEntity($value, $property, $this);
-
-                if ($reflection->hasMethod($setterMethod)) {
-                    $method = $reflection->getMethod($setterMethod);
-                    $method->invoke($this, $convertedValue);
-                } else {
-                    $property->setAccessible(true);
-                    $property->setValue($this, $convertedValue);
-                }
-            }
-        }
-        return $this;
+        return $this->getHydrator()->assign($this, $data);
     }
 
     public function pdoHydrate(array $data): void
     {
-        foreach ($data as $dbFieldName => $rawValue) {
-            $this->denormalizeAndSetProperty($dbFieldName, $rawValue);
-        }
-        $this->changeTracker->track($this);
+        $this->getHydrator()->pdoHydrate($this, $data);
     }
 
-    public function getDirtyData(): array
-    {
-        $changes = $this->changeTracker->getChanges($this);
-        $normalizedData = [];
-        foreach ($changes as $property => $value) {
-            // Find ReflectionProperty for $property
-            // ...
-            // **IMPLIED CHANGE:** Use the entity-to-database method
-            // $normalizedData[$dbField] = $this->normalizer->normalizeForEntityToDatabase($value, $property);
-        }
-
-        return $normalizedData;
-    }
-
-    public function hydrateWithRelations(): void
-    {
-        $this->completeHydration();
-    }
-
-    public function completeHydration(): void
+    public function completeHydration(): self
     {
         if (!empty($this->pendingData) || !empty($this->relatedEntities)) {
-            $this->completeMainHydration();
-            $this->hydrateRelatedEntities();
-            $this->changeTracker->track($this);
+            $this->getHydrator()->completeMainHydration($this, $this->pendingData, $this->cachedFieldMap);
+            $this->getRelationManager()->completeRelatedEntityHydration($this, $this->relatedEntities);
+            $this->relatedEntities = [];
         }
+
+        return $this;
     }
 
-    public function completeMainHydration(): void
-    {
-        if (!empty($this->pendingData)) {
-            if ($this->cachedFieldMap === null) {
-                $this->cachedFieldMap = $this->buildFieldToPropertyMap();
-            }
-
-            foreach ($this->pendingData as $key => $value) {
-                // $key here is the DB field name (e.g., 'user_name')
-                $this->denormalizeAndSetProperty($key, $value);
-            }
-
-            $this->pendingData = [];
-        }
-    }
-
-    /**
-     * Optionally set createdAt and updatedAt.
-     */
-    public function touchTimestamps(): void
-    {
-        if ($this instanceof TimestampableInterface) {
-            $now = new DateTimeImmutable();
-
-            if (method_exists($this, 'setCreatedAt')) {
-                $this->setCreatedAt($now);
-            }
-
-            if (method_exists($this, 'setUpdatedAt')) {
-                $this->setUpdatedAt($now);
-            }
-        }
-    }
-
-    /**
-     * Optionally soft-delete entity.
-     */
-    public function touchDeleted(): void
-    {
-        if ($this instanceof SoftDeletableInterface && method_exists($this, 'softDelete')) {
-            $this->softDelete();
-        }
-    }
-
-    public function table(): string
-    {
-        return StringUtils::studlyCapsToUnderscore(static::class);
-    }
+    // -----------------------------------------------------------
+    // TRANSFORMATION METHODS
+    // -----------------------------------------------------------
 
     public function toOriginalArray(): array
     {
-        $array = [];
-        $reflection = CustomReflection::getInstance($this)->getObject();
-
-        foreach ($reflection->getProperties() as $prop) {
-            $name = StringUtils::studlyCapsToUnderscore($prop->getName());
-            $array[$name] = $prop->getValue($this);
-        }
-
-        return $array;
+        return $this->getTransformer()->toOriginalArray($this);
     }
 
     public function toArray(): array
     {
-        $array = [];
-        $reflection = CustomReflection::getInstance($this)->getObject();
+        return $this->getTransformer()->toArray($this);
+    }
 
-        foreach ($reflection->getProperties(ReflectionProperty::IS_PRIVATE) as $property) {
-            $property->setAccessible(true);
-            $propertyName = $property->getName();
-            if ($property->isInitialized($this)) {
-                $array[$propertyName] = $property->getValue($this);
-            }
+    public function toDeepArray(
+        bool $includeRelationships = true,
+        int $maxDepth = 2,
+        array $excludedProperties = [],
+    ): array {
+        return $this->getTransformer()->toDeepArray(
+            $this,
+            $includeRelationships,
+            $maxDepth,
+            $excludedProperties,
+        );
+    }
 
-            // $array[$propertyName] = $value;
+    public function toFlattenedArray(
+        string $separator = '.',
+        bool $includeRelationships = true,
+        array $excludedProperties = [],
+    ): array {
+        return $this->getTransformer()->toFlattenedArray(
+            $this,
+            $separator,
+            $includeRelationships,
+            $excludedProperties,
+        );
+    }
 
-            // $array[$propertyName] = $this->convertValueForArray($value);
+    public function toFormArray(
+        array $fieldMapping = [],
+        bool $flattenNested = true,
+        bool $formatValues = true,
+    ): array {
+        return $this->getTransformer()->toFormArray(
+            $this,
+            $fieldMapping,
+            $flattenNested,
+            $formatValues,
+        );
+    }
+
+    public function toDatabaseArray(bool $includeRelationships = false): array
+    {
+        return $this->getTransformer()->toDatabaseArray($this, $includeRelationships);
+    }
+
+    public function extractRelationshipIds(): array
+    {
+        return $this->getTransformer()->extractRelationshipIds($this, static::RELATIONSHIPS);
+    }
+
+    // ----------------------------------------------------------
+    // DATABASE & MAPPING METHODS
+    // ----------------------------------------------------------
+
+    public function table(): string
+    {
+        return $this->getMapper()->getTableName($this);
+    }
+
+    public function getRelationClassName(string $relationBdName): ?string
+    {
+        $relationships = $this->getRelationships();
+        return $relationships[$relationBdName] ?? null;
+    }
+
+    public function getRelationPropertyName(string $officialKey): string
+    {
+        $camel = StringUtils::camelCase($officialKey);
+        if (property_exists($this, $camel)) {
+            return $camel;
+        }
+        if (property_exists($this, $camel . 'Show')) {
+            return $camel . 'Show';
+        }
+        return $camel;
+    }
+
+    public function getRelationshipKeyFromDataKey(string $dataKey): ?string
+    {
+        $relationships = $this->getRelationships();
+        if (isset($relationships[$dataKey])) {
+            return $dataKey;
+        }
+        $cleanKey = str_replace('_show', '', $dataKey);
+        if (isset($relationships[$cleanKey])) {
+            return $cleanKey;
         }
 
-        return $array;
+        return null;
+    }
+
+    public function getCurrencyCodeIfExists(): ?string
+    {
+        return $this->getMapper()->getCurrencyCodeIfExists($this);
+    }
+
+    public function convertToPropertyName(string $fieldName): string
+    {
+        return $this->getMapper()->convertToPropertyName($fieldName);
+    }
+
+    public function getCurrencyIdIfExists(): int|string|null
+    {
+        return $this->getMapper()->getCurrencyIdIfExists($this);
+    }
+
+    // In Entity class:
+    public function getAllProperties(): array
+    {
+        return $this->getMapper()->getAllProperties($this);
+    }
+
+    public function getEntityKeyField(): string|bool
+    {
+        return $this->getMapper()->getEntityKeyField($this);
+    }
+
+    public function getEntityKeyProperty(): string|bool
+    {
+        return $this->getMapper()->getEntityKeyProperty($this);
+    }
+
+    public function getProperty(string $field): ?ReflectionProperty
+    {
+        return $this->getMapper()->getPropertyForField($this, $field);
+    }
+
+    public function hasProperty(string $propertyName): bool
+    {
+        return $this->getMapper()->hasProperty($this, $propertyName);
+    }
+
+    public function isInitialized(string $field): bool
+    {
+        return $this->getMapper()->isInitialized($this, $field);
+    }
+
+    public function getFieldValue(string $field): mixed
+    {
+        return $this->getMapper()->getFieldValue($this, $field);
+    }
+
+    // ------------------------------------------------------------
+    // OTHER METHODS
+    // ------------------------------------------------------------
+
+    public function getDirtyData(): array
+    {
+        return $this->getHydrator()->getDirtyData($this);
     }
 
     public function isEmpty(): bool
@@ -202,327 +288,89 @@ abstract class Entity
         return true;
     }
 
-    public function getCurrencyCodeIfExists(): ?string
+    public function hasRelationships(): bool
     {
-        $reflection = CustomReflection::getInstance($this)->getObject();
-
-        // Check for common naming variations
-        foreach (['currencyCode', 'currency_code', 'currency'] as $possibleName) {
-            if ($reflection->hasProperty($possibleName)) {
-                $property = $reflection->getProperty($possibleName);
-                $property->setAccessible(true);
-                return $property->getValue($this);
-            }
-        }
-
-        // Also allow an attribute to mark a property as currencyCode
-        foreach ($reflection->getProperties() as $property) {
-            foreach ($property->getAttributes() as $attribute) {
-                $args = $attribute->getArguments();
-                if (!empty($args['currencyCode'])) {
-                    $property->setAccessible(true);
-                    return $property->getValue($this);
-                }
-            }
-        }
-
-        return null;
+        $relationships = static::RELATIONSHIPS ?? [];
+        return !empty($relationships);
     }
 
-    public function getCurrencyIdIfExists(): int|string|null
+    public function getRelationshipsName(string $relationName): string
     {
-        $reflection = CustomReflection::getInstance($this)->getObject();
-
-        foreach (['currencyId', 'currencyID', 'currency_id'] as $possibleName) {
-            if ($reflection->hasProperty($possibleName)) {
-                $property = $reflection->getProperty($possibleName);
-                $property->setAccessible(true);
-                return $property->getValue($this);
-            }
-        }
-
-        foreach ($reflection->getProperties() as $property) {
-            foreach ($property->getAttributes() as $attribute) {
-                $args = $attribute->getArguments();
-                if (!empty($args['currencyID'])) {
-                    $property->setAccessible(true);
-                    return $property->getValue($this);
-                }
-            }
-        }
-
-        return null;
+        return static::RELATIONSHIPS[$relationName];
     }
 
-    public function getEntityKeyField(): string|bool
+    public function getRelationships(): array
     {
-        $reflector = CustomReflection::getInstance($this)->getObject();
-
-        foreach ($reflector->getProperties(ReflectionProperty::IS_PRIVATE) as $property) {
-            $identifier = $property->getAttributes();
-            if (!empty($identifier)) {
-                $attribute = ArrayUtils::first($identifier);
-                $attrArguments = $attribute->getArguments();
-
-                return $attrArguments['name'] ?? StringUtils::studlyCapsToUnderscore($property->getName());
-            }
-        }
-
-        return false;
+        return static::RELATIONSHIPS;
     }
 
-    public function isInitialized(string $field): bool
+    public function hydrateWithRelations(): void
     {
-        $reflector = CustomReflection::getInstance($this)->getObject();
-        $property = $reflector->getProperty(StringUtils::studlyCaps($field));
-        return $property->isInitialized($this);
-    }
-
-    public function getFieldValue(string $field): mixed
-    {
-        $reflector = CustomReflection::getInstance($this)->getObject();
-
-        foreach ($reflector->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
-            if (strtolower($method->getName()) === 'get' . strtolower($field)) {
-                return $method->invoke($this);
-            }
-        }
-
-        return null;
-    }
-
-    public function setTableAlias(array $tableAlias): self
-    {
-        $this->tableAlias = $tableAlias;
-        return $this;
+        $this->completeHydration();
     }
 
     /**
-     * Extract data with specific prefix and remove the prefix.
+     * @return array
      */
-    protected function extractPrefixedData(array $data, string $prefix): array
+    public function getTableAlias(): array
     {
-        $result = [];
-        $prefixLength = strlen($prefix);
-
-        foreach ($data as $key => $value) {
-            if (str_starts_with($key, $prefix)) {
-                $cleanKey = substr($key, $prefixLength);
-                $result[$cleanKey] = $value;
-            }
-        }
-
-        return $result;
+        return $this->tableAlias;
     }
 
-    protected function convertArrayValues(array $array): array
+    /**
+     * @return array
+     */
+    public function getTableMap(): array
     {
-        return array_map([$this, 'convertValueForArray'], $array);
+        return $this->tableMap;
     }
 
-    private function hasActiveRelationships(): bool
+    /**
+     * @return array
+     */
+    public function &getRelatedEntities(): array
     {
-        if (!empty($this->relatedEntities)) {
-            return true;
-        }
-        foreach ($this->tableAlias as $relation => $alias) {
-            $baseRelation = $this->getBaseTable($relation);
-            if (isset(static::RELATIONSHIPS[$baseRelation])) {
-                return true;
-            }
-        }
-        return false;
+        return $this->relatedEntities;
     }
-    // private function hasActiveRelationships(): bool
+
+    public function getRelationManager(): EntityRelationManagerInterface
+    {
+        return $this->dependencies->getRelationManager();
+    }
+
+    public function getChangeTracker(): ChangeTrackerInterface
+    {
+        return $this->dependencies->getChangeTracker();
+    }
+
+    // Protected getters for internal use
+    protected function getMapper(): EntityMapperInterface
+    {
+        return $this->dependencies->getMapper();
+    }
+
+    protected function getHydrator(): EntityHydratorInterface
+    {
+        return $this->dependencies->getHydrator();
+    }
+
+    protected function getTransformer(): EntityToArrayTransformerInterface
+    {
+        return $this->dependencies->getTransformer();
+    }
+
+    protected function getNormalizer(): TypeNormalizerInterface
+    {
+        return $this->dependencies->getNormalizer();
+    }
+
+    // protected function getTypeHandlerFactory(): TypeHandlerFactory
     // {
-    //     if (!empty($this->relatedEntities)) {
-    //         return true;
-    //     }
-
-    //     foreach ($this->tableAlias as $relation => $alias) {
-    //         $relation = $this->getBaseTable($relation);
-    //         $relation = StringUtils::camelCase($relation);
-    //         if (isset(static::RELATIONSHIPS[$relation])) {
-    //             return true;
-    //         }
-    //     }
-
-    //     return false;
+    //     return $this->dependencies->getTypeHandlerFactory();
     // }
 
-    private function getBaseTable(string $logicalTable): string
+    protected function getTypePresenterFactory(): TypePresenterFactory
     {
-        if (preg_match('/^(.+)_join_\d+$/', $logicalTable, $matches)) {
-            return $matches[1];
-        }
-
-        return $logicalTable;
-    }
-
-    private function realName(string $name): string
-    {
-        if (empty($this->tableAlias)) {
-            return $name;
-        }
-
-        $logicalToPhysicalMap = $this->tableMap;
-
-        foreach ($this->tableAlias as $logicalKey => $alias) {
-            if (str_starts_with($name, $alias . '_')) {
-                $physicalTable = $logicalToPhysicalMap[$logicalKey] ?? $logicalKey;
-
-                if (isset(static::RELATIONSHIPS[$physicalTable])) {
-                    $fieldName = substr($name, strlen($alias) + 1);
-                    return $physicalTable . '.' . $fieldName;
-                }
-                return substr($name, strlen($alias) + 1);
-            }
-        }
-        return $name;
-    }
-
-    private function buildFieldToPropertyMap(): array
-    {
-        $map = [];
-        $reflection = CustomReflection::getInstance($this)->getObject();
-
-        foreach ($reflection->getProperties(ReflectionProperty::IS_PRIVATE) as $property) {
-            $attributes = $property->getAttributes(EntityFieldId::class);
-            $dbFieldName = $this->getDatabaseFieldName($property, $attributes);
-            $map[$dbFieldName] = $property->getName();
-        }
-
-        return $map;
-    }
-
-    private function denormalizeAndSetProperty(string $dbFieldName, mixed $rawValue): void
-    {
-        if ($this->cachedFieldMap === null) {
-            $this->cachedFieldMap = $this->buildFieldToPropertyMap();
-        }
-        $fieldToPropertyMap = $this->cachedFieldMap;
-        $reflection = CustomReflection::getInstance($this)->getObject();
-
-        $propertyName = $fieldToPropertyMap[$dbFieldName] ?? $this->convertToPropertyName($dbFieldName);
-
-        if (property_exists($this, $propertyName)) {
-            try {
-                $property = $reflection->getProperty($propertyName);
-
-                $convertedValue = $this->normalizer->normalizeForDatabaseToEntity(
-                    rawValue: $rawValue,
-                    property: $property,
-                    entityInstance: $this,
-                );
-
-                // 3. Set the property value
-                $this->setPropertyValue($propertyName, $convertedValue);
-            } catch (ReflectionException $e) {
-                // Property exists but reflection failed (highly unlikely in this flow)
-                error_log("Failed to reflect property {$propertyName}: {$e->getMessage()}");
-            }
-        }
-    }
-
-    private function setPropertyValue(string $propertyName, $value): void
-    {
-        $reflection = CustomReflection::getInstance($this)->getObject();
-        try {
-            $property = $reflection->getProperty($propertyName);
-            $property->setAccessible(true);
-            $property->setValue($this, $value);
-        } catch (ReflectionException $e) {
-            // Handle case where property doesn't exist (shouldn't happen here)
-        }
-    }
-
-    private function convertToPropertyName(string $fieldName): string
-    {
-        return lcfirst(StringUtils::studlyCaps($fieldName));
-    }
-
-    private function getDatabaseFieldName(ReflectionProperty $property, array $attributes): string
-    {
-        if (!empty($attributes)) {
-            $attribute = $attributes[0];
-            $arguments = $attribute->getArguments();
-            return $arguments['name'] ?? StringUtils::studlyCapsToUnderscore($property->getName());
-        }
-
-        return StringUtils::studlyCapsToUnderscore($property->getName());
-    }
-
-    private function convertValueForArray($value): mixed
-    {
-        if ($value instanceof self) {
-            return $value->toArray();
-        }
-        if ($value instanceof DateTimeInterface) {
-            return $value->format(self::DATE_FORMAT);
-        }
-        if ($value instanceof Money) {
-            return $value->getAmount();
-        }
-        if (is_array($value)) {
-            return $this->convertArrayValues($value);
-        }
-        if (is_object($value) && method_exists($value, '__toString')) {
-            return (string) $value;
-        } else {
-            return $value;
-        }
-    }
-
-    private function hydrateRelatedEntity(string $relationName, string $field, mixed $value): void
-    {
-        $entityClass = static::RELATIONSHIPS[$relationName];
-
-        if (!array_key_exists($relationName, $this->relatedEntities)) {
-            $this->relatedEntities[$relationName] = new $entityClass($this->tableAlias, $this->tableMap, $this->normalizer, $this->changeTracker);
-        }
-
-        $this->relatedEntities[$relationName]->__set($field, $value);
-    }
-
-    private function hydrateRelatedEntities(): void
-    {
-        foreach ($this->relatedEntities as $relationName => $entity) {
-            if (method_exists($entity, 'completeHydration')) {
-                $entity->completeHydration();
-            }
-
-            $propertyName = $relationName;
-            if (property_exists($this, $propertyName)) {
-                $this->$propertyName = $entity;
-            }
-        }
-    }
-
-    private function findPropertyByName(array $properties, string $propertyName): ?ReflectionProperty
-    {
-        foreach ($properties as $property) {
-            if ($property->getName() === $propertyName) {
-                return $property;
-            }
-        }
-        return null;
-    }
-
-    private function processValueForAssignment(ReflectionProperty $property, mixed $value): mixed
-    {
-        $attributes = $property->getAttributes();
-        if (!empty($attributes)) {
-            $attr = ArrayUtils::first($attributes);
-            if ($attr->getName() === 'DateField' && is_string($value)) {
-                return $this->formatDateString($value);
-            }
-        }
-        return $value;
-    }
-
-    private function formatDateString(string $dateString): string
-    {
-        $date = new DateTimeImmutable($dateString);
-        return $date->format(self::DATE_FORMAT);
+        return $this->dependencies->getTypePresenterFactory();
     }
 }

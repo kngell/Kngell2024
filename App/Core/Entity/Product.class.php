@@ -18,13 +18,13 @@ class Product extends Entity implements TimestampableInterface, SoftDeletableInt
     private string $sku;
     private string $name;
     private string $slug;
-    private ProductStatus $status = ProductStatus::DRAFT;
-    private int $stockStatusId; // Only keep the ID, not the joined entity
+    private int $statusId;
+    private int $stockStatusId;
     private bool $isActive = true;
     private bool $isFeatured = false;
     private bool $isVirtual = false;
     private bool $isDownloadable = false;
-    private ProductVisibility $visibility = ProductVisibility::VISIBLE;
+    private ProductVisibility $productVisibility = ProductVisibility::VISIBLE;
 
     // 🟡 Optional fields
     private ?string $description = null;
@@ -44,8 +44,8 @@ class Product extends Entity implements TimestampableInterface, SoftDeletableInt
     private int $maxOrderQuantity = 0;
 
     // ⚖️ Physical Properties
-    private ?Weight $weight = null;
-    private ?Dimensions $dimensions = null;
+    private ?Weight $productWeight = null;
+    private ?Dimensions $productDimension = null;
 
     // 🖼️ Media
     private ?string $mainImage = null;
@@ -54,9 +54,6 @@ class Product extends Entity implements TimestampableInterface, SoftDeletableInt
     // 📦 Shipping
     private ?int $shippingClassId = null;
     private bool $requiresShipping = true;
-
-    // 🏷️ Organization
-    private array $tags = [];
 
     // 📊 Sales & Performance
     private int $totalSales = 0;
@@ -86,24 +83,24 @@ class Product extends Entity implements TimestampableInterface, SoftDeletableInt
 
     public function hasDimensions(): bool
     {
-        return $this->dimensions !== null;
+        return $this->productDimension !== null;
     }
 
     public function getFormattedDimensions(): ?string
     {
-        return $this->dimensions?->getFormattedDimensions();
+        return $this->productDimension?->getFormattedDimensions();
     }
 
     public function getVolume(): ?float
     {
-        return $this->dimensions?->getVolume();
+        return $this->productDimension?->getVolume();
     }
 
     // Shipping calculations
 
     public function getVolumetricWeight(float $factor = 5000): ?float
     {
-        return $this->dimensions?->getVolumetricWeight($factor);
+        return $this->productDimension?->getVolumetricWeight($factor);
     }
 
     public function calculateShippingCost(?string $destination = 'domestic'): float
@@ -117,8 +114,8 @@ class Product extends Entity implements TimestampableInterface, SoftDeletableInt
         $calculator = $calculatorFactory->createForProduct($this);
 
         return $calculator->calculate(
-            $this->weight,
-            $this->dimensions,
+            $this->productWeight,
+            $this->productDimension,
             $this->getVolumetricWeight(),
             $this->shippingClassId,
             $destination,
@@ -221,26 +218,6 @@ class Product extends Entity implements TimestampableInterface, SoftDeletableInt
     public function setSlug(string $slug): Product
     {
         $this->slug = $slug;
-
-        return $this;
-    }
-
-    /**
-     * @return ProductStatus
-     */
-    public function getStatus(): ProductStatus
-    {
-        return $this->status;
-    }
-
-    /**
-     * @param ProductStatus $status
-     *
-     * @return Product
-     */
-    public function setStatus(ProductStatus $status): Product
-    {
-        $this->status = $status;
 
         return $this;
     }
@@ -450,26 +427,6 @@ class Product extends Entity implements TimestampableInterface, SoftDeletableInt
     }
 
     /**
-     * @return null|Weight
-     */
-    public function getWeight(): ?Weight
-    {
-        return $this->weight;
-    }
-
-    /**
-     * @param null|Weight $weight
-     *
-     * @return Product
-     */
-    public function setWeight(?Weight $weight): Product
-    {
-        $this->weight = $weight;
-
-        return $this;
-    }
-
-    /**
      * @return null|string
      */
     public function getMainImage(): ?string
@@ -570,46 +527,6 @@ class Product extends Entity implements TimestampableInterface, SoftDeletableInt
     }
 
     /**
-     * @return null|Dimensions
-     */
-    public function getDimensions(): ?Dimensions
-    {
-        return $this->dimensions;
-    }
-
-    /**
-     * @param null|Dimensions $dimensions
-     *
-     * @return Product
-     */
-    public function setDimensions(?Dimensions $dimensions): Product
-    {
-        $this->dimensions = $dimensions;
-
-        return $this;
-    }
-
-    /**
-     * @return ProductVisibility
-     */
-    public function getVisibility(): ProductVisibility
-    {
-        return $this->visibility;
-    }
-
-    /**
-     * @param ProductVisibility $visibility
-     *
-     * @return Product
-     */
-    public function setVisibility(ProductVisibility $visibility): Product
-    {
-        $this->visibility = $visibility;
-
-        return $this;
-    }
-
-    /**
      * @return bool
      */
     public function getIsDownloadable(): bool
@@ -685,6 +602,86 @@ class Product extends Entity implements TimestampableInterface, SoftDeletableInt
     public function setIsActive(bool $isActive): Product
     {
         $this->isActive = $isActive;
+
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getStatusId(): int
+    {
+        return $this->statusId;
+    }
+
+    /**
+     * @param int $statusId
+     *
+     * @return Product
+     */
+    public function setStatusId(int $statusId): Product
+    {
+        $this->statusId = $statusId;
+
+        return $this;
+    }
+
+    /**
+     * @return ProductVisibility
+     */
+    public function getProductVisibility(): ProductVisibility
+    {
+        return $this->productVisibility;
+    }
+
+    /**
+     * @param ProductVisibility $productVisibility
+     *
+     * @return Product
+     */
+    public function setProductVisibility(ProductVisibility $productVisibility): Product
+    {
+        $this->productVisibility = $productVisibility;
+
+        return $this;
+    }
+
+    /**
+     * @return null|Weight
+     */
+    public function getProductWeight(): ?Weight
+    {
+        return $this->productWeight;
+    }
+
+    /**
+     * @param null|Weight $productWeight
+     *
+     * @return Product
+     */
+    public function setProductWeight(?Weight $productWeight): Product
+    {
+        $this->productWeight = $productWeight;
+
+        return $this;
+    }
+
+    /**
+     * @return null|Dimensions
+     */
+    public function getProductDimension(): ?Dimensions
+    {
+        return $this->productDimension;
+    }
+
+    /**
+     * @param null|Dimensions $productDimension
+     *
+     * @return Product
+     */
+    public function setProductDimension(?Dimensions $productDimension): Product
+    {
+        $this->productDimension = $productDimension;
 
         return $this;
     }

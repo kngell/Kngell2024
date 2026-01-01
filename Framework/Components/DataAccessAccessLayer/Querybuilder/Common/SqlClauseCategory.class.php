@@ -2,18 +2,12 @@
 
 declare(strict_types=1);
 
-/**
- * Clause Categories - Groups related SQL clauses.
- */
 enum SqlClauseCategory: string
 {
-    /**
-     * Get all methods that belong to this category.
-     */
     public function getMethods(): array
     {
         return match($this) {
-            self::SELECT => ['select'],
+            self::SELECT => ['select', 'unionAll'],
             self::FROM => array_merge(
                 ['from'],
                 // All JOIN methods including compound ones
@@ -22,6 +16,7 @@ enum SqlClauseCategory: string
                 // ON conditions
                 ['on', 'andOn', 'orOn', 'onClosure'],
             ),
+            self::SET => ['update', 'set', 'setColumn', 'setColumns', 'setValue', 'setValues'],
             self::WHERE => [
                 'where', 'andWhere', 'orWhere', 'whereIn', 'whereNotIn',
                 'whereLike', 'whereNotLike', 'whereNull', 'whereNotNull',
@@ -34,6 +29,8 @@ enum SqlClauseCategory: string
             self::OFFSET => ['offset'],
             self::INTO => ['insert', 'into', 'columns'],
             self::VALUES => ['values'],
+            self::WITH => ['with', 'withRecursive', 'addCte'],
+
             // ✅ Add default case to handle any missing cases
             default => []
         };
@@ -47,14 +44,29 @@ enum SqlClauseCategory: string
         return in_array($method, $this->getMethods());
     }
 
-    public function toSqlClause(): SqlClause
+    public function toSqlClause(): SqlClause|SqlCteClause
     {
         return match ($this) {
+            self::WITH => SqlCteClause::WITH,
             self::SELECT => SqlClause::SELECT,
             self::FROM => SqlClause::FROM,
             self::WHERE => SqlClause::WHERE,
             self::GROUP_BY => SqlClause::GROUP_BY,
             self::HAVING => SqlClause::HAVING,
+            self::ORDER_BY => SqlClause::ORDER_BY,
+            self::LIMIT => SqlClause::LIMIT,
+            self::OFFSET => SqlClause::OFFSET,
+        };
+    }
+
+    public function toSqlClauseForRules(): SqlClause
+    {
+        return match ($this) {
+            self::SELECT => SqlClause::WHERE,
+            self::FROM => SqlClause::WHERE,
+            self::WHERE => SqlClause::WHERE,
+            self::GROUP_BY => SqlClause::GROUP_BY,
+            self::HAVING => SqlClause::WHERE,
             self::ORDER_BY => SqlClause::ORDER_BY,
             self::LIMIT => SqlClause::LIMIT,
             self::OFFSET => SqlClause::OFFSET,
@@ -73,6 +85,7 @@ enum SqlClauseCategory: string
         }
         return null;
     }
+    case WITH = 'with';
     case SELECT = 'select';
     case FROM = 'from';
     case WHERE = 'where';
@@ -81,6 +94,8 @@ enum SqlClauseCategory: string
     case ORDER_BY = 'orderBy';
     case LIMIT = 'limit';
     case OFFSET = 'offset';
+
+    case SET = 'set';
 
     case INTO = 'into';
     case VALUES = 'values';

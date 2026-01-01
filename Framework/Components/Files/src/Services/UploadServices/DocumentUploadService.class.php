@@ -12,9 +12,24 @@ class DocumentUploadService extends AbstractFileUploadService
         parent::__construct($fileMover, $request, $fieldName);
     }
 
+    public function getStorageBaseDirectory(): string
+    {
+        throw new Exception('Not implemented');
+    }
+
+    public function getWebBasePath(): string
+    {
+        throw new Exception('Not implemented');
+    }
+
     public function getHandledUploadFileType(): UploadFileType
     {
         return UploadFileType::DOCUMENT;
+    }
+
+    protected function getTempDirectory(): string
+    {
+        throw new Exception('Not implemented');
     }
 
     protected function getProcessor(): object

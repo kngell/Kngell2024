@@ -8,7 +8,6 @@ class ButtonElement extends AbstractHtmlElement
     private bool $autofocus;
     private string $command;
     private string $commandfor;
-    private bool $disabled;
     private string $form;
     private string $formaction;
     private string $formenctype;
@@ -124,9 +123,26 @@ class ButtonElement extends AbstractHtmlElement
      *
      * @return ButtonElement
      */
-    public function disabled(bool $disabled): self
+    public function disabled(bool $disabled = true): self
     {
         $this->disabled = $disabled;
+        return $this;
+    }
+
+    /**
+     * @param string $ariaLabel
+     *
+     * @return ButtonElement
+     */
+    public function ariaLabel(string $ariaLabel): self
+    {
+        $this->ariaLabel = $ariaLabel;
+        return $this;
+    }
+
+    public function ariaHidden(bool $ariaHidden = true): self
+    {
+        $this->ariaHidden = $ariaHidden;
         return $this;
     }
 

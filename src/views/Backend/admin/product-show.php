@@ -13,9 +13,8 @@ $this->start('head'); ?>
                 <img src="/uploads/products/123/main.jpg" alt="Product Image" class="product-show__image">
             </div>
             <div class="product-show__info">
-                <h1 class="product-show__title">Leather Wallet</h1>
-                <p> <?= print_r($product ?? 'nothing', true) ?></p>
-                <p class="product-show__sku">SKU: LW-001</p>
+                <h1 class="product-show__title"><?= $product->getName() ?? '' ?></h1>
+                <p class="product-show__sku">SKU: <?= $product->getSku() ?? '' ?></p>
                 <p class="product-show__status status--active">Active</p>
                 <div class="product-show__actions">
                     <a href="/admin/products/edit/123" class="btn btn--secondary">Edit</a>

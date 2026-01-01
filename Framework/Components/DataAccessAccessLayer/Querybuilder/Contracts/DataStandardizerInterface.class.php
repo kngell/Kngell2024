@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 interface DataStandardizerInterface
 {
-    public function standardize(array $data): array;
+    public function standardize(array $data): SelectPayload|InsertPayload|UpdatePayload;
 
-    public function setContext(string $context): self;
+    public function setMethod(string $context): self;
 
-    public function setInsertMap(array $insertMap): self;
+    public function setMap(array $insertMap): self;
 }

@@ -183,6 +183,30 @@ trait ControllerGettersAndSetters
         return $this;
     }
 
+    /**
+     * @param RegionContextInterface $region
+     *
+     * @return Controller
+     */
+    public function setRegion(RegionContextInterface $region): Controller
+    {
+        $this->region = $region;
+
+        return $this;
+    }
+
+    /**
+     * @param TranslatorServiceInterface $translator
+     *
+     * @return Controller
+     */
+    public function setTranslator(TranslatorServiceInterface $translator): Controller
+    {
+        $this->translator = $translator;
+
+        return $this;
+    }
+
     protected function layout(string $layout): void
     {
         $this->layout = $layout;

@@ -3,7 +3,7 @@
 declare(strict_types=1);
 class DataQueryFlowValidatorFactory implements FlowValidatorFactoryInterface
 {
-    public function __construct(private SqlQueryComponent $component)
+    public function __construct(private SqlComponent $component)
     {
     }
 

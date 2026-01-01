@@ -79,6 +79,7 @@ abstract class AbstractApp extends Container
             'defaultRegion' => $this->appConfig->getConfig()['default_region'],
             'previousUrlIgnore' => $this->appConfig->getConfig()['security']['excluded_paths']['previous_url_ignore'],
             'safeRedirectExclude' => $this->appConfig->getConfig()['security']['excluded_paths']['safe_redirect_exclude'],
+            'sessionConfig' => $this->appConfig->getSession(),
         ]);
 
         // Create aliases for commonly used services
@@ -134,13 +135,18 @@ abstract class AbstractApp extends Container
 
     protected function loadCache(): CacheInterface
     {
+        $cacheConfig = $this->appConfig->getCache();
+
+        // Create environment configuration
+        $envConfig = $this->resolve(CacheEnvironmentConfigurations::class, [
+            $this->appConfig->getCacheIdentifier(),
+            $cacheConfig,
+        ]);
+
         // Use factory binding for cache creation
-        $this->factory(CacheInterface::class, function ($container) {
-            $cacheFacade = $container->resolve(CacheFacade::class);
-            return $cacheFacade->create(
-                $this->appConfig->getCacheIdentifier(),
-                $this->appConfig->getCache(),
-            );
+        $this->factory(CacheInterface::class, function ($app) use ($envConfig): CacheInterface {
+            $cacheFactory = new CacheFactory($envConfig, new DirectoryManager(), new FileContentManager());
+            return $cacheFactory->create();
         });
 
         $cache = $this->resolve(CacheInterface::class);
@@ -207,7 +213,11 @@ abstract class AbstractApp extends Container
      */
     public static function diGet(string $class, array $args = []): mixed
     {
-        return self::getInstance()->resolve($class, $args);
+        $app = self::getInstance();
+        if (!$app->isFullyBooted()) {
+            $app->reboot();
+        }
+        return $app->resolve($class, $args);
     }
 
     /**

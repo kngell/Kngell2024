@@ -10,21 +10,21 @@ class Rooter implements RooterInterface
     public function __construct(
         RouteMatcher $routeMatcher,
         RouteDispatcher $routeDispatcher,
-        RouteResponseGenerator $routeResponseGenerator
+        RouteResponseGenerator $routeResponseGenerator,
     ) {
         $this->routeMatcher = $routeMatcher;
         $this->routeDispatcher = $routeDispatcher;
         $this->routeResponseGenerator = $routeResponseGenerator;
     }
 
-    public function handle(Request $request, ?App $app = null, string|null $url = null, array $params = []) : Response
+    public function handle(Request $request, ?App $app = null, string|null $url = null, array $params = []): Response
     {
         $route = $this->routeMatcher->match($request, $url);
         if ($route === null) {
             throw new PageNotFoundException("Page not Found with method {$request->getServer()->get('request_method')}");
         }
         $results = $this->routeDispatcher->dispatch($route, $url, $app, $params, $request);
-        if (! empty($params) && array_key_exists('code', $params)) {
+        if (!empty($params) && array_key_exists('code', $params)) {
             $responseStatus = $this->getResponseStatus($params);
         }
         if ($results instanceof Response) {
@@ -33,11 +33,17 @@ class Rooter implements RooterInterface
         return $this->routeResponseGenerator->generate(
             $route->getResponseBody(),
             isset($responseStatus) ? $responseStatus : $route->getResponseStatus(),
-            $results
+            $results,
         );
     }
 
-    public static function redirect(string $url, bool|HttpStatusCode $permanent = true) : Response
+    private function getResponseStatus(array $params): ResponseStatus
+    {
+        $errorCode = $params['code'];
+        return new ResponseStatus(HttpStatusCode::from($errorCode));
+    }
+
+    public static function redirect(string $url, bool|HttpStatusCode $permanent = true): Response
     {
         $response = new Response();
         if (is_bool($permanent)) {
@@ -48,11 +54,5 @@ class Rooter implements RooterInterface
         $response->setStatusCode($statusCode);
         $response->redirect($url);
         return $response;
-    }
-
-    private function getResponseStatus(array $params) : ResponseStatus
-    {
-        $errorCode = $params['code'];
-        return new ResponseStatus(HttpStatusCode::from($errorCode));
     }
 }

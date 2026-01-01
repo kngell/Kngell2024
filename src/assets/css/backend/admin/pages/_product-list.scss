@@ -2,7 +2,8 @@
 
 /*--------------- PRODUCT LIST -------------*/
 .product-list {
-  grid-template-rows: min-content min-content auto;
+  // grid-template-rows: min-content min-content auto;
+  grid-template-rows: min-content min-content 1fr;
   gap: 2.4rem;
 
   &__title {
@@ -80,20 +81,20 @@
 
   &__table-wrapper {
     grid-column: 1 / -1;
+
+    min-height: 0;
+    overflow-y: auto;
+    max-height: 100%;
+
     border-radius: map-deep-get($radius, s);
     border: 1px solid map-deep-get($color-neutral, gray, gray-100);
     box-shadow: $hard-shadow;
-
-    display: block; // ensures it sizes to children (default, but explicit is good)
-    height: auto; // let it follow table height
-    align-self: start; // important when wrapper is inside a grid, prevents stretching
 
     .table {
       width: 100%;
       table-layout: fixed;
       border-collapse: collapse;
 
-      // Column widths based on your Figma design
       &__col {
         &--product {
           width: 20%; // or 180.8px if you prefer fixed pixels
@@ -142,16 +143,13 @@
         border-bottom: 1px solid map-deep-get($color-neutral, gray, gray-50);
         background: map-deep-get($color-neutral, white);
         text-align: left;
-
-        // Enable text wrapping and overflow control
+        vertical-align: middle;
         word-wrap: break-word;
         overflow-wrap: break-word;
-        hyphens: auto; // Optional: better text breaking
+        hyphens: auto;
+        min-width: 0;
+        vertical-align: middle;
 
-        // Prevent content from forcing column expansion
-        min-width: 0; // Important for text truncation
-
-        // Product column specific - allow multiple lines
         &:first-child {
           .body-cell-product__label {
             .text-container {
@@ -173,6 +171,7 @@
               &__variant {
                 font-size: map-deep-get($text-s, regular, font-size);
                 color: map-deep-get($color-neutral, gray, gray-600);
+                vertical-align: middle;
               }
             }
           }
@@ -190,6 +189,26 @@
             text-overflow: ellipsis;
             display: block;
             width: 100%;
+          }
+        }
+        &:last-child {
+          vertical-align: top; // Ensure last cell also has vertical align
+
+          .action-container {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.8rem;
+            height: 100%; // Make sure it takes full height
+
+            // Make sure forms/buttons are properly sized
+            form,
+            .body-cell-action {
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              height: 100%;
+            }
           }
         }
       }
@@ -456,6 +475,7 @@
         border: 1px solid map-deep-get($color-neutral, gray, gray-200);
         font-size: map-deep-get($text-m, regular, font-size);
         transition: all 0.2s ease;
+        @include flex-center;
 
         &:hover {
           border-color: map-deep-get($color-primary, primary-500);
@@ -486,6 +506,7 @@
         &-label {
           font-size: map-deep-get($text-m, regular, font-size);
           color: map-deep-get($color-neutral, black, black-600);
+          white-space: nowrap;
         }
       }
 

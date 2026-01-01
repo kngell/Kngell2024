@@ -21,21 +21,4 @@ class RequiredValidator extends AbstractValidator
         }
         return false;
     }
-
-    private function isEmpty(mixed $value): bool
-    {
-        if ($value === null || $value === '' || $value === '[]') {
-            return true;
-        }
-
-        if (is_array($value) && empty($value)) {
-            return true;
-        }
-
-        if (is_string($value) && trim($value) === '') {
-            return true;
-        }
-
-        return false;
-    }
 }

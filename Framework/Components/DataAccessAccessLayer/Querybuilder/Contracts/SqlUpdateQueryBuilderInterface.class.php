@@ -6,13 +6,18 @@ declare(strict_types=1);
  */
 interface SqlUpdateQueryBuilderInterface extends SqlQueryBuilderInterface
 {
-    public function update(string $table): self;
+    public function update(null|string|Closure $table = null): self;
 
-    public function set(array $data): self;
+    public function set(mixed ...$data): self;
 
-    public function setColumn(string $column, mixed $value): self;
+    public function setColumn(string $column): self;
 
-    // UPDATE can have WHERE and JOINs
+    public function setColumns(string ...$columns): self;
+
+    public function setValue(mixed $value): self;
+
+    public function setValues(mixed ...$values): self;
+
     public function where(mixed ...$conditions): self;
 
     public function whereEqualTo(string $column, mixed $value): self;

@@ -1,7 +1,7 @@
 <?php
 
 declare(strict_types=1);
-class Brand extends Entity
+class Brand extends Entity implements TimestampableInterface
 {
     use EntityTimestampableTrait;
 

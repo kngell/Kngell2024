@@ -15,6 +15,7 @@ enum SqlConditionLink: string
             'orWhereEquals', 'orWhereNotEquals', 'orWhereLessThan', 'orWhereGreaterThan',
             'orWhereLessThanOrEqualTo', 'orWhereGreaterThanOrEqualTo',
         ],
+        'on' => ['on', 'andOn', 'orOn', 'onEqualTo', 'onNotEqualTo', 'onLessThan', 'onGreaterThan', 'onLike', 'onIn', 'onBetween', 'onNull'],
     ];
 
     public static function getFrom(string $method): self
@@ -31,4 +32,5 @@ enum SqlConditionLink: string
 
     case AND = 'and';
     case OR = 'or';
+    case ON = 'on';
 }

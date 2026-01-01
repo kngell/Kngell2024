@@ -1,13 +1,17 @@
 import DashboardManager from "js/backend/shared/DashboardManager";
 import ProductListCheckboxManager from "js/backend/shared/ProducListCheckboxManager";
-
 import BrowserLogger from "js/utils/BrowserLogger";
+
 const logger = new BrowserLogger("Main");
 
 class Main {
   constructor() {
     logger.debug("🔄 Main constructor called");
     this._mainInitialized = false;
+    this._components = {
+      dashboardManager: null,
+      productListManager: null,
+    };
     this._init();
   }
 
@@ -30,13 +34,20 @@ class Main {
 
   async _initializeCoreComponents() {
     logger.debug("Initializing core components");
+    try {
+      this._components.dashboardManager = await DashboardManager.create({ debug: true });
+      logger.debug("DashboardManager initialized");
+    } catch (error) {
+      logger.error("Failed to initialize DashboardManager", error);
+    }
 
-    // Components needed on most pages
-    new DashboardManager();
-
-    // Conditionally initialize product list manager
     if (this._isProductListPage()) {
-      new ProductListCheckboxManager();
+      try {
+        this._components.productListManager = new ProductListCheckboxManager();
+        logger.debug("ProductListCheckboxManager initialized");
+      } catch (error) {
+        logger.error("Failed to initialize ProductListCheckboxManager", error);
+      }
     }
   }
 
@@ -48,7 +59,6 @@ class Main {
   }
 }
 
-// Keep your existing initialization pattern
 let mainInstance = null;
 let initializationStarted = false;
 
@@ -60,19 +70,23 @@ function initializeApplication() {
   mainInstance = new Main();
 }
 
-// DOM ready handling
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", initializeApplication);
 } else {
   initializeApplication();
 }
 
-// Development exports
 if (process.env.NODE_ENV === "development") {
   window.MainApp = {
     getInstance: () => mainInstance,
     getState: () => ({
       mainInitialized: mainInstance?._mainInitialized,
     }),
+    refreshDashboard: async () => {
+      if (mainInstance?._components?.dashboardManager) {
+        return mainInstance._components.dashboardManager.refreshRoutePatterns();
+      }
+      throw new Error("DashboardManager not available");
+    },
   };
 }

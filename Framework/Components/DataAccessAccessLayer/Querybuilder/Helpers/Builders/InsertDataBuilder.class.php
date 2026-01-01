@@ -126,8 +126,13 @@ class InsertDataBuilder
             // Values will be provided later via values() method
         } else {
             // insert() was called with data
+            if (count($insertData) === 1 && isset($insertData[0])) {
+                $insertData = $insertData[0];
+                $this->columns = $insertData instanceof Entity ? array_keys($insertData->toArray()) : array_keys($insertData);
+            } elseif (ArrayUtils::isAssoc($insertData)) {
+                $this->columns = array_keys($insertData);
+            }
             $this->processedData = $insertData;
-            $this->columns = array_keys($insertData);
         }
     }
 

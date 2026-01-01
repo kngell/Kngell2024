@@ -3,7 +3,7 @@
 declare(strict_types=1);
 class DataManipulationFlowValidatorFactory implements FlowValidatorFactoryInterface
 {
-    public function __construct(private SqlQueryComponent $component)
+    public function __construct(private SqlComponent $component)
     {
     }
 
@@ -14,7 +14,7 @@ class DataManipulationFlowValidatorFactory implements FlowValidatorFactoryInterf
 
     public function create(): FlowValidatorInterface
     {
-        $statementType = $this->component->getSqlClause();
+        $statementType = $this->component->getSqlStatementType();
         return match (true) {
             $statementType === SqlStatementType::INSERT => new QueryFlowValidatorForInsert($this->component),
             $statementType === SqlStatementType::UPDATE => new QueryFlowValidatorForUpdate($this->component),

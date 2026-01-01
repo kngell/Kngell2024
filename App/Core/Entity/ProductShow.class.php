@@ -4,19 +4,22 @@ declare(strict_types=1);
 
 use Ramsey\Uuid\UuidInterface;
 
-class ProductShow extends Entity
+class ProductShow extends Entity implements TimestampableInterface, SoftDeletableInterface
 {
+    use EntityTimestampableTrait;
+    use SoftDeletableTrait;
     protected const array RELATIONSHIPS = [
-        'product' => Product::class,
+        'product_status' => ProductStatus::class,
         'stock_status' => StockStatus::class,
         'category' => Category::class,
         'brand' => Brand::class,
         'product_regional_price' => ProductRegionalPrice::class,
         'product_image_gallery' => ProductImageGallery::class,
-        'product_variation' => ProductVariation::class,
-        'variation_attribute' => VariationAttribute::class,
-        'variation_type' => VariationType::class,
+        'product_variation' => ProductVariationShow::class,
     ];
+
+    #[EntityFieldId(name: 'pdt_id')]
+    private int $id;
 
     private UuidInterface $publicId;
 
@@ -26,151 +29,46 @@ class ProductShow extends Entity
     private string $sku;
     private ?string $description = null;
     private ?string $shortDescription = null;
-
-    // Pricing
-    /** @var ProductRegionalPrice[] */
-    private array $regionalPrices = [];
-
-    private ?string $formattedBasePrice = null;
-    private ?string $formattedSalePrice = null;
-    private bool $isOnSale = false;
-
-    // Stock information (ADD THESE PROPERTIES)
     private StockStatus $stockStatus;
-    private int $stockQuantity;
-    private bool $allowBackOrders;
-    private bool $isTrackStock;
-    private string $stockDisplayText;
+    private int $stockQuantity = 0;
 
-    // Variations (ADD THIS PROPERTY)
-    private bool $hasVariations = false;
-
-    /** @var ProductVariationShow[] */
-    private array $variations = [];
-
-    // Media
-    private ?string $mainImage = null;
+    // RelationShips
+    private Category $category;
+    private ProductStatus $productStatus;
+    private Brand $brand;
+    private ProductRegionalPrice $productRegionalPrice;
 
     /** @var ProductImageGallery[] */
-    private array $galleryImages = [];
+    private array $productImageGallery = [];
 
-    private ?string $mainVideo = null;
-
-    // Categorization
-    private ?string $categoryName = null;
-    private ?string $brandName = null;
-    private array $tags = [];
+    /** @var ProductVariationShow[] */
+    private array $productVariationShow = [];
 
     // Shipping
-    private ?Weight $weight = null;
-    private ?string $formattedWeight = null;
-    private ?Dimensions $dimensions = null;
-    private ?string $formattedDimensions = null;
-
-    // SEO
-    private ?string $metaTitle = null;
-    private ?string $metaDescription = null;
+    private ?Weight $productWeight = null;
+    private ?Dimensions $productDimension = null;
 
     // Social/Engagement
     private float $averageRating = 0.0;
     private int $reviewCount = 0;
     private int $viewCount = 0;
 
-    // Related products
-    /** @var RelatedProduct[] */
-    private array $relatedProducts = [];
+    //Media
+    private ?string $mainImage = null;
+    private ?string $mainVideo = null;
 
-    public function isTrackStock(): bool
-    {
-        return $this->isTrackStock;
-    }
+    //Bool
+    private bool $allowBackOrders = false;
+    private bool $isTrackStock = true;
+    private bool $isFeatured = false;
+    private bool $isVirtual = false;
+    private bool $isDownloadable = false;
 
-    public function hasVariations(): bool
-    {
-        return $this->hasVariations;
-    }
+    //Sales
+    private int $totalSales = 0;
 
-    // Business logic methods (UPDATED - use StockStatus entity)
-    public function isAvailable(): bool
-    {
-        $stockStatusCode = $this->stockStatus->getStockStatusCode();
-
-        return $stockStatusCode === StockStatusCode::IN_STOCK
-            || ($stockStatusCode === StockStatusCode::BACKORDERED && $this->allowBackOrders);
-    }
-
-    public function shouldShowAddToCart(): bool
-    {
-        return $this->isAvailable() && !$this->hasVariations;
-    }
-
-    // Additional helpful methods (UPDATED)
-    public function getLowStockMessage(): ?string
-    {
-        if ($this->isTrackStock && $this->stockQuantity > 0 && $this->stockQuantity <= 5) {
-            return "Only {$this->stockQuantity} left in stock!";
-        }
-        return null;
-    }
-
-    public function getStockStatusCode(): StockStatusCode
-    {
-        return $this->stockStatus->getStockStatusCode();
-    }
-
-    public function getStockStatusLabel(): string
-    {
-        return $this->stockStatus->getLabel();
-    }
-
-    // For variations
-    public function hasAvailableVariations(): bool
-    {
-        if (!$this->hasVariations) {
-            return false;
-        }
-
-        foreach ($this->variations as $variation) {
-            if ($variation->isAvailable()) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    public function canBeOrdered(int $quantity = 1): bool
-    {
-        if (!$this->isAvailable()) {
-            return false;
-        }
-
-        $stockStatusCode = $this->stockStatus->getStockStatusCode();
-
-        if ($this->isTrackStock && $stockStatusCode === StockStatusCode::IN_STOCK) {
-            return $this->stockQuantity >= $quantity;
-        }
-
-        return true;
-    }
-
-    public function getStockDisplayText(): string
-    {
-        if (!$this->isTrackStock) {
-            return 'Available';
-        }
-
-        $stockStatusCode = $this->stockStatus->getStockStatusCode();
-
-        return match($stockStatusCode) {
-            StockStatusCode::IN_STOCK => $this->stockQuantity > 5 ? 'In Stock' : "Only {$this->stockQuantity} left",
-            StockStatusCode::OUT_OF_STOCK => 'Out of Stock',
-            StockStatusCode::BACKORDERED => 'Backordered',
-            StockStatusCode::PRE_ORDER => 'Pre-Order',
-            StockStatusCode::DISCONTINUED => 'Discontinued',
-            default => $this->stockStatus->getLabel(), // Fallback to the label from database
-        };
-    }
+    //Enum
+    private ProductVisibility $productVisibility = ProductVisibility::VISIBLE;
 
     /**
      * @return UuidInterface
@@ -293,86 +191,6 @@ class ProductShow extends Entity
     }
 
     /**
-     * @return array
-     */
-    public function getRegionalPrices(): array
-    {
-        return $this->regionalPrices;
-    }
-
-    /**
-     * @param array $regionalPrices
-     *
-     * @return ProductShow
-     */
-    public function setRegionalPrices(array $regionalPrices): ProductShow
-    {
-        $this->regionalPrices = $regionalPrices;
-
-        return $this;
-    }
-
-    /**
-     * @return null|string
-     */
-    public function getFormattedBasePrice(): ?string
-    {
-        return $this->formattedBasePrice;
-    }
-
-    /**
-     * @param null|string $formattedBasePrice
-     *
-     * @return ProductShow
-     */
-    public function setFormattedBasePrice(?string $formattedBasePrice): ProductShow
-    {
-        $this->formattedBasePrice = $formattedBasePrice;
-
-        return $this;
-    }
-
-    /**
-     * @return null|string
-     */
-    public function getFormattedSalePrice(): ?string
-    {
-        return $this->formattedSalePrice;
-    }
-
-    /**
-     * @param null|string $formattedSalePrice
-     *
-     * @return ProductShow
-     */
-    public function setFormattedSalePrice(?string $formattedSalePrice): ProductShow
-    {
-        $this->formattedSalePrice = $formattedSalePrice;
-
-        return $this;
-    }
-
-    /**
-     * @return bool
-     */
-    public function getIsOnSale(): bool
-    {
-        return $this->isOnSale;
-    }
-
-    /**
-     * @param bool $isOnSale
-     *
-     * @return ProductShow
-     */
-    public function setIsOnSale(bool $isOnSale): ProductShow
-    {
-        $this->isOnSale = $isOnSale;
-
-        return $this;
-    }
-
-    /**
      * @return StockStatus
      */
     public function getStockStatus(): StockStatus
@@ -413,323 +231,133 @@ class ProductShow extends Entity
     }
 
     /**
-     * @return bool
+     * @return Category
      */
-    public function getAllowBackOrders(): bool
+    public function getCategory(): Category
     {
-        return $this->allowBackOrders;
+        return $this->category;
     }
 
     /**
-     * @param bool $allowBackOrders
+     * @param Category $category
      *
      * @return ProductShow
      */
-    public function setAllowBackOrders(bool $allowBackOrders): ProductShow
+    public function setCategory(Category $category): ProductShow
     {
-        $this->allowBackOrders = $allowBackOrders;
+        $this->category = $category;
 
         return $this;
     }
 
     /**
-     * @return bool
+     * @return ProductStatus
      */
-    public function getIsTrackStock(): bool
+    public function getProductStatus(): ProductStatus
     {
-        return $this->isTrackStock;
+        return $this->productStatus;
     }
 
     /**
-     * @param bool $isTrackStock
+     * @param ProductStatus $productStatus
      *
      * @return ProductShow
      */
-    public function setIsTrackStock(bool $isTrackStock): ProductShow
+    public function setProductStatus(ProductStatus $productStatus): ProductShow
     {
-        $this->isTrackStock = $isTrackStock;
+        $this->productStatus = $productStatus;
 
         return $this;
     }
 
     /**
-     * @return bool
+     * @return Brand
      */
-    public function getHasVariations(): bool
+    public function getBrand(): Brand
     {
-        return $this->hasVariations;
+        return $this->brand;
     }
 
     /**
-     * @param bool $hasVariations
+     * @param Brand $brand
      *
      * @return ProductShow
      */
-    public function setHasVariations(bool $hasVariations): ProductShow
+    public function setBrand(Brand $brand): ProductShow
     {
-        $this->hasVariations = $hasVariations;
+        $this->brand = $brand;
 
         return $this;
     }
 
     /**
-     * @return array
+     * @return ProductRegionalPrice
      */
-    public function getVariations(): array
+    public function getProductRegionalPrice(): ProductRegionalPrice
     {
-        return $this->variations;
+        return $this->productRegionalPrice;
     }
 
     /**
-     * @param array $variations
+     * @param ProductRegionalPrice $productRegionalPrice
      *
      * @return ProductShow
      */
-    public function setVariations(array $variations): ProductShow
+    public function setProductRegionalPrice(ProductRegionalPrice $productRegionalPrice): ProductShow
     {
-        $this->variations = $variations;
+        $this->productRegionalPrice = $productRegionalPrice;
 
         return $this;
     }
 
     /**
-     * @return null|string
+     * @return ProductImageGallery[]
      */
-    public function getMainImage(): ?string
+    public function getProductImageGallery(): array
     {
-        return $this->mainImage;
+        return $this->productImageGallery;
     }
 
     /**
-     * @param null|string $mainImage
+     * @param ProductImageGallery[] $productImageGallery
      *
      * @return ProductShow
      */
-    public function setMainImage(?string $mainImage): ProductShow
+    public function setProductImageGallery(array $productImageGallery): ProductShow
     {
-        $this->mainImage = $mainImage;
+        $this->productImageGallery = $productImageGallery;
 
         return $this;
     }
 
-    /**
-     * @return array
-     */
-    public function getGalleryImages(): array
+    public function addProductImageGallery(ProductImageGallery $productImageGallery): void
     {
-        return $this->galleryImages;
+        $this->productImageGallery[] = $productImageGallery;
     }
 
     /**
-     * @param array $galleryImages
-     *
-     * @return ProductShow
+     * @return ProductVariationShow[]
      */
-    public function setGalleryImages(array $galleryImages): ProductShow
+    public function getProductVariationShow(): array
     {
-        $this->galleryImages = $galleryImages;
-
-        return $this;
+        return $this->productVariationShow;
     }
 
-    /**
-     * @return null|string
-     */
-    public function getMainVideo(): ?string
+    // /**
+    //  * @param ProductVariationShow[] $productVariationShow
+    //  *
+    //  * @return ProductShow
+    //  */
+    // public function setProductVariationShow(array $productVariationShow): ProductShow
+    // {
+    //     $this->productVariationShow = $productVariationShow;
+
+    //     return $this;
+    // }
+
+    public function addProductVariationShow(ProductVariationShow $productVariationShow): void
     {
-        return $this->mainVideo;
-    }
-
-    /**
-     * @param null|string $mainVideo
-     *
-     * @return ProductShow
-     */
-    public function setMainVideo(?string $mainVideo): ProductShow
-    {
-        $this->mainVideo = $mainVideo;
-
-        return $this;
-    }
-
-    /**
-     * @return null|string
-     */
-    public function getCategoryName(): ?string
-    {
-        return $this->categoryName;
-    }
-
-    /**
-     * @param null|string $categoryName
-     *
-     * @return ProductShow
-     */
-    public function setCategoryName(?string $categoryName): ProductShow
-    {
-        $this->categoryName = $categoryName;
-
-        return $this;
-    }
-
-    /**
-     * @return null|string
-     */
-    public function getBrandName(): ?string
-    {
-        return $this->brandName;
-    }
-
-    /**
-     * @param null|string $brandName
-     *
-     * @return ProductShow
-     */
-    public function setBrandName(?string $brandName): ProductShow
-    {
-        $this->brandName = $brandName;
-
-        return $this;
-    }
-
-    /**
-     * @return array
-     */
-    public function getTags(): array
-    {
-        return $this->tags;
-    }
-
-    /**
-     * @param array $tags
-     *
-     * @return ProductShow
-     */
-    public function setTags(array $tags): ProductShow
-    {
-        $this->tags = $tags;
-
-        return $this;
-    }
-
-    /**
-     * @return null|Weight
-     */
-    public function getWeight(): ?Weight
-    {
-        return $this->weight;
-    }
-
-    /**
-     * @param null|Weight $weight
-     *
-     * @return ProductShow
-     */
-    public function setWeight(?Weight $weight): ProductShow
-    {
-        $this->weight = $weight;
-
-        return $this;
-    }
-
-    /**
-     * @return null|string
-     */
-    public function getFormattedWeight(): ?string
-    {
-        return $this->formattedWeight;
-    }
-
-    /**
-     * @param null|string $formattedWeight
-     *
-     * @return ProductShow
-     */
-    public function setFormattedWeight(?string $formattedWeight): ProductShow
-    {
-        $this->formattedWeight = $formattedWeight;
-
-        return $this;
-    }
-
-    /**
-     * @return null|Dimensions
-     */
-    public function getDimensions(): ?Dimensions
-    {
-        return $this->dimensions;
-    }
-
-    /**
-     * @param null|Dimensions $dimensions
-     *
-     * @return ProductShow
-     */
-    public function setDimensions(?Dimensions $dimensions): ProductShow
-    {
-        $this->dimensions = $dimensions;
-
-        return $this;
-    }
-
-    /**
-     * @return null|string
-     */
-    public function getFormattedDimensions(): ?string
-    {
-        return $this->formattedDimensions;
-    }
-
-    /**
-     * @param null|string $formattedDimensions
-     *
-     * @return ProductShow
-     */
-    public function setFormattedDimensions(?string $formattedDimensions): ProductShow
-    {
-        $this->formattedDimensions = $formattedDimensions;
-
-        return $this;
-    }
-
-    /**
-     * @return null|string
-     */
-    public function getMetaTitle(): ?string
-    {
-        return $this->metaTitle;
-    }
-
-    /**
-     * @param null|string $metaTitle
-     *
-     * @return ProductShow
-     */
-    public function setMetaTitle(?string $metaTitle): ProductShow
-    {
-        $this->metaTitle = $metaTitle;
-
-        return $this;
-    }
-
-    /**
-     * @return null|string
-     */
-    public function getMetaDescription(): ?string
-    {
-        return $this->metaDescription;
-    }
-
-    /**
-     * @param null|string $metaDescription
-     *
-     * @return ProductShow
-     */
-    public function setMetaDescription(?string $metaDescription): ProductShow
-    {
-        $this->metaDescription = $metaDescription;
-
-        return $this;
+        $this->productVariationShow[] = $productVariationShow;
     }
 
     /**
@@ -793,39 +421,242 @@ class ProductShow extends Entity
     }
 
     /**
-     * @return array
+     * @return null|string
      */
-    public function getRelatedProducts(): array
+    public function getMainImage(): ?string
     {
-        return $this->relatedProducts;
+        return $this->mainImage;
     }
 
     /**
-     * @param array $relatedProducts
+     * @param null|string $mainImage
      *
      * @return ProductShow
      */
-    public function setRelatedProducts(array $relatedProducts): ProductShow
+    public function setMainImage(?string $mainImage): ProductShow
     {
-        $this->relatedProducts = $relatedProducts;
+        $this->mainImage = $mainImage;
 
         return $this;
     }
 
     /**
-     * @param string $stockDisplayText
+     * @return null|string
+     */
+    public function getMainVideo(): ?string
+    {
+        return $this->mainVideo;
+    }
+
+    /**
+     * @param null|string $mainVideo
      *
      * @return ProductShow
      */
-    public function setStockDisplayText(string $stockDisplayText): ProductShow
+    public function setMainVideo(?string $mainVideo): ProductShow
     {
-        $this->stockDisplayText = $stockDisplayText;
+        $this->mainVideo = $mainVideo;
 
         return $this;
     }
 
-    protected function getRelationShip(string $name): string
+    /**
+     * @return bool
+     */
+    public function getAllowBackOrders(): bool
     {
-        return static::RELATIONSHIPS[$name];
+        return $this->allowBackOrders;
+    }
+
+    /**
+     * @param bool $allowBackOrders
+     *
+     * @return ProductShow
+     */
+    public function setAllowBackOrders(bool $allowBackOrders): ProductShow
+    {
+        $this->allowBackOrders = $allowBackOrders;
+
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIsTrackStock(): bool
+    {
+        return $this->isTrackStock;
+    }
+
+    /**
+     * @param bool $isTrackStock
+     *
+     * @return ProductShow
+     */
+    public function setIsTrackStock(bool $isTrackStock): ProductShow
+    {
+        $this->isTrackStock = $isTrackStock;
+
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIsFeatured(): bool
+    {
+        return $this->isFeatured;
+    }
+
+    /**
+     * @param bool $isFeatured
+     *
+     * @return ProductShow
+     */
+    public function setIsFeatured(bool $isFeatured): ProductShow
+    {
+        $this->isFeatured = $isFeatured;
+
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIsVirtual(): bool
+    {
+        return $this->isVirtual;
+    }
+
+    /**
+     * @param bool $isVirtual
+     *
+     * @return ProductShow
+     */
+    public function setIsVirtual(bool $isVirtual): ProductShow
+    {
+        $this->isVirtual = $isVirtual;
+
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIsDownloadable(): bool
+    {
+        return $this->isDownloadable;
+    }
+
+    /**
+     * @param bool $isDownloadable
+     *
+     * @return ProductShow
+     */
+    public function setIsDownloadable(bool $isDownloadable): ProductShow
+    {
+        $this->isDownloadable = $isDownloadable;
+
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getTotalSales(): int
+    {
+        return $this->totalSales;
+    }
+
+    /**
+     * @param int $totalSales
+     *
+     * @return ProductShow
+     */
+    public function setTotalSales(int $totalSales): ProductShow
+    {
+        $this->totalSales = $totalSales;
+
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getId(): int
+    {
+        return $this->id;
+    }
+
+    /**
+     * @param int $id
+     *
+     * @return ProductShow
+     */
+    public function setId(int $id): ProductShow
+    {
+        $this->id = $id;
+
+        return $this;
+    }
+
+    /**
+     * @return ProductVisibility
+     */
+    public function getProductVisibility(): ProductVisibility
+    {
+        return $this->productVisibility;
+    }
+
+    /**
+     * @param ProductVisibility $productVisibility
+     *
+     * @return ProductShow
+     */
+    public function setProductVisibility(ProductVisibility $productVisibility): ProductShow
+    {
+        $this->productVisibility = $productVisibility;
+
+        return $this;
+    }
+
+    /**
+     * @return null|Weight
+     */
+    public function getProductWeight(): ?Weight
+    {
+        return $this->productWeight;
+    }
+
+    /**
+     * @param null|Weight $productWeight
+     *
+     * @return ProductShow
+     */
+    public function setProductWeight(?Weight $productWeight): ProductShow
+    {
+        $this->productWeight = $productWeight;
+
+        return $this;
+    }
+
+    /**
+     * @return null|Dimensions
+     */
+    public function getProductDimension(): ?Dimensions
+    {
+        return $this->productDimension;
+    }
+
+    /**
+     * @param null|Dimensions $productDimension
+     *
+     * @return ProductShow
+     */
+    public function setProductDimension(?Dimensions $productDimension): ProductShow
+    {
+        $this->productDimension = $productDimension;
+
+        return $this;
     }
 }

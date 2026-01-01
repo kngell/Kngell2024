@@ -27,7 +27,7 @@ class DataManipulationRuleFactory extends AbstractRuleFactory
                 $this->state,
                 $data,
             )),
-            SqlStatementType::UPDATE => $this->initialize(new UpdateRules(
+            SqlStatementType::UPDATE => $this->initialize(new SetRules(
                 $this->em,
                 $method,
                 $this->state,

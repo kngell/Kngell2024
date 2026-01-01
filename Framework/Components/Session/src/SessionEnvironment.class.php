@@ -22,9 +22,8 @@ class SessionEnvironment
      *
      * @return void
      */
-    public function __construct(array $sessionConfig = [])
+    public function __construct(array $sessionConfig)
     {
-        // Fixed: count($sessionConfig) < 0 is always false, use empty() instead
         if (empty($sessionConfig) || !is_array($sessionConfig)) {
             throw new LogicException('Session environment has failed to load. Ensure your are passing the correct yaml configuration file to the session facade class object');
         }

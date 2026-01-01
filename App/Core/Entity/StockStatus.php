@@ -9,7 +9,7 @@ class StockStatus extends Entity implements TimestampableInterface
     #[EntityFieldId()]
     private int $id; //Unique product identifier
 
-    private StockStatusCode $stockStatusCode;
+    private ?StockStatusCode $stockStatusCode;
     private string $label;
     private string $description;
     private int $sortOrder;
@@ -35,6 +35,26 @@ class StockStatus extends Entity implements TimestampableInterface
     }
 
     /**
+     * @return null|StockStatusCode
+     */
+    public function getStockStatusCode(): ?StockStatusCode
+    {
+        return $this->stockStatusCode;
+    }
+
+    /**
+     * @param null|StockStatusCode $stockStatusCode
+     *
+     * @return StockStatus
+     */
+    public function setStockStatusCode(?StockStatusCode $stockStatusCode): StockStatus
+    {
+        $this->stockStatusCode = $stockStatusCode;
+
+        return $this;
+    }
+
+    /**
      * @return string
      */
     public function getLabel(): string
@@ -50,6 +70,7 @@ class StockStatus extends Entity implements TimestampableInterface
     public function setLabel(string $label): StockStatus
     {
         $this->label = $label;
+
         return $this;
     }
 
@@ -90,29 +111,6 @@ class StockStatus extends Entity implements TimestampableInterface
     {
         $this->sortOrder = $sortOrder;
 
-        return $this;
-    }
-
-    /**
-     * @return StockStatusCode
-     */
-    public function getStockStatusCode(): StockStatusCode
-    {
-        return $this->stockStatusCode;
-    }
-
-    /**
-     * @param string $stockStatusCode
-     *
-     * @return StockStatus
-     */
-    public function setStockStatusCode(string $stockStatusCode): StockStatus
-    {
-        $enum = StockStatusCode::tryFrom($stockStatusCode);
-        if ($enum === null) {
-            throw new InvalidArgumentException("Invalid status value: $stockStatusCode");
-        }
-        $this->stockStatusCode = $enum;
         return $this;
     }
 }

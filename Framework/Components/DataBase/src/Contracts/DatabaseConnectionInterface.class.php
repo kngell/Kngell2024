@@ -7,6 +7,7 @@ interface DatabaseConnectionInterface
     /**
      * DataBase open
      * -----------------------------------------------.
+     *
      * @return PDO
      */
     public function open(): PDO;
@@ -14,13 +15,15 @@ interface DatabaseConnectionInterface
     /**
      * Data Base close
      * ------------------------------------------------.
+     *
      * @return void
      */
-    public function close():void;
+    public function close(): void;
 
     /**
      * beginTransaction
      * ------------------------------------------------.
+     *
      * @return bool
      */
     public function beginTransaction(): bool;
@@ -28,14 +31,18 @@ interface DatabaseConnectionInterface
     /**
      * Commit
      * ------------------------------------------------.
+     *
      * @return bool
      */
-    public function commit() :  bool;
+    public function commit(): bool;
 
     /**
      * Rollback.
      * ------------------------------------------------.
+     *
      * @return bool
      */
-    public function rollback() : bool;
+    public function rollback(): bool;
+
+    public function lastInsertId(string|null $name = null): string|false;
 }

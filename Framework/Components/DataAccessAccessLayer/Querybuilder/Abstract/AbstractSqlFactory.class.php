@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 abstract class AbstractSqlFactory implements ClauseBuilderFactoryInterface
 {
-    public function __construct(protected SqlQueryComponent $component)
+    public function __construct(protected SqlComponent $component)
     {
     }
 
     abstract public function supports(SqlStatementType $statement): bool;
 
-    protected function getStatementType(): SqlStatementType
+    protected function getStatementType(): ?SqlStatementType
     {
-        return $this->component->getSqlClause();
+        return $this->component->getSqlStatementType();
     }
 }

@@ -40,18 +40,17 @@ class SaveProductVariationListener implements EventListenerInterface
                 }
 
                 $variationId = $insertResult->getLastInsertId();
-
+                $attributeData = [];
                 foreach ($attributes as $attribute) {
-                    $attributeData = [
+                    $attributeData[] = [
                         'variation_id' => $variationId,
                         'attribute_name' => $attribute['attribute_name'] ?? null,
                         'attribute_value' => $attribute['attribute_value'] ?? null,
                     ];
-
-                    $attrResult = $this->variationAttributeModel->save($attributeData);
-                    if (!$attrResult->isSuccess()) {
-                        throw new RuntimeException('Failed to insert variation attribute row.');
-                    }
+                }
+                $attrResult = $this->variationAttributeModel->save($attributeData);
+                if (!$attrResult->isSuccess()) {
+                    throw new RuntimeException('Failed to insert variation attribute row.');
                 }
             }
 

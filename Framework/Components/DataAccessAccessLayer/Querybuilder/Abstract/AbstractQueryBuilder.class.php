@@ -3,7 +3,7 @@
 declare(strict_types=1);
 abstract class AbstractQueryBuilder
 {
-    protected SqlQueryComponent $queryComponent;
+    protected SqlComponent $queryComponent;
 
     public function getParameters(): array
     {
@@ -13,6 +13,11 @@ abstract class AbstractQueryBuilder
     public function getTableAlias(): array
     {
         return $this->queryComponent->getTableAlias();
+    }
+
+    public function getLogicalToPhysicalMap(): array
+    {
+        return $this->queryComponent->getLogicalToPhysicalMap();
     }
 
     public function getBindArray(): array

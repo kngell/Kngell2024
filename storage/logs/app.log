@@ -1,1 +1,125 @@
 
+[2025-12-13 19:19:23] DEBUG: Cache miss for total count
+[2025-12-13 19:20:15] DEBUG: Cache miss for page
+[2025-12-13 19:27:23] DEBUG: Cache hit for total count
+[2025-12-13 19:27:25] DEBUG: Cache hit for page
+[2025-12-13 19:32:42] DEBUG: Cache hit for total count
+[2025-12-13 19:32:44] DEBUG: Cache hit for page
+[2025-12-13 19:35:09] DEBUG: Cache hit for total count
+[2025-12-13 19:35:10] DEBUG: Cache hit for page
+[2025-12-13 19:37:27] DEBUG: Cache miss for total count
+[2025-12-13 19:38:21] DEBUG: Cache miss for page
+[2025-12-13 19:58:48] DEBUG: Cache hit for total count
+[2025-12-13 19:58:50] DEBUG: Cache miss for page
+[2025-12-13 20:00:57] DEBUG: Cache hit for total count
+[2025-12-13 20:00:59] DEBUG: Cache miss for page
+[2025-12-13 20:05:10] DEBUG: Cache hit for total count
+[2025-12-13 20:05:11] DEBUG: Cache miss for page
+[2025-12-13 20:31:51] DEBUG: Cache hit for total count
+[2025-12-13 20:31:54] DEBUG: Cache miss for page
+[2025-12-13 20:35:59] DEBUG: Cache miss for total count
+[2025-12-13 20:36:09] DEBUG: Cache miss for page
+[2025-12-13 20:38:21] DEBUG: Cache hit for total count
+[2025-12-13 20:38:41] DEBUG: Cache hit for page
+[2025-12-13 20:39:14] DEBUG: Cache hit for total count
+[2025-12-13 20:39:14] DEBUG: Cache miss for page
+[2025-12-13 20:39:32] DEBUG: Cache hit for total count
+[2025-12-13 20:39:32] DEBUG: Cache hit for page
+[2025-12-13 20:40:07] DEBUG: Cache hit for total count
+[2025-12-13 20:40:07] DEBUG: Cache hit for page
+[2025-12-13 20:40:35] DEBUG: Cache hit for total count
+[2025-12-13 20:40:35] DEBUG: Cache miss for page
+[2025-12-13 20:41:12] DEBUG: Cache hit for total count
+[2025-12-13 20:41:35] DEBUG: Cache miss for page
+[2025-12-13 21:12:32] DEBUG: Cache hit for total count [entity=ProductShow]
+[2025-12-13 21:12:32] DEBUG: Fully cached page hit [entity=ProductShow, page=2, perPage=3]
+[2025-12-13 21:14:05] DEBUG: Cache hit for total count [entity=ProductShow] [Memory: 4MB, Peak: 4MB]
+[2025-12-13 21:14:05] DEBUG: Fully cached page hit [entity=ProductShow, page=2, perPage=3] [Memory: 4MB, Peak: 4MB]
+[2025-12-13 21:22:14] DEBUG: Cache hit for total count [entity=ProductShow]
+[2025-12-13 21:22:14] DEBUG: Fully cached page hit [entity=ProductShow, page=2, perPage=3]
+[2025-12-13 21:39:25] DEBUG: Cache hit for total count [entity=ProductShow]
+[2025-12-13 21:39:26] DEBUG: Fully cached page hit [entity=ProductShow, page=2, perPage=3]
+[2025-12-13 21:39:40] DEBUG: Cache hit for total count [entity=ProductShow]
+[2025-12-13 21:39:40] DEBUG: Fully cached page hit [entity=ProductShow, page=2, perPage=3]
+[2025-12-13 21:41:17] DEBUG: Cache hit for total count [entity=ProductShow]
+[2025-12-13 21:41:17] DEBUG: Fully cached page hit [entity=ProductShow, page=2, perPage=3]
+[2025-12-13 22:08:13] DEBUG: Page cache hit [page=2, perPage=3]
+[2025-12-13 22:08:13] DEBUG: Entity cache check [required=3, cached=3, missing=0]
+[2025-12-13 22:09:40] DEBUG: Page cache hit [page=2, perPage=3]
+[2025-12-13 22:09:51] DEBUG: Entity cache check [required=3, cached=3, missing=0]
+[2025-12-13 22:10:06] DEBUG: Page cache hit [page=2, perPage=3]
+[2025-12-13 22:10:06] DEBUG: Entity cache check [required=3, cached=3, missing=0]
+[2025-12-13 22:10:11] DEBUG: Page cache hit [page=1, perPage=3]
+[2025-12-13 22:10:11] DEBUG: Entity cache check [required=3, cached=3, missing=0]
+[2025-12-13 22:10:17] DEBUG: Page cache miss [page=1, perPage=5]
+[2025-12-13 22:11:08] DEBUG: Page cache miss [page=1, perPage=5]
+[2025-12-13 22:12:57] DEBUG: Page cache miss [page=1, perPage=5]
+[2025-12-13 22:14:13] DEBUG: Page cache miss [page=1, perPage=5]
+[2025-12-13 22:18:58] DEBUG: Page cache miss [page=1, perPage=5]
+[2025-12-13 22:34:14] DEBUG: L1 cache miss, fetched from DB [page=1, perPage=5, count=5]
+[2025-12-13 22:34:14] DEBUG: L2 cache partial hit [total=5, cached=0, missing=5]
+[2025-12-13 22:34:25] DEBUG: L1 cache hit for page [page=1, perPage=5]
+[2025-12-13 22:34:26] DEBUG: L2 cache partial hit [total=5, cached=0, missing=5]
+[2025-12-13 22:35:00] DEBUG: L1 cache hit for page [page=1, perPage=5]
+[2025-12-13 22:35:46] DEBUG: L1 cache miss, fetched from DB [page=1, perPage=5, count=5]
+[2025-12-13 22:35:46] DEBUG: L2 cache partial hit [total=5, cached=0, missing=5]
+[2025-12-13 22:36:08] DEBUG: L1 cache hit for page [page=1, perPage=5]
+[2025-12-13 22:41:25] DEBUG: L1 cache miss, fetched from DB [page=1, perPage=5, count=5]
+[2025-12-13 22:41:25] DEBUG: L2 cache partial hit [total=5, cached=0, missing=5]
+[2025-12-13 22:43:18] DEBUG: L1 cache miss, fetched from DB [page=1, perPage=5, count=5]
+[2025-12-13 22:43:18] DEBUG: L2 cache partial hit [total=5, cached=0, missing=5]
+[2025-12-14 03:02:28] DEBUG: L1 cache hit for page [page=1, perPage=5]
+[2025-12-14 03:03:09] DEBUG: L1 cache miss, fetched from DB [page=1, perPage=5, count=5]
+[2025-12-14 03:03:59] DEBUG: L1 cache hit for page [page=1, perPage=5]
+[2025-12-14 03:16:46] DEBUG: L1 cache hit for page [page=1, perPage=5]
+[2025-12-14 03:17:15] DEBUG: L1 cache hit for page [page=1, perPage=5]
+[2025-12-14 03:18:46] DEBUG: L1 cache miss, fetched from DB [page=1, perPage=5, count=5]
+[2025-12-14 03:28:37] DEBUG: L1 cache miss, fetched from DB [page=1, perPage=5, count=5]
+[2025-12-14 03:28:54] DEBUG: L1 cache hit for page [page=1, perPage=5]
+[2025-12-14 03:32:02] DEBUG: L1 cache miss, fetched from DB [page=1, perPage=5, count=5]
+[2025-12-14 03:32:11] DEBUG: L1 cache hit for page [page=1, perPage=5]
+[2025-12-14 03:46:16] DEBUG: L1 cache miss, fetched from DB [page=1, perPage=5, count=5]
+[2025-12-14 03:46:43] DEBUG: L2 cache partial hit [total=5, cached=0, missing=5]
+[2025-12-14 03:50:33] DEBUG: L1 cache miss, fetched from DB [page=1, perPage=5, count=5]
+[2025-12-14 03:50:50] DEBUG: L2 cache partial hit [total=5, cached=0, missing=5]
+[2025-12-14 03:51:17] DEBUG: L1 cache hit for page [page=1, perPage=5]
+[2025-12-14 03:51:18] DEBUG: L2 cache partial hit [total=5, cached=0, missing=5]
+[2025-12-14 03:51:44] DEBUG: L1 cache hit for page [page=1, perPage=5]
+[2025-12-14 03:53:09] DEBUG: L2 cache partial hit [total=5, cached=0, missing=5]
+[2025-12-14 03:53:27] DEBUG: L1 cache hit for page [page=1, perPage=5]
+[2025-12-14 03:53:27] DEBUG: L2 cache partial hit [total=5, cached=0, missing=5]
+[2025-12-14 03:53:56] DEBUG: L1 cache hit for page [page=1, perPage=5]
+[2025-12-14 03:59:17] DEBUG: L1 cache miss, fetched from DB [page=1, perPage=5, count=5]
+[2025-12-14 03:59:17] DEBUG: L2 cache partial hit [total=5, cached=0, missing=5]
+[2025-12-14 04:16:18] DEBUG: L1 cache hit for page [page=1, perPage=5]
+[2025-12-14 04:16:18] DEBUG: L2 cache partial hit [total=5, cached=0, missing=5]
+[2025-12-14 04:39:33] DEBUG: L1 cache hit for page [page=1, perPage=5]
+[2025-12-14 04:41:50] DEBUG: L1 cache hit for page [page=1, perPage=5]
+[2025-12-14 05:04:21] DEBUG: L1 cache miss, fetched from DB [page=1, perPage=5, count=5]
+[2025-12-14 05:06:11] DEBUG: L2 cache partial hit [total=5, cached=0, missing=5]
+[2025-12-14 05:07:57] DEBUG: L1 cache hit for page [page=1, perPage=5]
+[2025-12-14 05:07:57] DEBUG: L2 cache full hit [count=5]
+[2025-12-14 05:14:11] DEBUG: L1 cache hit for page [page=1, perPage=5]
+[2025-12-14 05:14:11] DEBUG: L2 cache full hit [count=5]
+[2025-12-14 05:14:41] DEBUG: L1 cache hit for page [page=1, perPage=5]
+[2025-12-14 05:15:08] DEBUG: L2 cache full hit [count=5]
+[2025-12-14 05:15:50] DEBUG: L1 cache miss, fetched from DB [page=1, perPage=3, count=3]
+[2025-12-14 05:15:50] DEBUG: L2 cache partial hit [total=3, cached=0, missing=3]
+[2025-12-14 07:00:30] DEBUG: L1 cache miss, fetched from DB [page=1, perPage=3, count=3]
+[2025-12-14 07:00:31] DEBUG: L2 cache partial hit [total=3, cached=0, missing=3]
+[2025-12-14 07:08:04] DEBUG: L1 cache miss, fetched from DB [page=1, perPage=3, count=3]
+[2025-12-14 07:08:04] DEBUG: L2 cache partial hit [total=3, cached=0, missing=3]
+[2025-12-14 07:09:55] DEBUG: L1 cache miss, fetched from DB [page=2, perPage=3, count=3]
+[2025-12-14 07:09:55] DEBUG: L2 cache partial hit [total=3, cached=0, missing=3]
+[2025-12-14 07:10:00] DEBUG: L1 cache miss, fetched from DB [page=3, perPage=3, count=3]
+[2025-12-14 07:10:00] DEBUG: L2 cache partial hit [total=3, cached=0, missing=3]
+[2025-12-14 07:58:28] DEBUG: L1 cache miss, fetched from DB [page=3, perPage=3, count=3]
+[2025-12-14 07:58:29] DEBUG: L2 cache partial hit [total=3, cached=0, missing=3]
+[2025-12-14 07:58:31] DEBUG: L1 cache miss, fetched from DB [page=2, perPage=3, count=3]
+[2025-12-14 07:58:31] DEBUG: L2 cache partial hit [total=3, cached=0, missing=3]
+[2025-12-14 07:58:33] DEBUG: L1 cache miss, fetched from DB [page=1, perPage=3, count=3]
+[2025-12-14 07:58:33] DEBUG: L2 cache partial hit [total=3, cached=0, missing=3]
+[2025-12-14 07:58:36] DEBUG: L1 cache miss, fetched from DB [page=1, perPage=5, count=5]
+[2025-12-14 07:58:36] DEBUG: L2 cache partial hit [total=5, cached=0, missing=5]
+[2025-12-14 07:58:44] DEBUG: L1 cache miss, fetched from DB [page=1, perPage=10, count=10]
+[2025-12-14 07:58:44] DEBUG: L2 cache partial hit [total=10, cached=0, missing=10]

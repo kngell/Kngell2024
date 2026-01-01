@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Dom\Entity;
 use Psr\Log\LoggerInterface;
 
 final readonly class ContainerClassRegistrator
@@ -77,14 +78,31 @@ final readonly class ContainerClassRegistrator
             EventManagerInterface::class => EventManager::class,
             MenuItemInterface::class => MenuItem::class,
             EntityManagerInterface::class => EntityManager::class,
-            AbstractFactory::class => ConcreteFactory1::class,
             RooterInterface::class => Rooter::class,
-            FilesSystemInterface::class => FileSystem::class,
-            RouteDispatcher::class => function (App $app) {
-                $routeArgumentGenerator = $app->get(RouteArgumentGenerator::class);
-                $middlewares = YamlFile::get('middlewares');
-                return new RouteDispatcher($routeArgumentGenerator, $middlewares);
+            CookieServiceInterface::class => CookieService::class,
+            'currency.cache' => function (): CacheInterface {
+                return CacheFactory::createCurrencyCache();
             },
+            'region.cache' => function (): CacheInterface {
+                return CacheFactory::createRegionCache();
+            },
+            'locale.cache' => function (): CacheInterface {
+                return CacheFactory::createLocaleCache();
+            },
+            SmartSerializerInterface::class => SmartSerializer::class,
+            CurrencyCodeProviderInterface::class => CurrencyCodeProvider::class,
+            CurrencyResolverInterface::class => CurrencyResolver::class,
+            LocaleProviderInterface::class => function (App $app): DatabaseLocaleProvider {
+                return new DatabaseLocaleProvider(
+                    localeModel: $app->get(RegionLocaleModel::class),
+                    regionLocaleModel: $app->get(RegionLocaleMappingModel::class),
+                    regionModel: $app->get(RegionModel::class),
+                    defaultLocale:$app->getAppConfig()->getConfig()['default_locale'],
+                    builtinLocaleData:$app->getAppConfig()->getConfig()['builtin_locale_data'],
+                    cache: $app->get('locale.cache'),
+                );
+            },
+            RegionDataProviderInterface::class => RegionDataProvider::class,
             DatabaseEnvironmentConfig::class => [
                 function () {
                     return YamlFile::get('database');
@@ -101,17 +119,26 @@ final readonly class ContainerClassRegistrator
             FileOperationsInterface::class => FileOperationsManager::class,
 
             VariationBuilderInterface::class => DatabaseVariationBuilder::class,
-            ChangeTrackerInterface::class => ChangeTracker::class,
             CurrencyLookupInterface::class => CurrencyService::class,
-            CurrencyCodeProviderInterface::class => CurrencyCodeProvider::class,
             RegionContextInterface::class => RegionContext::class,
             LoggerInterface::class => CustomLogger::class,
 
             SessionInterface::class => Session::class,
+            CacheInterface::class => Cache::class,
             SqlCompositeQueryBuilderInterface::class => QueryBuilder::class,
-            // // Concrete form classes
-            // ProductFormConfirmation::class => ProductFormConfirmation::class,
-            // BulkProductForm::class => BulkProductForm::class,
+            // Entity
+            EntityMapperInterface::class => EntityMapper::class,
+            EntityRelationManagerInterface::class => EntityRelationManager::class,
+            EntityHydratorInterface::class => EntityHydrator::class,
+            EntityFactoryInterface::class => EntityFactory::class,
+            EntityCachingServiceInterface::class => EntityCachingService::class,
+            EntityDataSerializerInterface::class => EntityCacheDataSerializer::class,
+            EntityCacheKeyGeneratorInterface::class => EntityCacheKeyGenerator::class,
+
+            //Model
+            ModelUtilityInterface::class => ModelUtility::class,
+            ModelFactoryInterface::class => DefaultModelFactory::class,
+            ModelContextInterface::class => ModelContext::class,
         ];
     }
 
@@ -135,7 +162,7 @@ final readonly class ContainerClassRegistrator
             HashInterface::class => [Hash::class, function () use ($app) {
                 return $app->getAppConfig()->getConfig()['security'];
             }],
-
+            RouteCollector::class => RouteCollector::class,
             RouteMatcher::class => RouteMatcher::class,
             RouteArgumentGenerator::class => RouteArgumentGenerator::class,
             RouteResponseGenerator::class => RouteResponseGenerator::class,
@@ -152,6 +179,29 @@ final readonly class ContainerClassRegistrator
             NavigationHistoryService::class => NavigationHistoryService::class,
             RememberPreviousPageMiddleware::class => RememberPreviousPageMiddleware::class,
             TypeNormalizerInterface::class => DefaultTypeNormalizer::class,
+            ChangeTrackerInterface::class => ChangeTracker::class,
+            EntityDependenciesFactoryInterface::class => function () use ($app) {
+                return new EntityDependenciesFactory(
+                    $app->get(TypeNormalizerInterface::class),
+                    null,
+                    function () use ($app) {
+                        // This will be called when TypePresenterFactory is first needed
+                        return new TypePresenterFactory(
+                            $app->get(TranslatorServiceInterface::class),
+                            $app->get(RegionContextInterface::class),
+                        );
+                    },
+                );
+            },
+            //Forms
+            FormDataHandlerInterface::class => FormDataHandlerService::class,
+
+            //Region Context
+            FormatterInterface::class => Formatter::class,
+            FallbackSymbolProviderInterface::class => DefaultFallbackSymbolProvider::class,
+
+            //Translation
+            TranslatorServiceInterface::class => TranslatorService::class,
         ];
     }
 
@@ -204,8 +254,6 @@ final readonly class ContainerClassRegistrator
         // Infrastructure services
         $infrastructureServices = [
             MailerInterface::class,
-            FileUploadInterface::class,
-            FilesSystemInterface::class,
         ];
         foreach ($infrastructureServices as $service) {
             $app->tag($service, 'infrastructure');
@@ -230,6 +278,7 @@ final readonly class ContainerClassRegistrator
             HeaderRegionContext::class,
             QueryParameterRegionContext::class,
             SessionRegionContext::class,
+            CookieRegionContext::class,
         ];
         foreach ($regionContext as $context) {
             $app->tag($context, 'contexts');
@@ -277,7 +326,6 @@ final readonly class ContainerClassRegistrator
 
             // Infrastructure aliases
             MailerInterface::class => 'mailer',
-            FileUploadInterface::class => 'uploader',
             EventManagerInterface::class => 'events',
 
             // Form aliases
@@ -304,6 +352,7 @@ final readonly class ContainerClassRegistrator
                 'contextual_binding',
             ],
             'framework.name' => 'K\'nGELL',
+            'globalMiddlewares' => YamlFile::get('middlewares'),
         ]);
     }
 }

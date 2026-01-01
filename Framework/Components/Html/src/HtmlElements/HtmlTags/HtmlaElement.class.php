@@ -4,6 +4,7 @@ declare(strict_types=1);
 class HtmlaElement extends AbstractHtmlElement
 {
     private const string TAG = 'a';
+
     private string $attributionsrc;
     private string $download;
     private string $hreflang;
@@ -18,13 +19,14 @@ class HtmlaElement extends AbstractHtmlElement
         $tag = $this->getTagAttributes(get_object_vars($this), self::TAG);
         $children = '';
         while ($this->children->count()) {
-            $children .= $this->children->pop()->generate();
+            $children .= $this->children->shift()->generate();
         }
         return $this->tagContentContext($tag, $children) . '</a>';
     }
 
     /**
      * @param array $custom
+     *
      * @return HtmlaElement
      */
     public function custom(array $custom): self
@@ -33,8 +35,19 @@ class HtmlaElement extends AbstractHtmlElement
         return $this;
     }
 
+    public function aria(string $name, string ...$props): self
+    {
+        $aria = [];
+        foreach ($props as $prop) {
+            $aria['aria' . $name] = $prop;
+        }
+        $this->aria = array_merge($this->aria, $aria);
+        return $this;
+    }
+
     /**
      * @param string $attributionsrc
+     *
      * @return HtmlaElement
      */
     public function attributionsrc(string $attributionsrc): self
@@ -45,6 +58,7 @@ class HtmlaElement extends AbstractHtmlElement
 
     /**
      * @param string $download
+     *
      * @return HtmlaElement
      */
     public function download(string $download): self
@@ -55,6 +69,7 @@ class HtmlaElement extends AbstractHtmlElement
 
     /**
      * @param string $hreflang
+     *
      * @return HtmlaElement
      */
     public function hreflang(string $hreflang): self
@@ -65,6 +80,7 @@ class HtmlaElement extends AbstractHtmlElement
 
     /**
      * @param string $ping
+     *
      * @return HtmlaElement
      */
     public function ping(string $ping): self
@@ -75,6 +91,7 @@ class HtmlaElement extends AbstractHtmlElement
 
     /**
      * @param string $referrerpolicy
+     *
      * @return HtmlaElement
      */
     public function referrerpolicy(string $referrerpolicy): self
@@ -84,7 +101,19 @@ class HtmlaElement extends AbstractHtmlElement
     }
 
     /**
+     * @param bool $disabled
+     *
+     * @return HtmlaElement
+     */
+    public function disabled(bool $disabled = true): self
+    {
+        $this->disabled = $disabled;
+        return $this;
+    }
+
+    /**
      * @param string $rel
+     *
      * @return HtmlaElement
      */
     public function rel(string $rel): self
@@ -95,6 +124,7 @@ class HtmlaElement extends AbstractHtmlElement
 
     /**
      * @param string $target
+     *
      * @return HtmlaElement
      */
     public function target(string $target): self
@@ -105,6 +135,7 @@ class HtmlaElement extends AbstractHtmlElement
 
     /**
      * @param string $type
+     *
      * @return HtmlaElement
      */
     public function type(string $type): self
@@ -116,6 +147,7 @@ class HtmlaElement extends AbstractHtmlElement
     /**
      * @param string $content
      * @param bool $contentUp
+     *
      * @return HtmlaElement
      */
     public function content(string $content, bool $contentUp = true): self
@@ -127,6 +159,7 @@ class HtmlaElement extends AbstractHtmlElement
 
     /**
      * @param string $accesskey
+     *
      * @return HtmlaElement
      */
     public function accesskey(string $accesskey): self
@@ -137,6 +170,7 @@ class HtmlaElement extends AbstractHtmlElement
 
     /**
      * @param string ...$class
+     *
      * @return HtmlaElement
      */
     public function class(string ...$class): self
@@ -153,6 +187,7 @@ class HtmlaElement extends AbstractHtmlElement
 
     /**
      * @param string $contenteditable
+     *
      * @return HtmlaElement
      */
     public function contenteditable(string $contenteditable): self
@@ -163,6 +198,7 @@ class HtmlaElement extends AbstractHtmlElement
 
     /**
      * @param string $data
+     *
      * @return HtmlaElement
      */
     public function data(string $data): self
@@ -173,6 +209,7 @@ class HtmlaElement extends AbstractHtmlElement
 
     /**
      * @param string $dir
+     *
      * @return HtmlaElement
      */
     public function dir(string $dir): self
@@ -183,6 +220,7 @@ class HtmlaElement extends AbstractHtmlElement
 
     /**
      * @param string $draggable
+     *
      * @return HtmlaElement
      */
     public function draggable(string $draggable): self
@@ -193,6 +231,7 @@ class HtmlaElement extends AbstractHtmlElement
 
     /**
      * @param string $enterkeyhint
+     *
      * @return HtmlaElement
      */
     public function enterkeyhint(string $enterkeyhint): self
@@ -203,6 +242,7 @@ class HtmlaElement extends AbstractHtmlElement
 
     /**
      * @param bool $hidden
+     *
      * @return HtmlaElement
      */
     public function hidden(bool $hidden): self
@@ -213,6 +253,7 @@ class HtmlaElement extends AbstractHtmlElement
 
     /**
      * @param string $id
+     *
      * @return HtmlaElement
      */
     public function id(string $id): self
@@ -223,6 +264,7 @@ class HtmlaElement extends AbstractHtmlElement
 
     /**
      * @param string $inert
+     *
      * @return HtmlaElement
      */
     public function inert(string $inert): self
@@ -233,6 +275,7 @@ class HtmlaElement extends AbstractHtmlElement
 
     /**
      * @param string $inputmode
+     *
      * @return HtmlaElement
      */
     public function inputmode(string $inputmode): self
@@ -243,6 +286,7 @@ class HtmlaElement extends AbstractHtmlElement
 
     /**
      * @param string $lang
+     *
      * @return HtmlaElement
      */
     public function lang(string $lang): self
@@ -253,6 +297,7 @@ class HtmlaElement extends AbstractHtmlElement
 
     /**
      * @param string $popover
+     *
      * @return HtmlaElement
      */
     public function popover(string $popover): self
@@ -263,6 +308,7 @@ class HtmlaElement extends AbstractHtmlElement
 
     /**
      * @param string $spellcheck
+     *
      * @return HtmlaElement
      */
     public function spellcheck(string $spellcheck): self
@@ -273,6 +319,7 @@ class HtmlaElement extends AbstractHtmlElement
 
     /**
      * @param array $style
+     *
      * @return HtmlaElement
      */
     public function style(array $style): self
@@ -283,6 +330,7 @@ class HtmlaElement extends AbstractHtmlElement
 
     /**
      * @param int $tabindex
+     *
      * @return HtmlaElement
      */
     public function tabindex(int $tabindex): self
@@ -293,6 +341,7 @@ class HtmlaElement extends AbstractHtmlElement
 
     /**
      * @param string $title
+     *
      * @return HtmlaElement
      */
     public function title(string $title): self
@@ -303,6 +352,7 @@ class HtmlaElement extends AbstractHtmlElement
 
     /**
      * @param string $translate
+     *
      * @return HtmlaElement
      */
     public function translate(string $translate): self
@@ -313,6 +363,7 @@ class HtmlaElement extends AbstractHtmlElement
 
     /**
      * @param string $href
+     *
      * @return HtmlaElement
      */
     public function href(string $href): self
@@ -323,6 +374,7 @@ class HtmlaElement extends AbstractHtmlElement
 
     /**
      * @param string $dataBsToggle
+     *
      * @return HtmlaElement
      */
     public function dataBsToggle(string $dataBsToggle): self
@@ -334,6 +386,7 @@ class HtmlaElement extends AbstractHtmlElement
 
     /**
      * @param bool $ariaHaspopup
+     *
      * @return HtmlaElement
      */
     public function ariaHaspopup(bool $ariaHaspopup): self
@@ -345,6 +398,7 @@ class HtmlaElement extends AbstractHtmlElement
 
     /**
      * @param bool $ariaExpanded
+     *
      * @return HtmlaElement
      */
     public function ariaExpanded(bool $ariaExpanded): self
