@@ -13,8 +13,11 @@ class EntityMapper implements EntityMapperInterface
     {
     }
 
-    public function getTableName(Entity $entity): string
+    public function getTableName(Entity $entity, ?string $default = null): string
     {
+        if ($default !== null) {
+            return $default;
+        }
         $table = StringUtils::studlyCapsToUnderscore($entity::class);
         if (str_ends_with($table, '_show')) {
             return str_replace('_show', '', $table);
@@ -29,7 +32,7 @@ class EntityMapper implements EntityMapperInterface
 
     public function getEntityKeyProperty(Entity $entity): string|bool
     {
-        $reflector = CustomReflection::getInstance($entity)->getObject();
+        $reflector = CustomReflection::getInstance($entity)->getClass();
         foreach ($reflector->getProperties(ReflectionProperty::IS_PRIVATE) as $property) {
             $attributes = $property->getAttributes();
 
@@ -51,7 +54,7 @@ class EntityMapper implements EntityMapperInterface
         }
 
         $map = [];
-        $reflection = CustomReflection::getInstance($entity)->getObject();
+        $reflection = CustomReflection::getInstance($entity)->getClass();
 
         foreach ($reflection->getProperties(ReflectionProperty::IS_PRIVATE) as $property) {
             $attributes = $property->getAttributes('EntityFieldId');
@@ -68,7 +71,7 @@ class EntityMapper implements EntityMapperInterface
         $propertyName = $fieldMap[$dbFieldName] ?? $this->convertToPropertyName($dbFieldName);
 
         try {
-            $reflection = CustomReflection::getInstance($entity)->getObject();
+            $reflection = CustomReflection::getInstance($entity)->getClass();
             return $reflection->getProperty($propertyName);
         } catch (ReflectionException $e) {
             return null;
@@ -80,9 +83,19 @@ class EntityMapper implements EntityMapperInterface
         return lcfirst(StringUtils::studlyCaps($fieldName));
     }
 
+    public function unsetEntityPrimaryKey(Entity $entity): void
+    {
+        $reflector = CustomReflection::getInstance($entity)->getClass();
+        $primaryKeyField = $this->getEntityKeyField($entity);
+        if ($primaryKeyField && $entity->entityKeyIsInitialzed()) {
+            $property = $reflector->getProperty($primaryKeyField);
+            $property->setValue($entity, null);
+        }
+    }
+
     public function isPropertyInitialized(Entity $entity, string $field): bool
     {
-        $reflector = CustomReflection::getInstance($entity)->getObject();
+        $reflector = CustomReflection::getInstance($entity)->getClass();
         $propertyName = StringUtils::studlyCaps($field);
 
         if (!$reflector->hasProperty($propertyName)) {
@@ -98,7 +111,7 @@ class EntityMapper implements EntityMapperInterface
 
     public function getPropertyValue(Entity $entity, string $field): mixed
     {
-        $reflector = CustomReflection::getInstance($entity)->getObject();
+        $reflector = CustomReflection::getInstance($entity)->getClass();
         $field = StringUtils::studlyCaps($field);
         $getterName = 'get' . $field;
         foreach ($reflector->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
@@ -119,7 +132,7 @@ class EntityMapper implements EntityMapperInterface
 
     public function getCurrencyCodeIfExists(Entity $entity): ?string
     {
-        $reflection = CustomReflection::getInstance($entity)->getObject();
+        $reflection = CustomReflection::getInstance($entity)->getClass();
         foreach (['currencyCode', 'currency_code', 'currency'] as $possibleName) {
             if ($reflection->hasProperty($possibleName)) {
                 $property = $reflection->getProperty($possibleName);
@@ -145,7 +158,7 @@ class EntityMapper implements EntityMapperInterface
 
     public function getCurrencyIdIfExists(Entity $entity): int|string|null
     {
-        $reflection = CustomReflection::getInstance($entity)->getObject();
+        $reflection = CustomReflection::getInstance($entity)->getClass();
 
         foreach (['currencyId', 'currencyID', 'currency_id'] as $possibleName) {
             if ($reflection->hasProperty($possibleName)) {
@@ -171,23 +184,26 @@ class EntityMapper implements EntityMapperInterface
 
     public function hasProperty(Entity $entity, string $propertyName): bool
     {
-        $reflection = CustomReflection::getInstance($entity)->getObject();
+        $reflection = CustomReflection::getInstance($entity)->getClass();
+        if (StringUtils::isSnakeCase($propertyName)) {
+            $propertyName = StringUtils::snakeCaseToCamelCase($propertyName);
+        }
         return $reflection->hasProperty($propertyName);
     }
 
     public function isInitialized(Entity $entity, string $field): bool
     {
-        $reflector = CustomReflection::getInstance($entity)->getObject();
-        $property = $reflector->getProperty(StringUtils::camelCase($field));
+        $reflector = $reflection = CustomReflection::getInstance($entity)->getClass();
+        $property = $reflector->getProperty(StringUtils::snakeCaseToCamelCase($field));
         return $property->isInitialized($entity);
     }
 
     public function getFieldValue(Entity $entity, string $field): mixed
     {
-        $reflector = CustomReflection::getInstance($entity)->getObject();
+        $reflector = CustomReflection::getInstance($entity)->getClass();
 
         foreach ($reflector->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
-            if (strtolower($method->getName()) === 'get' . strtolower($field)) {
+            if (strtolower($method->getName()) === 'get' . strtolower($field) && $entity->entityKeyIsInitialzed()) {
                 return $method->invoke($entity);
             }
         }
@@ -210,7 +226,7 @@ class EntityMapper implements EntityMapperInterface
     public function getAllProperties(Entity $entity): array
     {
         $properties = [];
-        $reflection = CustomReflection::getInstance($entity)->getObject();
+        $reflection = CustomReflection::getInstance($entity)->getClass();
 
         foreach ($reflection->getProperties() as $prop) {
             $name = $prop->getName();
@@ -237,7 +253,7 @@ class EntityMapper implements EntityMapperInterface
 
     private function getDatabaseFieldForEntityKey(Entity $entity): string|bool
     {
-        $reflector = CustomReflection::getInstance($entity)->getObject();
+        $reflector = CustomReflection::getInstance($entity)->getClass();
         foreach ($reflector->getProperties(ReflectionProperty::IS_PRIVATE) as $property) {
             $attributes = $property->getAttributes();
 

@@ -20,7 +20,8 @@ class EventManager extends AbstractEventManager
         foreach ($listeners as ['callback' => $listener]) {
             /** @var EventListenerInterface */
             $listenerObj = $this->listeners->listnerCanBeInstantiated(class: $listener);
-            $eventResults[] = $listenerObj->update(event: $event);
+            $eventResults = $listenerObj->handle(event: $event);
+            $event->addResult($listener, $eventResults);
             if ($debug) {
                 $this->listeners->log()[$event->getName()][] = $eventResults;
             }

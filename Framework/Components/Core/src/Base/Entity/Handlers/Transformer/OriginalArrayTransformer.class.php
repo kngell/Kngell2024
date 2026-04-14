@@ -16,7 +16,7 @@ class OriginalArrayTransformer implements ToArrayTransformerInterface
     public function transform(Entity $entity, array $options = []): array
     {
         $array = [];
-        $reflection = CustomReflection::getInstance($entity)->getObject();
+        $reflection = $reflection = CustomReflection::getInstance($entity)->getClass();
 
         foreach ($reflection->getProperties() as $prop) {
             $name = StringUtils::studlyCapsToUnderscore($prop->getName());

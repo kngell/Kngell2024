@@ -92,6 +92,8 @@ validation:
     integer: "%s must be a whole number."
     decimal: "%s must be a decimal number."
     boolean: "%s must be true or false."
+    required_checked: "You must check %s to proceed"
+    required_confirmation: "You must type %s to confirm this action"
 
     # Number comparisons
     min_value: "%s must be at least %s."
@@ -142,6 +144,7 @@ validation:
 
     # Custom business rules
     unique: "%s already exists."
+    unique_in_array: "%s must be unique within the list."
     exists: "Selected %s is invalid."
     password_match: "Passwords do not match."
     strong_password: "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character."
@@ -157,6 +160,7 @@ validation:
     variation_sku:
       pattern: "Variation SKU can only contain letters, numbers, hyphens, and underscores."
       unique: "This variation SKU is already in use."
+      unique_in_array: "This SKU is duplicated in your variations list."
     price:
       min_value: "Price cannot be negative."
     stock_quantity:
@@ -306,6 +310,7 @@ security:
       - /public/assets/
       - /.well-known/
       - /assets/
+      - /form-validation-api/
 
     # Paths that should NEVER be redirected to, even on failure (e.g., error pages, API endpoints).
     # This will be used by CsrfTokenMiddleware::isSafeRedirectUrl
@@ -318,6 +323,8 @@ security:
       - /_500_error
       - /_client_error
       - /_dev_error
+      - /admin/confirm-product-deletion
+
 # DATABASE CONFIGURATIONS
 #===============================================
 #===============================================

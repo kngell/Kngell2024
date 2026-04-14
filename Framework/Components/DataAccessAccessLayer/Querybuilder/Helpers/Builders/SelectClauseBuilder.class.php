@@ -9,7 +9,7 @@ class SelectClauseBuilder extends AbstractClauseBuilder implements ClauseBuilder
     ) {
     }
 
-    protected function buildStatement(?SqlStatementType $type = null): void
+    protected function buildStatement(?SqlStatement $type = null): void
     {
         foreach ($type->getBuildOrder() as $clause) {
             if ($this->shouldBuildClause($clause)) {
@@ -27,7 +27,7 @@ class SelectClauseBuilder extends AbstractClauseBuilder implements ClauseBuilder
     protected function validateClauseOrder(): void
     {
         $userFlow = array_keys($this->query->getQueryFlow());
-        $statementType = $this->query->getSqlStatementType();
+        $statementType = $this->query->getStatement();
         $categoryOrder = $statementType->getCategoryBuildOrder();
 
         $this->validateAllowedMethods($userFlow, $statementType);
@@ -60,7 +60,6 @@ class SelectClauseBuilder extends AbstractClauseBuilder implements ClauseBuilder
     protected function buildClause(string $clause): void
     {
         match($clause) {
-            'with' => $this->buildWithClause(),
             'select' => $this->buildSelect(),
             'from' => $this->buildFromGroup(),
             'where' => $this->buildWhere(),
@@ -130,31 +129,6 @@ class SelectClauseBuilder extends AbstractClauseBuilder implements ClauseBuilder
         $this->query->add($havingGroup);
     }
 
-    private function buildWithClause(): void
-    {
-        $cteMap = $this->query->getCteMap();
-        if (empty($cteMap)) {
-            return;
-        }
-
-        $isRecursive = $this->query->isRecursive();
-        $withClause = new WithClause($isRecursive);
-
-        foreach ($cteMap as $cteData) {
-            $cteBody = $cteData['cteBody'];
-            if ($cteBody instanceof Closure) {
-                $cteBodyBuilder = new SqlSelectQuery($this->query->getEntityManager());
-                $cteBody($cteBodyBuilder);
-                $cteBody = $cteBodyBuilder;
-            }
-
-            $cte = new Cte($cteData['cteTable'], $cteBody);
-            $withClause->add($cte);
-        }
-
-        $this->query->add($withClause);
-    }
-
     private function isJoinMethod(string $method): bool
     {
         $joinMethods = [];
@@ -162,6 +136,7 @@ class SelectClauseBuilder extends AbstractClauseBuilder implements ClauseBuilder
             $baseName = strtolower($joinType->name);
             $joinMethods[] = $baseName . 'Join';
             $joinMethods[] = 'inner' . $baseName . 'Join';
+            $joinMethods[] = $baseName;
         }
 
         return in_array($method, $joinMethods);
@@ -182,10 +157,9 @@ class SelectClauseBuilder extends AbstractClauseBuilder implements ClauseBuilder
     private function buildSelect(): void
     {
         $selectClause = new SelectClause(
-            $this->query->getSelectColumns(),
-            $this->query->getWithAlias(),
-            $this->query->getState()->distinct,
-            $this->query->getTableAliasHelper(),
+            columnsCollector:$this->query->getColumnCollector(),
+            em:$this->query->getEntityManager(),
+            clauseContext: $this->query->getContext(),
         );
 
         $this->query->add($selectClause);
@@ -194,11 +168,18 @@ class SelectClauseBuilder extends AbstractClauseBuilder implements ClauseBuilder
     private function buildFromGroup(): void
     {
         $fromGroup = new FromGroup();
+        $selectMap = $this->query->getSelectMap();
+        if (isset($selectMap['select']['data'])) {
+            $data = $selectMap['select']['data'];
+        }
 
         // 1. Add main FROM clause (existing code)
         $from = new FromClause(
             $this->query->getFromTable(),
-            $this->query->getFromColumns(),
+            isset($data) ? $data : null,
+            $this->query->getEntityManager(),
+            $selectMap['select']['method'] ?? null,
+            $selectMap['select']['customAlias'] ?? null,
         );
         $from->setMethod(SqlClause::FROM->value);
         $fromGroup->add($from);
@@ -226,6 +207,9 @@ class SelectClauseBuilder extends AbstractClauseBuilder implements ClauseBuilder
             $joinConfig['customAlias'],
             $joinConfig['table'],
             $joinConfig['withAlias'],
+            null,
+            $this->query->getEntityManager(),
+            $joinConfig['method'] ?? null,
         );
         $join->setMethod($joinType->name)->setJoinContext($tableName);
 
@@ -241,7 +225,7 @@ class SelectClauseBuilder extends AbstractClauseBuilder implements ClauseBuilder
     {
         $onData = $this->query->getOnConditionsForTable($tableName);
         $onClause = new ConditionClause(
-            $onData['onConditions'],
+            $onData,
             'on',
             $this->query->getEntityManager(),
         );
@@ -254,6 +238,7 @@ class SelectClauseBuilder extends AbstractClauseBuilder implements ClauseBuilder
         $groupByClause = new GroupByClause(
             $this->query->getEntityManager(),
             $this->query->getGroupByMap(),
+            $this->query->getFromTable(),
         );
         $this->query->add($groupByClause);
     }
@@ -261,7 +246,10 @@ class SelectClauseBuilder extends AbstractClauseBuilder implements ClauseBuilder
     private function buildOrderBy(): void
     {
         // Implementation for ORDER BY
-        $orderByClause = new OrderByClause($this->query->getOrderByColumns());
+        $orderByClause = new OrderByClause(
+            $this->query->getOrderByColumns(),
+            $this->query->getFromTable(),
+        );
         $this->query->add($orderByClause);
     }
 
@@ -279,11 +267,11 @@ class SelectClauseBuilder extends AbstractClauseBuilder implements ClauseBuilder
 
     private function normalizeClause(string $clause): string
     {
-        $category = SqlClauseCategory::getCategoryForMethod($clause);
+        $category = SqlMethodCategory::getCategoryForMethod($clause);
         if ($category === null) {
             return $clause;
         }
-        if ($category === SqlClauseCategory::FROM && $this->isJoinMethod($clause)) {
+        if ($category === SqlMethodCategory::FROM && $this->isJoinMethod($clause)) {
             return 'join';
         }
         if (in_array($clause, ['on', 'andOn', 'orOn', 'onClosure'])) {
@@ -369,8 +357,8 @@ class SelectClauseBuilder extends AbstractClauseBuilder implements ClauseBuilder
     private function hasAnyJoin(array $userFlow): bool
     {
         foreach ($userFlow as $clause) {
-            $category = SqlClauseCategory::getCategoryForMethod($clause);
-            if ($category === SqlClauseCategory::FROM && $this->isJoinMethod($clause)) {
+            $category = SqlMethodCategory::getCategoryForMethod($clause);
+            if ($category === SqlMethodCategory::FROM && $this->isJoinMethod($clause)) {
                 return true;
             }
         }

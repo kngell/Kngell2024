@@ -35,11 +35,14 @@ class HtmlaElement extends AbstractHtmlElement
         return $this;
     }
 
-    public function aria(string $name, string ...$props): self
+    public function aria(string ...$props): self
     {
         $aria = [];
-        foreach ($props as $prop) {
-            $aria['aria' . $name] = $prop;
+        if (ArrayUtils::isKeyValueList($props)) {
+            $props = ArrayUtils::fromSequentialToAssoc($props);
+        }
+        foreach ($props as $name => $prop) {
+            $aria['aria-' . $name] = $prop;
         }
         $this->aria = array_merge($this->aria, $aria);
         return $this;
@@ -150,7 +153,7 @@ class HtmlaElement extends AbstractHtmlElement
      *
      * @return HtmlaElement
      */
-    public function content(string $content, bool $contentUp = true): self
+    public function content(null|string|int $content, bool $contentUp = true): self
     {
         $this->content = $content;
         $this->contentUp = $contentUp;

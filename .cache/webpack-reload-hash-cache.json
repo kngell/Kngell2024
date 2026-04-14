@@ -1,0 +1,13 @@
+{
+  "svgHash": "efb5cd342a6315b16760317ee5d07a74",
+  "cssHashes": {
+    "css/css/frontend/main/main.css": "72d4744761c4c153911bb529f03b6dc3",
+    "css/css/librairies/librairy.css": "2e9411720d2a32d95c0fc1d059d761f0",
+    "css/css/backend/admin/admin.css": "7a58a56bae4cecb6ee3a8d5667ed1e04",
+    "css/css/backend/admin/pages/product-list.css": "9de8ad97f7f81b4d27cad74c13cfc587",
+    "css/css/backend/admin/pages/product.css": "ffab22fc0eda41374ae43546500c10d4",
+    "css/css/backend/admin/modals/confirm-deletion.css": "cf0e001e9b38685a4ca8724ce97b4b7c",
+    "css/css/backend/admin/pages/contact.css": "6bcfd7cf54b010806261538ee55ad87e"
+  },
+  "timestamp": 1772509489010
+}

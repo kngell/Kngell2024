@@ -18,7 +18,7 @@ class InsertRules extends AbstractRules implements QueryRulesInterface
         $insertData = $this->normalize($insertdata);
 
         // Handle single insert
-        if (!isset($insertData[0]) || !is_array($insertData[0]) || !ArrayUtils::isMultidimentional($insertData)) {
+        if (!ArrayUtils::isArrayList($insertdata) && !ArrayUtils::isObjectList($insertdata) && ArrayUtils::isAssoc($insertdata)) {
             $singleData = isset($insertData[0]) ? $insertData[0] : $insertData;
             $entity = $this->em->getEntity();
             return $this->getSingleDataSetRule($singleData, 0, $entity);
@@ -65,7 +65,7 @@ class InsertRules extends AbstractRules implements QueryRulesInterface
         }
 
         // Handle batch array data
-        if (ArrayUtils::isMultidimentional($arrayInput) && ArrayUtils::isSequential($arrayInput)) {
+        if (ArrayUtils::isArrayList($arrayInput)) {
             return $arrayInput;
         }
 
@@ -75,13 +75,12 @@ class InsertRules extends AbstractRules implements QueryRulesInterface
     private function getSingleDataSetRule(array $insertData, int $batchIndex, Entity $entity): string
     {
         $parameterRule = [];
-        $helper = $this->em->getTableAliasHelper();
+        $helper = $this->createTableHelper();
 
         foreach ($insertData as $field => $value) {
-            // Add batch index to parameter names for batch inserts
             $paramField = $batchIndex > 0 ? "{$field}_{$batchIndex}" : $field;
             $parameterName = $this->createParameter($value, $paramField, $helper, null, $entity);
-            $parameterRule[] = ':' . $parameterName;
+            $parameterRule[] = $parameterName;
         }
         return '(' . implode(', ', $parameterRule) . ')';
     }

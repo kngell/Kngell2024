@@ -7,7 +7,7 @@ abstract class AbstractDataStandardizer implements DataStandardizerInterface
     protected array $map = [];
     protected ?string $method = null;
 
-    abstract public function standardize(array $data): SelectPayload|InsertPayload|UpdatePayload;
+    abstract public function standardize(array $data): SelectPayload|InsertPayload|UpdatePayload|SqlGenericDataPayload|OnPayload;
 
     abstract public function getContext(): string;
 
@@ -30,7 +30,6 @@ abstract class AbstractDataStandardizer implements DataStandardizerInterface
 
     protected function getRealData(array $data): array
     {
-        // Unwrap nested arrays like [[row]] → row
         if (count($data) === 1 && isset($data[0]) && is_array($data[0])) {
             return $this->getRealData($data[0]);
         }
@@ -80,6 +79,14 @@ abstract class AbstractDataStandardizer implements DataStandardizerInterface
         }
 
         return true;
+    }
+
+    protected function standardizeConditions(array $data): SqlDataPayloadInterface
+    {
+        if (empty($data)) {
+            throw new BadQueryArgumentException($this->method . ' condition requires at least one condition');
+        }
+        return new SqlGenericDataPayload($data, $this->method);
     }
 
     private function couldBeKeyValue(array $data): bool

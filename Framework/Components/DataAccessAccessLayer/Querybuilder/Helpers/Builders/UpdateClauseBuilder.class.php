@@ -11,51 +11,52 @@ class UpdateClauseBuilder extends AbstractClauseBuilder implements ClauseBuilder
 
     protected function ensureMinimalFlow(): void
     {
-        if ($this->query->hasUpdate() && !$this->query->hasSet()) {
-            throw new QueryFlowException('You need to specify what you want to update using the set() method.');
-        }
-
         if ($this->query->hasSet() && !$this->query->hasUpdate()) {
             $this->query->assumeUpdateCurrentTable();
-        }
-
-        // Validate we have at least the minimal required
-        if (!$this->query->isClosure() && (!$this->query->hasUpdate() || !$this->query->hasSet())) {
-            throw new QueryFlowException(
-                'Query must have at least UPDATE and SET clauses. ' .
-                'Called update(): ' . ($this->query->hasUpdate() ? 'yes' : 'no') . ', ' .
-                'Called set(): ' . ($this->query->hasSet() ? 'yes' : 'no'),
-            );
         }
     }
 
     protected function validateClauseOrder(): void
     {
-        $userFlow = array_keys($this->query->getQueryFlow());
-        $statementType = $this->query->getSqlStatementType();
-        $categoryOrder = $statementType->getCategoryBuildOrder();
-
-        $this->validateAllowedMethods($userFlow, $statementType);
-        $this->validateCategoryOrder($userFlow, $categoryOrder);
     }
 
     protected function shouldBuildClause(string $clause): bool
     {
-        $userFlow = array_keys($this->query->getQueryFlow());
-        return in_array($clause, $userFlow);
+        return false;
     }
 
     protected function buildClause(string $clause): void
     {
     }
 
-    protected function buildStatement(?SqlStatementType $type = null): void
+    protected function buildStatement(?SqlStatement $type = null): void
     {
-        $statement = new UpdateStatement(
-            $this->query->getUpdateMap(),
-            $this->query->getQueryFlow(),
-            $this->query->getEntityManager(),
-        );
-        $statement->build();
+        $updateMap = $this->query->getUpdateMap();
+
+        if ($this->isBulkUpdate()) {
+            $statement = new BulkUpdateStatement(
+                $updateMap,
+                $this->query->getJoinMap(),
+                $this->query->getOnMap(),
+                $this->query->getQueryFlow(),
+                $this->query->getEntityManager(),
+                $this->query->getBulkType(),
+            );
+        } else {
+            $statement = new UpdateStatement(
+                $updateMap,
+                $this->query->getQueryFlow(),
+                $this->query->getEntityManager(),
+            );
+        }
+
+        $this->query->add($statement);
+        $this->query->mergeChildState($statement);
+    }
+
+    private function isBulkUpdate(): bool
+    {
+        $userFlow = array_keys($this->query->getQueryFlow());
+        return in_array('bulkUpdate', $userFlow);
     }
 }

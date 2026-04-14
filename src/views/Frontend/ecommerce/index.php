@@ -5,90 +5,12 @@ $this->start('head'); ?>
 <?php $this->end(); ?>
 <?php $this->start('body'); ?>
 <main id="main-site" class="main">
-    <!-- Content -->
+    <!-- Content Hero section-->
     <section class="hero-section">
-        <div class="container hero">
-            <div class="hero__content">
-                <div class="hero__content-text">
-                    <div class="hero__content-text--titles">
-                        <p class="title-intro">Pro.beyond.</p>
-                        <h1 class="title-main animate-fade-in-up animate-delay-200">Iphone 14&nbsp;<span
-                                class="title-sub">Pro
-                                </span">
-                        </h1>
-                    </div>
-                    <p class="hero__content-text--body animate-fade-in-up animate-delay-300">Created to change
-                        everything for
-                        the
-                        better. for everyone</p>
-                </div>
-                <button class="hero__content-cta btn btn-outline btn-outline-white">Shop Now</button>
-            </div>
-            <div class="hero__img-container animate-fade-in-right animate-delay-200">
-                <img src="../../../assets/img/ecommerce/IphonePro.jpg" alt="Iphone Pro" class="image">
-            </div>
-        </div>
+        <?= $heroSection ?? '' ?>
     </section>
     <section class="small-banner-section">
-        <div class="banner">
-            <div class="banner-left">
-                <div class="banner-left__wide">
-                    <div class="image-container">
-                        <img src="../../../assets/img/ecommerce/PlayStation.png" alt="Play Station"
-                            class="image-container--img">
-                    </div>
-                    <div class="text-container">
-                        <h2 class="text-container__heading">Playstation 5</h2>
-                        <p class="text-container__body">Incredibly powerful CPUs, GPUs, and an SSD with integrated I/O
-                            will
-                            redefine your PlayStation
-                            experience.</p>
-                    </div>
-                </div>
-                <div class="banner-left__squares">
-                    <div class="banner-square light">
-                        <div class="banner-square__text-container">
-                            <h2 class="banner-square__text-container--heading">
-                                Apple AirPods&nbsp;<span>Max</span>
-                            </h2>
-                            <p class="banner-square__text-container--body">Computational audio. Listen, it's powerful
-                            </p>
-                        </div>
-                        <div class="banner-square__img-container">
-                            <img src="../../../assets/img/ecommerce/square-img1.png" alt="Square image 1" class="img">
-                        </div>
-                    </div>
-                    <div class="banner-square dark">
-                        <div class="banner-square__text-container">
-                            <h2 class="banner-square__text-container--heading">
-                                Apple Vision&nbsp;<span>Pro</span>
-                            </h2>
-                            <p class="banner-square__text-container--body">An immersive way to experience entertainment
-                            </p>
-                        </div>
-                        <div class="banner-square__img-container">
-                            <img src="../../../assets/img/ecommerce/square-img2.png" alt="Square image 2" class="img">
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-            <div class="banner-right">
-                <div class="banner-right__content">
-                    <div class="text-container">
-                        <h2 class="text-container__heading">Macbook&nbsp;<span>Air</span></h2>
-                        <p class="text-container__body">The new 15‑inch MacBook Air makes room for more of what you love
-                            with
-                            a spacious Liquid Retina
-                            display.</p>
-                    </div>
-                    <button class="btn btn-outline btn-outline-dark">Shop now</button>
-                </div>
-                <div class="banner-right__img-container">
-                    <img src="../../../assets/img/ecommerce/MacBook Pro 14.png" alt="Mac Book Air" class="image">
-                </div>
-            </div>
-        </div>
+        <?= $smallBannerSection ?? '' ?>
     </section>
     <section class="category-section">
         <div class="container category-container">

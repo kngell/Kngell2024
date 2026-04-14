@@ -21,4 +21,6 @@ interface ViewInterface
     public function setRequest(Request $request): void;
 
     public function getPath(): string;
+
+    public function formatBytes(int $bytes): string;
 }

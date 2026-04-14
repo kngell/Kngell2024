@@ -15,6 +15,7 @@ final class InsertDataStandardizer extends AbstractDataStandardizer
 
         return match ($this->method) {
             'insert' => $this->standardizeInsert($data),
+            'columns' => $this->standardizeColumns($data),
             'values' => $this->standardizeValues($data),
             default => throw new InvalidArgumentException("Unsupported insert method: {$this->method}")
         };
@@ -70,17 +71,36 @@ final class InsertDataStandardizer extends AbstractDataStandardizer
         throw new InvalidArgumentException('Unsupported insert() data format');
     }
 
+    private function standardizeColumns(array $data): InsertPayload
+    {
+        $insertData = isset($this->map['insert']) ? $this->map['insert'] : null;
+        if (!empty($insertData)) {
+            throw new InvalidArgumentException('Insert data already has data defined.');
+        }
+        if (!ArrayUtils::isStringList($data)) {
+            throw new InvalidArgumentException('Invalid column names');
+        }
+        return new InsertPayload($data, []);
+    }
+
     private function standardizeValues(array $data): InsertPayload
     {
+        $insertData = isset($this->map['insert']) ? $this->map['insert'] : null;
+        $columnsData = isset($this->map['columns']) ? $this->map['columns'] : null;
+
+        if ($insertData->hasColumns() || $insertData->hasValues()) {
+            throw new InvalidArgumentException('Insert data already has data defined.');
+        }
         // Columns already known → values only
-        if (isset($this->map['columns'])) {
-            $values = ArrayUtils::isSequential($data[0] ?? null) ? $data : [$data];
-            return new InsertPayload($this->map['columns'], $values);
+        if (isset($columnsData) && ArrayUtils::isSequential($data)) {
+            return new InsertPayload($this->map['columns'], $data);
         }
 
         // Infer columns from associative or pair-list rows
         if (ArrayUtils::isAssoc($data)) {
-            return new InsertPayload(array_keys($data), [$data]);
+            if ($insertData === null && $columnsData === null) {
+                return new InsertPayload(array_keys($data), [$data]);
+            }
         }
 
         if ($this->isPairList($data)) {

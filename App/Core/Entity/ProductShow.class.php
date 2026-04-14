@@ -9,13 +9,41 @@ class ProductShow extends Entity implements TimestampableInterface, SoftDeletabl
     use EntityTimestampableTrait;
     use SoftDeletableTrait;
     protected const array RELATIONSHIPS = [
-        'product_status' => ProductStatus::class,
-        'stock_status' => StockStatus::class,
-        'category' => Category::class,
-        'brand' => Brand::class,
-        'product_regional_price' => ProductRegionalPrice::class,
-        'product_image_gallery' => ProductImageGallery::class,
-        'product_variation' => ProductVariationShow::class,
+        'product_status' => [
+            'class' => ProductStatus::class,
+            'type' => 'one-to-one',
+            'collection' => false,
+        ],
+        'stock_status' => [
+            'class' => StockStatus::class,
+            'type' => 'one-to-one',
+            'collection' => false,
+        ],
+        'category' => [
+            'class' => Category::class,
+            'type' => 'one-to-one',
+            'collection' => false,
+        ],
+        'brand' => [
+            'class' => Brand::class,
+            'type' => 'one-to-one',
+            'collection' => false,
+        ],
+        'product_regional_price' => [
+            'class' => ProductRegionalPrice::class,
+            'type' => 'one-to-one',
+            'collection' => false,
+        ],
+        'product_image_gallery' => [
+            'class' => ProductImageGallery::class,
+            'type' => 'one-to-many',
+            'collection' => true,
+        ],
+        'product_variation' => [
+            'class' => ProductVariationShow::class,
+            'type' => 'one-to-many',
+            'collection' => true,
+        ],
     ];
 
     #[EntityFieldId(name: 'pdt_id')]

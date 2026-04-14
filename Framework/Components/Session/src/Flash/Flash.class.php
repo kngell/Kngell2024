@@ -84,9 +84,35 @@ class Flash implements FlashInterface
         }
     }
 
-    public function addFormInput(
+    public function addData(string $key, array $data = []): void
+    {
+        $uniqueKey = 'data_' . md5(trim($key));
+        if (!empty($data)) {
+            $this->session->set($uniqueKey . '_flash_data', $data);
+        }
+    }
+
+    public function peekData(string $key): ?array
+    {
+        $uniqueKey = 'data_' . md5(trim($key));
+        return $this->session->get($uniqueKey . '_flash_data');
+    }
+
+    public function getData(string $key): ?array
+    {
+        $uniqueKey = 'data_' . md5(trim($key));
+        return $this->session->flush($uniqueKey . '_flash_data');
+    }
+
+    public function hasData(string $key): bool
+    {
+        $uniqueKey = 'data_' . md5(trim($key));
+        return $this->session->exists($uniqueKey . '_flash_data');
+    }
+
+    public function addFormData(
         string $formAction,
-        array $postData,
+        array $postData = [],
         array $formErrors = [],
         array $fileData = [],
     ): void {
@@ -104,7 +130,7 @@ class Flash implements FlashInterface
         }
     }
 
-    public function getOldInput(?string $key = null): mixed
+    public function flush(?string $key = null): array
     {
         $input = $this->session->flush(self::INPUT_KEY);
 
@@ -114,7 +140,7 @@ class Flash implements FlashInterface
         return $input;
     }
 
-    public function flushForm(string $formAction): array
+    public function getFormData(string $formAction): array
     {
         $formAction = $this->normalizeFormAction($formAction);
         $formKey = 'form_' . md5($formAction);
@@ -136,7 +162,6 @@ class Flash implements FlashInterface
 
     private function normalizeFormAction(string $formAction): string
     {
-        // $formAction = DS . ltrim($formAction, '/');
         return rtrim($formAction, DS);
     }
 

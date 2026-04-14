@@ -25,9 +25,15 @@ final readonly class Request
         $this->headers = HeaderMap::createFromServerGlobals($superGlobals->server());
         $this->files = new FileUploadMap($superGlobals->files());
         $this->requestStartTime = (float) $this->server->get('request_time_float') ?? 0;
-        $this->method = HttpMethod::fromString(
-            $this->server->get('request_method') ?? 'GET', // Default fallback
-        );
+
+        $requestMethod = $this->server->get('request_method');
+
+        // Handle false or invalid values
+        if ($requestMethod === false || !is_string($requestMethod)) {
+            $requestMethod = 'GET'; // Default to GET
+        }
+
+        $this->method = HttpMethod::fromString($requestMethod);
 
         $this->protocol = strtolower($this->server->get('server_protocol') ?? 'HTTP/1.1');
         $this->requestedUri = $superGlobals->server('request_uri') ?? '/';
@@ -259,6 +265,39 @@ final readonly class Request
         }
 
         return null;
+    }
+
+    public function isAjax(): bool
+    {
+        // Check for standard AJAX header
+        $xRequestedWith = $this->headers->get('X-Requested-With');
+        if ($xRequestedWith && strtolower($xRequestedWith) === 'xmlhttprequest') {
+            return true;
+        }
+
+        // Check Accept header
+        $accept = $this->headers->get('Accept');
+        if ($accept && str_contains(strtolower($accept), 'application/json')) {
+            return true;
+        }
+
+        // Check for fetch API (this is what your client uses!)
+        $secFetchMode = $this->headers->get('Sec-Fetch-Mode');
+        if ($secFetchMode === 'cors') {
+            return true;
+        }
+
+        // Check for PJAX
+        if ($this->headers->get('X-PJAX') || $this->headers->get('X-PJAX-Container')) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public function isXmlHttpRequest(): bool
+    {
+        return $this->isAjax();
     }
 
     /**

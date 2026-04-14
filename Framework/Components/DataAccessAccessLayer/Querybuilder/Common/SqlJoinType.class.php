@@ -12,4 +12,5 @@ enum SqlJoinType: string
     case RIGHT = 'RIGHT JOIN';
     case FULL = 'FULL JOIN';
     case CROSS = 'CROSS JOIN';
+    case JOIN = 'JOIN';
 }

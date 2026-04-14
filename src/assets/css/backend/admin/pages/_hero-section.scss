@@ -1,0 +1,176 @@
+@use "css/backend/admin/abstracts" as *;
+
+/*--------------- HERO SECTION PAGE -------------*/
+
+@include input-field();
+.hero {
+  display: flex;
+  flex-direction: column;
+  gap: 2.4rem;
+  width: 100%;
+  overflow: hidden;
+  &__header {
+    .title {
+      @include page-title();
+    }
+  }
+
+  &__body {
+    position: relative;
+    overflow-y: auto;
+
+    .hero-form {
+      display: flex;
+      align-items: flex-start;
+      gap: 2.4rem;
+      align-self: stretch;
+      background-color: $background-neutral-primary;
+
+      &__left {
+        display: flex;
+        width: 64.68rem;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1.6rem;
+        .form-section {
+          display: flex;
+          padding: 2.4rem 0;
+          flex-direction: column;
+          justify-content: center;
+          align-items: flex-start;
+          gap: 1.2rem;
+          align-self: stretch;
+          border-radius: $radius-m;
+          border: $stroke-s solid $border-neutral-primary;
+          background: $background-neutral-tertiary;
+          box-shadow: $shadow-s;
+          &__header {
+            @include form-section-header;
+          }
+          &__body {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1.6rem;
+            padding: 0 2.4rem;
+            align-self: stretch;
+            &.call-to-action {
+              display: flex;
+              flex-direction: row;
+              align-items: flex-start;
+              gap: 1.6rem;
+              align-self: stretch;
+              .column {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1.2rem;
+                flex: 1 0 0;
+                &__title {
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  align-self: stretch;
+                  &--text {
+                    @include apply-text-style(
+                      (
+                        map: map-deep-get($poppins-map, bold),
+                        weight: body-normal,
+                        overrides: (
+                          color: $text-neutral-secondary
+                        )
+                      )
+                    );
+                  }
+                  &--toggle-switch {
+                    @include toggle-switch();
+                  }
+                }
+                &__content {
+                  display: flex;
+                  flex-direction: column;
+                  align-items: flex-start;
+                  gap: 1.6rem;
+                  align-self: stretch;
+                }
+              }
+            }
+          }
+        }
+      }
+      &__right {
+        display: flex;
+        padding: 2.4rem 0;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1.6rem;
+        flex: 1 0 0;
+        border-radius: $radius-m;
+        background-color: $background-neutral-tertiary;
+        .upload-header {
+          @include form-section-header;
+        }
+        .upload-body {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          padding: 0 2.4rem;
+          gap: 1.6rem;
+          align-self: stretch;
+
+          @include dropzone(
+            (
+              "single-class": "upload-single",
+              "multiple-class": "upload-multiple",
+              "single": true,
+              "multiple": true,
+              "padding": 1.6rem 1.6rem 0,
+              "height": 20rem
+            )
+          );
+        }
+      }
+    }
+  }
+  &__footer {
+    @include page-footer;
+  }
+}
+.upload-duplicate-warning {
+  position: fixed;
+  top: 2rem;
+  right: 2rem;
+  background: #ff9800;
+  color: #ffffff;
+  padding: 1.2rem 2rem;
+  border-radius: 0.4rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  z-index: 9999;
+  animation: slideIn 0.3s ease;
+
+  &.fade-out {
+    animation: slideOut 0.3s ease;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}

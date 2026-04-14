@@ -1,4 +1,4 @@
-import BaseValidator from "../BaseValidator.js";
+import BaseValidator from "../BaseValidator";
 
 export default class MaxItemsValidator extends BaseValidator {
   validate() {

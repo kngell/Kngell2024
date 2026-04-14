@@ -235,6 +235,11 @@ final class SqlBuilderMethodRegistry
         // ========================================
         // JOIN CONDITION METHODS (ON clause - part of FROM)
         // ========================================
+        'inner' => [
+            'clause' => SqlClause::FROM, // ON conditions are part of FROM clause
+            'link' => SqlConditionLink::ON,
+            'operator' => SqlOperator::EQUALS, // SQLOperator::ON
+        ],
         'on' => [
             'clause' => SqlClause::FROM, // ON conditions are part of FROM clause
             'link' => SqlConditionLink::ON,
@@ -439,12 +444,12 @@ final class SqlBuilderMethodRegistry
         'set' => [
             'clause' => SqlClause::SET,
             'link' => null,
-            'operator' => null,
+            'operator' => SqlOperator::EQUALS,
         ],
         'from' => [
             'clause' => SqlClause::FROM,
-            'link' => null,
-            'operator' => null,
+            'link' => SqlConditionLink::ON,
+            'operator' => SqlOperator::EQUALS,
         ],
     ];
 

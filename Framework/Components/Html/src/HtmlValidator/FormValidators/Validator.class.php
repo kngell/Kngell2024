@@ -31,7 +31,6 @@ final class Validator implements ValidatorInterface
             $this->lastResult = $this->performValidation();
             return $this->lastResult;
         } catch (ValidationException $e) {
-            // Re-throw ValidationException to preserve specific error codes
             throw $e;
         } catch (Throwable $th) {
             throw ValidationException::rulesFileNotFound($rules);
@@ -141,13 +140,10 @@ final class Validator implements ValidatorInterface
             $fieldErrors = $this->validateField($fieldName, $fieldRules);
 
             if (!empty($fieldErrors)) {
-                // Handle different error formats from different validators
                 foreach ($fieldErrors as $errorKey => $errorValue) {
                     if (is_numeric($errorKey)) {
-                        // Regular field error - store under fieldName
                         $errors[$fieldName][] = $errorValue;
                     } else {
-                        // Nested error from ItemsValidator - store with full path
                         $errors[$errorKey] = $errorValue;
                     }
                 }
@@ -232,12 +228,9 @@ final class Validator implements ValidatorInterface
             $error = $this->executeValidationRule($ruleName, $display, $inputValue, $ruleValue, $fieldName);
 
             if ($error !== false && $error !== null && $error !== '') {
-                // Handle different return types from validators
                 if (is_array($error)) {
-                    // ItemsValidator returns associative array with full field paths
                     $errors = array_merge($errors, $error);
                 } else {
-                    // Regular validator returns string error
                     $errors[] = $error;
                 }
 

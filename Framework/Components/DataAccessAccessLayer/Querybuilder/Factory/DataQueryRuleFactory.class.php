@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 class DataQueryRuleFactory extends AbstractRulesFactory implements RuleFactoryInterface
 {
-    public function supports(SqlStatementType $statement): bool
+    public function supports(SqlStatement $statement): bool
     {
-        return $statement === SqlStatementType::SELECT;
+        return $statement === SqlStatement::SELECT;
     }
 
     public function create(string $method, mixed $data): QueryRulesInterface
@@ -57,17 +57,51 @@ class DataQueryRuleFactory extends AbstractRulesFactory implements RuleFactoryIn
                in_array($method, ['on', 'andon', 'oron', 'onclause']);
     }
 
-    /**
-     * Create OnRules for ON clause methods.
-     */
     private function createOnRules(string $method, mixed $data): QueryRulesInterface
     {
-        return $this->initialize(new OnRules(
-            $data,
+        $context = $this->state->statementContext;
+
+        return match(true) {
+            // Bulk update scenarios - use bulk row factory
+            in_array($method, ['FROM', 'INNER']) && ($context === StatementType::BULK_UPDATE_MARIADB ||
+             $context === StatementType::BULK_UPDATE) =>
+                 $this->createBulkRowStrategy($method, $data),
+
+            // Regular ON clauses
+            default => $this->initialize(new OnRule(
+                $data,
+                $this->em,
+                $method,
+                $this->state,
+                new ConditionNormalizer(),
+            ))
+        };
+    }
+
+    private function createBulkRowStrategy(string $method, mixed $data): QueryRulesInterface
+    {
+        $strategyType = $this->getStrategyTypeForContext();
+
+        $bulkRow = $this->bulkRowFactory->create(
             $this->em,
             $method,
             $this->state,
-        ));
+            $data,
+            $strategyType,
+        );
+
+        return $this->initialize($bulkRow);
+    }
+
+    private function getStrategyTypeForContext(): ?string
+    {
+        $context = $this->state->statementContext;
+
+        if ($context === StatementType::BULK_UPDATE) {
+            return 'unionAll';
+        }
+
+        return null;
     }
 
     private function createGroupByRules(string $method, mixed $data): QueryRulesInterface
@@ -87,11 +121,12 @@ class DataQueryRuleFactory extends AbstractRulesFactory implements RuleFactoryIn
     {
         return match($clause) {
             SqlClause::WHERE,
-            SqlClause::HAVING => $this->initialize(new WhereRules(
+            SqlClause::HAVING => $this->initialize(new WhereRule(
                 $data,
                 $this->em,
                 $method,
                 $this->state,
+                new ConditionNormalizer(),
             )),
 
             SqlClause::LIMIT => $this->initialize(new LimitRule(
@@ -138,12 +173,15 @@ class DataQueryRuleFactory extends AbstractRulesFactory implements RuleFactoryIn
         };
     }
 
-    /**
-     * Handle FROM clause - could be ON or other FROM operations.
-     */
     private function handleFromClause(string $method, mixed $data): QueryRulesInterface
     {
         $methodKey = strtolower($method);
+        // $context = $this->state->statementContext;
+
+        // Check if this is a bulk update context
+        // if ($context === StatementType::BULK_UPDATE || $context === StatementType::BULK_UPDATE_MARIADB) {
+        //     return $this->createBulkRowStrategy($method, $data);
+        // }
 
         // Check if this is an ON method
         if (SqlBuilderMethodRegistry::isValidMethod($methodKey)) {
@@ -154,36 +192,50 @@ class DataQueryRuleFactory extends AbstractRulesFactory implements RuleFactoryIn
             }
         }
 
-        // Default for other FROM operations (e.g., table aliases)
-        // These might not need rules, or need different rules
+        // Default for other FROM operations
         throw new LogicException(
             "FROM clause operation '{$method}' does not have a rule implementation",
         );
     }
 
-    /**
-     * Fallback: create rule based on method name pattern.
-     */
+    // private function handleFromClause(string $method, mixed $data): QueryRulesInterface
+    // {
+    //     $methodKey = strtolower($method);
+
+    //     if (SqlBuilderMethodRegistry::isValidMethod($methodKey)) {
+    //         $link = SqlBuilderMethodRegistry::getLogicalLink($methodKey);
+
+    //         if ($link === SqlConditionLink::ON) {
+    //             return $this->createOnRules($method, $data);
+    //         }
+    //     }
+
+    //     throw new LogicException(
+    //         "FROM clause operation '{$method}' does not have a rule implementation",
+    //     );
+    // }
+
     private function createFromMethodName(string $method, mixed $data): QueryRulesInterface
     {
         $methodKey = strtolower($method);
 
-        // Check common patterns
-        if (str_starts_with($methodKey, 'where')) {
-            return $this->initialize(new WhereRules(
+        if (str_contains($methodKey, 'where')) {
+            return $this->initialize(new WhereRule(
                 $data,
                 $this->em,
                 $method,
                 $this->state,
+                new ConditionNormalizer(),
             ));
         }
 
         if (str_starts_with($methodKey, 'having')) {
-            return $this->initialize(new WhereRules( // HAVING uses WhereRules
+            return $this->initialize(new WhereRule( // HAVING uses WhereRule
                 $data,
                 $this->em,
                 $method,
                 $this->state,
+                new ConditionNormalizer(),
             ));
         }
 

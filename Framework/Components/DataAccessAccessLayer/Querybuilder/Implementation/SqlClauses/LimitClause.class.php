@@ -9,9 +9,10 @@ class LimitClause extends SqlComponent implements RegularClauseComponentInterfac
     private ?QueryRulesInterface $limitRule;
 
     public function __construct(
-        private EntityManagerInterface $em,
+        EntityManagerInterface $em,
         private array $limitConfig,
     ) {
+        parent::__construct(em:$em);
     }
 
     public function build(): string

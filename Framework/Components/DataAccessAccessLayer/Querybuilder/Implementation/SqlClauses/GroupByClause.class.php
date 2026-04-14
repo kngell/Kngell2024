@@ -8,10 +8,13 @@ class GroupByClause extends SqlComponent implements RegularClauseComponentInterf
     private ?QueryRulesInterface $groupByRule;
 
     public function __construct(
-        private EntityManagerInterface $em,
+        EntityManagerInterface $em,
         private array $groupByConfig,
+        ?string $table,
     ) {
+        parent::__construct(em: $em);
         $this->method = $groupByConfig['method'];
+        $this->table = $table;
     }
 
     public function build(): string

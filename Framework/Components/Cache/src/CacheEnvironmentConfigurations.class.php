@@ -111,7 +111,9 @@ class CacheEnvironmentConfigurations
         // Create directory if it doesn't exist
         $cacheDir = $basePath . $identifier . '/';
         if (!is_dir($cacheDir)) {
-            mkdir($cacheDir, 0755, true);
+            $oldUmask = umask(0);
+            mkdir($cacheDir, 0775, true);
+            umask($oldUmask);
         }
 
         return $cacheDir;

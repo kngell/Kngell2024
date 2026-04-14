@@ -13,15 +13,45 @@ final class TablesAliasHelper
     private ?string $table = null;
     private ?string $joinContext = null;
     private bool $isJoincontext = false;
+    private ?string $fromTable = null;
+    private ?string $toTable = null;
+    private string $quoteChar = '`';
+    private ?string $customAlias = null;
 
     public function __construct(private Token $token)
     {
+    }
+
+    public function reset(): void
+    {
+        $this->tables = [];
+        $this->conditionIndex = [];
+        $this->logicalToPhysicalMap = [];
+        $this->nestedRelationships = [];
+        $this->aliasParentMap = [];
+        $this->joinedMap = [];
+        $this->table = null;
+        $this->fromTable = null;
+        $this->toTable = null;
+        $this->joinContext = null;
+        $this->isJoincontext = false;
     }
 
     public function get(string $tbl, array &$tableAlias, array &$aliasCheck): array
     {
         if (empty($tbl)) {
             throw new InvalidArgumentException('Table name cannot be empty in TablesAliasHelper::get()');
+        }
+        if (!empty($this->customAlias)) {
+            $physicalTable = $this->getPhysicalTable($tbl);
+            $alias = $this->customAlias;
+
+            $tableAlias[$tbl] = $alias;
+            if (!in_array($alias, $aliasCheck, true)) {
+                $aliasCheck[] = $alias;
+            }
+            $this->customAlias = null;
+            return [$physicalTable, $alias];
         }
 
         if ($this->joinContext && $this->getPhysicalTable($this->joinContext) === $tbl) {
@@ -63,27 +93,42 @@ final class TablesAliasHelper
         return [$physicalTable, $alias];
     }
 
-    public function mapTableColumn(string|int $str, array $tables = []): array
+    public function mapTableColumn(string|int $logicalTable, int $position = 0): array
     {
-        if (is_string($str)) {
-            $separator = $this->separator($str);
-            $parts = explode($separator, $str);
+        if (is_string($logicalTable)) {
+            $parts = explode($this->separator($logicalTable), $logicalTable);
 
             if (count($parts) === 2) {
-                $tableColumn = $parts[0];
-                $column = $parts[1];
-                return [$tableColumn, $column];
+                return [$parts[0], $parts[1]];
             }
-
             if (count($parts) === 1) {
                 $column = $parts[0];
-                $defaultTable = $this->getDefaultTable();
-                return [$defaultTable, $column];
+                $default = ($position === 0 && $this->fromTable)
+                           ? $this->fromTable
+                           : ($this->toTable ?? $this->getDefaultTable());
+
+                return [$default, $column];
             }
         }
 
-        $defaultTable = $this->getDefaultTable();
-        return [$defaultTable, (string) $str];
+        return [$this->getDefaultTable(), (string) $logicalTable];
+    }
+
+    public function resolveColumn(string $columnStr, QueryState $state): string
+    {
+        if (!str_contains($columnStr, '.')) {
+            return $columnStr;
+        }
+
+        [$prefix, $col] = explode('.', $columnStr, 2);
+
+        $logicalName = array_search($prefix, $state->logicalToPhysicalMap);
+
+        if ($logicalName) {
+            return $logicalName . '.' . $col;
+        }
+
+        return $columnStr;
     }
 
     public function extractColumnName(null|string $condition): string
@@ -135,6 +180,12 @@ final class TablesAliasHelper
     {
         $this->joinContext = $joinContext;
         return $this;
+    }
+
+    public function setJoinMapping(?string $from, ?string $to): void
+    {
+        $this->fromTable = $from;
+        $this->toTable = $to;
     }
 
     public function setTables(array $tables): self
@@ -213,13 +264,74 @@ final class TablesAliasHelper
         return $tableName;
     }
 
-    public function getPhysicalTable(string $tbl): string
+    public function getPhysicalTable(string $logicalTable): string
     {
-        if (str_contains($tbl, '.')) {
-            $parts = explode('.', $tbl, 2);
-            return str_replace('_join_', '', $parts[1]);
+        if (str_contains($logicalTable, '.')) {
+            $parts = explode('.', $logicalTable);
+            $targetTable = end($parts);
+        } else {
+            $targetTable = $logicalTable;
         }
-        return str_replace('_join_', '', $tbl);
+
+        $table = str_replace('_join_', '', $targetTable);
+
+        if (str_contains($table, '_logical_')) {
+            return explode('_logical_', $table)[0];
+        }
+
+        return $table;
+    }
+    // private function getDefaultTable(): string
+    // {
+    //     if (empty($this->tables)) {
+    //         throw new RuntimeException('No tables available for alias generation. Tables must be set before generating aliases.');
+    //     }
+
+    //     $defaultTable = array_key_first($this->tables);
+
+    //     if (empty($defaultTable)) {
+    //         throw new RuntimeException('Default table cannot be empty. Check table configuration.');
+    //     }
+
+    //     return $defaultTable;
+    // }
+    /**
+     * @param string $quoteChar
+     *
+     * @return TablesAliasHelper
+     */
+    public function setQuoteChar(string $quoteChar): TablesAliasHelper
+    {
+        $this->quoteChar = $quoteChar;
+
+        return $this;
+    }
+
+    public function quote(string $identifier): string
+    {
+        if ($identifier === '*') {
+            return '*';
+        }
+
+        // Handle already quoted strings or dots
+        if (str_contains($identifier, '.')) {
+            $parts = explode('.', $identifier);
+            return implode('.', array_map([$this, 'quote'], $parts));
+        }
+
+        return $this->quoteChar . str_replace($this->quoteChar, $this->quoteChar . $this->quoteChar, $identifier) . $this->quoteChar;
+    }
+
+    /**
+     * @param null|string $customAlias
+     *
+     * @return TablesAliasHelper
+     */
+    public function setCustomAlias(?string $customAlias): TablesAliasHelper
+    {
+        $this->customAlias = $customAlias;
+
+        return $this;
     }
 
     private function normalizeParameterName(string $name): string
@@ -233,11 +345,28 @@ final class TablesAliasHelper
             $parentTable = $this->extractParentTable($tbl);
             $childTable = $this->extractChildTable($tbl);
 
-            $parentAlias = $tableAlias[$parentTable] ?? strtolower($parentTable[0]);
-            return $tableAlias[$childTable] ?? strtolower($childTable[0]);
+            $parentAlias = $tableAlias[$parentTable] ?? $this->getFirstchar($parentTable);
+            return $tableAlias[$childTable] ?? $this->getFirstchar($childTable);
         }
 
-        return $tableAlias[$physicalTable] ?? strtolower($physicalTable[0]);
+        return $tableAlias[$physicalTable] ?? $this->getFirstchar($physicalTable);
+    }
+
+    private function getFirstchar(string $str): string
+    {
+        $length = strlen($str);
+
+        for ($i = 0; $i < $length; $i++) {
+            $char = $str[$i];
+
+            if (preg_match('/[a-zA-Z0-9_]/', $char)) {
+                return strtolower($char);
+            }
+        }
+
+        throw new InvalidArgumentException(
+            "No valid alias character found in string: {$str}",
+        );
     }
 
     private function generateJoinAlias(string $baseAlias, array $aliasCheck, string $tbl): string
@@ -294,16 +423,17 @@ final class TablesAliasHelper
 
     private function getDefaultTable(): string
     {
-        if (empty($this->tables)) {
-            throw new RuntimeException('No tables available for alias generation. Tables must be set before generating aliases.');
+        if (!empty($this->joinContext)) {
+            return $this->joinContext;
         }
 
-        $defaultTable = array_key_first($this->tables);
-
-        if (empty($defaultTable)) {
-            throw new RuntimeException('Default table cannot be empty. Check table configuration.');
+        if (!empty($this->tables)) {
+            $defaultTable = array_key_first($this->tables);
+            if (!empty($defaultTable)) {
+                return $defaultTable;
+            }
         }
 
-        return $defaultTable;
+        throw new RuntimeException('No tables available for alias generation.');
     }
 }

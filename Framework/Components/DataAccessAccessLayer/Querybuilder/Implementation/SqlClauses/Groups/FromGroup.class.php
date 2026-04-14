@@ -2,17 +2,13 @@
 
 declare(strict_types=1);
 
-/**
- * FromGroup - Simple composite that groups FROM and JOIN clauses together
- * Minimal refactoring required - just wraps existing components.
- */
 class FromGroup extends SqlComponent implements ClauseComponentInterface
 {
     private const SqlClause CLAUSE = SqlClause::FROM;
 
-    public function __construct()
+    public function __construct(private null|STatementType $context = null)
     {
-        parent::__construct(self::CLAUSE);
+        parent::__construct(null);
     }
 
     public function build(): string
@@ -24,6 +20,9 @@ class FromGroup extends SqlComponent implements ClauseComponentInterface
         $parts = [];
 
         foreach ($this->children as $child) {
+            if ($this->context && $this->context === StatementType::BULK_UPDATE && $child instanceof FromClause) {
+                continue;
+            }
             if ($child instanceof JoinClause) {
                 $parts[] = $child->getLink();
             }
@@ -36,11 +35,14 @@ class FromGroup extends SqlComponent implements ClauseComponentInterface
             $this->mergeChildState($child);
         }
 
-        return implode(' ', $parts);
+        return $this->query = implode(' ', $parts);
     }
 
-    public function getSqlClause(): SqlClause
+    public function getSqlClause(): ?SqlClause
     {
+        if ($this->context && $this->context === StatementType::BULK_UPDATE) {
+            return null;
+        }
         return self::CLAUSE;
     }
 

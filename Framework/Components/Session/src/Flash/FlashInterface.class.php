@@ -14,11 +14,11 @@ interface FlashInterface
      */
     public function add(string $message, ?FlashType $type = null): void;
 
-    public function addFormInput(string $formAction, array $formValues, array $formErrors, array $fileData = []): void;
+    public function addFormData(string $formAction, array $formValues = [], array $formErrors = [], array $fileData = []): void;
 
-    public function getOldInput(?string $key = null): mixed;
+    public function getFormData(string $formAction): array;
 
-    public function flushForm(string $formAction): array;
+    public function flush(?string $key = null): array;
 
     /**
      * Get all the flash messages from the session.
@@ -28,4 +28,12 @@ interface FlashInterface
     public function get();
 
     public function getSession(): SessionInterface;
+
+    public function addData(string $key, array $data = []): void;
+
+    public function getData(string $key): ?array;
+
+    public function peekData(string $key): ?array;
+
+    public function hasData(string $key): bool;
 }

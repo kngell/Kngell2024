@@ -230,7 +230,7 @@ interface CollectionInterface extends Countable, IteratorAggregate, ArrayAccess
 
     public function addAll(array $parameters): self;
 
-    public function clear(string $key): void;
+    public function clear(): void;
 
     public function getWithDefault(string $key, mixed $defaultValue): mixed;
 

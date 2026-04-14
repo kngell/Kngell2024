@@ -9,7 +9,8 @@ class RequiredIfValidator extends AbstractValidator
         private readonly string $display,
         private readonly mixed $inputValue,
         private readonly string $ruleValue,
-        private readonly array $inputFields,
+        private readonly array $formData,
+        private readonly string $fieldName,
     ) {
     }
 
@@ -17,12 +18,9 @@ class RequiredIfValidator extends AbstractValidator
     {
         [$otherField, $expectedValue] = $this->parseRuleValue($this->ruleValue);
 
-        // Get the actual value of the other field (with proper null handling)
-        $otherValue = $this->getFieldValue($otherField);
+        $otherValue = $this->resolveFieldValue($otherField, $this->formData, $this->fieldName);
 
-        // Handle different expected value types
         if ($expectedValue !== null) {
-            // Convert both values to string for comparison (like JavaScript does)
             $otherValueString = $this->convertToString($otherValue);
             $expectedValueString = $this->convertToString($expectedValue);
 
@@ -33,7 +31,6 @@ class RequiredIfValidator extends AbstractValidator
                 );
             }
         } else {
-            // No expected value - just check if other field has a value
             if (!$this->isEmpty($otherValue) && $this->isEmpty($this->inputValue)) {
                 return $this->errorMessage(
                     sprintf($this->errorParams['message'], $this->display, $otherField),
@@ -45,11 +42,6 @@ class RequiredIfValidator extends AbstractValidator
         return false;
     }
 
-    private function getFieldValue(string $fieldName): mixed
-    {
-        return $this->inputFields[$fieldName] ?? null;
-    }
-
     private function parseRuleValue(string $ruleValue): array
     {
         if (str_contains($ruleValue, '=')) {
@@ -57,16 +49,5 @@ class RequiredIfValidator extends AbstractValidator
             return [trim($field), trim($value)];
         }
         return [trim($ruleValue), null];
-    }
-
-    private function convertToString(mixed $value): string
-    {
-        if (is_bool($value)) {
-            return $value ? 'true' : 'false';
-        }
-        if ($value === null) {
-            return '';
-        }
-        return (string) $value;
     }
 }

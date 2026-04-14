@@ -13,8 +13,16 @@ class CustomHttpMap extends Map
             if (isset($this->getAll()[strtolower($key)])) {
                 return $this->getAll()[strtolower($key)];
             }
-            return false;
+            return null; // Change this from false to null
         }
-        return array_map('strip_tags', $this->getAll() ?? []);
+
+        $data = $this->getAll() ?? [];
+        array_walk_recursive($data, function (&$value) {
+            if (is_string($value)) {
+                $value = strip_tags($value);
+            }
+        });
+
+        return $data;
     }
 }

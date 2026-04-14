@@ -24,14 +24,12 @@ class EntityHydrator implements EntityHydratorInterface
     public function assign(Entity $entity, array $data): Entity
     {
         foreach ($data as $key => $value) {
-            // Resolve 'product_variation_show' -> 'product_variation'
             $officialKey = $entity->getRelationshipKeyFromDataKey($key);
 
             if ($officialKey && is_array($value)) {
-                // Use the OFFICIAL key for the buffer
                 $this->entityFactory->getRelationManager()->hydrateRelatedEntity(
                     $entity,
-                    $officialKey, // Force 'product_variation'
+                    $officialKey,
                     '_all_data',
                     $value,
                     $entity->getTableAlias(),
@@ -39,6 +37,9 @@ class EntityHydrator implements EntityHydratorInterface
                     $entity->getRelatedEntities(),
                 );
             } else {
+                if ($key === $entity->getEntityKeyField() && empty($value)) {
+                    continue;
+                }
                 $entity->__set($key, $value);
             }
         }
@@ -49,24 +50,16 @@ class EntityHydrator implements EntityHydratorInterface
 
     public function getDirtyData(Entity $entity): array
     {
-        // These keys are likely snake_case (e.g., 'short_description')
         $changes = $this->changeTracker->getChanges($entity);
         $normalizedData = [];
-
-        // Get the map to convert 'short_description' -> 'shortDescription'
         $fieldToPropertyMap = $this->mapper->getFieldToPropertyMap($entity);
-        $reflection = CustomReflection::getInstance($entity)->getObject();
+        $reflection = CustomReflection::getInstance($entity)->getClass();
 
         foreach ($changes as $dbFieldName => $currentValue) {
             try {
-                // 1. Resolve the actual PHP property name
                 $propertyName = $fieldToPropertyMap[$dbFieldName] ?? $this->mapper->convertToPropertyName($dbFieldName);
-
-                // 2. Get the property from reflection using the camelCase name
                 $property = $reflection->getProperty($propertyName);
-
-                // 3. Keep the DB Field Name as the key for the final array
-                $normalizedData[$dbFieldName] = $this->normalizer->normalizeForEntityToDatabase(
+                $normalizedData[$dbFieldName] = $this->normalizer->normalizeFromEntityToDatabase(
                     $currentValue,
                     $property,
                     $entity,
@@ -98,7 +91,7 @@ class EntityHydrator implements EntityHydratorInterface
     public function denormalizeAndSetProperty(Entity $entity, string $dbFieldName, mixed $rawValue): void
     {
         $fieldToPropertyMap = $this->mapper->getFieldToPropertyMap($entity);
-        $reflection = CustomReflection::getInstance($entity)->getObject();
+        $reflection = CustomReflection::getInstance($entity)->getClass();
 
         $propertyName = $fieldToPropertyMap[$dbFieldName] ?? $this->mapper->convertToPropertyName($dbFieldName);
 
@@ -114,7 +107,7 @@ class EntityHydrator implements EntityHydratorInterface
 
         try {
             $property = $reflection->getProperty($propertyName);
-            $convertedValue = $this->normalizer->normalizeForDatabaseToEntity(
+            $convertedValue = $this->normalizer->normalizeFromDatabaseToEntity(
                 rawValue: $rawValue,
                 property: $property,
                 entityInstance: $entity,
@@ -147,7 +140,7 @@ class EntityHydrator implements EntityHydratorInterface
 
     private function setPropertyValue(Entity $entity, string $propertyName, $value): void
     {
-        $reflection = CustomReflection::getInstance($entity)->getObject();
+        $reflection = CustomReflection::getInstance($entity)->getClass();
         try {
             $property = $reflection->getProperty($propertyName);
             $property->setValue($entity, $value);

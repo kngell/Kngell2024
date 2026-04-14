@@ -73,6 +73,12 @@ final class EntityCacheKeyGenerator implements EntityCacheKeyGeneratorInterface
         return str_starts_with($cacheKey, "entity_{$className}_");
     }
 
+    public function getEntityPrefix(string $entityClass): string
+    {
+        $className = $this->normalizeClassName($entityClass);
+        return "entity.{$className}";
+    }
+
     public function normalizeClassName(string $className): string
     {
         // Replace backslashes with dots (dots are allowed)
@@ -100,35 +106,35 @@ final class EntityCacheKeyGenerator implements EntityCacheKeyGeneratorInterface
         return $this->createEntityContentHash($entity);
     }
 
-    /**
-     * Get typed identifier (with type prefix).
-     */
     private function getTypedCacheIdentifier(Entity $entity): string
     {
-        $value = $this->extractEntityIdentifier($entity);  // FIXED: Call extractEntityIdentifier, not getCacheIdentifier
+        $value = $this->extractEntityIdentifier($entity);
 
-        // Early return if already typed
         if (str_starts_with($value, 'uuid_') ||
             str_starts_with($value, 'int_') ||
             str_starts_with($value, 'str_') ||
             str_starts_with($value, 'content_')) {
-            return $value;
+            // Convert underscore format to dot format
+            return str_replace('_', '.', $value);
         }
 
-        // Determine type
+        return $this->detectType($value);
+    }
+
+    private function detectType(string $value): string
+    {
         if ($this->isUuidString($value)) {
-            return 'uuid_' . $value;
+            $cleanUuid = str_replace('-', '', $value);
+            return 'uuid.' . $cleanUuid;
         }
 
         if ($this->isIntegerString($value)) {
-            return 'int_' . $value;
+            return 'int.' . $value;
         }
 
-        if (is_string($value)) {
-            return 'str_' . $value;
-        }
-
-        return 'content_' . $value;
+        // For regular strings, clean them
+        $cleanString = preg_replace(self::ALLOWED_CHARS, '', $value);
+        return 'str.' . $cleanString;
     }
 
     private function createEntityContentHash(Entity $entity): string
@@ -173,31 +179,11 @@ final class EntityCacheKeyGenerator implements EntityCacheKeyGeneratorInterface
 
     private function typeIdentifier(string $identifier): string
     {
-        // Check if already has type prefix
         if (preg_match('/^(uuid|int|str|content)\./', $identifier)) {
             return $identifier;
         }
 
-        // Determine type - use dots instead of underscores for type separator
-        if ($this->isUuidString($identifier)) {
-            // Remove hyphens from UUID (not allowed in pattern)
-            $cleanUuid = str_replace('-', '', $identifier);
-            return 'uuid.' . $cleanUuid;
-        }
-
-        if ($this->isIntegerString($identifier)) {
-            return 'int.' . $identifier;
-        }
-
-        if (is_string($identifier)) {
-            // Clean string for cache
-            $cleanString = preg_replace(self::ALLOWED_CHARS, '', $identifier);
-            return 'str.' . $cleanString;
-        }
-
-        // Fallback to content hash (truncated)
-        $hash = md5((string) $identifier);
-        return 'content.' . substr($hash, 0, 16);
+        return $this->detectType($identifier);
     }
 
     private function truncateKey(string $key): string

@@ -1,0 +1,1114 @@
+@use "sass:list";
+@use "sass:map";
+@use "sass:color";
+@use "css/backend/admin/abstracts/variables" as *;
+@use "css/backend/admin/abstracts/functions" as *;
+@use "miscellaneous" as *;
+@use "text-style" as *;
+@use "icon_with_badge" as *;
+
+$input-field-config: (
+  "component-class": "input-field",
+
+  // Layout values
+  "input-height": 4.8rem,
+  "padding-horizontal": 1.6rem,
+  "padding-vertical": 1.2rem,
+  "icon-size": 2.4rem,
+  "gap-typing-area": 0.4rem,
+  "counter-width": 4.4rem,
+
+  // Border
+  "border-width": $stroke-s,
+  "border-radius": $radius-m,
+  "shadow": $shadow-s,
+
+  // Colors
+  "background-neutral-primary": $background-neutral-primary,
+  "background-neutral-secondary": $background-neutral-secondary,
+  "background-neutral-disabled": $background-neutral-disabled,
+  "background-brand-secondary": $background-brand-secondary,
+  "background-brand-tertiary": $background-brand-tertiary,
+
+  "border-neutral-primary": $border-neutral-primary,
+  "border-neutral-secondary": $border-neutral-secondary,
+  "border-brand-primary": $border-brand-primary,
+  "border-semantic-error": $border-semantic-error,
+  "border-neutral-disabled": $border-neutral-disabled,
+
+  "text-neutral-primary": $text-neutral-primary,
+  "text-neutral-secondary": $text-neutral-secondary,
+  "text-neutral-tertiary": $text-neutral-tertiary,
+  "text-neutral-disabled": $text-neutral-disabled,
+  "text-semantic-error": $text-semantic-error,
+
+  "icon-neutral-primary": $icon-neutral-primary,
+  "icon-neutral-tertiary": $icon-neutral-tertiary,
+  "icon-neutral-disabled": $icon-neutral-disabled,
+  "icon-semantic-error": $icon-semantic-error,
+
+  // Floating label
+  "floating-label-horizontal-padding": 0.4rem,
+  "floating-label-vertical-padding": 0.2rem,
+  "floating-label-border-radius": $radius-s,
+
+  // Animation
+  "transition-duration": 0.2s,
+  "transition-timing": ease,
+
+  // Typography
+  "input-text-style": (
+      map: map-deep-get($roboto-map, regular),
+      weight: normal,
+      overrides: (
+        color: $text-neutral-primary
+      )
+    ),
+  "label-text-style": (
+    map: map-deep-get($roboto-map, regular),
+    weight: normal,
+    overrides: (
+      color: $text-neutral-secondary
+    )
+  ),
+  "label-floating-text-style": (
+    map: map-deep-get($hahmlet-map, body, caption),
+    weight: caption,
+    overrides: (
+      color: $text-neutral-primary
+    )
+  ),
+  "error-text-style": (
+    map: map-deep-get($hahmlet-map, body, caption),
+    weight: caption,
+    overrides: (
+      color: $text-semantic-error
+    )
+  ),
+  "helper-text-style": (
+    map: map-deep-get($hahmlet-map, body, caption),
+    weight: caption,
+    overrides: (
+      color: $text-neutral-tertiary
+    )
+  ),
+  "counter-text-style": (
+    map: map-deep-get($hahmlet-map, body, caption),
+    weight: caption,
+    overrides: (
+      color: $text-neutral-tertiary
+    )
+  ),
+  "select-option-text-style": (
+    map: map-deep-get($roboto-map, regular),
+    weight: normal,
+    overrides: (
+      color: $text-neutral-primary
+    )
+  ),
+  "select-option-placeholder-text-style": (
+    map: map-deep-get($roboto-map, regular),
+    weight: normal,
+    overrides: (
+      color: $text-neutral-secondary
+    )
+  ),
+
+  // Textarea
+  "textarea-min-height": 5lh,
+  "textarea-padding-vertical": 1.2rem,
+
+  // Responsive
+  "responsive": true,
+  "responsive-scale-factor": 0.9
+);
+
+@function config($key) {
+  @return map.get($input-field-config, $key);
+}
+
+@function component-class() {
+  @return config("component-class");
+}
+@mixin input-field-base() {
+  $selector: "." + component-class();
+
+  #{$selector} {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.8rem;
+    position: relative;
+
+    // ============================================
+    // BODY
+    // ============================================
+
+    &__body {
+      position: relative;
+      display: flex;
+      align-items: center;
+      width: 100%;
+      gap: config("gap-typing-area");
+      background-color: config("background-neutral-primary");
+      border: config("border-width") solid config("border-neutral-primary");
+      border-radius: config("border-radius");
+      @include transition();
+
+      &:hover {
+        background-color: config("background-neutral-secondary");
+        border-color: config("border-neutral-secondary");
+      }
+
+      &:focus-within {
+        border-color: config("border-brand-primary");
+        box-shadow: config("shadow");
+        .input-field__icon-right svg {
+          transform: rotate(180deg);
+        }
+      }
+
+      // Hide placeholder when label exists
+      &:has(.input-field__label) {
+        .text.placeholder {
+          display: none;
+        }
+      }
+
+      // Rotate right icon when body is open
+      &.open {
+        .input-field__icon-right svg {
+          transform: rotate(180deg);
+        }
+      }
+      &.open:has(.input-field__icon-left) {
+        .input-field__custom-select ~ .input-field__label {
+          left: 1.6rem;
+        }
+      }
+      // Left icon positioning
+      &:has(.input-field__icon-left) {
+        .input-field__input,
+        .input-field__textarea,
+        .input-field__select,
+        .input-field__custom-select {
+          padding-left: calc(
+            #{config("padding-horizontal")} + #{config("icon-size")} + #{config("gap-typing-area")}
+          );
+        }
+        .input-field__label {
+          left: calc(
+            #{config("padding-horizontal")} + #{config("icon-size")} + #{config("gap-typing-area")}
+          );
+        }
+        .input-field__input:focus ~ .input-field__label,
+        .input-field__input:not(:placeholder-shown) ~ .input-field__label,
+        .input-field__textarea:focus ~ .input-field__label,
+        .input-field__textarea:not(:placeholder-shown) ~ .input-field__label,
+        .input-field__select:focus ~ .input-field__label,
+        .input-field__select:valid ~ .input-field__label,
+        .input-field__custom-select.has-value ~ .input-field__label {
+          left: config("padding-horizontal");
+        }
+        .input-field__icon-left {
+          position: absolute;
+          pointer-events: none;
+          top: 50%;
+          transform: translateY(-50%);
+          left: config("padding-horizontal");
+        }
+      }
+
+      // Right icon positioning
+      &:has(.input-field__icon-right) {
+        .input-field__right-container {
+          position: absolute;
+          pointer-events: none;
+          top: 50%;
+          transform: translateY(-50%);
+          right: 0;
+        }
+      }
+    }
+
+    // ============================================
+    // INPUT CONTAINER
+    // ============================================
+
+    &__input-container {
+      position: relative;
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      align-items: flex-start;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    // ============================================
+    // ICONS
+    // ============================================
+
+    &__icon-left,
+    &__icon-right,
+    &__clear,
+    &__password-toggle {
+      @include icon-with-badge(
+        $with-badge: false,
+        $icon-size: config("icon-size"),
+        $padding: 0,
+        $align-self: false
+      );
+      svg {
+        @include transition();
+      }
+    }
+
+    // ============================================
+    // RIGHT CONTAINER & COUNTER
+    // ============================================
+
+    &__right-container {
+      display: flex;
+      align-items: center;
+      padding-right: config("padding-horizontal");
+      gap: config("gap-typing-area");
+      flex-shrink: 0;
+    }
+
+    &__counter {
+      @include apply-text-style(config("counter-text-style"));
+      white-space: nowrap;
+    }
+
+    // ============================================
+    // FOOTER
+    // ============================================
+
+    &__footer {
+      width: 100%;
+      display: none;
+    }
+
+    &__helper {
+      @include apply-text-style(config("helper-text-style"));
+      flex: 1;
+    }
+
+    &__error {
+      @include apply-text-style(config("error-text-style"));
+      display: none;
+      flex: 1;
+    }
+
+    &__footer-counter {
+      @include apply-text-style(config("error-text-style"));
+    }
+
+    // ============================================
+    // MODIFIERS
+    // ============================================
+
+    &.is-required {
+      .input-field__label::after {
+        content: "*";
+        color: config("text-semantic-error");
+        margin-left: 0.4rem;
+      }
+    }
+
+    &.is-error {
+      .input-field__body {
+        border-color: config("border-semantic-error");
+        &:focus-within {
+          box-shadow: config("shadow");
+        }
+      }
+      .input-field__label {
+        color: config("text-semantic-error");
+      }
+      .input-field__footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 config("padding-horizontal");
+        .input-field__error {
+          display: block;
+        }
+        .input-field__helper {
+          display: none;
+        }
+      }
+
+      .input-field__icon-left svg,
+      .input-field__icon-right svg {
+        fill: config("icon-semantic-error");
+      }
+      .input-field__counter,
+      .input-field__footer-counter {
+        color: config("text-semantic-error");
+      }
+    }
+
+    &.is-disabled {
+      .input-field__body {
+        background-color: config("background-neutral-disabled");
+        border-color: config("border-neutral-disabled");
+        cursor: not-allowed;
+        &:hover {
+          background-color: config("background-neutral-disabled");
+          border-color: config("border-neutral-disabled");
+        }
+      }
+      .input-field__input,
+      .input-field__textarea,
+      .input-field__select,
+      .input-field__custom-select {
+        color: config("text-neutral-disabled");
+        cursor: not-allowed;
+      }
+      .input-field__label {
+        color: config("text-neutral-disabled");
+      }
+      .input-field__icon-left svg,
+      .input-field__icon-right svg {
+        fill: config("icon-neutral-disabled");
+      }
+      .input-field__counter,
+      .input-field__footer-counter {
+        color: config("text-neutral-disabled");
+      }
+    }
+  }
+}
+
+@mixin input-type() {
+  $selector: "." + component-class();
+
+  #{$selector} {
+    &__input {
+      width: 100%;
+      height: config("input-height");
+      padding: config("padding-vertical") config("padding-horizontal");
+      background-color: transparent;
+      border: none;
+      outline: none;
+      @include apply-text-style(config("input-text-style"));
+
+      &::placeholder {
+        color: transparent;
+      }
+
+      &:disabled {
+        cursor: not-allowed;
+      }
+    }
+  }
+}
+@mixin floating-label() {
+  $selector: "." + component-class();
+  // Default label position
+  #{$selector}__label {
+    position: absolute;
+    top: 50%;
+    left: config("padding-horizontal");
+    transform: translateY(-50%);
+    pointer-events: none;
+    background-color: transparent;
+    padding: 0;
+    white-space: nowrap;
+    z-index: 1;
+    @include transition();
+
+    @include apply-text-style(config("label-text-style"));
+
+    // When body has focus
+    .input-field__body:focus-within & {
+      color: config("text-neutral-primary");
+    }
+  }
+
+  // Floating state (when input/textarea/select/custom-select has value or is focused)
+  .input-field__input:focus ~ .input-field__label,
+  .input-field__input:not(:placeholder-shown) ~ .input-field__label,
+  .input-field__textarea:focus ~ .input-field__label,
+  .input-field__textarea:not(:placeholder-shown) ~ .input-field__label,
+  .input-field__select:focus ~ .input-field__label,
+  .input-field__select:valid ~ .input-field__label,
+  .input-field__body.open .input-field__label,
+  .input-field__custom-select.has-value ~ .input-field__label {
+    top: -1rem;
+    transform: translateY(0);
+    @include apply-text-style(config("label-floating-text-style"));
+    background-color: config("background-neutral-primary");
+    padding: config("floating-label-vertical-padding") config("floating-label-horizontal-padding");
+    border-radius: config("floating-label-border-radius");
+  }
+}
+// ============================================
+// TEXTAREA TYPE MIXIN
+// ============================================
+
+@mixin textarea-type() {
+  $selector: "." + component-class();
+  #{$selector} {
+    &__textarea {
+      width: 100%;
+      min-height: config("textarea-min-height");
+      padding: config("textarea-padding-vertical") config("padding-horizontal");
+      background-color: transparent;
+      border: none;
+      outline: none;
+      resize: vertical;
+      font-family: inherit;
+      @include apply-text-style(config("input-text-style"));
+
+      &::placeholder {
+        color: transparent;
+      }
+
+      &:disabled {
+        cursor: not-allowed;
+      }
+    }
+  }
+}
+// ============================================
+// SELECT TYPE MIXIN
+// ============================================
+
+@mixin select-type() {
+  $selector: "." + component-class();
+  #{$selector} {
+    &__select {
+      width: 100%;
+      height: config("input-height");
+      padding: config("padding-vertical") config("padding-horizontal");
+      background-color: transparent;
+      border: none;
+      outline: none;
+      cursor: pointer;
+      appearance: none;
+      @include apply-text-style(config("input-text-style"));
+
+      &::placeholder {
+        color: transparent;
+      }
+
+      &:invalid {
+        color: config("text-neutral-tertiary");
+      }
+
+      &:valid {
+        color: config("text-neutral-primary");
+      }
+
+      option {
+        color: config("text-neutral-primary");
+      }
+
+      option[value=""] {
+        color: config("text-neutral-tertiary");
+      }
+
+      &:disabled {
+        cursor: not-allowed;
+        color: config("text-neutral-disabled");
+      }
+    }
+  }
+}
+
+// ============================================
+// CUSTOM SELECT TYPE MIXIN
+// ============================================
+
+@mixin custom-select-type() {
+  $selector: "." + component-class();
+  #{$selector} {
+    // Custom select button - needs same dimensions as input
+    &__custom-select {
+      width: 100%;
+      height: config("input-height");
+      padding: config("padding-vertical") config("padding-horizontal");
+      background-color: transparent;
+      border: none;
+      outline: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      @include apply-text-style(config("input-text-style"));
+
+      .text {
+        flex: 1;
+        text-align: left;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+
+        &.placeholder {
+          color: config("text-neutral-tertiary");
+        }
+      }
+
+      &.has-value {
+        .text {
+          color: config("text-neutral-primary");
+        }
+      }
+
+      &:disabled {
+        cursor: not-allowed;
+        color: config("text-neutral-disabled");
+      }
+    }
+
+    // Dropdown container
+    &__dropdown {
+      position: absolute;
+      top: calc(100% + 0.4rem);
+      left: 0;
+      right: 0;
+      z-index: 100;
+      display: none;
+      background-color: config("background-neutral-primary");
+      border: config("border-width") solid config("border-neutral-primary");
+      border-radius: config("border-radius");
+      box-shadow: $shadow-m;
+      overflow: hidden;
+
+      &.is-open {
+        display: block;
+      }
+
+      // Search group inside dropdown
+      .search-group {
+        position: relative;
+        padding: 1.2rem config("padding-horizontal");
+        border-bottom: config("border-width") solid config("border-neutral-primary");
+        box-shadow: config("shadow");
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+
+        &__icon-container {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+
+          svg {
+            width: config("icon-size");
+            height: config("icon-size");
+            fill: config("icon-neutral-tertiary");
+          }
+        }
+
+        &__input-search {
+          width: 100%;
+          height: 3.6rem;
+          border: none;
+          outline: none;
+          background-color: transparent;
+          @include apply-text-style(config("input-text-style"));
+
+          &::placeholder {
+            color: config("text-neutral-tertiary");
+          }
+        }
+      }
+
+      // Options list
+      .option-list {
+        max-height: 25rem;
+        overflow-y: auto;
+        margin: 0;
+        padding: 0.8rem 0;
+        list-style: none;
+
+        &__item {
+          padding: 1rem config("padding-horizontal");
+          cursor: pointer;
+          @include apply-text-style(config("select-option-text-style"));
+          transition: background-color config("transition-duration") config("transition-timing");
+
+          &:hover {
+            background-color: config("background-neutral-secondary");
+          }
+
+          &.selected {
+            background-color: config("background-brand-tertiary");
+          }
+        }
+
+        // Scrollbar styling
+        &::-webkit-scrollbar {
+          width: 0.6rem;
+        }
+
+        &::-webkit-scrollbar-track {
+          background-color: config("background-neutral-secondary");
+          border-radius: $radius-full;
+        }
+
+        &::-webkit-scrollbar-thumb {
+          background-color: config("border-neutral-secondary");
+          border-radius: $radius-full;
+
+          &:hover {
+            background-color: config("border-neutral-primary");
+          }
+        }
+      }
+    }
+  }
+}
+// ============================================
+// RADIO TYPE MIXIN
+// ============================================
+
+@mixin radio-type() {
+  $selector: "." + component-class();
+
+  #{$selector} {
+    // Radio fieldset
+    &__fieldset {
+      border: none;
+      padding: 0;
+      margin: 0;
+      width: 100%;
+    }
+
+    // Radio legend
+    &__legend {
+      @include apply-text-style(config("label-text-style"));
+      margin-bottom: 1.2rem;
+      padding: 0;
+    }
+
+    // Radio options container
+    &__radio-options {
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+
+      // Horizontal layout
+      &.horizontal {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 2.4rem;
+      }
+    }
+
+    // Radio item
+    &__radio {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.8rem;
+      cursor: pointer;
+      position: relative;
+    }
+
+    // Radio input (hidden)
+    &__radio-input {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+      margin: 0;
+      padding: 0;
+    }
+
+    // Custom radio circle
+    &__radio-custom {
+      width: 1.25em;
+      height: 1.25em;
+      border: 0.2rem solid config("border-neutral-secondary");
+      border-radius: 50%;
+      @include flex-center;
+      position: relative;
+      flex-shrink: 0;
+      background-color: config("background-neutral-primary");
+      @include transition(all, config("transition-duration"), config("transition-timing"));
+      // Inner dot
+      &::after {
+        content: "";
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0);
+        width: 70%;
+        height: 70%;
+        background-color: $background-brand-primary;
+        border-radius: 50%;
+        @include transition(all, config("transition-duration"), config("transition-timing"));
+      }
+
+      // Hover state
+      #{$selector}__radio:hover & {
+        border-color: config("border-brand-primary");
+      }
+
+      // Checked state
+      #{$selector}__radio-input:checked + & {
+        border-color: config("border-brand-primary");
+
+        &::after {
+          transform: scale(1);
+        }
+      }
+
+      // Focus state
+      #{$selector}__radio-input:focus + & {
+        border-color: config("border-brand-primary");
+        box-shadow: 0 0 0 0.2rem rgba(config("border-brand-primary"), 0.2);
+      }
+
+      // Error state
+      #{$selector}.is-error & {
+        border-color: config("border-semantic-error");
+
+        &::after {
+          background-color: config("border-semantic-error");
+        }
+      }
+
+      // Disabled state
+      #{$selector}.is-disabled & {
+        border-color: config("border-neutral-disabled");
+        background-color: config("background-neutral-disabled");
+        cursor: not-allowed;
+
+        &::after {
+          background-color: config("border-neutral-disabled");
+        }
+      }
+    }
+
+    // Radio label
+    &__radio-label {
+      @include apply-text-style(config("input-text-style"));
+      cursor: pointer;
+
+      // Disabled state
+      #{$selector}.is-disabled & {
+        color: config("text-neutral-disabled");
+        cursor: not-allowed;
+      }
+
+      // Error state
+      #{$selector}.is-error & {
+        color: config("text-semantic-error");
+      }
+    }
+  }
+}
+
+// ============================================
+// CHECKBOX TYPE MIXIN
+// ============================================
+
+@mixin checkbox-type() {
+  $selector: "." + component-class();
+
+  #{$selector} {
+    // Checkbox fieldset
+    &__fieldset {
+      border: none;
+      padding: 0;
+      margin: 0;
+      width: 100%;
+    }
+
+    // Checkbox legend
+    &__legend {
+      @include apply-text-style(config("label-text-style"));
+      margin-bottom: 1.2rem;
+      padding: 0;
+    }
+
+    // Checkbox options container
+    &__checkbox-options {
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+
+      // Horizontal layout
+      &.horizontal {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 2.4rem;
+      }
+    }
+
+    // Checkbox item
+    &__checkbox {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.8rem;
+      cursor: pointer;
+      position: relative;
+    }
+
+    // Checkbox input (hidden)
+    &__checkbox-input {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+      margin: 0;
+      padding: 0;
+    }
+
+    // Custom checkbox square
+    &__checkbox-custom {
+      width: 2rem;
+      height: 2rem;
+      border: 0.2rem solid config("border-neutral-secondary");
+      border-radius: $radius-xs;
+      @include flex-center;
+      position: relative;
+      flex-shrink: 0;
+      background-color: config("background-neutral-primary");
+      @include transition(all, config("transition-duration"), config("transition-timing"));
+
+      // Checkmark
+      &::after {
+        content: "";
+        width: 0.4rem;
+        height: 0.8rem;
+        border: solid $background-neutral-primary;
+        border-width: 0 0.2rem 0.2rem 0;
+        transform: rotate(45deg) scale(0);
+        @include transition(all, config("transition-duration"), config("transition-timing"));
+      }
+
+      // Hover state
+      #{$selector}__checkbox:hover & {
+        border-color: config("border-brand-primary");
+      }
+
+      // Checked state
+      #{$selector}__checkbox-input:checked + & {
+        background-color: config("border-brand-primary");
+        border-color: config("border-brand-primary");
+
+        &::after {
+          transform: rotate(45deg) scale(1);
+        }
+      }
+
+      // Focus state
+      #{$selector}__checkbox-input:focus + & {
+        border-color: config("border-brand-primary");
+        box-shadow: 0 0 0 0.2rem rgba(config("border-brand-primary"), 0.2);
+      }
+
+      // Error state
+      #{$selector}.is-error & {
+        border-color: config("border-semantic-error");
+
+        #{$selector}__checkbox-input:checked + & {
+          background-color: config("border-semantic-error");
+          border-color: config("border-semantic-error");
+        }
+      }
+
+      // Disabled state
+      #{$selector}.is-disabled & {
+        border-color: config("border-neutral-disabled");
+        background-color: config("background-neutral-disabled");
+        cursor: not-allowed;
+
+        &::after {
+          border-color: config("text-neutral-disabled");
+        }
+
+        #{$selector}__checkbox-input:checked + & {
+          background-color: config("border-neutral-disabled");
+        }
+      }
+    }
+
+    // Checkbox label
+    &__checkbox-label {
+      @include apply-text-style(config("input-text-style"));
+      cursor: pointer;
+
+      // Disabled state
+      #{$selector}.is-disabled & {
+        color: config("text-neutral-disabled");
+        cursor: not-allowed;
+      }
+
+      // Error state
+      #{$selector}.is-error & {
+        color: config("text-semantic-error");
+      }
+    }
+  }
+}
+
+// ============================================
+// TOGGLE TYPE MIXIN
+// ============================================
+
+@mixin toggle-type() {
+  $selector: "." + component-class();
+
+  #{$selector} {
+    // Toggle container
+    &__toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 1.2rem;
+      cursor: pointer;
+      position: relative;
+
+      // Label on the left modifier
+      &--label-left {
+        flex-direction: row-reverse;
+      }
+    }
+
+    // Toggle input (hidden)
+    &__toggle-input {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+      margin: 0;
+      padding: 0;
+    }
+
+    // Toggle slider (the track)
+    &__toggle-slider {
+      position: relative;
+      display: inline-block;
+      width: 4.4rem;
+      height: 2.4rem;
+      background-color: config("background-neutral-disabled");
+      border-radius: $radius-full;
+      transition: all config("transition-duration") config("transition-timing");
+      flex-shrink: 0;
+
+      // Knob (the circle that moves)
+      &::before {
+        content: "";
+        position: absolute;
+        top: 0.2rem;
+        left: 0.2rem;
+        width: 2rem;
+        height: 2rem;
+        background-color: config("background-neutral-primary");
+        border-radius: 50%;
+        transition: transform config("transition-duration") config("transition-timing");
+        box-shadow: config("shadow");
+      }
+
+      // Hover state
+      #{$selector}__toggle:hover & {
+        background-color: config("border-neutral-secondary");
+      }
+
+      // Checked state
+      #{$selector}__toggle-input:checked + & {
+        background-color: config("border-brand-primary");
+
+        &::before {
+          transform: translateX(2rem);
+        }
+      }
+
+      // Focus state
+      #{$selector}__toggle-input:focus + & {
+        box-shadow: 0 0 0 0.2rem rgba(config("border-brand-primary"), 0.2);
+      }
+
+      // Error state
+      #{$selector}.is-error & {
+        border: config("border-width") solid config("border-semantic-error");
+
+        #{$selector}__toggle-input:checked + & {
+          background-color: config("border-semantic-error");
+        }
+      }
+
+      // Disabled state
+      #{$selector}.is-disabled & {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+
+    // Toggle label
+    &__toggle-label {
+      @include apply-text-style(config("input-text-style"));
+      cursor: pointer;
+      user-select: none;
+
+      // Required asterisk
+      #{$selector}.is-required & {
+        &::after {
+          content: "*";
+          color: config("text-semantic-error");
+          margin-left: 0.4rem;
+        }
+      }
+
+      // Error state
+      #{$selector}.is-error & {
+        color: config("text-semantic-error");
+      }
+
+      // Disabled state
+      #{$selector}.is-disabled & {
+        color: config("text-neutral-disabled");
+        cursor: not-allowed;
+      }
+    }
+  }
+}
+// ============================================
+// PUBLIC MIXIN
+// ============================================
+
+@mixin input-field($types: (), $config-overrides: ()) {
+  // Merge overrides with default config
+  $merged-config: map.merge($input-field-config, $config-overrides);
+
+  // Determine which types to include
+  $has-input: index($types, input) != null or length($types) == 0;
+  $has-textarea: index($types, textarea) != null;
+  $has-select: index($types, select) != null;
+  $has-custom-select: index($types, custom-select) != null;
+  $has-radio: index($types, radio) != null;
+  $has-checkbox: index($types, checkbox) != null;
+  $has-toggle: index($types, toggle) != null;
+
+  // Base styles (needed for input, textarea, select, custom-select)
+  @include input-field-base();
+  @include input-type();
+  @include floating-label();
+
+  @if $has-textarea {
+    @include textarea-type();
+  }
+  @if $has-select {
+    @include select-type();
+  }
+  @if $has-custom-select {
+    @include custom-select-type();
+  }
+  @if $has-radio {
+    @include radio-type();
+  }
+  @if $has-checkbox {
+    @include checkbox-type();
+  }
+
+  @if $has-toggle {
+    @include toggle-type();
+  }
+}

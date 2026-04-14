@@ -29,7 +29,7 @@ class HtmlTagElement extends AbstractHtmlComponent
      *
      * @return HtmlTagElement
      */
-    public function content(?string $content): self
+    public function content(null|string|int $content, bool $contentUp = true): self
     {
         $this->content = $content;
         return $this;
@@ -90,10 +90,13 @@ class HtmlTagElement extends AbstractHtmlComponent
         return $this;
     }
 
-    public function aria(string $name, string ...$props): self
+    public function aria(string ...$props): self
     {
         $aria = [];
-        foreach ($props as $prop) {
+        if (ArrayUtils::isKeyValueList($props)) {
+            $props = ArrayUtils::fromSequentialToAssoc($props);
+        }
+        foreach ($props as $name => $prop) {
             $aria['aria-' . $name] = $prop;
         }
         $this->aria = array_merge($this->aria, $aria);

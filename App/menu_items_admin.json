@@ -30,17 +30,27 @@
     "link": "",
     "dropdown-items": {
       "Product List": "/admin/product-list",
-      "Add Product": "/admin/product-add",
-      "Edit Product": "/admin/product-edit",
-      "Show Product": "/admin/product-show"
+      "Add Product": "/admin/product-add"
     }
   },
-  "Todo List": {
+  "Pages": {
     "type": "dropdown",
-    "icon-left": "icon-checklist",
-    "icon-right": "icon-arrow-down",
+    "icon-left": {
+      "name": "icon-checklist",
+      "aria": "Page Icon",
+      "class": ["page-icon"]
+    },
+    "icon-right": {
+      "name": "icon-arrow-down",
+      "aria": "DropDown Items",
+      "class": ["arrow-down", "rotated"]
+    },
     "link": "",
-    "dropdown-items": {}
+    "dropdown-items": {
+      "Category": "/category-page/add",
+      "Hero": "/hero-page/add",
+      "Small Banner": "/small-banner-page/add"
+    }
   },
   "Calendar": {
     "link": "/admin/calendar",

@@ -18,12 +18,17 @@ abstract class SqlComponent
     protected ?string $method = null;
     protected ?string $joinContext = null;
     protected ?string $logicalLink = null;
+    protected ?string $entryMethod = null;
+    protected array $queryMap = [];
+    protected float $buildTimeMs = 0;
 
-    public function __construct()
+    public function __construct(protected null|SqlStatement $sqlStatement = null, protected null|EntityManagerInterface $em = null)
     {
         $this->state = new QueryState();
         $this->children = new Collection();
     }
+
+    abstract public function build(): string;
 
     public function add(SqlComponent $query): void
     {
@@ -33,6 +38,11 @@ abstract class SqlComponent
     public function remove(SqlComponent $query): void
     {
         // Base implementation
+    }
+
+    public function getContext(): null|StatementType
+    {
+        return null;
     }
 
     public function getPrefix(): string
@@ -50,12 +60,18 @@ abstract class SqlComponent
         return false;
     }
 
-    abstract public function build(): string;
-
     public function resetState(): self
     {
         $this->state = new QueryState();
         $this->query = '';
+        $this->distinct = false;
+        $this->logicalLink = null;
+        $this->joinContext = null;
+        $this->method = null;
+        if (isset($this->children)) {
+            $this->children->clear();
+        }
+        $this->helper->reset();
         return $this;
     }
 
@@ -74,9 +90,12 @@ abstract class SqlComponent
         return $this->state->parameters;
     }
 
-    public function getBindArr(): array
+    /**
+     * @return null|SqlStatement
+     */
+    public function getStatement(): ?SqlStatement
     {
-        return $this->state->bindArr;
+        return $this->sqlStatement;
     }
 
     public function getAliasCheck(): array
@@ -97,14 +116,6 @@ abstract class SqlComponent
     public function getState(): QueryState
     {
         return $this->state;
-    }
-
-    /**
-     * @return null|SqlStatementType
-     */
-    public function getSqlStatementType(): ?SqlStatementType
-    {
-        return null;
     }
 
     /**
@@ -139,16 +150,71 @@ abstract class SqlComponent
         return null;
     }
 
-    protected function prepareChild(SqlComponent $child): void
+    /**
+     * @param null|EntityManagerInterface $em
+     *
+     * @return SqlQuery
+     */
+    public function setEntityManager(?EntityManagerInterface $em): SqlQuery
+    {
+        $this->em = $em;
+
+        return $this;
+    }
+
+    public function prepareChild(SqlComponent $child): void
     {
         if ($this->helper && method_exists($child, 'initializeWithDependencies')) {
             $child->initializeWithDependencies($this->helper, $this->state);
         }
     }
 
-    protected function mergeChildState(SqlComponent $child): void
+    public function mergeChildState(SqlComponent $child): void
     {
         $this->state = $this->state->merge($child->getState());
+    }
+
+    public function setQueryMap(array $queryMap): self
+    {
+        $this->queryMap = $queryMap;
+
+        return $this;
+    }
+
+    /**
+     * @return array
+     */
+    public function getQueryMap(): array
+    {
+        return $this->queryMap;
+    }
+
+    public function debugSql(): SqlDebugInfo
+    {
+        $start = microtime(true);
+        $sql = $this->query;
+
+        // Check for precedence safely
+        $hasPrecedenceIssues = false;
+        foreach ($this->children->all() as $child) {
+            if ($child instanceof LogicalContainerInterface && $child->hasOrOperators()) {
+                $hasPrecedenceIssues = true;
+                break;
+            }
+        }
+
+        $duration = $this->buildTimeMs;
+
+        return new SqlDebugInfo(
+            rawSql: $sql,
+            interpolatedSql: $this->formatSql($sql),
+            parameters: $this->getParameters(),
+            executionTimeMs: $duration,
+            metadata: [
+                'type' => (new ReflectionClass($this))->getShortName(),
+                'precedence_logic_detected' => $hasPrecedenceIssues,
+            ],
+        );
     }
 
     protected function addParameters(): void
@@ -164,5 +230,30 @@ abstract class SqlComponent
             }
         }
         return $aliasArr;
+    }
+
+    private function wouldCreateCircularReference(SqlComponent $component): bool
+    {
+        // Check if adding this component would create a circular reference
+        $current = $this;
+        while ($current !== null) {
+            if ($current === $component) {
+                return true;
+            }
+            $current = $current->getParent();
+        }
+        return false;
+    }
+
+    /**
+     * Basic SQL Pretty-Printer for the debug output.
+     */
+    private function formatSql(string $sql): string
+    {
+        $keywords = ['SELECT', 'FROM', 'WHERE', 'AND', 'OR', 'GROUP BY', 'ORDER BY', 'LIMIT', 'JOIN', 'LEFT JOIN'];
+        foreach ($keywords as $keyword) {
+            $sql = str_replace(" $keyword ", "\n$keyword ", $sql);
+        }
+        return $sql;
     }
 }

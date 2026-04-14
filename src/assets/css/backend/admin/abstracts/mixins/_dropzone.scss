@@ -1,0 +1,1002 @@
+@use "sass:map";
+@use "css/backend/admin/abstracts/variables" as *;
+@use "css/backend/admin/abstracts/functions" as *;
+@use "text-style" as *;
+@use "icon_with_badge" as *;
+@use "responsive" as *;
+
+// ============================================
+// COMPLETE DEFAULTS - All properties in one place
+// ============================================
+$dropzone-defaults: (
+  // Dimensions
+  "height": 18rem,
+  "width": 100%,
+  "padding": 2.4rem 1.6rem,
+  "preview-container-padding": 1.6rem 1.6rem 0,
+  "preview-content-padding": 0 1.6rem 1.6rem,
+  // Colors
+  "background": $background-neutral-primary,
+  "border-color": $border-neutral-primary,
+  "border-color-hover": $border-brand-primary,
+  "border-color-drag": $border-brand-primary,
+  "border-width": $stroke-m,
+  "border-style": dashed,
+
+  // Text styles
+  "main-text-style": (
+      map: map-deep-get($hahmlet-map, body, caption),
+      weight: caption,
+      overrides: (
+        color: $text-neutral-primary
+      )
+    ),
+  "hint-text-style": (
+    map: map-deep-get($hahmlet-map, body, caption),
+    weight: caption,
+    overrides: (
+      color: $text-neutral-secondary
+    )
+  ),
+
+  // Icon
+  "icon-name": "upload",
+  "icon-size": 2.4rem,
+  "icon-color": $icon-neutral-primary,
+  "icon-container-bg": transparent,
+  "icon-border-radius": 0,
+  "show-icon": true,
+
+  // Spacing
+  "gap-icon-text": 1.6rem,
+  "gap-text": 0.4rem,
+
+  // Effects
+  "border-radius": $radius-s,
+  "shadow": $shadow-m,
+  "shadow-hover": $shadow-l,
+  "shadow-drag": $shadow-l,
+
+  // States
+  "hover-scale": 1.02,
+  "drag-scale": 1.02,
+  "transition-duration": 0.2s,
+  "transition-timing": ease,
+
+  // Text content
+  "main-text": "Drag & drop or click to upload",
+  "hint-text": "PNG, JPG, GIF • Max 5MB",
+
+  // Optional features
+  "optional": false,
+  "optional-text": "Optional",
+  "optional-badge-bg": $background-neutral-tertiary,
+  "optional-badge-color": $text-neutral-tertiary,
+  "optional-badge-radius": $radius-xs,
+  "optional-badge-padding": 0.2rem 0.8rem,
+
+  // Preview settings
+  "preview-height": 14rem,
+  "preview-bg": $background-neutral-tertiary,
+  "preview-border-radius": $radius-xs,
+  "preview-object-fit": contain,
+  "preview-max-width": 100%,
+
+  // Multiple preview specific
+  "preview-grid-gap": 1rem,
+  "preview-item-min-width": 100px,
+  "preview-item-max-width": 150px,
+
+  // Progress indicator
+  "progress-height": 0.4rem,
+  "progress-bg": $background-neutral-tertiary,
+  "progress-fill": $border-brand-primary,
+  "progress-radius": $radius-full,
+
+  // Error state
+  "error-border-color": $border-semantic-error,
+  "error-text-color": $text-semantic-error,
+  "error-bg": $background-neutral-primary,
+  "error-shadow": $shadow-s
+);
+
+// ============================================
+// SINGLE MODE MIXIN
+// ============================================
+@mixin dropzone-single($base-class: "upload-single", $user-options: ()) {
+  // Start with defaults, then merge user options
+  $config: map.merge($dropzone-defaults, $user-options);
+
+  // Extract all values from config
+  $height: map.get($config, "height");
+  $width: map.get($config, "width");
+  $padding: map.get($config, "padding");
+
+  $preview-container-padding: map.get($config, "preview-container-padding");
+  $preview-content-padding: map.get($config, "preview-content-padding");
+
+  $background: map.get($config, "background");
+  $border-color: map.get($config, "border-color");
+  $border-color-hover: map.get($config, "border-color-hover");
+  $border-color-drag: map.get($config, "border-color-drag");
+  $border-style: map.get($config, "border-style");
+  $border-width: map.get($config, "border-width");
+
+  $main-text-style: map.get($config, "main-text-style");
+  $hint-text-style: map.get($config, "hint-text-style");
+
+  $icon-size: map.get($config, "icon-size");
+  $icon-color: map.get($config, "icon-color");
+  $icon-container-bg: map.get($config, "icon-container-bg");
+  $icon-border-radius: map.get($config, "icon-border-radius");
+  $show-icon: map.get($config, "show-icon");
+
+  $gap-icon-text: map.get($config, "gap-icon-text");
+  $gap-text: map.get($config, "gap-text");
+
+  $border-radius: map.get($config, "border-radius");
+  $shadow: map.get($config, "shadow");
+  $shadow-hover: map.get($config, "shadow-hover");
+  $shadow-drag: map.get($config, "shadow-drag");
+
+  $hover-scale: map.get($config, "hover-scale");
+  $drag-scale: map.get($config, "drag-scale");
+  $transition-duration: map.get($config, "transition-duration");
+  $transition-timing: map.get($config, "transition-timing");
+
+  $optional: map.get($config, "optional");
+  $optional-text: map.get($config, "optional-text");
+  $optional-badge-bg: map.get($config, "optional-badge-bg");
+  $optional-badge-color: map.get($config, "optional-badge-color");
+  $optional-badge-radius: map.get($config, "optional-badge-radius");
+  $optional-badge-padding: map.get($config, "optional-badge-padding");
+
+  $preview-height: map.get($config, "preview-height");
+  $preview-bg: map.get($config, "preview-bg");
+  $preview-border-radius: map.get($config, "preview-border-radius");
+  $preview-object-fit: map.get($config, "preview-object-fit");
+  $preview-max-width: map.get($config, "preview-max-width");
+
+  $progress-height: map.get($config, "progress-height");
+  $progress-bg: map.get($config, "progress-bg");
+  $progress-fill: map.get($config, "progress-fill");
+  $progress-radius: map.get($config, "progress-radius");
+
+  $error-border-color: map.get($config, "error-border-color");
+  $error-text-color: map.get($config, "error-text-color");
+  $error-bg: map.get($config, "error-bg");
+  $error-shadow: map.get($config, "error-shadow");
+
+  // Helper function to get horizontal padding
+  $horizontal-padding: if(length($padding) >= 2, nth($padding, 2), $padding);
+
+  // Single mode styles
+  .#{$base-class} {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: $gap-icon-text;
+    width: $width;
+    background-color: $background;
+    border: $border-width $border-style $border-color;
+    border-radius: $border-radius;
+    box-shadow: $shadow;
+    transition: all $transition-duration $transition-timing;
+    position: relative;
+    cursor: pointer;
+    overflow: hidden;
+    height: $height;
+
+    &:hover {
+      border-color: $border-color-hover;
+      box-shadow: $shadow-hover;
+      transform: scale($hover-scale);
+    }
+
+    &.is-dragging {
+      border-color: $border-color-drag;
+      background-color: rgba($border-color-drag, 0.05);
+      box-shadow: $shadow-drag;
+      transform: scale($drag-scale);
+    }
+
+    &.is-error {
+      border-color: $error-border-color;
+      background-color: $error-bg;
+      box-shadow: $error-shadow;
+
+      .#{$base-class}__hint-text {
+        color: $error-text-color;
+      }
+    }
+
+    &.is-disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    @if $optional {
+      &::after {
+        content: $optional-text;
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background-color: $optional-badge-bg;
+        color: $optional-badge-color;
+        padding: $optional-badge-padding;
+        border-radius: $optional-badge-radius;
+        font-size: 1.1rem;
+        font-weight: 600;
+        line-height: 1;
+        z-index: 2;
+      }
+    }
+
+    &__icon {
+      @include icon-with-badge(
+        $icon-size: $icon-size,
+        $icon-color: $icon-color,
+        $padding: 0,
+        $align-self: false,
+        $icon-container-bg: $icon-container-bg,
+        $border-color: false,
+        $border-radius: $icon-border-radius,
+        $with-badge: false,
+        $content-type: icon
+      );
+
+      @if not $show-icon {
+        display: none;
+      }
+    }
+
+    &__text {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: $gap-text;
+      text-align: center;
+      padding: 0 $horizontal-padding;
+    }
+
+    &__main-text {
+      @include apply-text-style($main-text-style);
+    }
+
+    &__hint-text {
+      @include apply-text-style($hint-text-style);
+    }
+
+    &__progress {
+      width: calc(100% - #{$horizontal-padding} * 2);
+      height: $progress-height;
+      background-color: $progress-bg;
+      border-radius: $progress-radius;
+      margin: 0 $horizontal-padding $gap-icon-text;
+      overflow: hidden;
+      display: none;
+
+      &-fill {
+        height: 100%;
+        background-color: $progress-fill;
+        border-radius: $progress-radius;
+        transition: width $transition-duration $transition-timing;
+        width: 0%;
+      }
+    }
+
+    &__preview-container {
+      width: 100%;
+      padding: $preview-container-padding;
+      background-color: $background;
+      display: none;
+    }
+
+    &__preview {
+      width: 100%;
+      height: $preview-height;
+      min-height: $preview-height;
+      max-height: $preview-height;
+      background-color: $preview-bg;
+      border-radius: $preview-border-radius;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      flex-shrink: 0;
+      cursor: pointer;
+      position: relative;
+
+      img {
+        max-width: $preview-max-width;
+        max-height: 100%;
+        width: auto;
+        height: auto;
+        object-fit: $preview-object-fit;
+        display: block;
+      }
+
+      &.loading {
+        img {
+          opacity: 0.5;
+          filter: blur(2px);
+        }
+      }
+
+      &:hover {
+        opacity: 0.9;
+      }
+    }
+
+    &__content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: $preview-content-padding;
+      width: 100%;
+      background-color: $background;
+      border-top: 1px solid rgba($border-color, 0.1);
+      flex-shrink: 0;
+      display: none;
+    }
+
+    &__info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+      min-width: 0;
+      flex: 1;
+    }
+
+    &__filename {
+      @include apply-text-style(
+        (map-deep-get($hahmlet-map, body, caption) caption),
+        (
+          color: $text-neutral-primary
+        )
+      );
+      word-break: break-word;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 100%;
+    }
+
+    &__filesize {
+      @include apply-text-style(
+        (map-deep-get($hahmlet-map, body, notes), notes),
+        (
+          color: $text-neutral-secondary
+        )
+      );
+    }
+
+    &__actions {
+      display: flex;
+      gap: 0.8rem;
+      flex-shrink: 0;
+
+      button {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0.4rem 0.8rem;
+        font-size: 1.2rem;
+        border-radius: $radius-xs;
+        transition: background-color 0.2s;
+        white-space: nowrap;
+
+        &:hover {
+          background-color: rgba($text-neutral-primary, 0.05);
+        }
+
+        &.remove {
+          color: $text-semantic-error;
+        }
+      }
+    }
+
+    input[type="file"] {
+      position: absolute;
+      width: 0;
+      height: 0;
+      opacity: 0;
+      z-index: -1;
+    }
+
+    &__loading-overlay {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      padding: 0.4rem 0.8rem;
+      border-radius: $radius-xs;
+      font-size: 1.2rem;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    // State modifiers
+    &--uploading {
+      .#{$base-class}__progress {
+        display: block;
+      }
+
+      .#{$base-class}__preview-container,
+      .#{$base-class}__content {
+        display: none;
+      }
+    }
+
+    &--preview {
+      height: auto;
+      min-height: $height;
+      padding: 0;
+      border-style: solid;
+
+      &:hover {
+        transform: none;
+        border-color: $border-color;
+      }
+
+      .#{$base-class}__preview-container {
+        display: block;
+      }
+
+      .#{$base-class}__content {
+        display: flex;
+      }
+
+      .#{$base-class}__icon,
+      .#{$base-class}__text,
+      .#{$base-class}__progress {
+        display: none;
+      }
+    }
+
+    @include respond-below("sm") {
+      padding: 1.6rem;
+
+      &--preview {
+        padding: 0;
+
+        .#{$base-class}__preview-container {
+          padding: 1.6rem;
+        }
+
+        .#{$base-class}__content {
+          padding: 1rem;
+        }
+      }
+    }
+  }
+}
+
+// ============================================
+// MULTIPLE MODE MIXIN
+// ============================================
+@mixin dropzone-multiple($base-class: "upload-multiple", $user-options: ()) {
+  // Start with defaults, then merge user options
+  $config: map.merge($dropzone-defaults, $user-options);
+
+  // Multiple mode specific overrides
+  $config: map.merge(
+    $config,
+    (
+      "hint-text": map.get($user-options, "hint-text") or "PNG, JPG, GIF • Max 5MB each"
+    )
+  );
+
+  // Extract all values from config
+  $height: map.get($config, "height");
+  $width: map.get($config, "width");
+  $padding: map.get($config, "padding");
+
+  $background: map.get($config, "background");
+  $border-color: map.get($config, "border-color");
+  $border-color-hover: map.get($config, "border-color-hover");
+  $border-color-drag: map.get($config, "border-color-drag");
+  $border-style: map.get($config, "border-style");
+  $border-width: map.get($config, "border-width");
+
+  $main-text-style: map.get($config, "main-text-style");
+  $hint-text-style: map.get($config, "hint-text-style");
+
+  $icon-size: map.get($config, "icon-size");
+  $icon-color: map.get($config, "icon-color");
+  $icon-container-bg: map.get($config, "icon-container-bg");
+  $icon-border-radius: map.get($config, "icon-border-radius");
+  $show-icon: map.get($config, "show-icon");
+
+  $gap-icon-text: map.get($config, "gap-icon-text");
+  $gap-text: map.get($config, "gap-text");
+
+  $border-radius: map.get($config, "border-radius");
+  $shadow: map.get($config, "shadow");
+  $shadow-hover: map.get($config, "shadow-hover");
+  $shadow-drag: map.get($config, "shadow-drag");
+
+  $hover-scale: map.get($config, "hover-scale");
+  $drag-scale: map.get($config, "drag-scale");
+  $transition-duration: map.get($config, "transition-duration");
+  $transition-timing: map.get($config, "transition-timing");
+
+  $optional: map.get($config, "optional");
+  $optional-text: map.get($config, "optional-text");
+  $optional-badge-bg: map.get($config, "optional-badge-bg");
+  $optional-badge-color: map.get($config, "optional-badge-color");
+  $optional-badge-radius: map.get($config, "optional-badge-radius");
+  $optional-badge-padding: map.get($config, "optional-badge-padding");
+
+  $preview-grid-gap: map.get($config, "preview-grid-gap");
+  $preview-item-min-width: map.get($config, "preview-item-min-width");
+  $preview-item-max-width: map.get($config, "preview-item-max-width");
+  $preview-border-radius: map.get($config, "preview-border-radius");
+  $preview-bg: map.get($config, "preview-bg");
+
+  $progress-height: map.get($config, "progress-height");
+  $progress-bg: map.get($config, "progress-bg");
+  $progress-fill: map.get($config, "progress-fill");
+  $progress-radius: map.get($config, "progress-radius");
+
+  $error-border-color: map.get($config, "error-border-color");
+  $error-text-color: map.get($config, "error-text-color");
+  $error-bg: map.get($config, "error-bg");
+  $error-shadow: map.get($config, "error-shadow");
+
+  // Helper function to get horizontal padding
+  $horizontal-padding: if(length($padding) >= 2, nth($padding, 2), $padding);
+
+  // Multiple mode styles
+  .#{$base-class} {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: $gap-icon-text;
+    width: $width;
+    background-color: $background;
+    border: $border-width $border-style $border-color;
+    border-radius: $border-radius;
+    box-shadow: $shadow;
+    transition: all $transition-duration $transition-timing;
+    position: relative;
+    cursor: pointer;
+    overflow: hidden;
+    height: $height;
+
+    &:hover {
+      border-color: $border-color-hover;
+      box-shadow: $shadow-hover;
+      transform: scale($hover-scale);
+    }
+
+    &.is-dragging {
+      border-color: $border-color-drag;
+      background-color: rgba($border-color-drag, 0.05);
+      box-shadow: $shadow-drag;
+      transform: scale($drag-scale);
+    }
+
+    &.is-error {
+      border-color: $error-border-color;
+      background-color: $error-bg;
+      box-shadow: $error-shadow;
+
+      .#{$base-class}__hint-text {
+        color: $error-text-color;
+      }
+    }
+
+    &.is-disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    @if $optional {
+      &::after {
+        content: $optional-text;
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background-color: $optional-badge-bg;
+        color: $optional-badge-color;
+        padding: $optional-badge-padding;
+        border-radius: $optional-badge-radius;
+        font-size: 1.1rem;
+        font-weight: 600;
+        line-height: 1;
+        z-index: 2;
+      }
+    }
+
+    &__icon {
+      @include icon-with-badge(
+        $icon-size: $icon-size,
+        $icon-color: $icon-color,
+        $padding: 0,
+        $align-self: false,
+        $icon-container-bg: $icon-container-bg,
+        $border-color: false,
+        $border-radius: $icon-border-radius,
+        $with-badge: false,
+        $content-type: icon
+      );
+
+      @if not $show-icon {
+        display: none;
+      }
+    }
+
+    &__text {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: $gap-text;
+      text-align: center;
+      padding: 0 $horizontal-padding;
+    }
+
+    &__main-text {
+      @include apply-text-style($main-text-style);
+    }
+
+    &__hint-text {
+      @include apply-text-style($hint-text-style);
+    }
+
+    &__progress {
+      width: calc(100% - #{$horizontal-padding} * 2);
+      height: $progress-height;
+      background-color: $progress-bg;
+      border-radius: $progress-radius;
+      margin: 0 $horizontal-padding $gap-icon-text;
+      overflow: hidden;
+      display: none;
+
+      &-fill {
+        height: 100%;
+        background-color: $progress-fill;
+        border-radius: $progress-radius;
+        transition: width $transition-duration $transition-timing;
+        width: 0%;
+      }
+    }
+
+    &__previews-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: $preview-grid-gap;
+      padding: $padding;
+      width: 100%;
+      display: none;
+    }
+
+    &__preview-item {
+      position: relative;
+      flex: 0 0 auto;
+      width: $preview-item-min-width;
+      max-width: $preview-item-max-width;
+      aspect-ratio: 1 / 1;
+      display: none;
+
+      .#{$base-class}__preview {
+        width: 100%;
+        height: 100%;
+        min-height: unset;
+        aspect-ratio: 1 / 1;
+        border-radius: $preview-border-radius;
+        background-color: $preview-bg;
+        overflow: hidden;
+        cursor: pointer;
+
+        img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          transition: opacity 0.2s;
+        }
+
+        &.loading {
+          position: relative;
+
+          img {
+            opacity: 0.5;
+            filter: blur(2px);
+          }
+        }
+
+        &.add-more {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background-color: rgba($border-color, 0.1);
+          border: 2px dashed $border-color;
+
+          svg {
+            width: 2.4rem;
+            height: 2.4rem;
+            fill: $icon-neutral-secondary;
+          }
+
+          &:hover {
+            background-color: rgba($border-color, 0.2);
+          }
+        }
+      }
+
+      &-actions {
+        position: absolute;
+        top: 0.4rem;
+        right: 0.4rem;
+        z-index: 2;
+        opacity: 0;
+        transition: opacity 0.2s;
+
+        button {
+          background: rgba(0, 0, 0, 0.6);
+          color: white;
+          border: none;
+          border-radius: 50%;
+          width: 2rem;
+          height: 2rem;
+          font-size: 1.4rem;
+          line-height: 1;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: background-color 0.2s;
+
+          &:hover {
+            background: rgba(0, 0, 0, 0.8);
+          }
+
+          &::before {
+            content: "×";
+          }
+        }
+      }
+
+      &:hover &-actions {
+        opacity: 1;
+      }
+    }
+
+    &__content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: $padding;
+      width: 100%;
+      background-color: $background;
+      border-top: 1px solid rgba($border-color, 0.1);
+      flex-shrink: 0;
+      display: none;
+    }
+
+    &__info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+      min-width: 0;
+      flex: 1;
+    }
+
+    &__main-text {
+      @include apply-text-style($main-text-style);
+    }
+
+    &__hint-text {
+      @include apply-text-style($hint-text-style);
+    }
+
+    &__actions {
+      display: flex;
+      gap: 0.8rem;
+      flex-shrink: 0;
+
+      button {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0.4rem 0.8rem;
+        font-size: 1.2rem;
+        border-radius: $radius-xs;
+        transition: background-color 0.2s;
+        white-space: nowrap;
+
+        &:hover {
+          background-color: rgba($text-neutral-primary, 0.05);
+        }
+
+        &.add-more {
+          color: $text-brand-primary;
+          border: 1px solid $border-color;
+
+          &:hover {
+            background-color: rgba($border-brand-primary, 0.1);
+          }
+
+          &:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+          }
+        }
+
+        &.remove {
+          color: $text-semantic-error;
+        }
+      }
+    }
+
+    input[type="file"] {
+      position: absolute;
+      width: 0;
+      height: 0;
+      opacity: 0;
+      z-index: -1;
+    }
+
+    &__loading-overlay {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      padding: 0.4rem 0.8rem;
+      border-radius: $radius-xs;
+      font-size: 1.2rem;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    // State modifiers
+    &--uploading {
+      .#{$base-class}__progress {
+        display: block;
+      }
+
+      .#{$base-class}__previews-grid,
+      .#{$base-class}__content {
+        display: none;
+      }
+    }
+
+    &--preview {
+      height: auto;
+      min-height: $height;
+      padding: 0;
+      border-style: solid;
+
+      &:hover {
+        transform: none;
+        border-color: $border-color;
+      }
+
+      .#{$base-class}__previews-grid {
+        display: flex;
+      }
+
+      .#{$base-class}__preview-item {
+        display: block;
+      }
+
+      .#{$base-class}__content {
+        display: flex;
+      }
+
+      .#{$base-class}__icon,
+      .#{$base-class}__text,
+      .#{$base-class}__progress {
+        display: none;
+      }
+    }
+
+    @include respond-below("sm") {
+      padding: 1.6rem;
+
+      &--preview {
+        padding: 0;
+
+        .#{$base-class}__previews-grid {
+          padding: 1.6rem;
+          gap: 0.8rem;
+        }
+
+        .#{$base-class}__preview-item {
+          width: 80px;
+        }
+
+        .#{$base-class}__content {
+          padding: 1rem;
+        }
+      }
+    }
+  }
+}
+
+// ============================================
+// MASTER MIXIN - Include all needed modes with custom classes
+// ============================================
+@mixin dropzone($config: ()) {
+  $include-single: map.get($config, "single") != false;
+  $include-multiple: map.get($config, "multiple") != false;
+
+  // Custom class names (default or user-provided)
+  $single-class: if(
+    map.get($config, "single-class"),
+    map.get($config, "single-class"),
+    "upload-single"
+  );
+  $multiple-class: if(
+    map.get($config, "multiple-class"),
+    map.get($config, "multiple-class"),
+    "upload-multiple"
+  );
+
+  // Extract mode-specific options
+  $single-options: if(
+    map.get($config, "single") and type-of(map.get($config, "single")) == "map",
+    map.get($config, "single"),
+    ()
+  );
+  $multiple-options: if(
+    map.get($config, "multiple") and type-of(map.get($config, "multiple")) == "map",
+    map.get($config, "multiple"),
+    ()
+  );
+
+  // Global options that apply to both modes
+  $global-padding: map.get($config, "padding");
+  $global-height: map.get($config, "height");
+
+  // Merge global options into mode-specific options
+  @if $global-padding {
+    $single-options: map.merge(
+      $single-options,
+      (
+        "padding": $global-padding
+      )
+    );
+    $multiple-options: map.merge(
+      $multiple-options,
+      (
+        "padding": $global-padding
+      )
+    );
+  }
+
+  @if $global-height {
+    $single-options: map.merge(
+      $single-options,
+      (
+        "height": $global-height
+      )
+    );
+    $multiple-options: map.merge(
+      $multiple-options,
+      (
+        "height": $global-height
+      )
+    );
+  }
+
+  // Include requested modes
+  @if $include-single {
+    @include dropzone-single($single-class, $single-options);
+  }
+
+  @if $include-multiple {
+    @include dropzone-multiple($multiple-class, $multiple-options);
+  }
+}

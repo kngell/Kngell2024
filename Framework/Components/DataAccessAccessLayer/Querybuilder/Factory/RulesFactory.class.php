@@ -10,19 +10,20 @@ class RulesFactory
     public function __construct(
         private EntityManagerInterface $em,
         private QueryState $state,
+        private BulkRowFactory $bulkRowFactory,
     ) {
         $this->factories = $this->factories();
     }
 
-    public function create(string $method, array $data): ?QueryRulesInterface
+    public function create(string $method, mixed $data, ?StatementType $statementType = null): ?QueryRulesInterface
     {
-        $statementType = SqlBuilderMethodRegistry::getClauseContext($method)->toStatementType();
-        if ($statementType === null) {
+        $statement = SqlBuilderMethodRegistry::getClauseContext($method)->toStatementType();
+        if ($statement === null) {
             return null;
         }
         foreach ($this->factories as $factory) {
-            if ($factory->supports($statementType)) {
-                return $factory->create($method, $data);
+            if ($factory->supports($statement)) {
+                return $factory->create($method, $data, $statementType);
             }
         }
         return null;
@@ -37,10 +38,12 @@ class RulesFactory
             new DataQueryRuleFactory(
                 $this->em,
                 $this->state,
+                $this->bulkRowFactory,
             ),
             new DataManipulationRuleFactory(
                 $this->em,
                 $this->state,
+                $this->bulkRowFactory,
             ),
         ];
     }

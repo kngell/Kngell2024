@@ -28,7 +28,7 @@ class HtmlBlockElement extends AbstractHtmlComponent
         return $this;
     }
 
-    public function content(string $htmlContent): self
+    public function blockContent(string $htmlContent): self
     {
         $this->htmlBlock = $htmlContent;
         return $this;

@@ -1,16 +1,17 @@
-import BaseValidator from "../BaseValidator.js";
+import BaseValidator from "../BaseValidator";
 
 export default class IntegerValidator extends BaseValidator {
   validate() {
     if (this.isEmpty(this.value)) {
       return null;
     }
+    if (typeof this.value === "string" && this.value.trim() === "") {
+      return this.errorMessage(this.errorParams.message, this.display);
+    }
 
     const num = Number(this.value);
-    const isInteger = Number.isInteger(num);
-
-    if (!isInteger) {
-      return this.errorMessage("%s must be an integer.");
+    if (!Number.isInteger(num)) {
+      return this.errorMessage(this.errorParams.message, this.display);
     }
 
     return null;

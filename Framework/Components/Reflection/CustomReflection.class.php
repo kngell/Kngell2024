@@ -3,26 +3,43 @@
 declare(strict_types=1);
 final class CustomReflection
 {
-    /** @var CustomReflection */
-    private static $instance;
+    /** @var array<class-string, self> */
+    private static array $instances = [];
 
-    private static $object;
-
-    private function __construct(private ReflectionObject $reflection)
-    {
+    private function __construct(
+        private readonly ReflectionClass $classReflection,
+    ) {
     }
 
-    public static function getInstance(object $object) : self
+    /**
+     * LEGACY API — do not remove yet.
+     */
+    public function getObject(): ReflectionObject
     {
-        if (! isset(static::$instance) || static::$object !== $object) {
-            static::$object = $object;
-            static::$instance = new static(new ReflectionObject($object));
+        // Create a ReflectionObject on demand (cheap)
+        return new ReflectionObject(
+            $this->classReflection->newInstanceWithoutConstructor(),
+        );
+    }
+
+    /**
+     * NEW, CORRECT API.
+     */
+    public function getClass(): ReflectionClass
+    {
+        return $this->classReflection;
+    }
+
+    public static function getInstance(object $object): self
+    {
+        $class = $object::class;
+
+        if (!isset(self::$instances[$class])) {
+            self::$instances[$class] = new self(
+                new ReflectionClass($class),
+            );
         }
-        return static::$instance;
-    }
 
-    public function getObject() : ReflectionObject
-    {
-        return $this->reflection;
+        return self::$instances[$class];
     }
 }

@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 use Brick\Money\Money;
 use Ramsey\Uuid\UuidInterface;
-use ReflectionIntersectionType;
-use ReflectionNamedType;
-use ReflectionUnionType;
 
 final class TypeHandlerFactory
 {
@@ -18,12 +15,32 @@ final class TypeHandlerFactory
 
     private bool $isInitialized = false;
 
+    public function __construct(
+    ) {
+    }
+
     public function getHandlerForValue(mixed $value, ?ReflectionProperty $property = null): TypeHandlerInterface
     {
         $this->initializeIfNeeded();
+
         if ($value === null) {
             return $this->valueBasedHandlers['null'];
         }
+
+        if ($value === '') {
+            return $this->valueBasedHandlers['empty_string'];
+        }
+
+        if ($property !== null) {
+            $attributes = $property->getAttributes(EntityFieldId::class);
+            foreach ($attributes as $attribute) {
+                $fieldId = $attribute->newInstance();
+                if ($fieldId->shouldObfuscate()) {
+                    return $this->valueBasedHandlers['obfuscator'];
+                }
+            }
+        }
+
         if ($property !== null) {
             $typeBasedHandler = $this->getTypeBasedHandler($property, $value);
             if ($typeBasedHandler !== null) {
@@ -36,7 +53,6 @@ final class TypeHandlerFactory
             return $valueBasedHandler;
         }
 
-        // STRATEGY 4: Fallback to standard handler
         return $this->valueBasedHandlers['standard'];
     }
 
@@ -95,8 +111,25 @@ final class TypeHandlerFactory
             return null;
         }
 
+        // 🟢 FIX: Check for empty string FIRST - highest priority
+        if ($value === '' && $propertyType->allowsNull()) {
+            // Empty string should be handled by EmptyStringType
+            return $this->valueBasedHandlers['empty_string'] ?? null;
+        }
+
+        // Check for Money type with HIGH priority
+        if ($propertyType instanceof ReflectionNamedType && $propertyType->getName() === Money::class) {
+            return $this->typeBasedHandlers[Money::class] ?? null;
+        }
+
         // Handle union types
         if ($propertyType instanceof ReflectionUnionType) {
+            // First check if any union type is Money
+            foreach ($propertyType->getTypes() as $type) {
+                if ($type instanceof ReflectionNamedType && $type->getName() === Money::class) {
+                    return $this->typeBasedHandlers[Money::class] ?? null;
+                }
+            }
             return $this->handleUnionType($propertyType, $value);
         }
 
@@ -160,7 +193,7 @@ final class TypeHandlerFactory
     private function getValueBasedHandler(mixed $value, ?ReflectionProperty $property): ?TypeHandlerInterface
     {
         foreach ($this->valueBasedHandlers as $name => $handler) {
-            if ($name === 'null') {
+            if ($name === 'null' || $name === 'empty_string') {
                 continue;
             }
 
@@ -203,10 +236,13 @@ final class TypeHandlerFactory
     {
         $this->valueBasedHandlers = [
             'null' => new NullType(),
+            'empty_string' => new EmptyStringType(),
+            'binary' => new BinaryType(),
+            'hex_literal' => new HexLiteralType(),
             'array' => new ArrayType(),
             'entity' => new EntityType(),
-            'empty_string' => new EmptyStringType(),
             'datetime' => new DateTimeType(),
+            'uuid' => new UuidType(),
             'standard' => new StandardType(),
         ];
     }
@@ -214,23 +250,36 @@ final class TypeHandlerFactory
     private function initializeTypeBasedHandlers(): void
     {
         $this->typeBasedHandlers = [
-            'bool', 'boolean' => new StandardType(),
-            'int', 'integer' => new StandardType(),
+            // Scalar types (with both names for compatibility)
+            'bool' => new StandardType(),
+            'boolean' => new StandardType(),
+            'int' => new StandardType(),
+            'integer' => new StandardType(),
             'float' => new StandardType(),
+            'double' => new StandardType(),
             'string' => new StandardType(),
             'array' => new ArrayType(),
 
+            // Class types
             Entity::class => new EntityType(),
             DateTime::class => new DateTimeType(),
             DateTimeImmutable::class => new DateTimeType(),
+            DateTimeInterface::class => new DateTimeType(),
+
+            // Your custom types
+            PriceRange::class => new PriceRangeType(),
             Weight::class => new WeightType(),
             Dimensions::class => new DimensionsType(),
             UuidInterface::class => new UuidType(),
 
+            // Special handlers
+            'binary' => new BinaryType(),
+            'hex_literal' => new HexLiteralType(),
             'enum' => new EnumType(),
             'object' => new ObjectType(),
         ];
 
+        // Add Money type if available
         if (class_exists(Money::class)) {
             $this->typeBasedHandlers[Money::class] = App::diGet(MoneyType::class);
         }

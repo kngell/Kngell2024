@@ -72,6 +72,14 @@ class PDOConnection implements DatabaseConnectionInterface
         return $this->con;
     }
 
+    public function quote(string $value): string
+    {
+        if ($this->con === null) {
+            $this->open();
+        }
+        return $this->con->quote($value);
+    }
+
     public function beginTransaction(): bool
     {
         if ($this->con === null) {
@@ -93,5 +101,59 @@ class PDOConnection implements DatabaseConnectionInterface
     public function lastInsertId(string|null $name = null): string|false
     {
         return $this->con->lastInsertId($name);
+    }
+
+    public function getAttribute(int $attribute): mixed
+    {
+        if ($this->con === null) {
+            $this->open();
+        }
+
+        try {
+            return $this->con->getAttribute($attribute);
+        } catch (PDOException $e) {
+            return $this->getFallbackAttribute($attribute);
+        }
+    }
+
+    public function getDriverName(): string
+    {
+        return (string) $this->getAttribute(PDO::ATTR_DRIVER_NAME);
+    }
+
+    public function getServerVersion(): string
+    {
+        return (string) $this->getAttribute(PDO::ATTR_SERVER_VERSION);
+    }
+
+    public function isMariaDB(): bool
+    {
+        $version = $this->getServerVersion();
+        return stripos($version, 'mariadb') !== false ||
+               stripos($version, 'maria') !== false;
+    }
+
+    public function getDatabaseVersion(): float
+    {
+        $version = $this->getServerVersion();
+
+        // Extract version number (e.g., "10.3.32-MariaDB" -> 10.3)
+        if (preg_match('/(\d+\.\d+)/', $version, $matches)) {
+            return (float) $matches[1];
+        }
+
+        return 0.0;
+    }
+
+    private function getFallbackAttribute(int $attribute): mixed
+    {
+        return match($attribute) {
+            PDO::ATTR_DRIVER_NAME => 'mysql', // Default assumption
+            PDO::ATTR_SERVER_VERSION => '10.0.0', // Conservative version
+            PDO::ATTR_SERVER_INFO => '',
+            PDO::ATTR_CONNECTION_STATUS => 'Connection OK',
+            PDO::ATTR_CLIENT_VERSION => '',
+            default => throw new PDOException('Attribute not supported'),
+        };
     }
 }

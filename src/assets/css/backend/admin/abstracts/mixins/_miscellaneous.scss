@@ -111,26 +111,9 @@
   }
 }
 
-@mixin asterix($gap: 0.2em, $font-size: 1.2rem, $line-height: 1, $color: null) {
-  display: inline-flex;
-  align-items: flex-start; // Ensure top alignment
-  gap: $gap;
-
-  &::after {
-    content: "*";
-    @if $color != null {
-      color: $color;
-    }
-    font-size: $font-size;
-    line-height: $line-height;
-    // Remove vertical-align: super - it doesn't work in flex context
-    align-self: flex-start; // Use flex alignment instead
-    margin-top: 0.1em; // Fine-tune vertical position if needed
-  }
-}
-
 // @mixin asterix($gap: 0.2em, $font-size: 1.2rem, $line-height: 1, $color: null) {
-//   display: inline;
+//   display: flex;
+//   gap: $gap;
 
 //   &::after {
 //     content: "*";
@@ -139,7 +122,25 @@
 //     }
 //     font-size: $font-size;
 //     line-height: $line-height;
-//     vertical-align: top; // Consistent top alignment
-//     margin-left: $gap; // Use margin instead of gap
+//     // align-self: flex-start;
+//     margin-top: 0.1em;
+//     vertical-align: top;
 //   }
 // }
+@mixin asterix($gap: 0.2em, $font-size: 1.2rem, $line-height: 1, $color: null) {
+  // Don't change the parent's position at all
+  // Just add the asterisk as an inline element that flex can handle
+
+  &::after {
+    content: "*";
+    @if $color != null {
+      color: $color;
+    }
+    // No positioning properties at all
+    display: inline-block;
+    font-size: $font-size;
+    line-height: $line-height;
+    margin-left: $gap;
+    vertical-align: middle;
+  }
+}

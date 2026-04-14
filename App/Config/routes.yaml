@@ -15,11 +15,15 @@ admin:
     controller: admin
     method: userDetail
     httpMethod: get
+  /confirm-product-deletion:
+    controller: product-delete
+    method: confirm
+    httpMethod: post
   /{controller}/{id+}/{method}:
 # Dynamic routes can be defined in groups too
 admin2:
   _group:
-    prefix: /admin
+    prefix: /admin2
     middleware: [auth, admin]
   /{controller}/index:
     method: index

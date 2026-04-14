@@ -1,5 +1,5 @@
-import BaseValidator from "../BaseValidator.js";
-import BrowserLogger from "js/utils/logger";
+import BaseValidator from "../BaseValidator";
+import BrowserLogger from "js/core/utils/logger";
 const logger = new BrowserLogger("MaxFilesValidator");
 
 export default class MaxFilesValidator extends BaseValidator {

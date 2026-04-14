@@ -3,6 +3,10 @@ import LastReview from "./Classes/_LastReview";
 import QuantityBoxMirror from "./Classes/_QuantityBoxMirror";
 // import CheckoutForm from "./Classes/checkout/CheckoutForm";
 import ProgressBar from "./Classes/checkout/_checkoutProgressBar";
+import UserMenu from "js/frontend/ecommerce/modules/user-menu";
+import BrowserLogger from "js/core/utils/BrowserLogger";
+
+const logger = new BrowserLogger("Ecommerce");
 
 export default class Ecommerce {
   constructor() {
@@ -17,8 +21,7 @@ export default class Ecommerce {
     new QuantityBoxMirror();
     // Checkout ProgressBar
     new ProgressBar();
-
-    // const checkout = new CheckoutForm("checkoutForm");
+    new UserMenu();
   };
 
   _setCategoryGap = () => {

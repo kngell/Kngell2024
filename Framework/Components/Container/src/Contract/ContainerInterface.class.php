@@ -7,10 +7,12 @@ interface ContainerInterface
     /**
      * Bind Classes, string into to container protected bindings
      * ---------------------------------------------------.
+     *
      * @param string $abstract
      * @param Closure|string|null $concrete
      * @param bool $shared
      * @param mixed $parameters
+     *
      * @return self
      */
     public function bind(string $abstract, Closure | string | null $concrete = null, bool $shared = false, mixed $parameters = []): self;
@@ -18,10 +20,12 @@ interface ContainerInterface
     /**
      * Make a unique instance of a class or Closure
      * ----------------------------------------------------.
+     *
      * @param string $abstract
      * @param Closure|string|null $concrete
      * @param bool $shared
      * @param mixed $args
+     *
      * @return self
      */
     public function singleton(string $abstract, Closure | string | null $concrete = null, bool $shared = true, mixed $args = []): self;
@@ -29,8 +33,10 @@ interface ContainerInterface
     /**
      * Create a container instance with existing instance
      * -----------------------------------------------------.
+     *
      * @param string $abstract
      * @param mixed $instance
+     *
      * @return void
      */
     public function instance(string $abstract, mixed $instance): mixed;
@@ -38,6 +44,7 @@ interface ContainerInterface
     /**
      * empty container
      * -------------------------------------------------------.
+     *
      * @return void
      */
     /**
@@ -66,4 +73,6 @@ interface ContainerInterface
     public function has(string $id): bool;
 
     public function flush(): void;
+
+    public function resolve(string $abstract, array $parameters = []): mixed;
 }

@@ -5,29 +5,41 @@
 
 @mixin page-title {
   display: flex;
-  flex-direction: column;
-  gap: 0.8rem;
-  flex: 1;
-
-  &__text {
-    color: map-deep-get($color-neutral, black, black-700);
-    font: {
-      size: map-deep-get($display-m, medium, font-size);
-      weight: map-deep-get($display-m, medium, font-weight);
+  align-items: flex-end;
+  gap: 2.4rem;
+  align-self: stretch;
+  &-left {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    flex: 1 0 0;
+    &__text {
+      color: map-deep-get($color-neutral, black, black-700);
+      font: {
+        size: map-deep-get($display-m, medium, font-size);
+        weight: map-deep-get($display-m, medium, font-weight);
+      }
+      line-height: map-deep-get($display-m, medium, line-height);
+      letter-spacing: map-deep-get($display-m, medium, letter-spacing);
     }
-    line-height: map-deep-get($display-m, medium, line-height);
-    letter-spacing: map-deep-get($display-m, medium, letter-spacing);
+    &__breadcrumbs {
+      @include breadcrumbs(
+        $padding-y: 0,
+        $color: map-deep-get($color-primary, primary-500),
+        $font-size: map-deep-get($text-m, medium, font-size),
+        $line-height: map-deep-get($text-m, medium, line-height),
+        $active-color: map-deep-get($color-neutral, black, black-500),
+        $gap: 0.8rem,
+        $separator-size: 1.8rem
+      );
+    }
   }
-
-  &__breadcrumbs {
-    @include breadcrumbs(
-      $padding-y: 0,
-      $color: map-deep-get($color-primary, primary-500),
-      $font-size: map-deep-get($text-m, medium, font-size),
-      $line-height: map-deep-get($text-m, medium, line-height),
-      $active-color: map-deep-get($color-neutral, black, black-500),
-      $gap: 0.8rem,
-      $separator-size: 1.8rem
-    );
+  &-right {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.6rem;
+    .btn {
+      gap: 0.4rem;
+    }
   }
 }

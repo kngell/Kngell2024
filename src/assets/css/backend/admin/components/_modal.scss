@@ -1,1 +1,186 @@
+@use "sass:color";
 @use "css/backend/admin/abstracts" as *;
+
+/*--------------- MODAL OVERLAY (Global) -------------*/
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1000;
+  display: none;
+  opacity: 0;
+  @include transition;
+
+  // Active state
+  &.active {
+    display: flex;
+    opacity: 1;
+    @include animation(modalFadeIn 0.3s ease forwards);
+  }
+
+  // Default alignment
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  overflow-y: auto;
+
+  // Responsive padding
+  @include responsive-spacing(padding, 2rem, 0.8);
+
+  // Small screen adjustments
+  @media (max-height: 600px) {
+    align-items: flex-start;
+  }
+}
+
+.modal {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background-color: $white;
+  border-radius: $radius-m;
+  box-shadow: $shadow-l;
+
+  // Default sizing - will be overridden by specific modals
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+
+  transform: translateY(20px);
+  opacity: 0;
+  @include transition((transform, opacity), 0.3s);
+
+  .modal-overlay.active & {
+    transform: translateY(0);
+    opacity: 1;
+    @include animation(modalSlideUp 0.3s ease forwards);
+  }
+
+  // Responsive
+  @include respond-below(md) {
+    width: 95%;
+    max-height: 95vh;
+  }
+
+  // @media (max-height: 500px) {
+  //   max-height: 98vh;
+  // }
+}
+
+/*--------------- MODAL SECTIONS (Global) -------------*/
+.modal-header {
+  flex-shrink: 0;
+  border-bottom: 1px solid $gray-200;
+  // Padding is set by specific modals
+}
+
+.modal-body {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.modal-footer {
+  flex-shrink: 0;
+  border-top: 1px solid $gray-200;
+}
+
+/*--------------- CLOSE BUTTON (Global) -------------*/
+.modal-close-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 4rem;
+  height: 4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  border-radius: $radius-s;
+  cursor: pointer;
+  color: $black-800;
+  @include transition;
+  z-index: 10;
+
+  &:hover {
+    background-color: rgba($black-500, 0.1);
+    color: $danger-color;
+  }
+
+  &:focus {
+    outline: 2px solid $primary-500;
+    outline-offset: 2px;
+  }
+
+  // Responsive
+  @include respond-below(md) {
+    width: 3.6rem;
+    height: 3.6rem;
+    top: 0.75rem;
+    right: 0.75rem;
+    font-size: 2rem;
+  }
+}
+
+body.modal-open {
+  overflow: hidden;
+}
+
+.success-notification,
+.modal-error {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 10002;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border-radius: $radius-s;
+  box-shadow: $shadow-l;
+  @include animation(slideIn 0.3s ease forwards);
+
+  .icon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+  }
+
+  &.slide-out {
+    @include animation(slideOut 0.3s ease forwards);
+  }
+}
+
+.success-notification {
+  background-color: color.scale($success-color, $lightness: 95%);
+  color: color.scale($success-color, $lightness: -20%);
+  border: 1px solid color.scale($success-color, $lightness: 80%);
+
+  .icon {
+    fill: $success-color;
+  }
+}
+
+.modal-error {
+  background-color: color.scale($danger-color, $lightness: 95%);
+  color: color.scale($danger-color, $lightness: -20%);
+  border: 1px solid color.scale($danger-color, $lightness: 80%);
+
+  .icon {
+    fill: $danger-color;
+  }
+}
+
+/*--------------- PRINT STYLES (Global) -------------*/
+@media print {
+  .modal-overlay {
+    display: none !important;
+  }
+
+  body.modal-open {
+    overflow: auto !important;
+  }
+}

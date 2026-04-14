@@ -12,32 +12,38 @@ class SetClause extends SqlComponent implements RegularClauseComponentInterface,
     private ?SqlOperator $operator = null;
 
     public function __construct(
-        private UpdatePayload $setData,
+        private array $setData,
         bool $hasMultiple,
         bool $hasSingle,
         string $method,
-        private EntityManagerInterface $em,
+        EntityManagerInterface $em,
+        private null|string $sourceTable = null,
     ) {
-        parent::__construct();
-        // parent::__construct(self::CLAUSE, null, $em);
+        parent::__construct(em:$em);
         $this->method = $method;
         $this->setData = $setData;
         $this->hasMultiple = $hasMultiple;
         $this->hasSingle = $hasSingle;
+        $this->joinContext = $sourceTable;
     }
 
     public function build(): string
     {
-        if (empty($this->setData)) {
+        if (empty($this->setData) && !$this->em->hasData()) {
             return '';
         }
-        $this->initializeConditionRule();
-        $method = $this->setData->getMethod();
-        $setSql = $this->setRule->getRule($this->setData->getUpdateData());
+        $this->initializeSetRule();
 
+        $setSql = $this->setRule->getRule($this->setData);
+
+        if (empty(trim($setSql))) {
+            $this->state->hasSetContent = false;
+            return '';
+        }
         if ($this->setRule instanceof QueryRulesInterface && method_exists($this->setRule, 'getState')) {
             $this->state = $this->state->merge($this->setRule->getState());
         }
+
         return $this->query = $setSql;
     }
 
@@ -80,14 +86,14 @@ class SetClause extends SqlComponent implements RegularClauseComponentInterface,
         return $this->hasSingle;
     }
 
-    private function initializeConditionRule(): void
+    private function initializeSetRule(): void
     {
         if (!isset($this->conditionRule)) {
             if ($this->joinContext !== null) {
                 $this->state->joinContext = $this->joinContext;
             }
             $registry = new SqlFactoryRegistry($this, $this->em, $this->state);
-            $this->setRule = $registry->getRule($this->method, $this->setData->getUpdateData());
+            $this->setRule = $registry->getRule($this->method, $this->setData);
         }
     }
 }

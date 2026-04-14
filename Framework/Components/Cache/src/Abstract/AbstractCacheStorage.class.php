@@ -58,7 +58,14 @@ abstract class AbstractCacheStorage implements IterableStorageInterface
 
         $this->envConfigurations = $envConfigurations;
         $this->options = $options;
-        $this->cacheDirectory = ROOT_DIR . $envConfigurations->getFileCacheBasePath();
+        $basePath = $envConfigurations->getFileCacheBasePath();
+
+        // If path is absolute, don't prepend ROOT_DIR
+        if (str_starts_with($basePath, ROOT_DIR)) {
+            $this->cacheDirectory = $basePath;
+        } else {
+            $this->cacheDirectory = ROOT_DIR . DS . ltrim($basePath, DS);
+        }
     }
 
     /**

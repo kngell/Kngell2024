@@ -27,9 +27,10 @@ class Map implements IteratorAggregate, Countable
 
     /**
      * @param array<string|int,V> $array
+     *
      * @return void
      */
-    public function addAll(array $array) : void
+    public function addAll(array $array): void
     {
         $this->items = array_merge($this->items, $array);
     }
@@ -37,14 +38,15 @@ class Map implements IteratorAggregate, Countable
     /**
      * @param string|int $key
      * @param V $value
+     *
      * @return void
      */
-    public function add(string|int $key, mixed $value) : void
+    public function add(string|int $key, mixed $value): void
     {
         $this->items[$key] = $value;
     }
 
-    public function has(string|int $key) : bool
+    public function has(string|int $key): bool
     {
         return array_key_exists($key, $this->items);
     }
@@ -52,16 +54,17 @@ class Map implements IteratorAggregate, Countable
     /**
      * @return array<string|int,V>
      */
-    public function getAll() : array
+    public function getAll(): array
     {
         return $this->items;
     }
 
     /**
      * @param string|int $key
+     *
      * @return mixed|null|V
      */
-    public function get(string|int $key) : mixed
+    public function get(string|int $key): mixed
     {
         if (isset($this->items[$key])) {
             return $this->items[$key];
@@ -69,14 +72,14 @@ class Map implements IteratorAggregate, Countable
         return null;
     }
 
-    public function remove(string|int $key) : void
+    public function remove(string|int $key): void
     {
         if ($this->has($key)) {
             unset($this->items[$key]);
         }
     }
 
-    public function clear() : void
+    public function clear(): void
     {
         $this->items = [];
     }

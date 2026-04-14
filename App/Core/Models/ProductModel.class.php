@@ -2,97 +2,90 @@
 
 declare(strict_types=1);
 
-use Ramsey\Uuid\Uuid;
-use Ramsey\Uuid\UuidInterface;
-
-class ProductModel extends Model
+class ProductModel extends AbstractSaveModel
 {
-    public function save(mixed $data = null): QueryResult
+    public function findBySku(string $sku): ?Product
     {
-        if ($data === null) {
-            throw new InvalidArgumentException('No data to save.');
-        }
-        if (is_array($data)) {
-            if (!isset($data['name'])) {
-                throw new InvalidArgumentException('Cannot save without product name.');
-            }
-            if (!ArrayUtils::isAssoc($data)) {
-                throw new InvalidArgumentException('Save data should be an associative array.');
-            }
-            $product = $this->getProductById((int) $data['id']);
-            $product->getChangeTracker()->track($product);
-            /** @var Product */
-            $data = $product->assign($data);
-        }
-        if (!$data instanceof Product) {
-            throw new RuntimeException('data to save must be an instance of Product entity.');
-        }
-        if (!$data->isInitialized('public_id')) {
-            /** @var UuidInterface $publicId */
-            $publicId = Uuid::uuid4();
-            $data->setPublicId($publicId);
-        }
-        if (!$data->isInitialized('slug')) {
-            $baseSlug = $this->slugify($data->getName());
-            $slug = $baseSlug;
-            $counter = 0;
-
-            while ($this->one(['slug' => $slug])->exists()) {
-                $counter++;
-                $slug = $baseSlug . '-' . $counter;
-            }
-
-            $data->setSlug($slug);
-        }
-        $dirtyData = $data->getDirtyData();
-        dd('dirty data' . var_dump($dirtyData, true));
-        return parent::save($data);
+        return $this->one(['sku' => $sku])->asClass();
     }
 
-    public function getTotal(): int
+    public function getProductWithPaths(): array
     {
-        $this->em->createQueryBuilder()->select('count(name) AS tot')->build();
-        $total = $this->em->persist()->getQueryResult();
-        $count = ArrayUtils::first($total->getResults()->all());
-        return $count['tot'];
-    }
+        $query = $this->em->setEntity($this->entity)->createQueryBuilder();
 
-    public function getProducts(int $offset = 0, int $limit = 10): array
-    {
-        $query = $this->em->createQueryBuilder()
-            ->select()
-            ->innerJoin('product_category')
-            ->on('product_category.product_id', 'product.id')
-            ->innerJoin('categories', 'category_name', 'category_description')
-            ->on('product_category.category_id', 'categories.cat_id')
-            ->innerJoin('brand', 'brand_name')
-            ->on('categories.br_id', 'brand.br_id')
-            ->limit($limit)
-            ->offset($offset)
-            ->orderBy('product.id', 'DESC')
+        $query->select('main_image', 'main_video')
+            ->where(function ($query) {
+                $query->where('main_image', '!=', '')
+                      ->orWhere('main_video', '!=', '');
+            })
             ->build();
-
-        return $this->em->persist()->getQueryResult()->getResults('object')->all();
+        return $this->em->persist()->getQueryResult()->asArray();
     }
 
-    public function getProductById(int $id): Product|NullObjectInterface
+    public function getProductById(int|string $id): Product|null
     {
-        $product = $this->find($id)->asClass();
-        if ($product instanceof Product) {
-            return $product;
+        if (is_int($id)) {
+            $product = $this->find($id);
+        } else {
+            $product = $this->one(['public_id' => $id]);
         }
-        return new NullObject();
+        if ($product->exists()) {
+            return $product->asClass();
+        }
+        return null;
     }
 
-    private function slugify(string $text): string
+    public function getProductsWithColumns(array $columns, int $page = 1, int $limit = 20, string $search = ''): array
     {
-        $text = preg_replace('~[^\pL\d]+~u', '-', $text);
-        $text = iconv('utf-8', 'us-ascii//TRANSLIT', $text);
-        $text = preg_replace('~[^-\w]+~', '', $text);
-        $text = trim($text, '-');
-        $text = preg_replace('~-+~', '-', $text);
-        $text = strtolower($text);
+        $conditions = [
+            'searchTerm' => !empty($search) ? '%' . $search . '%' : null,
+        ];
+        $results = $this->page($page, $limit, $conditions, $columns);
+        if ($results->isSuccess()) {
+            return $results->asArray();
+        }
+        return [];
+    }
 
-        return empty($text) ? 'n-a-' . substr(Uuid::uuid4()->toString(), 0, 8) : $text;
+    public function deleteProductByUuId(string $id, ?string $deleteOption = null): ?QueryResult
+    {
+        $params = [];
+        if ($deleteOption !== null) {
+            $params['deleteOption'] = $deleteOption;
+        }
+        $params['public_id'] = $id;
+        return parent::delete($params);
+    }
+
+    protected function validateData(array $data): void
+    {
+    }
+
+    protected function generateMissingFields(array $data): array
+    {
+        $data = $this->generatePublicId($data);
+
+        if (empty($data['slug']) && $this->entity->hasProperty('slug')) {
+            $data['slug'] = $this->generateUniqueSlug($data['name']);
+        }
+        $defaults = [
+            'status_id' => 1,
+            'stock_quantity' => 0,
+            'stock_status_id' => 1,
+        ];
+
+        foreach ($defaults as $field => $value) {
+            if (empty($data[$field])) {
+                $data[$field] = $value;
+            }
+        }
+        return $data;
+    }
+
+    private function validateProductData(array $data): void
+    {
+        if (!isset($data['name']) || empty(trim($data['name']))) {
+            throw new InvalidArgumentException('Product name is required.');
+        }
     }
 }

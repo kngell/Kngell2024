@@ -9,10 +9,10 @@ class UserModel extends Model
     public function getUser(string|int $id): User|bool
     {
         $user = $this->find($id);
-        if ($user->getQueryResult() && $user->count() === 0) {
+        if (!$user->isSuccess()) {
             return false;
         }
-        return $user->getResults('class')->single();
+        return $user->asClass();
     }
 
     public function loginAttempts(string $email): User|null

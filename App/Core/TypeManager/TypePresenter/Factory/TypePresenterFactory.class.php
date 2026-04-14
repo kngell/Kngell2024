@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 use Brick\Money\Money;
 use Ramsey\Uuid\UuidInterface;
-use ReflectionIntersectionType;
-use ReflectionNamedType;
-use ReflectionUnionType;
 
 final class TypePresenterFactory implements TypePresenterFactoryInterface
 {
@@ -17,12 +14,43 @@ final class TypePresenterFactory implements TypePresenterFactoryInterface
     public function __construct(
         private TranslatorServiceInterface $translator,
         private RegionContextInterface $regionContext,
+        private ObfuscatorManager $obfuscatorManager,
     ) {
     }
 
     public function getPresenterForValue(mixed $value, ?ReflectionProperty $property = null): TypePresenterInterface
     {
         $this->initializeIfNeeded();
+
+        if ($property !== null) {
+            $formatAttributes = $property->getAttributes(DisplayFormat::class);
+            foreach ($formatAttributes as $attribute) {
+                $format = $attribute->newInstance();
+
+                // Check for obfuscation
+                if ($format->obfuscate === true) {
+                    return $this->valueBasedPresenters['obfuscated']; // Updated key
+                }
+            }
+        }
+
+        if ($property !== null) {
+            $formatAttributes = $property->getAttributes(DisplayFormat::class);
+            foreach ($formatAttributes as $attribute) {
+                $format = $attribute->newInstance();
+
+                // Check for obfuscation
+                if ($format->obfuscate === true) {
+                    return $this->valueBasedPresenters['obfuscated_id'];
+                }
+
+                // Add other format-based presenter selection here
+                // e.g., date formatting, number formatting, etc.
+                if ($format->style === 'date' || $format->dateStyle !== null) {
+                    // You could have specialized date presenters
+                }
+            }
+        }
 
         // STRATEGY 1: Check property type
         if ($property !== null) {
@@ -194,6 +222,9 @@ final class TypePresenterFactory implements TypePresenterFactoryInterface
             'collection' => new CollectionPresenter($this, $this->translator),
             'datetime' => new DateTimePresenter($this->regionContext),
             'money' => App::diGet(MoneyPresenter::class),
+            'obfuscated' => new ObfuscatedPresenter(
+                $this->obfuscatorManager,
+            ),
             'standard' => new StandardPresenter(),
         ];
     }

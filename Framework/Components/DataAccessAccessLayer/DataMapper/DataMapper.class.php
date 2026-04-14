@@ -17,6 +17,11 @@ class DataMapper extends AbstractDataMapper
     public function persist(string $sql = '', array $parameters = [], bool $isSearch = false): self
     {
         try {
+            if (empty(trim($sql))) {
+                $this->executionStatus = false;
+                $this->parameters = [];
+                return $this;
+            }
             $this->parameters = $parameters;
             return $this->prepare($sql)->bindParameters($parameters, $isSearch)->execute();
         } catch (Throwable $th) {
@@ -122,6 +127,7 @@ class DataMapper extends AbstractDataMapper
         try {
             return match (true) {
                 is_int($value) => PDO::PARAM_INT,
+                is_float($value) => PDO::PARAM_STR,
                 is_bool($value) => PDO::PARAM_BOOL,
                 $value === null => PDO::PARAM_NULL,
                 default => PDO::PARAM_STR

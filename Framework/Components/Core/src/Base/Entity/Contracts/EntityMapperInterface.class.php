@@ -6,7 +6,7 @@ declare(strict_types=1);
 
 interface EntityMapperInterface
 {
-    public function getTableName(Entity $entity): string;
+    public function getTableName(Entity $entity, ?string $default): string;
 
     public function getEntityKeyField(Entity $entity): string|bool;
 
@@ -35,4 +35,6 @@ interface EntityMapperInterface
     public function hasProperty(Entity $entity, string $propertyName): bool;
 
     public function getAllProperties(Entity $entity): array;
+
+    public function unsetEntityPrimaryKey(Entity $entity): void;
 }

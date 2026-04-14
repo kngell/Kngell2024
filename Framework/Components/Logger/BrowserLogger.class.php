@@ -40,6 +40,32 @@ class BrowserLogger
         self::$messages = [];
     }
 
+    public static function messages(): string
+    {
+        $msg = '';
+        if (!empty(self::$messages)) {
+            $msg .= "<div style='background: #1e1e1e; color: #00ff00; padding: 20px; margin: 20px 0; border: 2px solid #ff00ff; font-family: monospace; font-size: 14px; border-radius: 5px;'>";
+            $msg .= "<strong style='color: #ffff00;'>🛠️ DEBUG LOG</strong><br><br>";
+            foreach (self::$messages as $message) {
+                // Add some color coding
+                if (str_contains($message, '===')) {
+                    $msg .= "<strong style='color: #ff00ff;'>" . htmlspecialchars($message) . '</strong><br>';
+                } elseif (str_starts_with($message, 'Field:')) {
+                    $msg .= "<span style='color: #00ffff;'>" . htmlspecialchars($message) . '</span><br>';
+                } elseif (str_starts_with($message, '  ')) {
+                    $msg .= "<span style='color: #90ee90; margin-left: 20px;'>" . htmlspecialchars($message) . '</span><br>';
+                } else {
+                    $msg .= htmlspecialchars($message) . '<br>';
+                }
+            }
+            $msg .= '</div>';
+        }
+
+        // Clear messages after displaying (optional)
+        self::$messages = [];
+        return $msg;
+    }
+
     public static function clear(): void
     {
         self::$messages = [];

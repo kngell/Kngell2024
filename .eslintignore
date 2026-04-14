@@ -1,0 +1,33 @@
+# Dependencies
+node_modules
+package-lock.json
+yarn.lock
+
+# Build outputs
+dist
+build
+coverage
+
+# Styles - THIS FIXES YOUR ISSUE
+*.scss
+*.css
+*.sass
+*.less
+*.styl
+
+# Assets
+public
+assets
+images
+fonts
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg
+*.ico
+
+# Config files
+*.config.js
+.env
+.vscode

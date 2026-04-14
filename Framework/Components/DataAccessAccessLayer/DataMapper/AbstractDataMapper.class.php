@@ -6,7 +6,7 @@ abstract class AbstractDataMapper implements DataMapperInterface
 {
     protected DatabaseConnectionInterface $_con;
     protected PDOStatement $_query;
-    protected bool $executionStatus;
+    protected bool $executionStatus = false;
     protected array $parameters = [];
 
     public function __construct(DatabaseConnectionInterface $_con)
@@ -29,6 +29,11 @@ abstract class AbstractDataMapper implements DataMapperInterface
         return $this->_con->rollback();
     }
 
+    public function quote(string $value): string
+    {
+        return $this->_con->quote($value);
+    }
+
     public function getConnexion(): DatabaseConnectionInterface
     {
         return $this->_con;
@@ -37,11 +42,11 @@ abstract class AbstractDataMapper implements DataMapperInterface
     /**
      * Get the value of _query.
      *
-     * @return PDOStatement
+     * @return null|PDOStatement
      */
-    public function getQueryStatement(): PDOStatement
+    public function getQueryStatement(): null|PDOStatement
     {
-        return $this->_query;
+        return isset($this->_query) ? $this->_query : null;
     }
 
     public function lastInsertId(?string $name = null): string|false
@@ -59,11 +64,56 @@ abstract class AbstractDataMapper implements DataMapperInterface
 
     public function getQueryString(): string
     {
-        return $this->_query->queryString;
+        return isset($this->_query) ? $this->_query->queryString : '';
     }
 
     public function getQueryParameters(): array
     {
         return $this->parameters;
+    }
+
+    public function reset(): self
+    {
+        $this->parameters = [];
+
+        if (isset($this->_query)) {
+            unset($this->_query);
+        }
+        return $this;
+    }
+
+    public function fullReset(): self
+    {
+        $this->executionStatus = false;
+        $this->parameters = [];
+        if (isset($this->_query)) {
+            unset($this->_query);
+        }
+        return $this;
+    }
+
+    public function getAttribute(int $attribute): mixed
+    {
+        return $this->_con->getAttribute($attribute);
+    }
+
+    public function getDriverName(): string
+    {
+        return $this->_con->getDriverName();
+    }
+
+    public function getServerVersion(): string
+    {
+        return $this->_con->getServerVersion();
+    }
+
+    public function isMariaDB(): bool
+    {
+        return $this->_con->isMariaDB();
+    }
+
+    public function getDatabaseVersion(): float
+    {
+        return $this->_con->getDatabaseVersion();
     }
 }

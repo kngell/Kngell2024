@@ -44,7 +44,7 @@ class WithClause extends SqlComponent implements CteClauseComponentInterface
 
     public function add(SqlComponent $component): void
     {
-        if (!$component instanceof Cte) {
+        if (!$component instanceof CteQuery) {
             throw new InvalidArgumentException(
                 'WithClause can only contain Cte components',
             );

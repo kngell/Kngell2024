@@ -284,3 +284,53 @@ VALUES
     (5, 'chest_width', '40 inches'),
     (6, 'size', 'L'),
     (6, 'chest_width', '44 inches');
+
+-- Check for circular references in role hierarchy
+WITH RECURSIVE
+    cte_user_roles AS (
+        SELECT
+            a.expires_at,
+            0 as level,
+            a1.id AS role_id,
+            a1.role_name,
+            a1.priority
+        FROM
+            acl_user_role AS a
+            JOIN acl_role AS a1 ON a.role_id = a1.id
+        WHERE
+            a.user_id = 86
+            AND a.is_active = 1
+            AND (
+                a.expires_at IS NULL
+                OR a.expires_at > NOW ()
+            )
+        UNION ALL
+        SELECT
+            c.expires_at,
+            c.level + 1 as level,
+            a11.id AS role_id,
+            a11.role_name,
+            a11.priority
+        FROM
+            cte_user_roles AS c
+            JOIN acl_role_hierarchy AS a12 ON c.role_id = a12.parent_role_id
+            JOIN acl_role AS a11 ON a12.child_role_id = a11.id
+    ) CYCLE role_id RESTRICT
+SELECT
+    c2.role_id,
+    c2.role_name,
+    c2.priority,
+    c2.expires_at,
+    c2.level
+FROM
+    cte_user_roles AS c2
+ORDER BY
+    c2.priority DESC,
+    c2.level ASC;
+
+SELECT
+    *
+FROM
+    acl_user_role
+WHERE
+    user_id = 158;

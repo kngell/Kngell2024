@@ -11,9 +11,8 @@ class ModelContext implements ModelContextInterface
         'utility' => ['count', 'exists'],
     ];
 
-    public function __construct(private ModelFactoryInterface $factory)
+    public function __construct()
     {
-        $this->initializeStrategies();
     }
 
     /**
@@ -24,17 +23,21 @@ class ModelContext implements ModelContextInterface
      *
      * @return QueryResult
      */
-    public function execute(string $operation, EntityManagerInterface $em, Entity $entity, mixed $params): QueryResult
+    public function execute(string $operation, EntityManagerInterface $em, Entity $entityPrototype, mixed $params): QueryResult
     {
+        $em->reset();
+        $em->setEntity($entityPrototype);
+
         if (!$this->has($operation)) {
             throw new InvalidArgumentException("Operation '$operation' not supported");
         }
 
-        return $this->strategies[$operation]->execute($em, $entity, $params);
+        return $this->strategies[$operation]->execute($em, $entityPrototype, $params);
     }
 
     public function executeGroup(string $group, string $operation, EntityManagerInterface $em, Entity $entity, mixed $params): QueryResult
     {
+        $em->setEntity($entity);
         if (!isset($this->strategyGroups[$group])) {
             throw new InvalidArgumentException("Strategy group '$group' not defined");
         }
@@ -79,12 +82,13 @@ class ModelContext implements ModelContextInterface
         return in_array($operation, $this->strategyGroups['operation'] ?? []);
     }
 
-    private function initializeStrategies(): void
+    public function initialize(Model $md, ModelUtilityInterface $utils): void
     {
+        $factory = new DefaultModelFactory($utils, $md);
         foreach ($this->strategyGroups as $group => $operations) {
             foreach ($operations as $operationName) {
-                if ($this->factory->supports($operationName)) {
-                    $strategyInstance = $this->factory->create($operationName);
+                if ($factory->supports($operationName)) {
+                    $strategyInstance = $factory->create($operationName);
                     $this->strategies[$operationName] = $strategyInstance;
                 }
             }

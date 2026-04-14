@@ -28,5 +28,9 @@ interface SqlUpdateQueryBuilderInterface extends SqlQueryBuilderInterface
 
     public function join(string $table, ?string $alias = null): self;
 
+    public function innerJoin(mixed $query): self;
+
+    public function bulkData(mixed $data): self;
+
     public function on(string $leftColumn, string $rightColumn): self;
 }

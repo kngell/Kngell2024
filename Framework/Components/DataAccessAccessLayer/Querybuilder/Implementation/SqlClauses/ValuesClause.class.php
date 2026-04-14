@@ -9,10 +9,11 @@ class ValuesClause extends SqlComponent implements RegularClauseComponentInterfa
     private ?QueryRulesInterface $valuesRule;
 
     public function __construct(
-        private EntityManagerInterface $em,
+        EntityManagerInterface $em,
         private ProcessedInsertData $processedData,
         null|string $method,
     ) {
+        parent::__construct(em: $em);
         $this->method = $method;
     }
 

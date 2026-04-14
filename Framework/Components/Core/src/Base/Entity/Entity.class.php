@@ -6,6 +6,7 @@ abstract class Entity
 {
     protected const array RELATIONSHIPS = [];
 
+    private bool $_isTracking = false;
     private array $tableAlias;
     private array $tableMap;
     private array $relatedEntities = [];
@@ -22,72 +23,21 @@ abstract class Entity
         $this->tableMap = $tableMap;
     }
 
-    // --------------------------------------------------------
-    // MAGIC METHODS & HYDRATION (using the protected getters)
-    // --------------------------------------------------------
     public function __set(string $name, mixed $value): void
     {
-        $isRelation = isset(static::RELATIONSHIPS[$name]);
-
-        if ($isRelation && is_array($value) && !ArrayUtils::isArrayList($value)) {
-            $this->getRelationManager()->hydrateRelatedEntity(
-                entity: $this,
-                dbRelationName: $name,
-                field: '_all_data',
-                value: $value,
-                tableAlias: $this->tableAlias,
-                tableMap: $this->tableMap,
-                relatedEntities: $this->relatedEntities,
-            );
-            return;
-        }
-
-        $name = $this->getRelationManager()->resolveRealName(
+        $resolvedName = $this->getRelationManager()->resolveRealName(
             $this,
             $name,
             $this->tableAlias,
             $this->tableMap,
             static::RELATIONSHIPS,
         );
-
-        if (str_contains($name, '.')) {
-            $parts = explode('.', $name);
-
-            $currentPath = '';
-            foreach ($parts as $i => $part) {
-                $currentPath = $currentPath ? $currentPath . '.' . $part : $part;
-
-                if (isset(static::RELATIONSHIPS[$currentPath])) {
-                    $remainingPath = implode('.', array_slice($parts, $i + 1));
-
-                    $this->getRelationManager()->hydrateRelatedEntity(
-                        entity: $this,
-                        dbRelationName: $currentPath,
-                        field: $remainingPath,
-                        value: $value,
-                        tableAlias: $this->tableAlias,
-                        tableMap: $this->tableMap,
-                        relatedEntities: $this->relatedEntities,
-                    );
-                    return;
-                }
-            }
+        if (str_contains($resolvedName, '.')) {
+            $this->handleRelationshipField($resolvedName, $value);
+            return;
         }
 
-        if ($this->getRelationManager()->hasActiveRelationships($this, $this->tableAlias, $this->relatedEntities)) {
-            $this->pendingData[$name] = $value;
-        } else {
-            $this->getHydrator()->denormalizeAndSetProperty($this, $name, $value);
-        }
-    }
-
-    public function debugPendingCollections(): array
-    {
-        return [
-            'pendingCollections' => $this->pendingCollections,
-            'relatedEntities' => $this->relatedEntities,
-            'relationships' => static::RELATIONSHIPS,
-        ];
+        $this->handleMainEntityField($resolvedName, $value);
     }
 
     public function assign(array $data): self
@@ -106,8 +56,8 @@ abstract class Entity
             $this->getHydrator()->completeMainHydration($this, $this->pendingData, $this->cachedFieldMap);
             $this->getRelationManager()->completeRelatedEntityHydration($this, $this->relatedEntities);
             $this->relatedEntities = [];
+            $this->pendingData = [];
         }
-
         return $this;
     }
 
@@ -152,7 +102,7 @@ abstract class Entity
     }
 
     public function toFormArray(
-        array $fieldMapping = [],
+        ?FormFieldMappingPayloadInterface $fieldMapping = null,
         bool $flattenNested = true,
         bool $formatValues = true,
     ): array {
@@ -178,9 +128,9 @@ abstract class Entity
     // DATABASE & MAPPING METHODS
     // ----------------------------------------------------------
 
-    public function table(): string
+    public function table(?string $default = null): string
     {
-        return $this->getMapper()->getTableName($this);
+        return $this->getMapper()->getTableName($this, $default);
     }
 
     public function getRelationClassName(string $relationBdName): ?string
@@ -191,7 +141,7 @@ abstract class Entity
 
     public function getRelationPropertyName(string $officialKey): string
     {
-        $camel = StringUtils::camelCase($officialKey);
+        $camel = StringUtils::snakeCaseToCamelCase($officialKey);
         if (property_exists($this, $camel)) {
             return $camel;
         }
@@ -256,6 +206,28 @@ abstract class Entity
         return $this->getMapper()->hasProperty($this, $propertyName);
     }
 
+    public function entityKeyIsInitialzed(): bool
+    {
+        $keyProperty = $this->getEntityKeyProperty();
+        return $this->isInitialized($keyProperty);
+    }
+
+    public function hasChanges(): bool
+    {
+        return $this->getChangeTracker()->hasChanges($this);
+    }
+
+    public function getEntityPrimarykeyValue(): mixed
+    {
+        $keyProperty = $this->getEntityKeyProperty();
+        return $this->getFieldValue($keyProperty);
+    }
+
+    public function unsetEntityPrimaryKey(): void
+    {
+        $this->getMapper()->unsetEntityPrimaryKey($this);
+    }
+
     public function isInitialized(string $field): bool
     {
         return $this->getMapper()->isInitialized($this, $field);
@@ -273,6 +245,24 @@ abstract class Entity
     public function getDirtyData(): array
     {
         return $this->getHydrator()->getDirtyData($this);
+    }
+
+    public function track(): self
+    {
+        $this->getChangeTracker()->track($this);
+        $this->_isTracking = true;
+        return $this;
+    }
+
+    public function isTracking(): bool
+    {
+        return $this->_isTracking;
+    }
+
+    public function stopTracking(): void
+    {
+        $this->getChangeTracker()->stopTracking($this);
+        $this->_isTracking = false;
     }
 
     public function isEmpty(): bool
@@ -309,6 +299,11 @@ abstract class Entity
         $this->completeHydration();
     }
 
+    public function hasSoftDelete(): bool
+    {
+        return $this instanceof SoftDeletableInterface;
+    }
+
     /**
      * @return array
      */
@@ -323,6 +318,17 @@ abstract class Entity
     public function getTableMap(): array
     {
         return $this->tableMap;
+    }
+
+    public function getRelationshipClass(string $relationshipName): ?string
+    {
+        return static::RELATIONSHIPS[$relationshipName]['class'] ?? null;
+    }
+
+    public function isRelationshipCollection(string $relationshipName): bool
+    {
+        $config = static::RELATIONSHIPS[$relationshipName] ?? [];
+        return ($config['collection'] ?? false) || ($config['type'] ?? '') === 'one-to-many';
     }
 
     /**
@@ -341,6 +347,11 @@ abstract class Entity
     public function getChangeTracker(): ChangeTrackerInterface
     {
         return $this->dependencies->getChangeTracker();
+    }
+
+    public function prepareRowHydration(): void
+    {
+        $this->getRelationManager()->resetCurrentPointers($this->relatedEntities);
     }
 
     // Protected getters for internal use
@@ -364,13 +375,74 @@ abstract class Entity
         return $this->dependencies->getNormalizer();
     }
 
-    // protected function getTypeHandlerFactory(): TypeHandlerFactory
-    // {
-    //     return $this->dependencies->getTypeHandlerFactory();
-    // }
-
     protected function getTypePresenterFactory(): TypePresenterFactory
     {
         return $this->dependencies->getTypePresenterFactory();
+    }
+
+    private function findRelationshipFromPath(array $pathParts): ?array
+    {
+        $currentPath = '';
+        $relationships = static::RELATIONSHIPS;
+
+        foreach ($pathParts as $part) {
+            $currentPath = $currentPath ? $currentPath . '.' . $part : $part;
+
+            if (isset($relationships[$currentPath])) {
+                $config = $relationships[$currentPath];
+                $remainingPath = implode('.', array_slice($pathParts, count(explode('.', $currentPath))));
+
+                return [
+                    'name' => $currentPath,
+                    'remaining' => $remainingPath,
+                    'config' => $config,
+                ];
+            }
+        }
+
+        return null;
+    }
+
+    private function handleMainEntityField(string $fieldName, mixed $value): void
+    {
+        $fieldToPropertyMap = $this->getMapper()->getFieldToPropertyMap($this);
+
+        if (isset($fieldToPropertyMap[$fieldName])) {
+            $this->getHydrator()->denormalizeAndSetProperty($this, $fieldName, $value);
+            return;
+        }
+
+        // Check if fieldName itself is a property (camelCase conversion)
+        $propertyName = $this->convertToPropertyName($fieldName);
+        if ($this->hasProperty($propertyName)) {
+            $this->getHydrator()->denormalizeAndSetProperty($this, $fieldName, $value);
+            return;
+        }
+
+        // Unknown field, store for later
+        $this->pendingData[$fieldName] = $value;
+    }
+
+    private function handleRelationshipField(string $fullPath, mixed $value): void
+    {
+        $parts = explode('.', $fullPath);
+        $relationshipInfo = $this->findRelationshipFromPath($parts);
+
+        if (!$relationshipInfo) {
+            // Not a known relationship, store for later
+            $this->pendingData[$fullPath] = $value;
+            return;
+        }
+
+        $this->getRelationManager()->hydrateRelatedEntity(
+            entity: $this,
+            dbRelationName: $relationshipInfo['name'],
+            field: $relationshipInfo['remaining'],
+            value: $value,
+            tableAlias: $this->tableAlias,
+            tableMap: $this->tableMap,
+            relatedEntities: $this->relatedEntities,
+            relationshipConfig: $relationshipInfo['config'],
+        );
     }
 }

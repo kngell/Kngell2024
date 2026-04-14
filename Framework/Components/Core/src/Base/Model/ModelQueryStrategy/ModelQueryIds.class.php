@@ -12,7 +12,7 @@ class ModelQueryIds extends AbstractModelBaseQuery
         $offset = max(0, ($page - 1) * $perPage);
         $keyField = $params['keyField'] ?? null;
 
-        $em->getRepository($targetEntity)->findByIds($conditions, $perPage, $offset, $keyField);
+        $em->getRepository($targetEntity)->fetchIds($conditions, $perPage, $offset, $keyField);
 
         return $this->getQueryResult($em, 'page')
             ->setPagination($page, $perPage)->setEntityKeyField($keyField);

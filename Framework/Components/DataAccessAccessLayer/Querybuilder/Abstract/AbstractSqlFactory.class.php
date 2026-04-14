@@ -8,10 +8,10 @@ abstract class AbstractSqlFactory implements ClauseBuilderFactoryInterface
     {
     }
 
-    abstract public function supports(SqlStatementType $statement): bool;
+    abstract public function supports(SqlStatement $statement): bool;
 
-    protected function getStatementType(): ?SqlStatementType
+    protected function getStatement(): ?SqlStatement
     {
-        return $this->component->getSqlStatementType();
+        return $this->component->getStatement();
     }
 }

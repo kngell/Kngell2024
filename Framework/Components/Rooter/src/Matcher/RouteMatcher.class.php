@@ -9,7 +9,7 @@ final class RouteMatcher
     private string $controllerSuffix = 'Controller';
 
     public function __construct(
-        private RoutePatternRegistry $patternRegistry,
+        private RouteMatchingService $matchingService,
         private ParameterAliasRegistry $aliasses,
     ) {
     }
@@ -18,45 +18,29 @@ final class RouteMatcher
     {
         try {
             $routePath = $this->normalizeUrl($request, $internalUrl);
+            $routes = $this->matchingService->getRoutes();
 
-            $routes = $this->patternRegistry->getRouteObjects();
-            foreach ($routes as $routePathKey => $route) {
-                $pattern = $this->patternRegistry->getPhpPattern($routePathKey);
+            $routeInfo = $this->matchingService->findRouteForPath($routePath, $routes);
 
-                if (!preg_match($pattern, $routePath, $rawMatches)) {
-                    continue;
-                }
-
-                $namedMatches = array_filter($rawMatches, 'is_string', ARRAY_FILTER_USE_KEY);
-
-                $controller = $route->controller ?? ($namedMatches['controller'] ?? null);
-                $method = $route->method ?? ($namedMatches['method'] ?? null);
-
-                $routeParams = method_exists($route, 'toArray') ? $route->toArray() : [];
-                $mergedMatches = array_merge($routeParams, $namedMatches);
-
-                if ($controller !== null) {
-                    $mergedMatches['controller'] = $controller;
-                }
-                if ($method !== null) {
-                    $mergedMatches['method'] = $method;
-                }
-
-                // Check HTTP method
-                if (method_exists($route, 'matchesMethod') && !$route->matchesMethod($request->getMethod())) {
-                    continue;
-                }
-
-                return $this->routeInfo($route, $mergedMatches, $request);
+            if (!$routeInfo) {
+                return null;
             }
 
-            return null;
+            $route = $routeInfo['route'];
+            $matches = $routeInfo['matches'];
+
+            // Check HTTP method
+            if (method_exists($route, 'matchesMethod') && !$route->matchesMethod($request->getMethod())) {
+                return null;
+            }
+
+            return $this->buildRouteInfo($route, $matches, $request);
         } catch (Exception $e) {
             return null;
         }
     }
 
-    private function routeInfo(Route $route, array $matches, Request $request): RouteInfo
+    private function buildRouteInfo(Route $route, array $matches, Request $request): RouteInfo
     {
         $controller = $this->controller($route->controller, $matches);
         $method = $this->method($controller, $route->method, $matches);
@@ -175,9 +159,9 @@ final class RouteMatcher
 
     private function controller(?string $controller, array $matches): string
     {
-        $controller = StringUtils::studlyCaps($controller ?? $matches['controller']);
-        if (class_exists($controller . $this->controllerSuffix)) {
-            return $controller . $this->controllerSuffix;
+        $controller = StringUtils::studlyCaps($controller ?? $matches['controller']) . $this->controllerSuffix;
+        if (class_exists($controller)) {
+            return $controller;
         }
         throw new PageNotFoundException("Page $controller not Found");
     }
@@ -190,7 +174,7 @@ final class RouteMatcher
             throw new InvalidPropertyOrMethod("No method specified for controller $controller");
         }
 
-        $methodName = StringUtils::camelCase($methodName);
+        $methodName = StringUtils::snakeCaseToCamelCase($methodName);
         if (method_exists($controller, $methodName)) {
             return new ReflectionMethod($controller, $methodName);
         }

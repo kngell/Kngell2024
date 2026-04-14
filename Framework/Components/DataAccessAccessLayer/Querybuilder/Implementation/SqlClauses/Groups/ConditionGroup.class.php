@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-class ConditionGroup extends SqlQuery implements ClauseComponentInterface, OperatorAwareInterface
+class ConditionGroup extends SqlQuery implements ClauseComponentInterface, OperatorAwareInterface, LogicalContainerInterface
 {
     private array $conditions = [];
     private ?string $groupLink = null;
+    private bool $isExplicit = false;
 
     public function __construct(private SqlClause $clauseContext)
     {
@@ -40,7 +41,6 @@ class ConditionGroup extends SqlQuery implements ClauseComponentInterface, Opera
 
         $result = implode(' ', $builtParts);
 
-        // Apply group-level parentheses only when needed
         return $this->needsGroupParentheses() ? "({$result})" : $result;
     }
 
@@ -81,7 +81,6 @@ class ConditionGroup extends SqlQuery implements ClauseComponentInterface, Opera
 
     public function getOperator(): ?SqlOperator
     {
-        // ConditionGroups don't have a single operator, return null
         return null;
     }
 
@@ -135,6 +134,41 @@ class ConditionGroup extends SqlQuery implements ClauseComponentInterface, Opera
         return !empty($this->conditions) ? $this->conditions[0] : null;
     }
 
+    // private function needsGroupParentheses(): bool
+    // {
+    //     $childCount = $this->children->count();
+
+    //     // Single child rarely needs parentheses
+    //     if ($childCount === 1) {
+    //         $firstChild = $this->children->first();
+    //         return $firstChild instanceof ConditionGroup ||
+    //                ($firstChild instanceof ConditionClause && $firstChild->getLogicalLink() === 'OR');
+    //     }
+
+    //     // Multiple children need parentheses if they have OR operators
+    //     foreach ($this->children->all() as $child) {
+    //         if ($child instanceof ConditionClause && $child->getLogicalLink() === 'OR') {
+    //             return true;
+    //         }
+    //         if ($child instanceof ConditionGroup && $child->hasOrOperators()) {
+    //             return true;
+    //         }
+    //     }
+
+    //     return false;
+    // }
+    /**
+     * @param bool $isExplicit
+     *
+     * @return ConditionGroup
+     */
+    public function setIsExplicit(bool $isExplicit): ConditionGroup
+    {
+        $this->isExplicit = $isExplicit;
+
+        return $this;
+    }
+
     private function getLogicalOperatorForChild(ClauseComponentInterface $child, int $index): string
     {
         if ($child instanceof ConditionClause) {
@@ -149,62 +183,25 @@ class ConditionGroup extends SqlQuery implements ClauseComponentInterface, Opera
         return 'AND';
     }
 
-    /**
-     * Apply parentheses to individual conditions based on precedence.
-     */
-    private function applyConditionParentheses(
-        OperatorAwareInterface $condition,
-        string $conditionSql,
-        ?SqlOperator $previousOperator,
-    ): string {
-        $currentOperator = $condition->getOperator();
-        $logicalLink = $condition->getLogicalLink();
-
-        if (OperatorPrecedence::requiresParentheses($previousOperator, $currentOperator, $logicalLink)) {
-            return "({$conditionSql})";
-        }
-
-        return $conditionSql;
-    }
-
-    /**
-     * Apply parentheses to the entire group if needed.
-     */
-    private function applyGroupParentheses(string $sql): string
-    {
-        if ($this->needsGroupParentheses()) {
-            return "({$sql})";
-        }
-
-        return $sql;
-    }
-
+    // Inside ConditionGroup
     private function needsGroupParentheses(): bool
     {
-        $childCount = $this->children->count();
-
-        // Single child rarely needs parentheses
-        if ($childCount === 1) {
-            $firstChild = $this->children->first();
-            return $firstChild instanceof ConditionGroup ||
-                   ($firstChild instanceof ConditionClause && $firstChild->getLogicalLink() === 'OR');
+        if ($this->isExplicit) {
+            return true;
         }
 
-        // Multiple children need parentheses if they have OR operators
         foreach ($this->children->all() as $child) {
-            if ($child instanceof ConditionClause && $child->getLogicalLink() === 'OR') {
-                return true;
-            }
-            if ($child instanceof ConditionGroup && $child->hasOrOperators()) {
+            $linkName = ($child instanceof ConditionClause)
+                ? $child->getLogicalLink()
+                : $child->getGroupLink();
+
+            $op = SqlOperator::tryFrom($linkName);
+
+            if ($op && $op->getPrecedence() < SqlOperator::AND->getPrecedence()) {
                 return true;
             }
         }
 
         return false;
-    }
-
-    private function countConditions(): int
-    {
-        return count($this->conditions);
     }
 }

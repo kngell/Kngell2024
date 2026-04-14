@@ -1,0 +1,9 @@
+@use "css/backend/admin/abstracts/variables" as *;
+@mixin required-badge() {
+  display: flex;
+  padding: 0.4rem 0.8rem;
+  justify-content: center;
+  align-items: center;
+  border-radius: $radius-s;
+  background-color: $background-semantic-error-subtle;
+}

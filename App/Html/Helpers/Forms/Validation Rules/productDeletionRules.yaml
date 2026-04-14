@@ -1,0 +1,5 @@
+confirm_delete:
+  display: "Delete Confirmation"
+  required: true
+  required_checked: true
+  custom_message: "Please confirm you want to delete this product"

@@ -1,4 +1,4 @@
-import BaseValidator from "../BaseValidator.js";
+import BaseValidator from "../BaseValidator";
 
 export default class GteValidator extends BaseValidator {
   constructor(errorParams, display, value, ruleValue, formData) {

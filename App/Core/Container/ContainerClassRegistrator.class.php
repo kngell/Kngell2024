@@ -77,7 +77,6 @@ final readonly class ContainerClassRegistrator
             MailerInterface::class => Mailer::class,
             EventManagerInterface::class => EventManager::class,
             MenuItemInterface::class => MenuItem::class,
-            EntityManagerInterface::class => EntityManager::class,
             RooterInterface::class => Rooter::class,
             CookieServiceInterface::class => CookieService::class,
             'currency.cache' => function (): CacheInterface {
@@ -103,6 +102,7 @@ final readonly class ContainerClassRegistrator
                 );
             },
             RegionDataProviderInterface::class => RegionDataProvider::class,
+            DataMapperInterface::class => DataMapper::class,
             DatabaseEnvironmentConfig::class => [
                 function () {
                     return YamlFile::get('database');
@@ -111,12 +111,12 @@ final readonly class ContainerClassRegistrator
             MailerFacade::class => function () {
                 return YamlFile::get('email_settings');
             },
-            ProductFormCreator::class => ProductFormCreator::class,
             FileSearchInterface::class => FileSearchManager::class,
             FileUploadComponentInterface::class => UploadService::class,
             FileContentInterface::class => FileContentManager::class,
             DirectoryInterface::class => DirectoryManager::class,
             FileOperationsInterface::class => FileOperationsManager::class,
+            ChangeTrackerInterface::class => ChangeTracker::class,
 
             VariationBuilderInterface::class => DatabaseVariationBuilder::class,
             CurrencyLookupInterface::class => CurrencyService::class,
@@ -149,6 +149,7 @@ final readonly class ContainerClassRegistrator
             Request::class => Request::class,
             ValidatorInterface::class => Validator::class,
             DatabaseConnectionInterface::class => PDOConnection::class,
+            EntityManagerInterface::class => EntityManager::class,
             UserModel::class => UserModel::class,
             FlashInterface::class => Flash::class,
             ViewInterface::class => View::class,
@@ -158,7 +159,6 @@ final readonly class ContainerClassRegistrator
             CacheStorageInterface::class => NativeCacheStorage::class,
             CookieStoreInterface::class => NativeCookieStore::class,
             CookieInterface::class => Cookie::class,
-            DataMapperInterface::class => DataMapper::class,
             HashInterface::class => [Hash::class, function () use ($app) {
                 return $app->getAppConfig()->getConfig()['security'];
             }],
@@ -179,29 +179,37 @@ final readonly class ContainerClassRegistrator
             NavigationHistoryService::class => NavigationHistoryService::class,
             RememberPreviousPageMiddleware::class => RememberPreviousPageMiddleware::class,
             TypeNormalizerInterface::class => DefaultTypeNormalizer::class,
-            ChangeTrackerInterface::class => ChangeTracker::class,
             EntityDependenciesFactoryInterface::class => function () use ($app) {
                 return new EntityDependenciesFactory(
                     $app->get(TypeNormalizerInterface::class),
                     null,
                     function () use ($app) {
-                        // This will be called when TypePresenterFactory is first needed
                         return new TypePresenterFactory(
                             $app->get(TranslatorServiceInterface::class),
                             $app->get(RegionContextInterface::class),
+                            $app->get(ObfuscatorManager::class),
                         );
                     },
+                    $app->get(EntityIdentityMap::class),
                 );
             },
             //Forms
             FormDataHandlerInterface::class => FormDataHandlerService::class,
 
+            //Html sections
+            HtmlSectionManagerInterface::class => HtmlRegularSectionManager::class,
             //Region Context
             FormatterInterface::class => Formatter::class,
             FallbackSymbolProviderInterface::class => DefaultFallbackSymbolProvider::class,
 
             //Translation
             TranslatorServiceInterface::class => TranslatorService::class,
+
+            //Files|Upload
+            FileMoverInterface::class => FileMoverService::class,
+
+            //Templates
+            HtmlTemplatePathInterface::class => HtmlTemplatePathManager::class,
         ];
     }
 
@@ -260,17 +268,16 @@ final readonly class ContainerClassRegistrator
         }
 
         // Form factories - THIS IS THE KEY PART!
-        $formFactories = [
-            MainProductFormFactory::class,
-            DeleteProductFormFactory::class,
-            BulkProductFormFactory::class,
-        ];
+        // $formFactories = [
+        //     MainProductFormFactory::class,
+        //     DeleteProductFormFactory::class,
+        //     HeroFormFactory::class,
+        // ];
 
-        foreach ($formFactories as $factory) {
-            // Tag each factory with both specific and interface tags
-            $app->tag($factory, 'form_factories');
-            $app->tag($factory, FormFactoryInterface::class);
-        }
+        // foreach ($formFactories as $factory) {
+        //     $app->tag($factory, 'form_factories');
+        //     $app->tag($factory, FormFactoryInterface::class);
+        // }
 
         $regionContext = [
             AcceptLanguageRegionContext::class,
@@ -287,8 +294,8 @@ final readonly class ContainerClassRegistrator
 
         // Other form services
         $formServices = [
-            ProductFormCreator::class,
-            FormSectionManager::class,
+            FormCreatorService::class,
+            HtmlRegularSectionManager::class,
             FormProgressCalculator::class,
             VariationBuilderInterface::class,
         ];
@@ -297,9 +304,6 @@ final readonly class ContainerClassRegistrator
         }
     }
 
-    /**
-     * Register aliases for commonly used services.
-     */
     private static function registerAliases(App $app): void
     {
         $aliases = [
@@ -329,7 +333,7 @@ final readonly class ContainerClassRegistrator
             EventManagerInterface::class => 'events',
 
             // Form aliases
-            ProductFormCreator::class => 'form.creator',
+            FormCreatorService::class => 'form.creator',
         ];
 
         foreach ($aliases as $abstract => $alias) {
@@ -337,9 +341,6 @@ final readonly class ContainerClassRegistrator
         }
     }
 
-    /**
-     * Register global parameters available throughout the application.
-     */
     private static function registerGlobalParameters(App $app): void
     {
         $app->setGlobalParameters([

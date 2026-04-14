@@ -12,12 +12,6 @@ readonly class RouteDispatcher
         'cacheGarbageCollector',
     ];
 
-    /**
-     * Defines the order of middleware execution.
-     *
-     * Note: 'auth' must come first since other auth-related
-     * middlewares depend on it to set the user in the container.
-     */
     private const MIDDLEWARE_ORDER = [
         'auth',           // Authentication (must be first)
         'requireLogin',   // Login enforcement
@@ -30,9 +24,6 @@ readonly class RouteDispatcher
     ) {
     }
 
-    /**
-     * Dispatches the route and returns the response.
-     */
     public function dispatch(
         RouteInfo $route,
         string $url,
@@ -119,47 +110,31 @@ readonly class RouteDispatcher
         }, $middlewareNames);
     }
 
-    /**
-     * Ensures the auth middleware is always processed first if authentication-related
-     * middlewares are present in the middleware chain.
-     */
     private function ensureAuthMiddlewareFirst(array &$middlewareNames): void
     {
-        // If we have requireLogin or grantAccess but no auth, add auth first
-        $hasAuthRelatedMiddleware = in_array('requireLogin', $middlewareNames) ||
-                                   in_array('grantAccess', $middlewareNames);
+        $hasAuthRelatedMiddleware = in_array('requireLogin', $middlewareNames) || in_array('grantAccess', $middlewareNames);
 
         $hasAuthMiddleware = in_array('auth', $middlewareNames);
 
         if ($hasAuthRelatedMiddleware && !$hasAuthMiddleware) {
-            // Add auth middleware at the beginning
             array_unshift($middlewareNames, 'auth');
         } elseif ($hasAuthMiddleware && $hasAuthRelatedMiddleware) {
-            // If auth middleware exists but is not first, move it to the front
             $authIndex = array_search('auth', $middlewareNames);
             if ($authIndex > 0) {
-                // Remove auth from its current position
                 unset($middlewareNames[$authIndex]);
-                // Re-index the array
                 $middlewareNames = array_values($middlewareNames);
-                // Add auth at the beginning
                 array_unshift($middlewareNames, 'auth');
             }
         }
     }
 
-    /**
-     * Returns an ordered list of middleware names for the route.
-     */
     private function getOrderedMiddlewares(RouteInfo $route): array
     {
         $routeMiddlewares = $this->extractRouteMiddlewares($route->getRouteParams());
         $allMiddlewares = array_merge(self::GLOBAL_MIDDLEWARES, $routeMiddlewares);
 
-        // Remove duplicates while preserving order
         $allMiddlewares = array_values(array_unique($allMiddlewares));
 
-        // Sort according to MIDDLEWARE_ORDER
         usort($allMiddlewares, function ($a, $b) {
             $order = self::MIDDLEWARE_ORDER;
             $posA = array_search($a, $order, true);
@@ -180,9 +155,6 @@ readonly class RouteDispatcher
         return $allMiddlewares;
     }
 
-    /**
-     * Extracts middleware names from route params.
-     */
     private function extractRouteMiddlewares(array $params): array
     {
         if (isset($params['middleware'])) {
@@ -198,33 +170,29 @@ readonly class RouteDispatcher
         return [];
     }
 
-    /**
-     * Resolves and returns the controller instance.
-     */
     private function resolveController(RouteInfo $route, App $app, Request $request): Controller
     {
         $this->bindPaymentGateway($app);
 
-        // Bind view environment path
         $path = $this->controllerPath($route->getMethod()->getDeclaringClass()->getFileName());
         $app->bindParams(ViewEnvironment::class, ['path' => $path]);
 
-        // Use method injection to create and configure controller
-        return $app->call(function () use ($route, $request, $app) {
-            $controller = $app->resolve($route->getController());
+        $controller = $app->resolve($route->getController());
 
-            // Use method injection for controller setup instead of manual setter calls
-            return $app->call([$this, 'configureController'], [
-                'controller' => $controller,
-                'request' => $request,
-                'app' => $app,
-            ]);
-        });
+        return $this->configureController($controller, $request, $app);
+        // $dispatcher = $this;
+
+        // return $app->call(function () use ($route, $request, $app, $dispatcher) {
+        //     $controller = $app->resolve($route->getController());
+
+        //     return $app->call([$dispatcher, 'configureController'], [
+        //         'controller' => $controller,
+        //         'request' => $request,
+        //         'app' => $app,
+        //     ]);
+        // });
     }
 
-    /**
-     * Configure controller with all required dependencies.
-     */
     private function configureController(Controller $controller, Request $request, App $app): Controller
     {
         return $controller
@@ -240,7 +208,9 @@ readonly class RouteDispatcher
             ->setCookie($app->getCookie())
             ->setNavigationHistory($app->get(NavigationHistoryService::class))
             ->setRegion($app->get(RegionContextInterface::class))
-            ->setTranslator($app->get(TranslatorServiceInterface::class));
+            ->setTranslator($app->get(TranslatorServiceInterface::class))
+            ->setSectionManager($app->get(HtmlSectionManagerInterface::class))
+            ->setProviderFactory($app->get(SectionProviderFactory::class));
     }
 
     /**

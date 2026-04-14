@@ -2,24 +2,29 @@
 
 declare(strict_types=1);
 
-/**
- * SQL FUNCTIONS - Built-in operations that return a value
- * These are called within SQL expressions, not as standalone methods.
- */
 enum SqlFunction: string
 {
-    // =========================================================================
-    // AGGREGATE FUNCTIONS - Operate on multiple rows, return single value
-    // =========================================================================
+    public static function isSqlFunction(mixed $value): bool
+    {
+        if (!is_string($value)) {
+            return false;
+        }
+
+        $parts = explode('(', $value);
+        $funcName = strtoupper(trim($parts[0]));
+        $match = self::tryFrom($funcName);
+
+        if (!$match) {
+            return false;
+        }
+        return str_contains($value, '(') && str_ends_with(trim($value), ')');
+    }
     case COUNT = 'COUNT';
     case SUM = 'SUM';
     case AVG = 'AVG';
     case MIN = 'MIN';
     case MAX = 'MAX';
 
-    // =========================================================================
-    // SCALAR FUNCTIONS - Operate on single value, return single value
-    // =========================================================================
     // String functions
     case UPPER = 'UPPER';
     case LOWER = 'LOWER';

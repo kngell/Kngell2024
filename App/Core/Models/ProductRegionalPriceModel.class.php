@@ -1,8 +1,21 @@
 <?php
 
 declare(strict_types=1);
+
 class ProductRegionalPriceModel extends Model
 {
+    public function save(null|array|Entity $data = null, array $conditions = []): QueryResult
+    {
+        // $priceEntity = $this->findOrCreate($conditions);
+
+        // if ($priceEntity->getEntityPrimarykeyValue()) {
+        //     $priceEntity->track();
+        // }
+        // $priceEntity->assign($data);
+        // $this->addToIdentityMap($priceEntity);
+        return parent::save($data);
+    }
+
     /**
      * @throws PDOException
      * @throws QueryResultException

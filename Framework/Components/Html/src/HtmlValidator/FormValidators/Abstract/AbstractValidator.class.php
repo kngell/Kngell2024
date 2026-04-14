@@ -12,8 +12,7 @@ abstract class AbstractValidator
 
     protected function errorMessage(string $errMsg, array $classes = []): string
     {
-        $classString = !empty($classes) ? " class='" . implode(' ', $classes) . "'" : '';
-        return "<small{$classString}>{$errMsg}</small>";
+        return FieldErrorHtml::format($errMsg, $classes);
     }
 
     protected function isEmpty(mixed $value): bool
@@ -72,5 +71,63 @@ abstract class AbstractValidator
         }
 
         return (string) $value;
+    }
+
+    protected function buildErrorMessage(array $errorParams): array
+    {
+        $message = $errorParams['message'] ?? '%s must be unique';
+        $classes = $errorParams['classes'] ?? ['text-danger', 'validation-error'];
+
+        return [$message, $classes];
+    }
+
+    protected function extractFieldName(string $path): string
+    {
+        if (preg_match('/\[([^\]]+)\]$/', $path, $matches)) {
+            return $matches[1];
+        }
+        return $path;
+    }
+
+    protected function resolveFieldValue(string $targetField, array $formData, string $fieldName): mixed
+    {
+        if (!$formData) {
+            return null;
+        }
+
+        if (str_contains($fieldName, '[')) {
+            preg_match_all('/[^[\]]+/', $fieldName, $matches);
+            $keys = $matches[0];
+            array_pop($keys); // Remove current field
+
+            $cursor = $formData;
+            foreach ($keys as $key) {
+                if (isset($cursor[$key])) {
+                    $cursor = $cursor[$key];
+                } else {
+                    $cursor = null;
+                    break;
+                }
+            }
+
+            if ($cursor && isset($cursor[$targetField])) {
+                return $cursor[$targetField];
+            }
+        }
+
+        return $formData[$targetField] ?? null;
+    }
+
+    protected function convertToString(mixed $value): string
+    {
+        if (is_bool($value)) {
+            return $value ? 'true' : 'false';
+        }
+
+        if ($value === null) {
+            return '';
+        }
+
+        return trim((string) $value);
     }
 }

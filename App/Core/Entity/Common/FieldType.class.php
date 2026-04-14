@@ -15,4 +15,5 @@ enum FieldType: string
     case INTEGER = 'integer';
     case FLOAT = 'float';
     case BOOLEAN = 'boolean';
+    case INT = 'int';
 }

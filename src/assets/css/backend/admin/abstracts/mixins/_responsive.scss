@@ -57,8 +57,6 @@
   }
 }
 
-// Responsive typography scaling mixin
-// Automatically scales font sizes across breakpoints
 @mixin responsive-font-size($base-size, $scale-factor: 0.8) {
   font-size: $base-size;
 

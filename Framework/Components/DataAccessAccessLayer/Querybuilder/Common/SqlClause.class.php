@@ -4,19 +4,19 @@ declare(strict_types=1);
 
 enum SqlClause: string
 {
-    public function toStatementType(): SqlStatementType
+    public function toStatementType(): SqlStatement
     {
         return match ($this) {
             // SELECT statement clauses
             self::SELECT, self::FROM, self::WHERE,
             self::GROUP_BY, self::HAVING, self::ORDER_BY,
-            self::LIMIT, self::OFFSET => SqlStatementType::SELECT,
+            self::LIMIT, self::OFFSET,self::CYCLE => SqlStatement::SELECT,
 
             // INSERT statement clauses
-            self::INTO, self::VALUES, self::ON_DUPLICATE_KEY_UPDATE => SqlStatementType::INSERT,
+            self::INTO, self::VALUES, self::ON_DUPLICATE_KEY_UPDATE => SqlStatement::INSERT,
 
             // UPDATE statement clause
-            self::SET => SqlStatementType::UPDATE,
+            self::SET => SqlStatement::UPDATE,
         };
     }
     // Data Retrieval
@@ -34,4 +34,8 @@ enum SqlClause: string
     case VALUES = 'VALUES';    // Row insertion clause (INSERT)
     case INTO = 'INTO';        // Target specification clause (INSERT)
     case ON_DUPLICATE_KEY_UPDATE = 'ON DUPLICATE KEY UPDATE';
+
+    // Recursive CTE support
+    case SEARCH = 'SEARCH';
+    case CYCLE = 'CYCLE';
 }

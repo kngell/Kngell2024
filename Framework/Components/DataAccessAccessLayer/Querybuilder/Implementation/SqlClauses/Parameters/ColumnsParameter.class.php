@@ -12,9 +12,11 @@ class ColumnsParameter extends SqlComponent
         ?TablesAliasHelper $helper,
         null|string|Closure $table,
         bool $selectAsAlias,
+        ?EntityManagerInterface $em = null,
+        private ?StatementType $clauseContext = null,
         string|array ...$columns,
     ) {
-        parent::__construct(); // Call parent constructor to initialize state
+        parent::__construct(em:$em); // Call parent constructor to initialize state
         $this->columns = ColumnStandardizer::standardize((array) $columns);
         $this->helper = $helper;
         $this->table = $table;
@@ -27,34 +29,44 @@ class ColumnsParameter extends SqlComponent
         if (!$this->helper) {
             throw new RuntimeException('TablesAliasHelper not initialized');
         }
+
         $this->ensureStateInitialized();
-
-        if (!$this->table instanceof Closure) {
-            $columnStrings = [];
-            $logicalKey = $this->getLogicalTable();
-
-            $tableAlias = $this->state->tableAlias ?? [];
-            $aliasCheck = $this->state->aliasCheck ?? [];
-            if ($this->customAlias === null) {
-                list($table, $alias) = $this->helper->get($logicalKey, $tableAlias, $aliasCheck);
-            } else {
-                $alias = $this->customAlias;
-            }
-        } else {
-            $query = new SqlQueryClosure($this->table);
-            $innerSql = $query->build();
-            $this->mergeChildState($query);
-            return $innerSql;
+        if ($this->table instanceof Closure) {
+            return $this->buildSubquery();
         }
 
+        return $this->buildRegularColumns();
+    }
+
+    private function buildSubquery(): string
+    {
+        $query = new SqlQueryClosure($this->table, $this->em, $this->clauseContext);
+        $innerSql = $query->build();
+        $this->mergeChildState($query);
+        return $innerSql;
+    }
+
+    private function buildRegularColumns(): string
+    {
+        $logicalKey = $this->getLogicalTable();
+
+        // Get table alias
+        $tableAlias = $this->state->tableAlias ?? [];
+        $aliasCheck = $this->state->aliasCheck ?? [];
+        $this->helper->setCustomAlias($this->customAlias);
+
+        [$table, $alias] = $this->helper->get($logicalKey, $tableAlias, $aliasCheck);
+
+        // Build column strings
+        $columnStrings = [];
         foreach ($this->columns as $column) {
             $columnStrings[] = $this->ColumnBuilderForSelect->build($column, $alias);
         }
-        if (isset($logicalKey)) {
-            $this->state->tables[$logicalKey] = $this->columns;
-            $this->state->tableAlias = $tableAlias;
-            $this->state->aliasCheck = $aliasCheck;
-        }
+
+        // Update state
+        $this->state->tables[$logicalKey] = $this->columns;
+        $this->state->tableAlias = $tableAlias;
+        $this->state->aliasCheck = $aliasCheck;
 
         $this->query = implode(', ', $columnStrings);
         return $this->query;
@@ -62,33 +74,56 @@ class ColumnsParameter extends SqlComponent
 
     private function getLogicalTable(): string
     {
-        $logicalKey = $this->state->joinContext ?? $this->table;
-
+        $logicalKey = $this->table;
         $physicalTable = $this->helper->getPhysicalTable($logicalKey);
 
-        $columns = [];
-        foreach ($this->columns as $column) {
-            if (is_string($column) && str_contains($column, '.')) {
-                $parts = explode('.', $column, 2);
-                if (count($parts) === 2 && $physicalTable === $parts[0]) {
-                    $columns[] = $parts[1];
-                } else {
-                    $columns[] = $column;
-                }
-            } else {
-                $columns[] = $column;
-            }
-        }
-        $this->columns = $columns;
-        // Update state immutably
         $this->state = $this->state->withLogicalToPhysicalMap(
             array_merge($this->state->logicalToPhysicalMap, [$logicalKey => $physicalTable]),
         );
 
+        $this->columns = $this->cleanColumnPrefixes($this->columns, $physicalTable, $logicalKey);
+
         return $logicalKey;
     }
 
-    // Optional: Add state validation
+    private function cleanColumnPrefixes(array $columns, string $physicalTable, string $logicalKey): array
+    {
+        return array_map(function ($column) use ($physicalTable, $logicalKey) {
+            if (!is_string($column) || !str_contains($column, '.')) {
+                return $column;
+            }
+
+            $parts = explode('.', $column);
+
+            // If there are multiple dots, the physical table is the second-to-last part
+            // Example: "product_variation.variation_attribute.name" -> physical table is "variation_attribute"
+            if (count($parts) >= 3) {
+                $possiblePhysicalTable = $parts[count($parts) - 2];
+                $columnName = end($parts);
+
+                // Check if this matches the expected physical table
+                if ($possiblePhysicalTable === $physicalTable) {
+                    return $columnName;
+                }
+
+                // Also check against logical key mappings
+                $logicalToPhysicalMap = $this->state->logicalToPhysicalMap ?? [];
+                if (isset($logicalToPhysicalMap[$possiblePhysicalTable]) &&
+                    $logicalToPhysicalMap[$possiblePhysicalTable] === $physicalTable) {
+                    return $columnName;
+                }
+            }
+
+            // Handle simple table.column format
+            $firstPrefix = $parts[0];
+            if ($firstPrefix === $physicalTable || $firstPrefix === $logicalKey) {
+                return end($parts);
+            }
+
+            return $column;
+        }, $columns);
+    }
+
     private function ensureStateInitialized(): void
     {
         if (!$this->state) {

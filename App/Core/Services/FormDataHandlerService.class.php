@@ -6,6 +6,11 @@ class FormDataHandlerService implements FormDataHandlerInterface
 {
     private const string WEB_PATH_PREFIX = 'web_path__';
     private const int WEB_PATH_PREFIX_LENGTH = 10;
+    private const array EXCLUDED_EMPTY_CHECK_KEYS = [
+        'csrfToken',
+        'frm_name',
+        'form-tab',
+    ];
 
     public function __construct(
         private FlashInterface $flash,
@@ -24,14 +29,14 @@ class FormDataHandlerService implements FormDataHandlerInterface
             $formValues = ArrayUtils::flattenWithKeys($formData);
             $fileMetadata = $upload->getFileMetadata();
             $fileMetadata = $this->mergeWebPathsIntoMetadata($fileMetadata, $webPaths);
-            $this->flash->addFormInput(
+            $this->flash->addFormData(
                 $requestUri,
                 $formValues,
                 $errors,
                 $fileMetadata,
             );
         } catch (Throwable $e) {
-            $this->flash->addFormInput(
+            $this->flash->addFormData(
                 $requestUri,
                 [],
                 ['system' => ['An error occurred while saving form data. Please try again.']],
@@ -43,15 +48,28 @@ class FormDataHandlerService implements FormDataHandlerInterface
     public function getStoredFormData(string $requestUri): array
     {
         try {
-            return $this->flash->flushForm($requestUri);
+            return $this->flash->getFormData($requestUri);
         } catch (Throwable $e) {
             throw new ControllerFormDataException('no Stored data found!');
         }
     }
 
-    public function getOldInput(?string $key = null): mixed
+    public function isEmptyData(array $data, array $additionalExcludeKeys = []): bool
     {
-        return $this->flash->getOldInput($key);
+        $excludeKeys = array_merge(
+            self::EXCLUDED_EMPTY_CHECK_KEYS,
+            $additionalExcludeKeys,
+        );
+
+        $filtered = array_diff_key($data, array_flip($excludeKeys));
+        $nonEmptyValues = array_filter($filtered, fn ($v) => $v !== '' && $v !== null);
+
+        return empty($nonEmptyValues);
+    }
+
+    public function getFormData(?string $key = null): mixed
+    {
+        return $this->flash->getFormData($key);
     }
 
     public function hasStoredFormData(string $requestUri): bool
@@ -61,7 +79,7 @@ class FormDataHandlerService implements FormDataHandlerInterface
 
     public function clearStoredFormData(string $requestUri): void
     {
-        $this->flash->flushForm($requestUri);
+        $this->flash->getFormData($requestUri);
     }
 
     public function prepareForValidation(array $data): array

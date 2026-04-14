@@ -9,24 +9,34 @@ class JoinClause extends SqlQuery implements RegularClauseComponentInterface
     public function __construct(
         ?string $customAlias,
         string|Closure $table,
-        bool $withAlias = false,
+        bool $withAlias,
+        private SqlSelectQueryBuilderInterface|Closure|null $selectQuery = null,
+        ?EntityManagerInterface $em,
+        ?string $method,
     ) {
-        parent::__construct(self::CLAUSE);
+        parent::__construct(self::CLAUSE, null, $em);
         $this->withAlias = $withAlias;
         $this->table = is_string($table) ? $table : '';
         $this->customAlias = $customAlias;
         $this->table = $table;
-    }
-
-    public function getSqlClause(): ?SqlClause
-    {
-        return SqlClause::tryFrom($this->method);
+        $this->method = $method;
     }
 
     public function build(): string
     {
         if (!$this->helper) {
             throw new RuntimeException('TablesAliasHelper not initialized');
+        }
+        $parts = [];
+        if ($this->selectQuery !== null) {
+            if ($this->selectQuery instanceof Closure) {
+                $query = new SqlQueryClosure($this->selectQuery, $this->em, $this->method);
+            } elseif ($this->selectQuery instanceof SqlComponent) {
+                $query = $this->selectQuery;
+            }
+            $this->prepareChild($query);
+            $innerSql = '(' . $query->build() . ')';
+            $this->mergeChildState($query);
         }
 
         $tableAlias = $this->state->tableAlias;
@@ -45,13 +55,16 @@ class JoinClause extends SqlQuery implements RegularClauseComponentInterface
 
         $this->state->logicalToPhysicalMap[$this->table] = $table;
 
+        if ($this->state->statementContext === StatementType::BULK_UPDATE) {
+            $table = $innerSql;
+        }
+
         if (!empty($this->customAlias)) {
             $alias = $this->customAlias;
         }
 
         $this->state->tableAlias = $tableAlias;
         $this->state->aliasCheck = $aliasCheck;
-        $parts = [];
 
         $parts[] = $table . ' AS ' . $alias;
 
@@ -72,6 +85,14 @@ class JoinClause extends SqlQuery implements RegularClauseComponentInterface
         $this->helper->setJoinContext(null);
 
         return $this->query;
+    }
+
+    public function getSqlClause(): ?SqlClause
+    {
+        if ($this->state->statementContext === StatementType::BULK_UPDATE) {
+            return null;
+        }
+        return SqlClause::tryFrom($this->method);
     }
 
     public function getTable(): string

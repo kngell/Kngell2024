@@ -1,4 +1,3 @@
-// js/core/validation/factory/ValidatorRegistry.js
 import RequiredValidator from "js/core/validation/Validators/RequiredValidator";
 import MinValidator from "js/core/validation/Validators/MinValidator";
 import MaxValidator from "js/core/validation/Validators/MaxValidator";
@@ -17,6 +16,9 @@ import UploadLimitValidator from "js/core/validation/Validators/UploadLimitValid
 import PostLimitValidator from "js/core/validation/Validators/PostLimitValidator";
 import MaxFilesValidator from "js/core/validation/Validators/MaxFilesValidator";
 import MimesValidator from "js/core/validation/Validators/MimesValidator";
+import UniqueInArrayValidator from "js/core/validation/Validators/UniqueInArrayValidator";
+import IntegerValidator from "js/core/validation/Validators/IntegerValidator";
+import RequiredCheckedValidator from "js/core/validation/Validators/RequiredCheckedValidator.js";
 
 export default class ValidatorRegistry {
   static validators = {
@@ -38,6 +40,9 @@ export default class ValidatorRegistry {
     post_limit: PostLimitValidator,
     max_files: MaxFilesValidator,
     mimes: MimesValidator,
+    unique_in_array: UniqueInArrayValidator,
+    integer: IntegerValidator,
+    required_checked: RequiredCheckedValidator,
   };
 
   static getValidator(ruleName) {

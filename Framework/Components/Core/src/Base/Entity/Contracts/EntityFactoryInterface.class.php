@@ -34,6 +34,8 @@ interface EntityFactoryInterface
 
     public function getPrimaryKeyField(string $entityClass): string;
 
+    public function hasRelationships(string $entityClass): bool;
+
     public function getNormalizer(): TypeNormalizerInterface;
 
     public function getChangeTracker(): ChangeTrackerInterface;

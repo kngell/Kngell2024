@@ -1,0 +1,10 @@
+@use "sass:color";
+
+@mixin keyframes($name) {
+  @keyframes #{$name} {
+    @content;
+  }
+}
+@mixin animation($animations...) {
+  animation: $animations;
+}

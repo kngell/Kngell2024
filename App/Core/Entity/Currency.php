@@ -11,7 +11,7 @@ class Currency extends Entity implements TimestampableInterface
 
     private string $currencyCode;
     private string $currencyName;
-    private string $symbol;
+     private string $symbol;
     private string $currencySymbol;
     private bool $isActive = true;
     private bool $isDefault = false;

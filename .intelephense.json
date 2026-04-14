@@ -1,0 +1,20 @@
+{
+  "files.associations": ["*.php", "*.phtml"],
+  "files.exclude": [
+    "**/tests/**",
+    "**/test/**",
+    "**/Tests/**",
+    "**/examples/**",
+    "**/docs/**",
+    "**/resources/**",
+    "**/assets/**"
+  ],
+  "files.maxSize": 10000000,
+  "storage.maxItems": 100000,
+  "memoryLimit": 4096,
+  "completion.fullyQualifyGlobalConstantsAndFunctions": false,
+  "diagnostics.undefinedSymbols": true,
+  "diagnostics.unusedUse": false,
+  "indexing.maxFileSize": 500000,
+  "indexing.maxTime": 60
+}

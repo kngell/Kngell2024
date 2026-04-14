@@ -1,0 +1,10 @@
+# Exclude test files from classmap
+**/tests/** export-ignore
+**/test/** export-ignore
+**/examples/** export-ignore
+**/docs/** export-ignore
+
+# Exclude development files
+**/*.md export-ignore
+**/*.yml export-ignore
+**/*.yaml export-ignore

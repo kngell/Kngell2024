@@ -18,14 +18,16 @@ abstract class Controller
     protected AbstractFormCreator $frm;
     protected RegionContextInterface $region;
     protected TranslatorServiceInterface $translator;
+    protected NavigationHistoryService $navigationHistory;
+    protected SectionProviderFactory $providerFactory;
+    protected HtmlRegularSectionManager $sectionManager;
     private ViewInterface $view;
     private string $layout;
     private Model|null $currentModel;
-    private NavigationHistoryService $navigationHistory;
 
-    public function __call($name, $args)
+    public function __call(string $name, mixed $args): void
     {
-        $method = $name . 'Action';
+        $method = $name;
 
         if (method_exists($this, $method)) {
             if ($this->before() !== false) {
@@ -40,10 +42,7 @@ abstract class Controller
     public function render(string $templatePath, array $context = []): string
     {
         try {
-            $pathParts = explode(DS, $templatePath);
-            if (count($pathParts) === 1) {
-                $templatePath = strtolower(str_replace('Controller', '', $this::class) . DS . $templatePath);
-            }
+            $templatePath = $this->templatePath($templatePath);
             $this->view->setRequest($this->request);
             return $this->view->render($templatePath, $this->context($context));
         } catch (AmbiguousViewException | ViewNotFoundException $e) {
@@ -111,35 +110,35 @@ abstract class Controller
         return $this->redirect($targetUrl);
     }
 
-    protected function handleViewError(Exception $e, string $viewPath): string
-    {
-        if ($e instanceof AmbiguousViewException) {
-            // Log the ambiguity for debugging
-            error_log('View ambiguity in ' . static::class . ": {$e->getMessage()}");
+    // protected function handleViewError(Exception $e, string $viewPath): string
+    // {
+    //     if ($e instanceof AmbiguousViewException) {
+    //         // Log the ambiguity for debugging
+    //         error_log('View ambiguity in ' . static::class . ": {$e->getMessage()}");
 
-            // In development, show helpful error
-            if ($_ENV['APP_ENV'] === 'development') {
-                return "<div style='background: #ffebee; padding: 20px; border: 1px solid #c62828;'>
-                    <h3>Ambiguous View Reference</h3>
-                    <p><strong>Controller:</strong> " . static::class . "</p>
-                    <p><strong>View path:</strong> {$viewPath}</p>
-                    <p><strong>Error:</strong> {$e->getMessage()}</p>
-                    <p>Please specify the full path to disambiguate the view.</p>
-                </div>";
-            }
+    //         // In development, show helpful error
+    //         if ($_ENV['APP_ENV'] === 'development') {
+    //             return "<div style='background: #ffebee; padding: 20px; border: 1px solid #c62828;'>
+    //                 <h3>Ambiguous View Reference</h3>
+    //                 <p><strong>Controller:</strong> " . static::class . "</p>
+    //                 <p><strong>View path:</strong> {$viewPath}</p>
+    //                 <p><strong>Error:</strong> {$e->getMessage()}</p>
+    //                 <p>Please specify the full path to disambiguate the view.</p>
+    //             </div>";
+    //         }
 
-            // In production, show generic error
-            return $this->render('errors/500', ['message' => 'View configuration error']);
-        }
+    //         // In production, show generic error
+    //         return $this->render('errors/500', ['message' => 'View configuration error']);
+    //     }
 
-        if ($e instanceof ViewNotFoundException) {
-            // Let your error controller handle 404s
-            throw $e;
-        }
+    //     if ($e instanceof ViewNotFoundException) {
+    //         // Let your error controller handle 404s
+    //         throw $e;
+    //     }
 
-        // Re-throw other exceptions
-        throw $e;
-    }
+    //     // Re-throw other exceptions
+    //     throw $e;
+    // }
 
     protected function getRedirectUrl(): string|null
     {
@@ -151,14 +150,27 @@ abstract class Controller
         return $this->session->get('previous_url');
     }
 
+    protected function getFlashData(string $action): array
+    {
+        $flashedData = $this->flash->getFormData($action);
+        $values = $flashedData['values'];
+        $errors = $flashedData['errors'];
+        $files = $flashedData['files'];
+        return [$values, $errors, $files];
+    }
+
     protected function form(string $action, array|Entity &$formValues = [], array &$formErrors = [], array &$files = []): string
     {
-        $flashedData = $this->flash->flushForm($action);
+        $flashedData = $this->flash->getFormData($action);
         $values = !empty($flashedData['values']) ? $flashedData['values'] : $formValues;
         $errors = !empty($flashedData['errors']) ? $flashedData['errors'] : $formErrors;
-        $files = !empty($flashedData['files']) ? $flashedData['files'] : [];
-        // Make sure files are passed to the form instance
+        $files = !empty($flashedData['files']) ? $flashedData['files'] : $files;
         return $this->frm->make($action, $values, $errors, $files);
+    }
+
+    protected function formatBytes(int $bytes): string
+    {
+        return $this->view->formatBytes($bytes);
     }
 
     /**
@@ -203,7 +215,28 @@ abstract class Controller
 
     protected function jsonResponse(string|object|array|bool $data = []): JsonResponse
     {
-        return new JsonResponse($data, HttpStatusCode::HTTP_OK, ['Content-Type' => 'application/json']);
+        $response = new JsonResponse($data, HttpStatusCode::HTTP_OK, ['Content-Type' => 'application/json']);
+        $response->setEncodingOptions(JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        return $response;
+    }
+
+    private function templatePath(string $templatePath): string
+    {
+        if (str_starts_with($templatePath, '/')) {
+            return ltrim($templatePath, '/');
+        }
+
+        if (str_contains($templatePath, '@')) {
+            [$module, $path] = explode('@', $templatePath, 2);
+            return $module . DS . $path;
+        }
+
+        $controllerClass = static::class;
+        $controllerPath = str_replace('Controller', '', $controllerClass);
+        $controllerPath = StringUtils::kebabCase($controllerPath);
+        $controllerPath = str_replace('-', DS, $controllerPath);
+
+        return $controllerPath . DS . trim($templatePath, DS);
     }
 
     private function context(array $context): array

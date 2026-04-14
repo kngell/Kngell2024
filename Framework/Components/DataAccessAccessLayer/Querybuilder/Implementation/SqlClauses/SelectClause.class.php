@@ -7,15 +7,14 @@ class SelectClause extends SqlQuery implements RegularClauseComponentInterface
     private const SqlClause CLAUSE = SqlClause::SELECT;
 
     public function __construct(
-        private array $columnMap,
-        bool $withAlias,
-        bool $distinct,
-        ?TablesAliasHelper $helper = null,
+        private ColumnCollector $columnsCollector,
+        ?EntityManagerInterface $em,
+        private ?StatementType $clauseContext,
     ) {
-        parent::__construct(self::CLAUSE);
-        $this->withAlias = $withAlias;
-        $this->distinct = $distinct;
-        $this->helper = $helper;
+        parent::__construct(self::CLAUSE, null, $em);
+        $this->withAlias = $columnsCollector->getWithAlias();
+        $this->distinct = $columnsCollector->getDistinct();
+        $this->customAlias = $columnsCollector->getCustomAlias();
     }
 
     public function build(): string
@@ -60,20 +59,29 @@ class SelectClause extends SqlQuery implements RegularClauseComponentInterface
 
     private function initializeColumns(): void
     {
-        foreach ($this->columnMap as $key => $config) {
-            if (array_key_first($this->columnMap) !== $key && empty($config['columns'])) {
+        $columnMap = $this->dispatchColumns($this->columnsCollector->all());
+
+        foreach ($columnMap as $key => $config) {
+            $isMainTable = array_key_first($columnMap) === $key;
+
+            // Skip empty non-main tables
+            if (!$isMainTable && empty($config['columns'])) {
                 continue;
             }
+
             $table = $config['table'] ?? $this->extractTableFromKey($key);
-            $columns = $this->standardizeColumns($config['columns'] ?? []);
+            $columns = $this->standardizeColumns($config['columns'] ?? [], $isMainTable);
             $customAlias = $config['customAlias'] ?? null;
             $tableWithAlias = $config['withAlias'] ?? $this->withAlias;
 
-            if (empty($columns)) {
-                continue;
-            }
-
-            $parameter = new ColumnsParameter($this->helper, $table, $tableWithAlias, ...$columns);
+            $parameter = new ColumnsParameter(
+                $this->helper,
+                $table,
+                $tableWithAlias,
+                $this->em,
+                $this->clauseContext,
+                ...$columns,
+            );
 
             // Initialize the parameter with current state
             if ($this->helper && method_exists($parameter, 'initializeWithDependencies')) {
@@ -96,12 +104,49 @@ class SelectClause extends SqlQuery implements RegularClauseComponentInterface
         return $key;
     }
 
-    private function standardizeColumns(array $columns): array
+    private function standardizeColumns(array $columns, bool $isMainTable): array
     {
         if (ArrayUtils::isMultidimentional($columns)) {
             $columns = ArrayUtils::flattenArrayRecursive($columns);
         }
 
+        // Handle CTE context
+        if (empty($columns) && $this->state->statementContext === StatementType::CTE && !$isMainTable) {
+            return [];
+        }
+
         return empty($columns) ? ['*'] : $columns;
+    }
+
+    private function dispatchColumns(array $selectMap): array
+    {
+        $dispatched = [];
+        $physicalToLogical = [];
+
+        foreach ($selectMap as $logicalKey => $config) {
+            $physicalName = $this->helper->getPhysicalTable($logicalKey);
+            $physicalToLogical[$physicalName] = $logicalKey;
+
+            $dispatched[$logicalKey] = $config;
+            $dispatched[$logicalKey]['columns'] = [];
+        }
+
+        foreach ($selectMap as $sourceLogicalKey => $config) {
+            foreach ($config['columns'] as $columnStr) {
+                if (str_contains($columnStr, '.')) {
+                    [$prefix, $colName] = explode('.', $columnStr, 2);
+
+                    if (isset($physicalToLogical[$prefix])) {
+                        $targetKey = $physicalToLogical[$prefix];
+                        $dispatched[$targetKey]['columns'][] = $targetKey . '.' . $colName;
+                    } else {
+                        $dispatched[$sourceLogicalKey]['columns'][] = $sourceLogicalKey . '.' . $colName;
+                    }
+                } else {
+                    $dispatched[$sourceLogicalKey]['columns'][] = $sourceLogicalKey . '.' . $columnStr;
+                }
+            }
+        }
+        return $dispatched;
     }
 }

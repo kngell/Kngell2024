@@ -10,14 +10,30 @@ class QueryFlowValidatorForInsert implements FlowValidatorInterface
     public function validate(array $queryFlow, array $insertMap, array $xonditions = []): void
     {
         $this->validateRequiredClauses($queryFlow);
-        $this->validateInsertMap($insertMap);
+        // $this->validateInsertMap($insertMap);
     }
 
     private function validateRequiredClauses(array $queryFlow): void
     {
-        if (!isset($queryFlow['insert'])) {
-            throw new QueryFlowException('INSERT query requires insert statement');
+        $statement = $this->query->getStatement();
+        $requiredClauses = $statement->getRequiredClauses();
+        $flow = array_keys($queryFlow);
+        foreach ($requiredClauses as $clause) {
+            if ($clause === 'into' && !in_array($clause, $flow)) {
+                $this->query->assumeInsertIntoCurrentTable();
+                continue;
+            }
+            if ($clause === 'values' && !in_array($clause, $flow)) {
+                $this->query->assumeEntityManagerHasInsertData();
+                continue;
+            }
+            if (!in_array($clause, $flow)) {
+                throw new QueryFlowException("Missing required clause '$clause' in the Insert query flow");
+            }
         }
+        // if (!isset($queryFlow['insert'])) {
+        //     throw new QueryFlowException('INSERT query requires insert statement');
+        // }
     }
 
     private function validateInsertMap(array $insertMap): void

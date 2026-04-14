@@ -30,6 +30,8 @@ interface CacheStorageInterface
 
     public function deleteMultiple(iterable $keys): bool;
 
+    public function getCacheDirectory(): string;
+
     // public function addKeyToTag(string $key, string $tag, ?int $ttl);
 
     // public function invalidateTag(string $tag);

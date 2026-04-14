@@ -15,6 +15,7 @@ class EntityManager implements EntityManagerInterface
         private DataMapperInterface $mapper,
         private TablesAliasHelper $tableAliasHelper,
         private EntityFactoryInterface $entityFactory,
+        private SqlTypeHandlerFactory $sqlTypeHandler,
     ) {
     }
 
@@ -51,6 +52,11 @@ class EntityManager implements EntityManagerInterface
     {
         $this->queryBuilder = null;
         return $this;
+    }
+
+    public function quote(string $value): string
+    {
+        return $this->mapper->quote($value);
     }
 
     /**
@@ -102,10 +108,29 @@ class EntityManager implements EntityManagerInterface
         return $this;
     }
 
+    public function isCollectionOfEntities(): bool
+    {
+        return $this->entity instanceof CollectionInterface || (is_array($this->entity) && ArrayUtils::isObjectList($this->entity));
+    }
+
     public function getEntity(): Entity|CollectionInterface
     {
         if (!isset($this->entity)) {
             throw new DataAccessLayerException('No entity has been set');
+        }
+        return $this->entity;
+    }
+
+    public function getEntityContext(): Entity
+    {
+        if (!isset($this->entity)) {
+            throw new DataAccessLayerException('No entity has been set');
+        }
+        if ($this->entity instanceof CollectionInterface) {
+            return $this->entity->first();
+        }
+        if (is_array($this->entity) && ArrayUtils::isObjectList($this->entity)) {
+            return $this->entity[0];
         }
         return $this->entity;
     }
@@ -141,6 +166,16 @@ class EntityManager implements EntityManagerInterface
         return $this;
     }
 
+    public function trackChangesWithData(array $data): void
+    {
+        if (!$this->entity instanceof Entity) {
+            throw new DataAccessLayerException('trackChangesWithData requires single Entity');
+        }
+
+        $this->entity->track();
+        $this->entity->assign($data);
+    }
+
     public function getEntityKeyField(): string|bool
     {
         if (isset($this->entityFieldId)) {
@@ -160,42 +195,44 @@ class EntityManager implements EntityManagerInterface
         return false;
     }
 
-    /**
-     * Get entity key value with proper reflection.
-     */
     public function getEntityKeyValue(): mixed
     {
-        $keyField = $this->getEntityKeyField();
-        if (!$keyField) {
-            return null;
+        if ($this->entity instanceof Entity && $this->entity->entityKeyIsInitialzed()) {
+            return $this->entity->getEntityPrimarykeyValue();
         }
-
+        $entity = null;
         if ($this->entity instanceof CollectionInterface) {
-            throw new DataAccessLayerException('Cannot get key value from collection');
+            $entity = $this->entity->first();
+        } elseif (is_array($this->entity)) {
+            $entity = $this->entity[0];
+        }
+        if ($entity instanceof Entity && $entity->entityKeyIsInitialzed()) {
+            return $entity->getEntityPrimarykeyValue();
         }
 
-        $propertyName = StringUtils::underscoreToStudlyCaps($keyField);
-        $getter = 'get' . $propertyName;
-
-        if ($this->reflector->hasMethod($getter) && $this->reflector->getMethod($getter)->isPublic()) {
-            if ($this->entity->isInitialized($propertyName)) {
-                return $this->entity->$getter();
-            }
-        }
         return null;
-        // // Fallback to direct property access
-        // try {
-        //     if ($this->reflector->hasProperty($propertyName)) {
-        //         $property = $this->reflector->getProperty($propertyName);
-        //         return $property->getValue($this->entity);
-        //     }
-        //     return false;
-        // } catch (ReflectionException $e) {
-        //     throw new DataAccessLayerException(
-        //         "Cannot access key field '{$keyField}' on entity " . $this->entity::class,
-        //     );
-        // }
     }
+    // public function getEntityKeyValue(): mixed
+    // {
+    //     $keyField = $this->getEntityKeyField();
+    //     if (!$keyField) {
+    //         return null;
+    //     }
+
+    //     if ($this->entity instanceof CollectionInterface) {
+    //         throw new DataAccessLayerException('Cannot get key value from collection');
+    //     }
+
+    //     $propertyName = StringUtils::underscoreToStudlyCaps($keyField);
+    //     $getter = 'get' . $propertyName;
+
+    //     if ($this->reflector->hasMethod($getter) && $this->reflector->getMethod($getter)->isPublic()) {
+    //         if ($this->entity->isInitialized($propertyName)) {
+    //             return $this->entity->$getter();
+    //         }
+    //     }
+    //     return null;
+    // }
 
     public function isEntityKeyInitialized(): bool
     {
@@ -226,15 +263,11 @@ class EntityManager implements EntityManagerInterface
         }
     }
 
-    /**
-     * Extract entity properties with proper type handling.
-     */
     public function getEntityProperties(): array
     {
-        if ($this->entity instanceof CollectionInterface) {
+        if ($this->entity instanceof CollectionInterface || (is_array($this->entity) && ArrayUtils::isObjectList($this->entity))) {
             return $this->getCollectionProperties();
         }
-
         return $this->getSingleEntityProperties();
     }
 
@@ -246,11 +279,28 @@ class EntityManager implements EntityManagerInterface
             error_log('ERROR: EntityManager::persist() - No query builder set!');
             throw new RuntimeException('No query built to persist');
         }
+        if (!$this->queryBuilder->hasQuery()) {
+            return $this;
+        }
 
         $sql = $this->queryBuilder->getQuery();
         $parameters = $this->queryBuilder->getParameters();
-        // dump('Sql: ' . $sql, 'Parameters :' . print_r($parameters, true));
+        // BrowserLogger::log('Sql: ' . $sql, 'Parameters :' . print_r($parameters, true), $this->queryBuilder);
+        // BrowserLogger::display();
+        // exit;
+
         $this->mapper->persist($sql, $parameters, false);
+        return $this;
+    }
+
+    public function reset(): self
+    {
+        if (isset($this->queryBuilder)) {
+            $this->queryBuilder->reset();
+        }
+
+        $this->mapper->fullReset();
+        $this->tableAlias = [];
         return $this;
     }
 
@@ -261,10 +311,12 @@ class EntityManager implements EntityManagerInterface
         }
         return new QueryResult(
             $this->mapper,
+            $this->mapper->getQueryStatement(),
             $this->resolveEntityClass(),
             $this->queryBuilder->getTableAlias(),
             $this->entityFactory,
             $this->queryBuilder->getLogicalToPhysicalMap(),
+            $this->queryBuilder->getStatement(),
         );
     }
 
@@ -349,15 +401,7 @@ class EntityManager implements EntityManagerInterface
 
     public function getEntityData(): array
     {
-        if ($this->entity instanceof Entity) {
-            return $this->getEntityProperties();
-        }
-
-        $data = [];
-        foreach ($this->entity as $singleEntity) {
-            $data[] = $singleEntity->toArray();
-        }
-        return $data;
+        return $this->getEntityProperties();
     }
 
     public function getDirtyData(): array
@@ -391,6 +435,39 @@ class EntityManager implements EntityManagerInterface
     public function getNormalizer(): TypeNormalizerInterface
     {
         return $this->entityFactory->getNormalizer();
+    }
+
+    public function getAttribute(int $attribute): mixed
+    {
+        return $this->mapper->getAttribute($attribute);
+    }
+
+    public function getDriverName(): string
+    {
+        return $this->mapper->getDriverName();
+    }
+
+    public function getServerVersion(): string
+    {
+        return $this->mapper->getServerVersion();
+    }
+
+    public function isMariaDB(): bool
+    {
+        return $this->mapper->isMariaDB();
+    }
+
+    public function getDatabaseVersion(): float
+    {
+        return $this->mapper->getDatabaseVersion();
+    }
+
+    /**
+     * @return SqlTypeHandlerFactory
+     */
+    public function getSqlTypeHandler(): SqlTypeHandlerFactory
+    {
+        return $this->sqlTypeHandler;
     }
 
     /**
@@ -556,6 +633,7 @@ class EntityManager implements EntityManagerInterface
     private function getSingleEntityProperties(): array
     {
         $properties = [];
+
         $allProperties = $this->reflector->getProperties(
             ReflectionProperty::IS_PUBLIC |
             ReflectionProperty::IS_PRIVATE |
@@ -585,6 +663,7 @@ class EntityManager implements EntityManagerInterface
     {
         $collectionProperties = [];
 
+        /** @var Entity $entity */
         foreach ($this->entity as $index => $entity) {
             $reflector = new ReflectionObject($entity);
             $properties = [];
@@ -617,9 +696,6 @@ class EntityManager implements EntityManagerInterface
         return $collectionProperties;
     }
 
-    /**
-     * Normalize property value for database storage.
-     */
     private function normalizePropertyValue(mixed $value, string $fieldName): mixed
     {
         if ($value instanceof Entity) {
@@ -676,6 +752,7 @@ class EntityManager implements EntityManagerInterface
             self::$mapper ?? throw new RuntimeException('Mapper not configured'),
             self::$tableAliasHelper ?? throw new RuntimeException('Table alias helper not configured'),
             self::$entityFactory ?? throw new RuntimeException('EntityFactory not configured'),
+            self::$sqlTypeHandler ?? throw new RuntimeException('SqlTypeHandler not configured'),
         );
     }
 }

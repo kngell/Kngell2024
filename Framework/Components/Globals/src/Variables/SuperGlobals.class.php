@@ -21,7 +21,7 @@ class SuperGlobals implements SuperGlobalsInterface
         $this->__request = $_REQUEST;
     }
 
-    public function request(?string $key = null) : mixed
+    public function request(?string $key = null): mixed
     {
         return $this->getVariabale($key, $this->__request);
     }
@@ -55,15 +55,15 @@ class SuperGlobals implements SuperGlobalsInterface
     public function server(?string $key = null): mixed
     {
         if (null != $key) {
-            if (! isset($this->__server[strtoupper($key)])) {
+            if (!isset($this->__server[strtoupper($key)])) {
                 return '';
             }
             return $this->__server[strtoupper($key)];
         }
-        return array_map('strip_tags', $this->__server ?? []);
+        return $this->recursiveStripTags($this->__server ?? []);
     }
 
-    public function emptyGlobals() : void
+    public function emptyGlobals(): void
     {
         $_GET = [];
         $_POST = [];
@@ -72,7 +72,22 @@ class SuperGlobals implements SuperGlobalsInterface
         $_FILES = [];
     }
 
-    private function getVariabale(?string $key, array $var) : mixed
+    private function recursiveStripTags(array $array): array
+    {
+        $result = [];
+        foreach ($array as $key => $value) {
+            if (is_array($value)) {
+                $result[$key] = $this->recursiveStripTags($value);
+            } elseif (is_string($value)) {
+                $result[$key] = strip_tags($value);
+            } else {
+                $result[$key] = $value;
+            }
+        }
+        return $result;
+    }
+
+    private function getVariabale(?string $key, array $var): mixed
     {
         if ($var == []) {
             return [];

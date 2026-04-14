@@ -9,9 +9,10 @@ class OffsetClause extends SqlComponent implements RegularClauseComponentInterfa
     private ?QueryRulesInterface $offsetRule;
 
     public function __construct(
-        private EntityManagerInterface $em,
+        EntityManagerInterface $em,
         private array $offsetConfig,
     ) {
+        parent::__construct(em:$em);
     }
 
     public function build(): string

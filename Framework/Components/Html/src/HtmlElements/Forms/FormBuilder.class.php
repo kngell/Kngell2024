@@ -224,7 +224,7 @@ class FormBuilder extends AbstractHtmlElement
      *
      * @return FormBuilder
      */
-    public function novalidate(bool $novalidate): self
+    public function novalidate(bool $novalidate = true): self
     {
         $this->novalidate = $novalidate;
         return $this;

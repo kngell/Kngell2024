@@ -4,20 +4,20 @@ declare(strict_types=1);
 
 class DefineNewTokenHashListener implements EventListenerInterface
 {
-    public function update(EventInterface $event): ?object
+    public function handle(EventInterface $event): ?object
     {
         $object = $event->getObject();
-        if (! $object instanceof LogoutController) {
+        if (!$object instanceof LogoutController) {
             return new NullEvent();
         }
         $result = $this->deleteOldTokenHash($object);
-        if (! $result instanceof NullObjectInterface && $result->getQueryResult() && $result->rowCount()) {
+        if (!$result instanceof NullObjectInterface && $result->getQueryResult() && $result->rowCount()) {
             $this->setNewTokenHash(AuthService::currentUser(), $object);
         }
         return $event;
     }
 
-    private function setNewTokenHash(User $user, LogoutController $logout) : void
+    private function setNewTokenHash(User $user, LogoutController $logout): void
     {
         list($result, $token) = $logout->getUserSession()->rememberLogin($user, $logout->getCookie());
         if ($result->getQueryResult() && $result->getLastInsertId()) {
@@ -25,7 +25,7 @@ class DefineNewTokenHashListener implements EventListenerInterface
         }
     }
 
-    private function deleteOldTokenHash(LogoutController $logout) : QueryResult|NullObjectInterface
+    private function deleteOldTokenHash(LogoutController $logout): QueryResult|NullObjectInterface
     {
         $cookie = $logout->getCookie();
         if ($cookie->exists(REMEMBER_ME_COOKIE_NAME)) {

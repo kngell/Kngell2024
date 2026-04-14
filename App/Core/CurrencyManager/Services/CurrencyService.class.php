@@ -9,9 +9,6 @@ final class CurrencyService implements CurrencyLookupInterface
     ) {
     }
 
-    /**
-     * Get all active currencies for dropdown options (using currency_id as value).
-     */
     public function getActiveCurrencies(): array
     {
         try {

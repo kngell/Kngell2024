@@ -4,16 +4,23 @@ declare(strict_types=1);
 
 abstract class Model
 {
+    use CommonQueryMethodsTrait;
+
     protected string $entityClassName;
     protected Entity $entity;
+    protected array $columns = [];
+    private array $eventData = [];
+    protected static array $identityMap = [];
 
     public function __construct(
         protected EntityManagerInterface $em,
         protected EntityFactoryInterface $factory,
         private ModelContextInterface $context,
+        private ModelUtilityInterface $utils,
     ) {
         $this->entityClassName = $this->resolveEntityClassName();
         $this->getEntity();
+        $this->context->initialize($this, $this->utils);
     }
 
     public function __call(string $method, array $arguments): mixed
@@ -25,18 +32,43 @@ abstract class Model
         }
     }
 
-    public function all($params = []): QueryResult
+    public function all($params = [], bool $withRelations = false): QueryResult
     {
-        return $this->context->execute('all', $this->em, $this->entity, $params);
+        $result = $this->context->execute('all', $this->em, $this->entity, $params);
+
+        if (!empty($this->columns)) {
+            $params['columns'] = $this->columns;
+        }
+
+        if ($withRelations) {
+            $result->setFetchStrategy(FetchStrategy::RELATIONSHIP_AWARE);
+        }
+
+        return $result;
     }
 
-    public function one($params = []): QueryResult
+    public function columns(string ...$columns): self
     {
-        return $this->context->execute('one', $this->em, $this->entity, $params);
+        $this->columns = $columns;
+        return $this;
+    }
+
+    public function one($params = [], bool $withRelations = false): QueryResult
+    {
+        $result = $this->context->execute('one', $this->em, $this->entity, $params);
+
+        if ($withRelations) {
+            $result->setFetchStrategy(FetchStrategy::RELATIONSHIP_AWARE);
+        }
+
+        return $result;
     }
 
     public function find($id): QueryResult
     {
+        if (isset(self::$identityMap[static::class][$id])) {
+            return self::$identityMap[static::class][$id];
+        }
         return $this->context->execute('find', $this->em, $this->entity, $id);
     }
 
@@ -52,13 +84,13 @@ abstract class Model
         return $this->context->execute('last', $this->em, $this->entity, $params);
     }
 
-    public function page(int $page, int $perPage, array $conditions = []): QueryResult
+    public function page(int $page, int $perPage, array $conditions = [], array $columns = []): QueryResult
     {
-        $params = ['page' => $page, 'perPage' => $perPage, 'conditions' => $conditions];
+        $params = ['page' => $page, 'perPage' => $perPage, 'columns' => $columns, 'conditions' => $conditions];
         return $this->context->execute('page', $this->em, $this->entity, $params);
     }
 
-    public function ids(int $page, int $perPage, array $conditions = []): QueryResult
+    public function ids(null|int|string $page = null, ?int $perPage = null, array $conditions = []): QueryResult
     {
         $params = ['page' => $page, 'perPage' => $perPage, 'conditions' => $conditions];
         $keyField = $this->entity->getEntityKeyField();
@@ -74,26 +106,48 @@ abstract class Model
         return $this->context->execute('get', $this->em, $this->entity, $params);
     }
 
-    public function save(mixed $data = null): QueryResult
+    public function save(null|array|Entity $data = null, array $conditions = []): QueryResult
     {
-        return $this->context->execute('save', $this->em, $this->entity, $data);
+        $payload = $this->utils->normalizeData($data, $this->entity);
+        if ($payload->isCollection()) {
+            return $this->syncCollection($payload, $conditions);
+        }
+        if ($payload->hasId()) {
+            return $this->update($payload, $conditions);
+        }
+        return $this->insert($payload);
     }
 
-    public function insert($entity = null): QueryResult
+    public function insert(mixed $data = null): QueryResult
     {
-        return $this->context->execute('insert', $this->em, $this->entity, $entity);
+        try {
+            return $this->context->execute('insert', $this->em, $this->entity, $data);
+        } finally {
+        }
     }
 
-    public function update($entityOrConditions = [], array $conditions = []): QueryResult
+    public function update(mixed $data = null, array $conditions = []): ?QueryResult
     {
-        $params = ['entity' => $entityOrConditions, 'conditions' => $conditions];
-        return $this->context->execute('update', $this->em, $this->entity, $params);
+        try {
+            $params = ['data' => $data, 'conditions' => $conditions];
+            return $this->context->execute('update', $this->em, $this->entity, $params);
+        } finally {
+        }
     }
 
-    public function delete($params = []): QueryResult
+    public function delete(mixed $params = []): QueryResult
     {
-        return $this->context->execute('delete', $this->em, $this->entity, $params);
+        try {
+            return $this->context->execute('delete', $this->em, $this->entity, $params);
+        } finally {
+            if (is_string($params)) {
+                $this->clearIdentityMap($params);
+            } elseif (is_array($params) && isset($params['id'])) {
+                $this->clearIdentityMap($params['id']);
+            }
+        }
     }
+
     // ============ UTILITIES ============
 
     public function count(array $conditions = []): int
@@ -113,16 +167,20 @@ abstract class Model
 
     public function findOrCreate(array $criteria, array $attributes = []): Entity
     {
+        $cacheKey = $this->entityClassName . ':' . serialize($criteria);
+        if (isset(self::$identityMap[$cacheKey])) {
+            return self::$identityMap[$cacheKey];
+        }
+
         $result = $this->one($criteria);
 
         if (!$result->isEmpty()) {
-            return $result->first();
+            /** @var Entity */
+            $entity = $result->asClass();
+            self::$identityMap[$cacheKey] = $entity;
+            return $entity->completeHydration();
         }
-
-        $entity = $this->createEntity(array_merge($criteria, $attributes));
-        $this->save($entity);
-
-        return $entity;
+        return $this->factory->createFromClient($this->entityClassName, $attributes);
     }
 
     /**
@@ -131,6 +189,91 @@ abstract class Model
     public function getEntityManager(): EntityManagerInterface
     {
         return $this->em;
+    }
+
+    public function addToIdentityMap(Entity $entity): void
+    {
+        $id = $entity->getEntityPrimarykeyValue();
+        if ($id) {
+            self::$identityMap[static::class][$id] = $entity;
+        }
+    }
+
+    public function getFromIdentityMap(mixed $id): ?Entity
+    {
+        return self::$identityMap[static::class][$id] ?? null;
+    }
+
+    public function clearIdentityMap(mixed $id): void
+    {
+        if (isset(self::$identityMap[static::class][$id])) {
+            unset(self::$identityMap[static::class][$id]);
+        }
+    }
+
+    public function clearState(): void
+    {
+        $this->em->reset();
+        if (isset(static::$identityMap[static::class])) {
+            static::$identityMap[static::class] = [];
+        }
+    }
+
+    /**
+     * @return array
+     */
+    public function getEventData(): array
+    {
+        return $this->eventData;
+    }
+
+    protected function saveEventData(string|int $id, string $keyField): void
+    {
+        $entity = $this->getById($id, $keyField);
+
+        if ($entity) {
+            $this->eventData['old_entity_snapshot'] = clone $entity;
+            $this->addToIdentityMap($entity);
+        }
+    }
+
+    protected function syncCollection(ModelOperationPayload $payload, array $conditions = []): QueryResult
+    {
+        $results = [];
+
+        if ($payload->hasIds()) {
+            if (empty($conditions)) {
+                $conditions = [$payload->getKeyField() => array_unique($payload->getIds())];
+            }
+
+            $results['update'] = $this->update($payload, $conditions);
+        }
+
+        if ($payload->hasInserts()) {
+            $results['insert'] = $this->insert($payload);
+        }
+        if (empty($results)) {
+            return $this->em->getQueryResult()->setSkipped(true, 'Nothing to sync');
+        }
+        /** @var QueryResult $finalResult */
+        $finalResult = $this->em->getQueryResult();
+        $totalRows = 0;
+        $skipped = true;
+        $reason = '';
+
+        foreach ($results as $res) {
+            if (!$res->isSuccess()) {
+                return $res;
+            }
+            $totalRows += $res->count();
+            $skipped = $skipped && $res->wasSkipped();
+            $reason .= ' ' . $res->getSkipReason();
+        }
+
+        // Set the final state as the aggregate of all parts
+        $finalResult->setRowCount($totalRows)->setOperation('sync')->setSkipped($skipped)->setSkipReason($reason);
+
+        return $finalResult;
     }
 
     private function resolveEntityClassName(): string
@@ -149,7 +292,7 @@ abstract class Model
                 $this->entityClassName,
             );
         }
-        $this->em->setEntity($this->entity);
+        // $this->em->setEntity($this->entity);
         return $this->entity;
     }
 }

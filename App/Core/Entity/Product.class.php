@@ -9,9 +9,21 @@ class Product extends Entity implements TimestampableInterface, SoftDeletableInt
     use EntityTimestampableTrait;
     use SoftDeletableTrait;
 
-    #[EntityFieldId(name: 'pdt_id')]
+    #[DisplayFormat(
+        obfuscate: true,
+        obfuscationStrategy: 'hashid',
+        prefix: '#',
+        nullPlaceholder: 'No ID',
+    )]
+    #[EntityFieldId(name: 'pdt_id', type: FieldType::INT)]
     private int $id;
 
+    #[DisplayFormat(
+        style: 'uuid',
+        prefix: 'ID: ',
+        suffix: ' (UUID)',
+    )]
+    #[EntityFieldId(name: 'public_id', type: FieldType::STRING)]
     private UuidInterface $publicId;
 
     // 🔒 Required core fields
@@ -73,6 +85,7 @@ class Product extends Entity implements TimestampableInterface, SoftDeletableInt
      */
     public function getPriceForRegion(string $regionCode): ?ProductRegionalPrice
     {
+        /** @var ProductRegionalPrice|null $regionalPrice */
         foreach ($this->regionalPrices as $regionalPrice) {
             if ($regionalPrice->getRegionCode() === $regionCode) {
                 return $regionalPrice;
@@ -682,6 +695,46 @@ class Product extends Entity implements TimestampableInterface, SoftDeletableInt
     public function setProductDimension(?Dimensions $productDimension): Product
     {
         $this->productDimension = $productDimension;
+
+        return $this;
+    }
+
+    /**
+     * @return null|string
+     */
+    public function getMainVideo(): ?string
+    {
+        return $this->mainVideo;
+    }
+
+    /**
+     * @param null|string $mainVideo
+     *
+     * @return Product
+     */
+    public function setMainVideo(?string $mainVideo): Product
+    {
+        $this->mainVideo = $mainVideo;
+
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getTotalSales(): int
+    {
+        return $this->totalSales;
+    }
+
+    /**
+     * @param int $totalSales
+     *
+     * @return Product
+     */
+    public function setTotalSales(int $totalSales): Product
+    {
+        $this->totalSales = $totalSales;
 
         return $this;
     }

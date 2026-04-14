@@ -1,0 +1,213 @@
+@use "css/backend/admin/abstracts" as *;
+
+/*--------------- CATEGORY -------------*/
+
+.category {
+  display: flex;
+  flex-direction: column;
+  gap: 2.4rem;
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+
+  &__header {
+    @include page-title();
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    position: relative;
+    width: 100%;
+    min-height: 0;
+    overflow-y: auto;
+
+    .category-form {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      gap: 1.6rem;
+      .radio-tab {
+        position: fixed;
+        opacity: 0;
+        width: 0;
+        height: 0;
+        pointer-events: none;
+        top: -100%;
+        left: -100%;
+      }
+
+      // Tabs container
+      &__tabs {
+        display: flex;
+        width: 100%;
+        align-items: center;
+        gap: 0.8rem;
+        position: sticky;
+        top: 0;
+        background-color: $background-neutral-tertiary;
+        z-index: 10;
+        .tab {
+          display: flex;
+          padding: 0.8rem 1.6rem;
+          justify-content: center;
+          align-items: center;
+          flex: 1 0 0;
+          color: $text-neutral-primary;
+          border-radius: $radius-xs;
+          background-color: transparent;
+          cursor: pointer;
+          @include transition();
+          position: relative;
+
+          &::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 1px;
+            width: 100%;
+            background-color: $border-neutral-secondary;
+          }
+
+          &__text {
+            flex: 1 0 0;
+            text-align: center;
+            margin: 0;
+            @include apply-text-style(
+              (
+                map: map-deep-get($roboto-map, regular),
+                weight: normal,
+                overrides: (
+                  color: inherit
+                )
+              )
+            );
+          }
+
+          &:hover:not(.tab__disabled) {
+            color: $text-neutral-inverse-primary;
+            background-color: $background-brand-secondary;
+          }
+
+          &:active:not(.tab__disabled) {
+            color: $text-brand-inverse;
+            background-color: $background-brand-primary;
+          }
+
+          &__disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+            display: none;
+          }
+        }
+      }
+
+      // Content container
+      &__content {
+        position: relative;
+
+        .tab-content {
+          display: none;
+          animation: fadeIn 0.3s ease;
+          width: 100%;
+        }
+      }
+      // Active tab styles - radios and tabs are siblings
+      #tab-category-infos:checked ~ .category-form__tabs label[for="tab-category-infos"],
+      #tab-content-style:checked ~ .category-form__tabs label[for="tab-content-style"],
+      #tab-settings:checked ~ .category-form__tabs label[for="tab-settings"] {
+        color: $text-brand-primary;
+        background-color: $background-brand-tertiary;
+
+        &::after {
+          background-color: $border-brand-primary;
+          height: 2px;
+        }
+      }
+      // Show content - radios and content are siblings
+      #tab-category-infos:checked ~ .category-form__content .category-form__content--infos,
+      #tab-content-style:checked ~ .category-form__content .category-form__content--content,
+      #tab-settings:checked ~ .category-form__content .category-form__content--settings {
+        display: flex;
+        justify-content: flex-start;
+        align-items: flex-start;
+        width: 100%;
+        gap: 1.6rem;
+      }
+      // Left and right columns
+      &__left,
+      &__right {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        border-radius: $radius-m;
+        background-color: $background-neutral-tertiary;
+
+        .form-section {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          width: 100%;
+
+          &__header {
+            @include form-section-header();
+          }
+
+          &__body {
+            display: flex;
+            padding: 1.6rem 2.4rem;
+            flex-direction: column;
+            gap: 1.6rem;
+            width: 100%;
+            @include input-field(
+              (select, custom-select, textarea),
+              (
+                "select-floating-label": true
+              )
+            );
+
+            .form-row {
+              display: flex;
+              align-items: center;
+              gap: 1.6rem;
+
+              &.vertical {
+                flex-direction: column;
+                justify-content: center;
+                align-items: flex-start;
+
+                .settings {
+                  display: flex;
+                  justify-content: flex-end;
+                  align-items: flex-start;
+                  gap: 2.4rem;
+                  width: 100%;
+
+                  .toggle-switch {
+                    @include toggle-switch();
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+
+      &__left {
+        width: 67.68rem;
+      }
+
+      &__right {
+        flex: 1;
+        @include dropzone();
+      }
+    }
+  }
+
+  &__footer {
+    @include page-footer();
+  }
+}

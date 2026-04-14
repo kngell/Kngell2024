@@ -35,9 +35,11 @@ abstract class AbstractHtmlComponent
     protected int $tabindex;
     protected string $title;
     protected string $translate;
-    protected array $custom;
+    protected array $custom = [];
+    protected mixed $placeholder;
     protected string $align;
     protected string $accept;
+    protected bool $required;
     protected string $onclick;
     protected string $ondblclick;
     protected string $onmousedown;
@@ -71,6 +73,8 @@ abstract class AbstractHtmlComponent
     protected string $text;
     protected bool $ariaHidden;
     protected bool $disabled;
+    protected string $script;
+    protected bool $checked;
 
     public function setParent(?self $parent)
     {
@@ -90,7 +94,6 @@ abstract class AbstractHtmlComponent
 
     public function add(self|null ...$htmlelements): self
     {
-        $h = $htmlelements;
         return $this;
     }
 
@@ -105,10 +108,13 @@ abstract class AbstractHtmlComponent
         return $this;
     }
 
-    public function aria(string $name, string ...$props): self
+    public function aria(string ...$props): self
     {
         $aria = [];
-        foreach ($props as $prop) {
+        if (ArrayUtils::isKeyValueList($props)) {
+            $props = ArrayUtils::fromSequentialToAssoc($props);
+        }
+        foreach ($props as $name => $prop) {
             $aria['aria-' . $name] = $prop;
         }
         $this->aria = array_merge($this->aria, $aria);
@@ -223,6 +229,13 @@ abstract class AbstractHtmlComponent
         return $this->class;
     }
 
+    public function content(null|string|int $content, bool $contentUp = true): self
+    {
+        $this->content = $content;
+        $this->contentUp = $contentUp;
+        return $this;
+    }
+
     public function hasInputBoxContainer(): bool
     {
         foreach ($this->class as $class) {
@@ -240,6 +253,24 @@ abstract class AbstractHtmlComponent
         return $this->value;
     }
 
+    public function script(string $script): self
+    {
+        $this->script = $script;
+        return $this;
+    }
+
+    public function name(string $name): self
+    {
+        $this->name = $name;
+        return $this;
+    }
+
+    public function role(string $role): self
+    {
+        $this->role = $role;
+        return $this;
+    }
+
     /**
      * @param mixed $value
      *
@@ -249,6 +280,16 @@ abstract class AbstractHtmlComponent
     {
         $this->value = $value;
 
+        return $this;
+    }
+
+    public function attribute(string|int ...$customAttr): self
+    {
+        $attrs = [];
+        if (ArrayUtils::isKeyValueList($customAttr)) {
+            $attrs = ArrayUtils::fromSequentialToAssoc($customAttr);
+        }
+        $this->custom = array_merge($this->custom, $attrs);
         return $this;
     }
 
@@ -270,13 +311,52 @@ abstract class AbstractHtmlComponent
         return $this;
     }
 
+    /**
+     * @param array $style
+     *
+     * @return AbstractHtmlComponent
+     */
+    public function style(array $style): AbstractHtmlComponent
+    {
+        $this->style = $style;
+        return $this;
+    }
+
+    /**
+     * @param bool $checked
+     *
+     * @return AbstractHtmlComponent
+     */
+    public function checked(bool $checked = true): AbstractHtmlComponent
+    {
+        $this->checked = $checked;
+
+        return $this;
+    }
+
+    /**
+     * @return null|string|int
+     */
+    public function getContent(): null|string|int
+    {
+        return $this->content;
+    }
+
     protected function inputErrors(string $name, string $type = ''): string
     {
         $errorStr = '';
         $isError = false;
         if (isset($this->formErrors) && array_key_exists($name, $this->formErrors)) {
             foreach ($this->formErrors[$name] as $error) {
-                $errorStr .= $error;
+                if (is_array($error)) {
+                    $arrError = [];
+                    foreach ($error as $err) {
+                        $arrError[] = $err;
+                    }
+                    $errorStr .= implode(', ', $arrError);
+                } else {
+                    $errorStr .= $error;
+                }
             }
             $isError = true;
         }
@@ -326,14 +406,14 @@ abstract class AbstractHtmlComponent
     {
         $attributes = [];
         $attributes[] = '<' . $tag;
-
         foreach ($tagAttrs as $attr => $value) {
             if (
-                in_array($attr, ['content', 'contentUp', 'tag', 'formErrors', 'formValues', 'token', 'position', 'htmlBlock', 'errorMessage', 'level', 'key', 'includeToken'], true)
+                in_array($attr, ['content', 'contentUp', 'tag', 'formErrors', 'formValues', 'token', 'position', 'htmlBlock', 'errorMessage', 'level', 'key', 'includeToken', 'defaultValue'], true)
                 || is_object($value)
             ) {
                 continue;
             }
+
             $attribute = $this->tagAttribute($attr, $value);
             !empty($attribute) ? $attributes[] = $attribute : '';
         }
@@ -349,6 +429,47 @@ abstract class AbstractHtmlComponent
 
     protected function populateField(): void
     {
+        // Special handling for radio inputs
+        if ($this instanceof RadioType) {
+            $submittedValue = $this->inputValue($this->name, $this->defaultValue ?? '');
+            $radioValue = $this->value ?? '';
+
+            if ($radioValue !== '') {
+                // Radio has an explicit value - normal matching
+                if (strtolower((string) $radioValue) === strtolower((string) $submittedValue)) {
+                    $this->checked(true);
+                }
+            } elseif ($submittedValue === '') {
+                static $firstRadioChecked = false;
+                if (!$firstRadioChecked) {
+                    $this->checked(true);
+                    $firstRadioChecked = true;
+                }
+            }
+            return;
+        }
+
+        if ($this instanceof CheckboxType) {
+            $submittedValue = $this->inputValue($this->name, $this->value ?? '');
+
+            // Handle various truthy values from translator
+            $isChecked = !empty($submittedValue) && in_array($submittedValue, [
+                'common.yes',
+                'yes',
+                '1',
+                1,
+                'true',
+                true,
+                'on',
+            ], true);
+
+            if ($isChecked) {
+                $this->checked(true);
+            }
+            return;
+        }
+
+        // Original logic for other field types
         $strErrors = '';
         if (isset($this->name)) {
             $strErrors = $this->inputErrors($this->name);
@@ -414,14 +535,18 @@ abstract class AbstractHtmlComponent
             // Boolean attributes
             $type === 'boolean' => $value === true ? (string) (' ' . $key) : '',
 
-            // Custom attributes handled by separate method
-            is_array($value) && in_array($key, ['custom', 'aria']) => $this->customAttr($value),
-
             // Style array
             is_array($value) && $key === 'style' =>
-                $this->arrayNotEmpty($value)
-                    ? " $key='" . implode('; ', array_filter($value, fn ($v) => !empty($v) || $v === '0')) . "'"
-                    : '',
+            $this->arrayNotEmpty($value)
+               ? " $key='" . implode('; ', array_map(
+                   fn ($k, $v) => "$k: $v",
+                   array_keys($value),
+                   array_filter($value, fn ($v) => $v !== null && $v !== ''),
+               )) . "'"
+               : '',
+
+            // Custom attributes handled by separate method
+            is_array($value) && in_array($key, ['custom', 'aria']) => $this->customAttr($value),
 
             // Other array attributes (like class)
             is_array($value) =>

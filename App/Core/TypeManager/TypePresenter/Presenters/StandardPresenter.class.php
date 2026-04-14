@@ -11,7 +11,10 @@ class StandardPresenter implements TypePresenterInterface
 
     public function display(mixed $value, ?ReflectionProperty $property = null, ?RegionContextInterface $regionContext = null): mixed
     {
-        if ($value === null || $value === '') {
+        if ($value === null) {
+            return null;
+        }
+        if ($value === '') {
             return '';
         }
 

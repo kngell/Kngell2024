@@ -1,0 +1,14 @@
+title:
+  display: Hero Title
+  required: true
+  min: 3
+  max: 255
+specialized_title:
+  display: Hero Specialized Title
+  max: 255
+subtitle:
+  display: Hero SubTitle
+  max: 500
+page_target:
+  display: Page Target
+  max: 255

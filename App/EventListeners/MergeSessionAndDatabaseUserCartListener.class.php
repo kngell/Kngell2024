@@ -8,10 +8,10 @@ class MergeSessionAndDatabaseUserCartListener implements EventListenerInterface
     {
     }
 
-    public function update(EventInterface $event): ?object
+    public function handle(EventInterface $event): ?object
     {
         $object = $event->getObject();
-        if (! $object instanceof LoginController) {
+        if (!$object instanceof LoginController) {
             return new NullEvent();
         }
         $this->mergeSessionAndDatabaseCart($object);
@@ -45,7 +45,7 @@ class MergeSessionAndDatabaseUserCartListener implements EventListenerInterface
                         break;
                     }
                 }
-                if (! $itemExistsInCart) {
+                if (!$itemExistsInCart) {
                     // Add new item from session to cart
                     $newCartItem = new Cart();
                     $newCartItem->setUserId($userId);

@@ -112,13 +112,11 @@ class NativeCacheStorage extends AbstractCacheStorage implements TaggableCacheSt
         $removedCount = 0;
 
         foreach ($keys as $key) {
-            // Using removeCache ensures both the cache entry and its TTL file are deleted
             if ($this->removeCache($key)) {
                 $removedCount++;
             }
         }
 
-        // After removing all keys, delete the tag index file itself
         $tagFile = $this->getTagFilePath($tag);
         if (file_exists($tagFile)) {
             unlink($tagFile);
@@ -126,6 +124,27 @@ class NativeCacheStorage extends AbstractCacheStorage implements TaggableCacheSt
 
         return $removedCount;
     }
+
+    // public function invalidateTag(string $tag): int
+    // {
+    //     $keys = $this->readTagIndex($tag);
+    //     $removedCount = 0;
+
+    //     foreach ($keys as $key) {
+    //         // Using removeCache ensures both the cache entry and its TTL file are deleted
+    //         if ($this->removeCache($key)) {
+    //             $removedCount++;
+    //         }
+    //     }
+
+    //     // After removing all keys, delete the tag index file itself
+    //     $tagFile = $this->getTagFilePath($tag);
+    //     if (file_exists($tagFile)) {
+    //         unlink($tagFile);
+    //     }
+
+    //     return $removedCount;
+    // }
 
     public function removeCache(string $key): bool
     {
@@ -244,9 +263,12 @@ class NativeCacheStorage extends AbstractCacheStorage implements TaggableCacheSt
 
     public function getStats(): array
     {
+        $sizeInBytes = $this->directoryManager->getSize($this->cacheDirectory);
         return [
             'directory' => $this->cacheDirectory,
             'total_files' => $this->directoryManager->getFileCount($this->cacheDirectory),
+            'total_size_human' => ByteHelper::format($sizeInBytes),
+            'total_size_bytes' => $sizeInBytes,
             'total_directories' => $this->directoryManager->getDirectoryCount($this->cacheDirectory),
             'is_readable' => $this->directoryManager->isReadable($this->cacheDirectory),
             'is_writable' => $this->directoryManager->isWritable($this->cacheDirectory),

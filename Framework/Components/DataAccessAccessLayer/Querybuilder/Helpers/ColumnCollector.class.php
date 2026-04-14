@@ -19,6 +19,21 @@ class ColumnCollector
         return $columnMap;
     }
 
+    public function getWithAlias(): bool
+    {
+        return $this->selectMap['withAlias'];
+    }
+
+    public function getDistinct(): bool
+    {
+        return $this->selectMap['distinct'];
+    }
+
+    public function getCustomAlias(): ?string
+    {
+        return $this->selectMap['customAlias'];
+    }
+
     /**
      * @param array $selectMap
      *
@@ -45,16 +60,17 @@ class ColumnCollector
 
     private function addSelectColumns(array &$columnMap): void
     {
-        foreach ($this->selectMap as $key => $config) {
-            if (is_string($config['table'])) {
-                $columnMap[$config['table'] ?? 'main'] = [
-                    'columns' => $config['columns'],
-                    'customAlias' => $config['customAlias'],
-                    'withAlias' => $config['withAlias'],
-                ];
-            } else {
-                $columnMap['main'] = $config;
-            }
+        if (empty($this->selectMap['table'])) {
+            throw new InvalidArgumentException('Main table cannot be empty in SELECT Query');
+        }
+        if (is_string($this->selectMap['table'])) {
+            $columnMap[$this->selectMap['table']] = [
+                'columns' => $this->selectMap['columns'],
+                'customAlias' => $this->selectMap['customAlias'],
+                'withAlias' => $this->selectMap['withAlias'],
+            ];
+        } else {
+            $columnMap['main'] = $this->selectMap;
         }
     }
 

@@ -16,6 +16,7 @@ class CsrfTokenMiddleware implements MiddlewareInterface
     private const array CSRF_EXEMPT_PATHS = [
         '/api/webhook',
         '/api/callback',
+        '/upload-cleanup/cleanup',
         // Add other paths that should be exempt from CSRF protection
     ];
 
@@ -33,7 +34,7 @@ class CsrfTokenMiddleware implements MiddlewareInterface
                 return $this->handleCsrfFailure($request);
             }
         }
-
+    
         return $next->handle($request);
     }
 
@@ -78,7 +79,7 @@ class CsrfTokenMiddleware implements MiddlewareInterface
     {
         $postData = $request->getPost()->getAll();
 
-        $this->flash->addFormInput(
+        $this->flash->addFormData(
             $request->getRequestedUri(),
             $postData,
             [],

@@ -1,5 +1,5 @@
-import BaseValidator from "../BaseValidator.js";
-import BrowserLogger from "js/utils/logger";
+import BaseValidator from "../BaseValidator";
+import BrowserLogger from "js/core/utils/logger";
 const logger = new BrowserLogger("MimesValidator");
 
 export default class MimesValidator extends BaseValidator {
@@ -12,20 +12,29 @@ export default class MimesValidator extends BaseValidator {
       errorParams: this.errorParams,
     });
 
-    if (this.isEmpty(this.value)) {
-      logger.debug("✅ MimesValidator: Empty value, skipping");
+    // 🟢 FIX: Better empty check for file inputs
+    if (this.isFileInputEmpty(this.value)) {
+      logger.debug("✅ MimesValidator: No file uploaded, skipping validation");
       return null;
     }
 
     const files = this.getFiles();
+
+    // 🟢 FIX: No files to validate
+    if (files.length === 0) {
+      logger.debug("✅ MimesValidator: No files to validate");
+      return null;
+    }
+
     const allowedTypes = this.ruleValue.split(",").map((type) => type.trim());
 
     logger.debug("📁 Files to validate:", files);
     logger.debug("✅ Allowed types:", allowedTypes);
 
     for (const file of files) {
-      if (!file || !file.type) {
-        logger.debug("❌ Skipping invalid file:", file);
+      // 🟢 FIX: Skip invalid file objects
+      if (!file || !file.name || file.name === "") {
+        logger.debug("⏭️ Skipping empty file input");
         continue;
       }
 
@@ -55,6 +64,35 @@ export default class MimesValidator extends BaseValidator {
 
     logger.debug("✅ MimesValidator: Validation PASSED");
     return null;
+  }
+
+  // 🟢 NEW: Check if file input is actually empty
+  isFileInputEmpty(value) {
+    // No value
+    if (!value) return true;
+
+    // Empty FileList
+    if (value instanceof FileList) {
+      return value.length === 0;
+    }
+
+    // Empty File object (no name, no size)
+    if (value instanceof File) {
+      return !value.name || value.name === "" || value.size === 0;
+    }
+
+    // Empty array
+    if (Array.isArray(value)) {
+      if (value.length === 0) return true;
+
+      // Check first item - if it's an empty File object
+      const firstFile = value[0];
+      if (firstFile instanceof File) {
+        return !firstFile.name || firstFile.name === "" || firstFile.size === 0;
+      }
+    }
+
+    return false;
   }
 
   isFileTypeAllowed(file, allowedTypes) {
@@ -97,6 +135,7 @@ export default class MimesValidator extends BaseValidator {
   }
 
   getFileExtension(filename) {
+    if (!filename) return "";
     return filename.slice(((filename.lastIndexOf(".") - 1) >>> 0) + 2);
   }
 
@@ -161,7 +200,7 @@ export default class MimesValidator extends BaseValidator {
       return this.value;
     }
 
-    // Handle case where value is already an array of FileList (shouldn't happen but just in case)
+    // Handle case where value is already an array of FileList
     if (Array.isArray(this.value) && this.value[0] instanceof FileList) {
       return Array.from(this.value[0]);
     }

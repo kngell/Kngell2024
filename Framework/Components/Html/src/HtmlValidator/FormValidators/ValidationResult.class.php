@@ -2,9 +2,6 @@
 
 declare(strict_types=1);
 
-/**
- * Represents the result of a validation operation.
- */
 final readonly class ValidationResult
 {
     public function __construct(

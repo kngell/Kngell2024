@@ -13,4 +13,6 @@ interface EventInterface
     public function getResults(): mixed;
 
     public function getParams(): mixed;
+
+    public function addResult(string $key, mixed $value): self;
 }

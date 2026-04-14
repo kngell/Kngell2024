@@ -207,6 +207,46 @@ trait ControllerGettersAndSetters
         return $this;
     }
 
+    /**
+     * @return SectionProviderFactory
+     */
+    public function getProviderFactory(): SectionProviderFactory
+    {
+        return $this->providerFactory;
+    }
+
+    /**
+     * @param SectionProviderFactory $providerFactory
+     *
+     * @return Controller
+     */
+    public function setProviderFactory(SectionProviderFactory $providerFactory): Controller
+    {
+        $this->providerFactory = $providerFactory;
+
+        return $this;
+    }
+
+    /**
+     * @return HtmlRegularSectionManager
+     */
+    public function getSectionManager(): HtmlRegularSectionManager
+    {
+        return $this->sectionManager;
+    }
+
+    /**
+     * @param HtmlRegularSectionManager $sectionManager
+     *
+     * @return Controller
+     */
+    public function setSectionManager(HtmlRegularSectionManager $sectionManager): Controller
+    {
+        $this->sectionManager = $sectionManager;
+
+        return $this;
+    }
+
     protected function layout(string $layout): void
     {
         $this->layout = $layout;

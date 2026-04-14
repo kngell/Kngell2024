@@ -26,6 +26,7 @@ interface EntityRelationManagerInterface
         array $tableAlias,
         array $tableMap,
         array &$relatedEntities,
+        ?array $relationshipConfig = null,
     ): void;
 
     public function completeRelatedEntityHydration(Entity $entity, array $relatedEntities): void;
@@ -39,4 +40,6 @@ interface EntityRelationManagerInterface
         string $relationName,
         array $collectionData,
     ): void;
+
+    public function resetCurrentPointers(array &$relatedEntities): void;
 }

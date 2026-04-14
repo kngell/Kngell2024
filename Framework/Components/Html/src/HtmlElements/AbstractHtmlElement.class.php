@@ -113,6 +113,33 @@ abstract class AbstractHtmlElement extends AbstractHtmlComponent
         return $this;
     }
 
+    protected function end(): string
+    {
+        // void tags have no closing
+        if (in_array(strtolower($this->tag), self::VOID_TAGS, true)) {
+            return '';
+        }
+
+        return "</{$this->tag}>";
+    }
+
+    protected function begin(): string
+    {
+        $properties = get_object_vars($this);
+        if ($this instanceof HtmlAttributeProviderInterface) {
+            $properties = array_merge($properties, $this->getProperties());
+        }
+
+        $tag = $this->getTagAttributes($properties, $this->tag);
+
+        // inject csrf only for forms
+        if ($this->tag === 'form' && $this->includeToken) {
+            $tag .= $this->csrftoken();
+        }
+
+        return $tag;
+    }
+
     private function handleErrorMessage(AbstractHtmlComponent $child): void
     {
         if ($child instanceof AbstractInput || $child instanceof SelectElement || $child instanceof TextAreaElement) {
@@ -131,16 +158,6 @@ abstract class AbstractHtmlElement extends AbstractHtmlComponent
         return [$begin, $end];
     }
 
-    private function end(): string
-    {
-        // void tags have no closing
-        if (in_array(strtolower($this->tag), self::VOID_TAGS, true)) {
-            return '';
-        }
-
-        return "</{$this->tag}>";
-    }
-
     private function frmName(): string
     {
         if ($this->tag !== 'form' || $this->includeToken === false) {
@@ -151,18 +168,6 @@ abstract class AbstractHtmlElement extends AbstractHtmlComponent
             ->name('frm_name')
             ->value($this->name ?? '')
             ->generate();
-    }
-
-    private function begin(): string
-    {
-        $tag = $this->getTagAttributes(get_object_vars($this), $this->tag);
-
-        // inject csrf only for forms
-        if ($this->tag === 'form' && $this->includeToken) {
-            $tag .= $this->csrftoken();
-        }
-
-        return $tag;
     }
 
     private function csrftoken(): string

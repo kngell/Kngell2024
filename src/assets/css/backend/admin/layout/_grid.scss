@@ -43,7 +43,7 @@
   }
   &__main {
     grid-area: main;
-    overflow: hidden;
+    overflow-x: hidden;
   }
   &__footer {
     grid-area: footer;

@@ -7,9 +7,9 @@ class DataQueryClauseBuilderFactory implements ClauseBuilderFactoryInterface
     {
     }
 
-    public function supports(SqlStatementType $statement): bool
+    public function supports(SqlStatement $statement): bool
     {
-        return $statement === SqlStatementType::SELECT;
+        return $statement === SqlStatement::SELECT;
     }
 
     public function create(): ClauseBuilderInterface

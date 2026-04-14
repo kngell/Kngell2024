@@ -2,21 +2,19 @@
 
 declare(strict_types=1);
 
-class UpdateStatement extends SqlQuery implements SqlStatementInterface
+class UpdateStatement extends AbstractStatement
 {
-    private const SqlStatementType TYPE = SqlStatementType::UPDATE;
-
-    private array $updateMap;
+    private const StatementType TYPE = StatementType::SIMPLE_UPDATE;
 
     public function __construct(
         array $updateMap = [],
         array $queryFlow = [],
         ?EntityManagerInterface $em = null,
     ) {
-        parent::__construct(null, self::TYPE, $em);
-        $this->updateMap = $updateMap;
-        $this->queryFlow = $queryFlow;
+        parent::__construct(self::TYPE, $queryFlow, $em);
+        $this->map = $updateMap;
         $this->table = $updateMap['table'] ?? null;
+        $this->initialize();
     }
 
     public function build(): string
@@ -24,75 +22,50 @@ class UpdateStatement extends SqlQuery implements SqlStatementInterface
         if ($this->table === null) {
             throw new QueryBuildException('UPDATE statement requires a table');
         }
+        list($table, $alias) = $this->helper->get($this->table, $this->state->tableAlias, $this->state->aliasCheck);
 
-        $parts = ['UPDATE', $this->table];
-
-        foreach (self::TYPE->getBuildOrder() as $clause) {
-            if ($this->shouldBuildClause($clause)) {
-                $this->buildClause($clause);
-            }
+        if (!empty($this->customAlias)) {
+            $alias = $this->customAlias;
         }
+
+        $parts = [$table . ' AS ' . $alias];
+        $this->state->tables[$table] = $this->getColumns();
+        $this->state->isUpdate = true;
+        $this->state->statementContext = self::TYPE;
+
         $parts[] = parent::build();
         $this->query = implode(' ', $parts);
         return $this->query;
     }
 
-    public function getsqlStatementType(): SqlStatementType
-    {
-        return self::TYPE;
-    }
-
-    protected function shouldBuildClause(string $clause): bool
-    {
-        $userFlow = array_keys($this->queryFlow);
-        return in_array($clause, $userFlow);
-    }
-
-    private function buildClause(string $clause): void
+    protected function buildSpecificClause(string $clause): void
     {
         match($clause) {
             'set' => $this->buildSetClause(),
-            'where' => $this->buildWhereClause(),
+            'where' => $this->buildWhereClauseFromMap(),
             default => null
         };
+    }
+
+    private function getColumns(): array
+    {
+        $columns = [];
+        $setData = $this->map['set']->getData();
+        foreach ($setData as $column => $value) {
+            $columns[] = $column;
+        }
+        return $columns;
     }
 
     private function buildSetClause(): void
     {
         $setClause = new SetClause(
-            $this->updateMap['set'],
+            $this->map['set']->getData(),
             false,
             true,
             'set',
             $this->em,
         );
         $this->add($setClause);
-    }
-
-    private function buildWhereClause(): void
-    {
-        $conditionsMap = $this->updateMap;
-        if (!isset($conditionsMap['where']) || empty($conditionsMap['where'])) {
-            return;
-        }
-
-        $builder = new ConditionGroupBuilder($this->em);
-
-        foreach ($conditionsMap['where'] as $index => $conditionData) {
-            $builder->addCondition(
-                $conditionData->getMethod(),
-                $conditionData->getUpdateData(),
-            );
-        }
-
-        $groupedElements = $builder->getGroupedElements();
-
-        if ($groupedElements->isEmpty()) {
-            return;
-        }
-
-        foreach ($groupedElements->all() as $element) {
-            $this->add($element);
-        }
     }
 }

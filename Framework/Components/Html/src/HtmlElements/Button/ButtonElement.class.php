@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-class ButtonElement extends AbstractHtmlElement
+class ButtonElement extends AbstractHtmlElement implements HtmlAttributeProviderInterface
 {
     private string $type;
     private bool $autofocus;
@@ -240,7 +240,7 @@ class ButtonElement extends AbstractHtmlElement
      *
      * @return ButtonElement
      */
-    public function content(string $content, bool $contentUp = true): self
+    public function content(null|string|int $content, bool $contentUp = true): self
     {
         $this->content = $content;
         $this->contentUp = $contentUp;
@@ -256,5 +256,10 @@ class ButtonElement extends AbstractHtmlElement
     {
         $this->tabindex = $tabindex;
         return $this;
+    }
+
+    public function getProperties(): array
+    {
+        return get_object_vars($this);
     }
 }

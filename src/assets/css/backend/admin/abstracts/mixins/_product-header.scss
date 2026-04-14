@@ -1,0 +1,13 @@
+@use "page-title" as *;
+
+@mixin product-header {
+  display: flex;
+  align-items: flex-end;
+  gap: 2.4rem;
+  align-self: stretch;
+  flex: 0 0 auto;
+
+  .title {
+    @include page-title;
+  }
+}

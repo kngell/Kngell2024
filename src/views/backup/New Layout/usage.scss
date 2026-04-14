@@ -1,0 +1,68 @@
+// styles/main.scss
+@use "components/dropzone" as *;
+
+// ============================================
+// Example 1: Single mode only with defaults
+// ============================================
+@include dropzone(
+  (
+    "single": true
+  )
+);
+
+// ============================================
+// Example 2: Multiple mode only with defaults
+// ============================================
+@include dropzone(
+  (
+    "multiple": true
+  )
+);
+
+// ============================================
+// Example 3: Both modes with global padding
+// ============================================
+@include dropzone(
+  (
+    "single": true,
+    "multiple": true,
+    "padding": 1.6rem // Applies to both
+  )
+);
+
+// ============================================
+// Example 4: Both modes with different options
+// ============================================
+@include dropzone(
+  (
+    "single": (
+      "preview-height": 16rem,
+      "hint-text": "Upload product image"
+    ),
+    "multiple": (
+      "preview-grid-gap": 1.2rem,
+      "preview-item-min-width": 120px,
+      "hint-text": "Upload gallery images"
+    ),
+    "padding": 2rem,
+    // Global padding for both
+    "height": 20rem // Global height for both
+  )
+);
+
+// ============================================
+// Example 5: Override specific properties per mode
+// ============================================
+@include dropzone(
+  (
+    "single": (
+      "preview-height": 14rem,
+      "padding": 1.6rem // Overrides global for single only
+    ),
+    "multiple": (
+      "preview-grid-gap": 1rem,
+      "preview-item-min-width": 100px
+    ),
+    "padding": 2rem // Global default, overridden by single's padding
+  )
+);

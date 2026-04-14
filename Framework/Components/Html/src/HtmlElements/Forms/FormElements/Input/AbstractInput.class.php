@@ -14,8 +14,6 @@ abstract class AbstractInput extends AbstractFormDataElement
     protected mixed $max;
     protected bool $multiple;
     protected string $pattern;
-    protected mixed $placeholder;
-    protected bool $required;
     protected int $step;
     protected bool $autofocus;
     protected int $height;
@@ -103,6 +101,17 @@ abstract class AbstractInput extends AbstractFormDataElement
         $this->size = $size;
         return $this;
     }
+
+    // /**
+    //  * @param array $style
+    //  *
+    //  * @return AbstractInput
+    //  */
+    // public function style(array $style): AbstractInput
+    // {
+    //     $this->style = $style;
+    //     return $this;
+    // }
 
     /**
      * @param int $maxlength

@@ -1,32 +1,43 @@
 <?php
 
 declare(strict_types=1);
+
 class App extends AbstractApp
 {
     public function __construct()
     {
-        $this->resolutionContext = new ResolutionContext();
-        $this->registerCoreBindings();
-
+        $this->isCli = php_sapi_name() === 'cli';
         AppConstants::enable();
         $this->appConfig = AppConfig::getInstance()->setup();
+        parent::__construct();
+        $this->registerCoreBindings();
         ContainerClassRegistrator::register($this);
     }
 
     public function boot(): self
     {
         $this->loadErrorHandlers();
-        $this->loadSession();
         $this->phpVersion();
         $this->loadEnvironment();
         $this->loadCache();
-        $this->loadCookies();
-        $this->createAppProperties();
+
+        if (!$this->isCli) {
+            $this->loadSession();
+            $this->loadCookies();
+            $this->createAppProperties();
+        } else {
+            $this->bootMap['createAppProperties'] = true;
+        }
+
         return $this;
     }
 
     public function run(string $url = '', array $params = []): void
     {
+        if ($this->isCli) {
+            throw new LogicException('Cannot run HTTP router in CLI mode.');
+        }
+
         $response = $this->rooter->handle($this->request, $this, $url, $params);
         $response->prepare($this->request);
         $response->send();
@@ -54,5 +65,10 @@ class App extends AbstractApp
                 $this->$boot();
             }
         }
+    }
+
+    public function isCli(): bool
+    {
+        return $this->isCli;
     }
 }

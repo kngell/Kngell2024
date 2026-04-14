@@ -1,0 +1,42 @@
+@use "css/backend/admin/abstracts" as *;
+
+// ============================================
+// INPUT FIELD COMPONENT
+// ============================================
+.input-show {
+  width: 100%;
+  height: 60vh; // OR a fixed height like 600px. CRITICAL for scrolling.
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; // Prevents the whole container from scrolling
+
+  .row-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    flex: 1; // Tells this box to take up all remaining space
+    min-height: 0; // Allows the flex item to be smaller than its internal content
+    padding: 2.4rem;
+
+    overflow-y: auto; // Enables the scrollbar only here
+    background-color: $gray-300;
+
+    .row {
+      width: 100%;
+      display: flex;
+      flex-direction: row; // Ensure the row stays horizontal
+      justify-content: space-between;
+      gap: 2.4rem;
+      flex-shrink: 0; // Prevents rows from squishing to fit
+
+      .input-wrapper,
+      .textarea-wrapper {
+        padding: 2.4rem;
+        flex: 1; // Keeps the width at 60rem even if container is tight
+      }
+    }
+  }
+}
+
+@include input-field((textarea, select, custom-select, radio, checkbox, toggle));

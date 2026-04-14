@@ -8,7 +8,7 @@ class UniqueValidator extends AbstractValidator
         private readonly array $errorParams,
         private readonly string $display,
         private readonly mixed $inputValue,
-        private readonly ?string $ruleValue,
+        private readonly null|string|array $ruleValue,
         private readonly Model $md,
         private readonly ?array $formData,
         private string $fieldName,
@@ -21,23 +21,34 @@ class UniqueValidator extends AbstractValidator
         if ($this->isEmpty($this->inputValue)) {
             return false;
         }
+        $model = $this->md;
+        $column = $this->extractFieldName($this->fieldName);
+        $ruleType = $this->ruleValue;
 
+        if (is_array($this->ruleValue)) {
+            $modelName = ucfirst(StringUtils::snakeCaseToCamelCase($this->ruleValue['modelName'])) . 'Model';
+            $column = $this->ruleValue['fieldNames'][0] ?? $this->fieldName;
+            $ruleType = $this->ruleValue['ignore'] ?? 'ignore_current';
+
+            $model = App::diGet($modelName);
+        }
+        // dd($this->formData);
         $ignoreCurrent = $this->shouldIgnoreCurrent();
 
-        $conditions = [$this->fieldName => $this->inputValue];
-        $existingRecord = $this->md->one($conditions);
+        $conditions = [$column => $this->inputValue];
+        $existingRecord = $model->one($conditions);
 
         if ($existingRecord->exists()) {
             if ($ignoreCurrent) {
                 $existingRecord = $existingRecord->asClass();
-                $isSameRecord = $this->isSameRecord($existingRecord);
+                $isSameRecord = $this->isSameRecord($existingRecord, $model);
                 if (!$isSameRecord) {
-                    return $this->buildErrorMessage();
+                    return $this->buildErrorMessage($this->errorParams);
                 }
                 return false;
             }
 
-            [$message,$classes] = $this->buildErrorMessage();
+            [$message,$classes] = $this->buildErrorMessage($this->errorParams);
             return $this->errorMessage(
                 sprintf($message, $this->display),
                 $classes,
@@ -49,7 +60,11 @@ class UniqueValidator extends AbstractValidator
 
     private function shouldIgnoreCurrent(): bool
     {
-        if ($this->ruleValue !== 'ignore_current') {
+        $ruleValue = $this->ruleValue;
+        if (is_array($ruleValue)) {
+            $ruleValue = $ruleValue['ignore'];
+        }
+        if ($ruleValue !== 'ignore_current') {
             return false;
         }
 
@@ -60,25 +75,46 @@ class UniqueValidator extends AbstractValidator
         return true;
     }
 
-    private function isSameRecord(Entity $existingRecord): bool
+    private function isSameRecord(Entity $existing, Model $model): bool
     {
-        $entity = $this->md->getEntityManager()->getEntity();
-        $primaryKeyField = $entity->getEntityKeyField() ?? 'id';
-        $primaryKeyProperty = $entity->getEntityKeyProperty() ?? 'id';
+        $entity = $model->getEntityManager()->getEntity();
 
-        $currentId = $this->getCurrentIdFromFormData($primaryKeyField, $primaryKeyProperty);
+        if ($existing->entityKeyIsInitialzed()) {
+            $existingId = $existing->getEntityPrimarykeyValue();
+        } else {
+            $existingId = null;
+        }
+        $pkField = $entity->getEntityKeyField() ?? 'id';
+        // $pkProperty = $entity->getEntityKeyProperty();
+        // $existingId = $existing->getFieldValue($pkField);
+        $currentId = null;
 
-        if ($currentId === null) {
-            return false;
+        if ($this->fieldName && strpos($this->fieldName, '[') !== false) {
+            $currentId = $this->getIdFromNestedPath($pkField);
+        } else {
+            $currentId = $this->formData['pdt_id'] ?? $this->getCurrentIdFromFormData($pkField, 'id');
         }
 
-        $existingId = $existingRecord->getFieldValue($primaryKeyField)
-                    ?? $existingRecord->getFieldValue($primaryKeyProperty);
-
-        if ($existingId === null) {
+        if ($currentId === null || $existingId === null) {
             return false;
         }
-        return $existingId == $currentId;
+        return (string) $existingId === (string) $currentId;
+    }
+
+    private function getIdFromNestedPath(string $pkField): mixed
+    {
+        preg_match_all('/[^[\]]+/', $this->fieldName, $matches);
+        $keys = $matches[0];
+        array_pop($keys);
+
+        $cursor = $this->formData;
+        foreach ($keys as $key) {
+            if (!isset($cursor[$key])) {
+                return null;
+            }
+            $cursor = $cursor[$key];
+        }
+        return $cursor[$pkField] ?? $cursor['id'] ?? null;
     }
 
     private function getCurrentIdFromFormData(string $field, string $property): mixed
@@ -99,13 +135,5 @@ class UniqueValidator extends AbstractValidator
         }
 
         return null;
-    }
-
-    private function buildErrorMessage(): array
-    {
-        $message = $this->errorParams['message'] ?? '%s must be unique';
-        $classes = $this->errorParams['classes'] ?? ['text-danger', 'validation-error'];
-
-        return [$message, $classes];
     }
 }

@@ -21,7 +21,12 @@
     "paypal/paypal-server-sdk": "dev-main",
     "firebase/php-jwt": "dev-main",
     "geoip2/geoip2": "dev-main",
-    "psr/log": "^3.0@dev"
+    "psr/log": "^3.0@dev",
+    "intervention/image": "^2.7",
+    "spatie/image-optimizer": "^1.6",
+    "ext-gd": "*",
+    "ext-exif": "*",
+    "hashids/hashids": "^5.0@dev"
   },
   "require-dev": {
     "symfony/var-dumper": "^7.1",
@@ -32,15 +37,27 @@
   "autoload": {
     "classmap": [
       "Framework/",
-      "App/",
-      "scripts/src/"
+      "App/"
     ],
     "exclude-from-classmap": [
-      "Framework/Components/Core/src/Base/Traits/useCase.php",
-      "**/useCase.php",
-      "**/*examples*",
-      "**/*test*"
+      "**/tests/**",
+      "**/test/**",
+      "**/Tests/**",
+      "**/examples/**",
+      "**/docs/**",
+      "**/migrations/**",
+      "**/seeds/**",
+      "**/factories/**",
+      "**/useCase.php"
     ]
+  },
+  "config": {
+    "optimize-autoloader": true,
+    "classmap-authoritative": true,
+    "sort-packages": true,
+    "allow-plugins": {
+      "friendsofphp/php-cs-fixer": true
+    }
   },
   "scripts": {},
   "repositories": [

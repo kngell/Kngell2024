@@ -26,8 +26,8 @@ class ConditionClause extends SqlQuery implements RegularClauseComponentInterfac
     public function build(): string
     {
         $this->initializeConditionRule();
-
-        $conditionSql = $this->conditionRule->getRule((array) $this->conditions);
+        $conditions = $this->getConditions();
+        $conditionSql = $this->conditionRule->getRule($conditions);
         if (empty($conditionSql)) {
             return '';
         }
@@ -38,7 +38,9 @@ class ConditionClause extends SqlQuery implements RegularClauseComponentInterfac
         if ($this->conditionRule instanceof QueryRulesInterface && method_exists($this->conditionRule, 'getState')) {
             $this->state = $this->state->merge($this->conditionRule->getState());
         }
-
+        // if ($this->requiresGrouping()) {
+        //     $conditionSql = '(' . $conditionSql . ')';
+        // }
         return $this->combineWithChildren($conditionSql, $childrenSql);
         // return $this->applyConditionParentheses($result);
     }
@@ -72,16 +74,27 @@ class ConditionClause extends SqlQuery implements RegularClauseComponentInterfac
 
     public function getConditions(): array
     {
+        if ($this->method === 'on') {
+            $this->helper->setJoinMapping(
+                $this->conditions['fromTable'],
+                $this->conditions['toTable'],
+            );
+            return $this->conditions['onConditions'];
+        }
         return (array) $this->conditions;
     }
 
-    /**
-     * Check if this condition requires grouping due to complexity.
-     */
     public function requiresGrouping(): bool
     {
+        // $ruleMethod = $this->conditionRule->getMethod();
+        // $ruleLogicalLink = SqlBuilderMethodRegistry::getLogicalLink($ruleMethod);
+
         // OR conditions always need grouping
         if ($this->getLogicalLink() === 'OR') {
+            //|| $ruleLogicalLink->name === 'OR')
+            // if ($this->getLogicalLink() === 'OR') {
+            //     $this->logicalLink = SqlConditionLink::AND->name;
+            // }
             return true;
         }
 
@@ -109,28 +122,30 @@ class ConditionClause extends SqlQuery implements RegularClauseComponentInterfac
         return null;
     }
 
-    /**
-     * Check if this is a complex condition that might need parentheses.
-     */
+    public function getRuleReport(): array
+    {
+        $mapping = SqlBuilderMethodRegistry::getMapping($this->method);
+        return [
+            'method' => $this->method,
+            'logic' => $mapping['link']->name,
+            'sql_op' => $mapping['operator']->value,
+            'precedence' => $mapping['operator']->getPrecedence(),
+        ];
+    }
+
     private function isComplexCondition(): bool
     {
         if ($this->conditions instanceof Closure) {
             return true;
         }
 
-        if (is_array($this->conditions) && count($this->conditions) > 2) {
-            return true;
+        if (is_array($this->conditions)) {
+            foreach ($this->conditions as $val) {
+                if (is_string($val) && in_array(strtoupper($val), ['OR', 'AND', 'new_block'])) {
+                    return true;
+                }
+            }
         }
-
-        if ($this->getOperator() === SqlOperator::IN && is_array($this->conditions[2] ?? null)) {
-            return count($this->conditions[2]) > 3;
-        }
-
-        // Subqueries and function calls are complex
-        if (is_string($this->conditions[0] ?? null) && str_contains($this->conditions[0], '(')) {
-            return true;
-        }
-
         return false;
     }
 
@@ -162,18 +177,21 @@ class ConditionClause extends SqlQuery implements RegularClauseComponentInterfac
 
     private function combineWithChildren(string $conditionSql, string $childrenSql): string
     {
-        if (empty($childrenSql)) {
-            return $conditionSql;
-        }
-
-        // If we have both condition and children, combine with AND
-        return "{$conditionSql} AND {$childrenSql}";
+        $junction = $this->getLogicalLink();
+        return empty($childrenSql)
+             ? $conditionSql
+             : "{$conditionSql} {$junction} {$childrenSql}";
+        // return $this->applyConditionParentheses($conditionSql);
     }
 
     private function applyConditionParentheses(string $sql): string
     {
         if ($this->requiresGrouping()) {
-            return "({$sql})";
+            $sql = '(' . $sql . ')';
+
+            if ($this->getLogicalLink() === SqlConditionLink::OR) {
+                $this->logicalLink = SqlConditionLink::AND->name;
+            }
         }
         return $sql;
     }

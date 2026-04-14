@@ -14,6 +14,7 @@ class EntityDependenciesFactory implements EntityDependenciesFactoryInterface
         private TypeNormalizerInterface $normalizer,
         ?TypePresenterFactoryInterface $typePresenterFactory,
         private ?Closure $typePresenterFactoryCreator,
+        private EntityIdentityMap $identityMap,
     ) {
         if ($typePresenterFactory !== null) {
             $this->typePresenterFactory = $typePresenterFactory;
@@ -104,7 +105,7 @@ class EntityDependenciesFactory implements EntityDependenciesFactoryInterface
     public function getEntityFactory(): EntityFactoryInterface
     {
         if ($this->entityFactory === null) {
-            $this->entityFactory = new EntityFactory($this);
+            $this->entityFactory = new EntityFactory($this, $this->identityMap);
         }
         return $this->entityFactory;
     }

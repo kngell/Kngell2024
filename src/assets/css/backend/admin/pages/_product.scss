@@ -6,31 +6,19 @@
   display: flex;
   flex-direction: column;
   flex: 1 1 auto;
-  min-height: 0; // ✅ critical for nested scroll
+  min-height: 0;
   overflow: hidden;
   gap: 2.4rem;
 
   &__header {
-    display: flex;
-    align-items: flex-end;
-    gap: 2.4rem;
-    align-self: stretch;
-    flex: 0 0 auto;
-    .title {
-      @include page-title;
-    }
-    .user-action {
-      display: flex;
-      align-items: flex-start;
-      gap: 1.6rem;
-    }
+    @include product-header;
   }
   &__body {
     flex: 1 1 auto;
-    min-height: 0; // allows scroll inside
+    min-height: 0;
     display: flex;
     flex-direction: column;
-    overflow-y: auto; // only form scrolls
+    overflow-y: auto;
     &-frm {
       flex: 1 1 auto;
       display: grid;
@@ -177,80 +165,6 @@
     }
   }
   &__footer {
-    flex-shrink: 0;
-    flex: 0 0 auto;
-    position: sticky;
-    bottom: 0;
-    z-index: 1000;
-    display: flex;
-    padding: 1.6rem 2.4rem;
-    justify-content: space-between;
-    align-items: center;
-    gap: 1.6rem;
-    align-self: stretch;
-    border-top: 1px solid map-deep-get($color-neutral, gray, gray-100);
-    background-color: map-deep-get($color-neutral, white);
-    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
-
-    @include respond-below(md) {
-      flex-direction: column;
-      align-items: stretch;
-      padding: 1.2rem;
-    }
-    .completeness {
-      display: flex;
-      align-items: center;
-      gap: 1.6rem;
-      flex: 1 0 0;
-
-      &__text {
-        @include text-style(
-          $text-l,
-          medium,
-          (
-            color: map-deep-get($color-neutral, black, black-700),
-          )
-        );
-
-        @include respond-below(sm) {
-          display: none;
-        }
-      }
-
-      &__progress-container {
-        @include progress-bar(
-          $width: 20rem,
-          $height: 0.6rem,
-          $progress-color: map-deep-get($color-primary, primary-500),
-          $background-color: map-deep-get($color-neutral, gray, gray-100),
-          $show-percentage: true,
-          $percentage-position: outside,
-          $container-gap: 1rem
-        );
-        // Responsive widths
-        @include respond-below(md) {
-          width: 15rem;
-          .completeness-progress {
-            width: 15rem;
-          }
-        }
-
-        @include respond-below(sm) {
-          width: 10rem;
-          .completeness-progress {
-            width: 10rem;
-          }
-        }
-      }
-    }
-    .buttons {
-      display: flex;
-      align-items: center;
-      gap: 1.6rem;
-
-      @include respond-below(md) {
-        justify-content: space-between;
-      }
-    }
+    @include page-footer;
   }
 }

@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 class QueryResult implements Countable, IteratorAggregate
 {
-    private null|int $lastUpdateId = null;
+    use QueryResultFetchTrait;
+    use QueryResultFormatTrait;
+    use QueryResultStatusTrait;
+
+    private null|int|array $lastUpdateId = null;
     private null|int $lastOperationId = null;
     private null|string $entityKeyField = null;
     private QueryResultConfig $config;
@@ -14,20 +18,25 @@ class QueryResult implements Countable, IteratorAggregate
     private string $operation = 'all';
     private QueryResultPaginator $paginator;
     private QueryResultHydrator $hydrator;
-    private ?PDOStatement $pdoStatement = null;
     private int $rowCount = 0;
     private ?string $lastInsertId = null;
     private bool $isWriteOperation = false;
+    private bool $isSkipped = false;
+    private bool $executionStatus = false;
+    private string $skipReason = '';
+    private FetchStrategy $fetchStrategy = FetchStrategy::STANDARD;
 
     public function __construct(
         private DataMapperInterface $dataMapper,
-        private string $entity,
+        private ?PDOStatement $pdoStatement,
+        private string $entityClass,
         private array $tableAlias,
         private EntityFactoryInterface $entityFactory,
         private array $tableMap,
+        private ?SqlStatement $statementType,
     ) {
         $this->initializeComponents();
-        // Don't initialize statement yet - wait for first fetch
+        $this->executionStatus = $dataMapper->getExecutionStatus();
     }
 
     public function __destruct()
@@ -35,90 +44,17 @@ class QueryResult implements Countable, IteratorAggregate
         $this->close();
     }
 
-    /**
-     * Initialize or re-initialize for a new operation.
-     */
+    public function getAffectedRows(): int
+    {
+        $this->initialize();
+        return $this->pdoStatement ? $this->pdoStatement->rowCount() : 0;
+    }
+
     public function prepare(string $operation = 'all'): self
     {
         $this->operation = $operation;
-        $this->isInitialized = false; // Force re-initialization
+        $this->isInitialized = false;
         return $this;
-    }
-
-    public function all(): array
-    {
-        $this->initialize();
-        $this->operation = 'all';
-
-        $results = $this->fetcher->fetchAll();
-        return $this->paginator->applyPagination($results, 'all');
-    }
-
-    public function first(): mixed
-    {
-        $this->initialize();
-        $this->operation = 'first';
-
-        if ($this->paginator->getLimit() !== null && $this->paginator->getLimit() > 1) {
-            $results = $this->fetcher->fetchAll();
-            $limited = array_slice($results, 0, $this->paginator->getLimit());
-            return $limited[0] ?? null;
-        }
-
-        return $this->fetcher->fetchFirst();
-    }
-
-    public function last(): mixed
-    {
-        $this->initialize();
-        $this->operation = 'last';
-
-        if ($this->paginator->getLastLimit() !== null && $this->paginator->getLastLimit() > 1) {
-            $results = $this->fetcher->fetchAll();
-            $limited = array_slice($results, -$this->paginator->getLastLimit());
-            return $limited[0] ?? null;
-        }
-
-        $results = $this->fetcher->fetchAll();
-        return !empty($results) ? end($results) : null;
-    }
-
-    public function single(): mixed
-    {
-        $this->initialize();
-        $this->operation = 'single';
-        return $this->fetcher->fetchSingle();
-    }
-
-    public function asArray(): mixed
-    {
-        $this->initialize();
-        return $this->formatter->asArray();
-    }
-
-    public function asClass(?string $entityClass = null): mixed
-    {
-        $this->initialize();
-        $entityClass = $entityClass ?? $this->entity;
-        return $this->formatter->asClass($entityClass);
-    }
-
-    public function asColumn(int $columnIndex = 0): array
-    {
-        $this->initialize();
-        return $this->formatter->asColumn($columnIndex);
-    }
-
-    public function asKeyPairs(): array
-    {
-        $this->initialize();
-        return $this->formatter->asKeyPairs();
-    }
-
-    public function asObject(): mixed
-    {
-        $this->initialize();
-        return $this->formatter->asObject();
     }
 
     public function count(): int
@@ -157,33 +93,14 @@ class QueryResult implements Countable, IteratorAggregate
         return new ArrayIterator($this->all());
     }
 
-    public function isSuccess(): bool
+    public function setSkipped(bool $skipped, string $reason = ''): self
     {
-        if ($this->isWriteOperation) {
-            if ($this->dataMapper->getExecutionStatus() === false) {
-                return false;
-            }
-            return true;
-        }
-        return $this->dataMapper->getExecutionStatus() !== false;
+        $this->isSkipped = $skipped;
+        $this->skipReason = $reason;
+        return $this;
     }
 
-    public function wasSuccessful(): bool
-    {
-        return $this->isSuccess();
-    }
-
-    public function getAffectedRows(): int
-    {
-        return $this->rowCount;
-    }
-
-    public function queryExecuted(): bool
-    {
-        return $this->dataMapper->getExecutionStatus() !== false;
-    }
-
-    public function setLastUpdateId(null|int $lastUpdateId): self
+    public function setLastUpdateId(null|int|array $lastUpdateId): self
     {
         $this->lastUpdateId = $lastUpdateId;
         return $this;
@@ -230,7 +147,7 @@ class QueryResult implements Countable, IteratorAggregate
         $this->initialize();
 
         if ($fetchOptions !== null) {
-            $this->config->processFetchOptions($fetchOptions, $this->entity);
+            $this->config->processFetchOptions($fetchOptions, $this->entityClass);
         }
 
         return $this;
@@ -241,7 +158,7 @@ class QueryResult implements Countable, IteratorAggregate
      */
     public function getResults(string|array|null $params = null, ?string $className = null): self
     {
-        $fetchOptions = $this->config->convertLegacyParams($params, $className, $this->entity);
+        $fetchOptions = $this->config->convertLegacyParams($params, $className, $this->entityClass);
         return $this->execute($fetchOptions);
     }
 
@@ -296,10 +213,10 @@ class QueryResult implements Countable, IteratorAggregate
      */
     public function getEntity(): string
     {
-        return $this->entity;
+        return $this->entityClass;
     }
 
-    public function getQeuryString(): string
+    public function getQueryString(): string
     {
         return $this->dataMapper->getQueryString();
     }
@@ -391,6 +308,63 @@ class QueryResult implements Countable, IteratorAggregate
         return true;
     }
 
+    public function hydrateWithRelations(array $data): Object
+    {
+        return $this->hydrator->hydrateWithRelationships($data);
+    }
+
+    /**
+     * @param FetchStrategy $fetchStrategy
+     *
+     * @return QueryResult
+     */
+    public function setFetchStrategy(FetchStrategy $fetchStrategy): QueryResult
+    {
+        $this->fetchStrategy = $fetchStrategy;
+
+        return $this;
+    }
+
+    /**
+     * @return FetchStrategy
+     */
+    public function getFetchStrategy(): FetchStrategy
+    {
+        return $this->fetchStrategy;
+    }
+
+    /**
+     * @param int $rowCount
+     *
+     * @return QueryResult
+     */
+    public function setRowCount(int $rowCount): QueryResult
+    {
+        $this->rowCount = $rowCount;
+
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getSkipReason(): string
+    {
+        return $this->skipReason;
+    }
+
+    /**
+     * @param string $skipReason
+     *
+     * @return QueryResult
+     */
+    public function setSkipReason(string $skipReason): QueryResult
+    {
+        $this->skipReason = $skipReason;
+
+        return $this;
+    }
+
     private function initialize(): void
     {
         if ($this->isInitialized) {
@@ -398,12 +372,16 @@ class QueryResult implements Countable, IteratorAggregate
         }
 
         try {
-            $this->pdoStatement = $this->dataMapper->getQueryStatement();
+            if ($this->wasSkipped()) {
+                $this->isInitialized = true;
+                return;
+            }
             if (!$this->pdoStatement) {
                 throw new QueryResultException('PDOStatement not available from DataMapper');
             }
+
             $this->rowCount = $this->pdoStatement->rowCount();
-            $queryString = trim($this->getQeuryString());
+            $queryString = trim($this->getQueryString());
             $firstWord = strtoupper(explode(' ', $queryString)[0] ?? '');
             $this->isWriteOperation = in_array($firstWord, ['INSERT', 'UPDATE', 'DELETE', 'REPLACE']);
 
@@ -422,10 +400,12 @@ class QueryResult implements Countable, IteratorAggregate
             $this->formatter = new QueryResultFormatter(
                 $this,
                 $this->config,
-                $this->entityFactory->getChangeTracker(),
-                $this->entityFactory->getNormalizer(),
+                $this->entityFactory,
+                new CartesianHydrator($this->entityFactory),
+                new CartesianDetector(),
+                $this->entityClass,
             );
-            $this->formatter->setTableAlias($this->tableAlias);
+            // $this->formatter->setTableAlias($this->tableAlias);
             $this->isInitialized = true;
         } catch (Throwable $exception) {
             throw new QueryResultException(
@@ -439,7 +419,7 @@ class QueryResult implements Countable, IteratorAggregate
     private function initializeComponents(): void
     {
         $this->config = new QueryResultConfig(
-            $this->entity,
+            $this->entityClass,
             $this->tableAlias,
             $this->tableMap,
         );
@@ -452,8 +432,9 @@ class QueryResult implements Countable, IteratorAggregate
         );
         $this->paginator = new QueryResultPaginator();
         $this->hydrator = new QueryResultHydrator(
-            $this->entityFactory->getChangeTracker(),
-            $this->entityFactory->getNormalizer(),
+            $this->config,
+            $this->entityFactory,
+            $this->entityClass,
         );
     }
 }

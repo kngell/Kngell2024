@@ -13,6 +13,16 @@ class NavbarHtmlElement extends AbstractNavbarHtmlElement
         $this->menuItems = json_decode(file_get_contents(FileSearchManager::get(APP, 'menu_acl.json')), true);
     }
 
+    public function buildLayout(HtmlBuilder $html): array
+    {
+        throw new Exception('Not implemented');
+    }
+
+    public function buildFormLayout(HtmlBuilder $form): array
+    {
+        throw new Exception('Not implemented');
+    }
+
     public function display(): string
     {
         $nav = $this->builder;
@@ -31,6 +41,11 @@ class NavbarHtmlElement extends AbstractNavbarHtmlElement
         )->generate();
     }
 
+    protected function getProviderKey(): string
+    {
+        throw new Exception('Not implemented');
+    }
+
     /**
      * @param array $menuItems
      * @param User|null $user
@@ -42,8 +57,11 @@ class NavbarHtmlElement extends AbstractNavbarHtmlElement
         $ulElements = [];
         $html = $this->builder;
         $ul = $html->tag('ul')->class('nav-menu');
+        $accountElements = $html->tag('div');
         foreach ($this->menuItems as $menuItem => $link) {
-            // $class = $menuItem === array_key_first($this->menuItems) ? ['nav-menu__item--btn', 'active'] : ['nav-menu__item--btn'];
+            if ($menuItem === 'Account') {
+                continue;
+            }
             if (is_array($link) && $menuItem === 'Account') {
                 $accountElements = $html->tag('div')->class('nav-connexion')->add(
                     ...$this->accountElements($user, $link),
@@ -51,7 +69,7 @@ class NavbarHtmlElement extends AbstractNavbarHtmlElement
             } else {
                 $class = $this->getClass($menuItem, $link);
                 $ulElements[] = $html->tag('li')->class('nav-menu__item')->add(
-                    $html->tag('a')->class(...$class)->href($link)->content($menuItem)->custom(['aria-current' => 'page']),
+                    $html->tag('a')->class(...$class)->href($link['path'] ?? $link ?? '#')->content($menuItem)->custom(['aria-current' => 'page']),
                 );
             }
         }
@@ -85,7 +103,7 @@ class NavbarHtmlElement extends AbstractNavbarHtmlElement
     private function getClass(string $menuitem, string|array $link): array
     {
         $url = $this->request->getQuery()->get('url');
-        is_array($link) ? $link = $link[0] : $link;
+        is_array($link) ? $link = $link['path'] : $link;
         if ($this->request->isGet() && $this->request->getQuery()->get('url') === ltrim($link, DS)) {
             if ($menuitem === 'Account') {
                 return ['nav-connexion__btn', 'active'];

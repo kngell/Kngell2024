@@ -10,7 +10,7 @@ trait ProductCrudTraitOperationSupport
         $fileMetadata = $upload->getFileMetadata();
         $fileMetadata = $this->mergeWebPathsIntoMetadata($fileMetadata, $webPaths);
 
-        $this->flash->addFormInput(
+        $this->flash->addFormData(
             $this->request->getRequestedUri(),
             $formValues,
             $errors,

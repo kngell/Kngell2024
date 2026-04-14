@@ -33,7 +33,12 @@ final class JoinMethod
         $normalized = strtolower($method);
 
         foreach (SqlJoinType::cases() as $joinType) {
-            $joinMethodName = strtolower($joinType->name) . 'join';
+            if ($joinType === SqlJoinType::JOIN) {
+                $joinMethodName = strtolower($joinType->name);
+            } else {
+                $joinMethodName = strtolower($joinType->name) . 'join';
+            }
+
             if ($normalized === $joinMethodName) {
                 return $joinType;
             }

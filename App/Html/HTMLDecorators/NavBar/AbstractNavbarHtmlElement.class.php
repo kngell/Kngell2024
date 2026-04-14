@@ -19,8 +19,9 @@ abstract class AbstractNavbarHtmlElement extends AbstractHtml implements HtmlCom
         $copy = false;
         $file_to_search = self::FILE_TO_SEARCH . $file;
         $source = self::SOURCE_FILE . $file;
+        $fileManager = FileManager::create();
         if (!file_exists($file_to_search)) {
-            $copy = FileManager::copyFile($source, $file_to_search);
+            $copy = $fileManager->copy($source, $file_to_search);
         } else {
             return str_replace(ROOT_DIR, HOST, $file_to_search);
         }

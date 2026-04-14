@@ -13,12 +13,10 @@ class TextAreaElement extends AbstractFormDataElement
     private string $autocorrect;
     private string $dirname;
     private string $form;
-    private string $placeholder;
     private int $maxlength;
     private int $minlength;
     private bool $autofocus;
     private bool $readonly;
-    private bool $required;
     private string $wrap;
 
     public function __construct($content = '')
@@ -50,7 +48,7 @@ class TextAreaElement extends AbstractFormDataElement
      *
      * @return TextAreaElement
      */
-    public function content(string $content): self
+    public function content(null|string|int $content, bool $contentUp = true): self
     {
         $this->content = $content;
         return $this;

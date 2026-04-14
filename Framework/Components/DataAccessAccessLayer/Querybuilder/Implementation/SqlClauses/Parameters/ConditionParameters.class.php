@@ -6,9 +6,9 @@ class ConditionParameters extends SqlComponent
 {
     public function __construct(
         private ConditionRuleInterface $rule,
-        private EntityManagerInterface $em,
+        EntityManagerInterface $em,
     ) {
-        parent::__construct();
+        parent::__construct(em:$em);
     }
 
     public function build(): string

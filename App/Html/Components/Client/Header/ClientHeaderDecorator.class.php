@@ -1,0 +1,23 @@
+<?php
+
+declare(strict_types=1);
+
+class ClientHeaderDecorator extends AbstractHtmlDecorator
+{
+    public function page(): array
+    {
+        if (!$this->controller instanceof EcommerceController) {
+            throw new HtmlDecoratorException(get_class($this->controller) . ' is not a valid instance of Controller');
+        }
+        $header = new ClientHeader(
+            $this->controller->getProviderFactory(),
+            $this->controller->getSectionManager(),
+            $this->controller->getBuilder(),
+        );
+        [$headerTop,$headerBottom] = $header->getHtmlElements();
+        return parent::page() + [
+            'headerTop' => $headerTop,
+            'headerBottom' => $headerBottom,
+        ];
+    }
+}

@@ -1,0 +1,190 @@
+@use "sass:map";
+@use "css/backend/admin/abstracts/variables" as *;
+@use "css/backend/admin/abstracts/functions" as *;
+@use "text-style" as *;
+
+@mixin toggle-switch($options: ()) {
+  $defaults: (
+    "width": 4.4rem,
+    "height": 2.4rem,
+    "track-color": $background-neutral-disabled,
+    "track-color-active": $background-brand-primary,
+    "knob-color": $background-neutral-primary,
+    "knob-color-active": $background-neutral-primary,
+    "knob-size": 2rem,
+    "knob-gap": 0.2rem,
+    "border-radius": $radius-full,
+    "shadow": $shadow-s,
+    "transition-duration": 0.2s,
+    "transition-timing": ease,
+    "disabled-opacity": 0.5,
+    "with-icons": false,
+    "icon-on": "✓",
+    "icon-off": "✕",
+    "icon-color": $text-neutral-primary,
+    "icon-size": 1.2rem,
+    "label-position": "right",
+    "label-gap": 0.8rem
+  );
+
+  $config: map.merge($defaults, $options);
+
+  $width: map.get($config, "width");
+  $height: map.get($config, "height");
+  $track-color: map.get($config, "track-color");
+  $track-color-active: map.get($config, "track-color-active");
+  $knob-color: map.get($config, "knob-color");
+  $knob-color-active: map.get($config, "knob-color-active");
+  $knob-size: map.get($config, "knob-size");
+  $knob-gap: map.get($config, "knob-gap");
+  $border-radius: map.get($config, "border-radius");
+  $shadow: map.get($config, "shadow");
+  $transition-duration: map.get($config, "transition-duration");
+  $transition-timing: map.get($config, "transition-timing");
+  $disabled-opacity: map.get($config, "disabled-opacity");
+  $with-icons: map.get($config, "with-icons");
+  $icon-on: map.get($config, "icon-on");
+  $icon-off: map.get($config, "icon-off");
+  $icon-color: map.get($config, "icon-color");
+  $icon-size: map.get($config, "icon-size");
+  $label-position: map.get($config, "label-position");
+  $label-gap: map.get($config, "label-gap");
+
+  $knob-offset: $knob-gap;
+  $knob-offset-active: calc(#{$width} - #{$knob-size} - #{$knob-gap});
+
+  // Container styles
+  display: inline-flex;
+  align-items: center;
+  gap: $label-gap;
+
+  @if $label-position == "top" or $label-position == "bottom" {
+    flex-direction: column;
+  }
+
+  // Hide the checkbox but keep it functional
+  input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none; // Don't block clicks, but hide visually
+    &:focus-visible + & {
+      outline: 2px solid $border-brand-primary;
+      outline-offset: 2px;
+    }
+  }
+
+  // Toggle label (clickable area)
+  .toggle {
+    position: relative;
+    display: inline-block;
+    width: $width;
+    height: $height;
+    cursor: pointer;
+    flex-shrink: 0;
+
+    // When checkbox inside this label is focused
+    // &:has(input:focus) {
+    //   outline: 2px solid $border-brand-primary;
+    //   outline-offset: 2px;
+    // }
+
+    // When checkbox inside this label is disabled
+    &:has(input:disabled) {
+      opacity: $disabled-opacity;
+      cursor: not-allowed;
+    }
+  }
+
+  // Track styles
+  .track {
+    width: 100%;
+    height: 100%;
+    background-color: $track-color;
+    border-radius: $border-radius;
+    transition: background-color $transition-duration $transition-timing;
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding: 0 $knob-gap;
+
+    @if $with-icons {
+      &::before,
+      &::after {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: $icon-size;
+        color: $icon-color;
+        line-height: 1;
+        z-index: 1;
+        pointer-events: none;
+      }
+
+      &::before {
+        content: $icon-off;
+        left: $knob-gap;
+      }
+
+      &::after {
+        content: $icon-on;
+        right: $knob-gap;
+      }
+    }
+  }
+
+  // Knob styles
+  .knob {
+    position: absolute;
+    left: $knob-offset;
+    top: 50%;
+    transform: translateY(-50%);
+    width: $knob-size;
+    height: $knob-size;
+    background-color: $knob-color;
+    border-radius: $border-radius;
+    box-shadow: $shadow;
+    transition:
+      left $transition-duration $transition-timing,
+      background-color $transition-duration $transition-timing,
+      transform $transition-duration $transition-timing;
+    z-index: 2;
+  }
+
+  // Label text styles
+  .label {
+    @include apply-text-style(
+      (
+        map: map-deep-get($roboto-map, regular),
+        weight: normal,
+        overrides: (
+          color: $text-neutral-primary
+        )
+      )
+    );
+    user-select: none;
+
+    @if $label-position == "left" {
+      order: -1;
+    }
+  }
+
+  // CHECKED STATE - Fixed!
+  // Target the track and knob when checkbox INSIDE .toggle is checked
+  .toggle:has(input:checked) {
+    .track {
+      background-color: $track-color-active;
+    }
+
+    .knob {
+      left: $knob-offset-active;
+      background-color: $knob-color-active;
+    }
+  }
+
+  // Active/Pressed state
+  .toggle:active .knob {
+    transform: translateY(-50%) scale(0.95);
+  }
+}

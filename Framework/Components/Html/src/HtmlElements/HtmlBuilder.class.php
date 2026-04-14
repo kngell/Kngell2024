@@ -52,9 +52,9 @@ class HtmlBuilder extends AbstractHtmlElement
     public function tag(string $tag): self|HtmlaElement|HtmlTagElement|SelectElement
     {
         return match (true) {
-            in_array($tag, ['div', 'section', 'body', 'nav', 'ul', 'li', 'dl', 'table', 'thead', 'tbody', 'tr', 'td', 'span', 'th', 'button', 'small', 'svg', 'use', 'caption', 'colgroup', 'col']) || preg_match('~[0-9]+~', $tag) => new self($this->token, $tag),
+            in_array($tag, ['div', 'section', 'body', 'nav', 'ul', 'li', 'dl', 'table', 'thead', 'tbody', 'tr', 'td', 'span', 'th', 'button', 'small', 'svg', 'use', 'caption', 'colgroup', 'col', 'code']) || preg_match('~[0-9]+~', $tag) => new self($this->token, $tag),
             $tag === 'a' => new HtmlaElement(),
-            in_array($tag, ['p', 'dd', 'dt', 'img', 'video', 'i', 'strong']) => new HtmlTagElement($tag),
+            in_array($tag, ['p', 'dd', 'dt', 'img', 'video', 'i', 'strong', 'desc']) => new HtmlTagElement($tag),
             $tag === 'select' => new SelectElement($this->token)
         };
     }
@@ -218,11 +218,14 @@ class HtmlBuilder extends AbstractHtmlElement
         return $this;
     }
 
-    public function aria(string $name, string ...$props): self
+    public function aria(string ...$props): self
     {
         $aria = [];
-        foreach ($props as $prop) {
-            $aria['aria' . $name] = $prop;
+        if (ArrayUtils::isKeyValueList($props)) {
+            $props = ArrayUtils::fromSequentialToAssoc($props);
+        }
+        foreach ($props as $name => $prop) {
+            $aria['aria-' . $name] = $prop;
         }
         $this->aria = array_merge($this->aria, $aria);
         return $this;

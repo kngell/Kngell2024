@@ -1,0 +1,9 @@
+name:
+  display: Category Name
+  required: true
+  min: 3
+  max: 255
+icon:
+  display: Category Icon
+  required: true
+  max: 20

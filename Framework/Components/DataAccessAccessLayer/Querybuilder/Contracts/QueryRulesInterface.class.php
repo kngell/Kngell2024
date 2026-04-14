@@ -8,6 +8,7 @@ interface QueryRulesInterface
 
     public function getRule(array $conditions): string;
 
-    // Return the updated state after rule processing
     public function getState(): QueryState;
+
+    public function getMethod(): ?string;
 }

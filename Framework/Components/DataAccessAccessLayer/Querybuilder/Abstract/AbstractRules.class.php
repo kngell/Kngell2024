@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-abstract class AbstractRules
+abstract class AbstractRules implements QueryRulesInterface
 {
     protected EntityManagerInterface $em;
     protected ?string $method;
@@ -31,51 +31,53 @@ abstract class AbstractRules
         return $this->state;
     }
 
+    /**
+     * @return null|string
+     */
+    public function getMethod(): ?string
+    {
+        return $this->method;
+    }
+
     abstract protected function normalize(array $arrayInput): array;
 
     protected function createParameter(mixed $value, string $field, TablesAliasHelper $tableHelper, ?int $index, Entity $entity): string
     {
-        $dbFieldName = $tableHelper->extractColumnName($field);
-
-        $normalizedValue = $this->normalizer->normalizeValueForDatabase(
-            $dbFieldName,
-            $value,
-            $entity,
-        );
-
-        $baseName = $field;
-        if ($index !== null) {
-            $baseName .= '_' . $index;
-        }
-
-        $parameterName = $tableHelper->generateUniqueParameterName($baseName, $this->state->parameters);
-
-        $this->state->parameters[$parameterName] = $normalizedValue;
-
-        return $parameterName;
+        return $this->createParameterOrLiteralValue($value, $field, $tableHelper, $index, $entity, false);
     }
 
-    protected function getOperation(array &$conditions): string
+    protected function createLiteralValue(mixed $value, string $field, TablesAliasHelper $tableHelper, ?int $index, Entity $entity): string
+    {
+        return $this->createParameterOrLiteralValue($value, $field, $tableHelper, $index, $entity, true);
+    }
+
+    protected function createTableHelper(array $keyColumns = []): TablesAliasHelper
+    {
+        $helper = $this->em->getTableAliasHelper()
+            ->setTables($this->tables)
+            ->setConditionIndex($keyColumns);
+        if ($this->state->joinContext !== null) {
+            return $helper->setJoinContext($this->state->joinContext);
+        }
+        return $helper;
+    }
+
+    protected function getOperation(array &$conditions): ?string
     {
         $method = $this->method;
 
-        // Check for explicit operator
-        if (isset($conditions[1]) && is_string($conditions[1]) && SqlOperator::exists(trim($conditions[1]))) {
-            $op = $conditions[1];
-            unset($conditions[1]);
-            $conditions = array_values($conditions);
-            return $op;
-        }
+        if (isset($conditions['right']) && is_array($conditions['right'])) {
+            // Use enum mapping
+            $operator = SqlBuilderMethodRegistry::getDefaultOperator($method);
+            if (!$operator) {
+                throw new BadQueryArgumentException(
+                    "The query method '{$method}' does not have a mapped operator",
+                );
+            }
 
-        // Use enum mapping
-        $operator = SqlBuilderMethodRegistry::getDefaultOperator($method);
-        if (!$operator) {
-            throw new BadQueryArgumentException(
-                "The query method '{$method}' does not have a mapped operator",
-            );
+            return $operator->value;
         }
-
-        return $operator->value;
+        return null;
     }
 
     protected function getConditionLink(int $currentIndex): string
@@ -94,10 +96,8 @@ abstract class AbstractRules
             tableAlias: $this->state->tableAlias,
             aliasCheck: $this->state->aliasCheck,
             parameters: $this->state->parameters,
-            bindArr: $this->state->bindArr,
             logicalToPhysicalMap: $this->state->logicalToPhysicalMap,
             tables: $component->getTables(),
-            table: $this->state->table,
             isSubquery: true,
             subqueryMainTable: array_key_first($component->getTables()),
         );
@@ -108,5 +108,88 @@ abstract class AbstractRules
     protected function mergeSubQueryState(SqlComponent $component): void
     {
         $this->state = $this->state->merge($component->getState());
+    }
+
+    protected function normalizeAssociative(array $conditions): array
+    {
+        $newConditions = [];
+        $count = count($conditions);
+        if (ArrayUtils::isMultidimentional($conditions)) {
+            list($scalarArr, $arrayKeys) = $this->separateScalarFromArrayKeys($conditions);
+        } else {
+            $scalarArr = $conditions;
+            $arrayKeys = [];
+        }
+
+        foreach ($scalarArr as $left => $right) {
+            $newConditions[] = [
+                'left' => $left,
+                'right' => $right,
+                'operator' => '=',
+            ];
+        }
+        if (!empty($arrayKeys)) {
+            if ($this->isInCondition($arrayKeys) && !str_contains(strtolower($this->method), 'in')) {
+                $this->method = 'whereIn';
+            }
+            $operator = $this->getOperation($arrayKeys);
+            foreach ($arrayKeys as $key => $condition) {
+                $newConditions[] = [
+                    'left' => $key,
+                    'right' => $condition,
+                    'operator' => $operator,
+                ];
+            }
+        }
+
+        return $newConditions;
+    }
+
+    protected function isInCondition(array $condition): bool
+    {
+        return false;
+    }
+
+    private function createParameterOrLiteralValue(mixed $value, string $field, TablesAliasHelper $tableHelper, ?int $index, Entity $entity, bool $isLiteral = false): string
+    {
+        $dbFieldName = $tableHelper->extractColumnName($field);
+
+        $normalizedValue = $this->normalizer->normalizeValueForDatabase(
+            $dbFieldName,
+            $value,
+            $entity,
+        );
+
+        if ($isLiteral) {
+            $sqlTypeHandler = $this->em->getSqlTypeHandler();
+            $handler = $sqlTypeHandler->getForValue($normalizedValue);
+            return $handler->toSqlLiteral($normalizedValue, $this->em);
+        }
+
+        $baseName = $field;
+        if ($index !== null) {
+            $baseName .= '_' . $index;
+        }
+
+        $parameterName = $tableHelper->generateUniqueParameterName($baseName, $this->state->parameters);
+
+        $this->state->parameters[$parameterName] = $normalizedValue;
+
+        return ':' . $parameterName;
+    }
+
+    private function separateScalarFromArrayKeys(array $conditions): array
+    {
+        $scalars = [];
+        $arrays = [];
+
+        foreach ($conditions as $key => $value) {
+            if (is_array($value)) {
+                $arrays[$key] = $value;
+            } else {
+                $scalars[$key] = $value;
+            }
+        }
+        return [$scalars, $arrays];
     }
 }

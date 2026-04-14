@@ -12,7 +12,7 @@ class InsertDataProcessor
 
     public function process(): ProcessedInsertData
     {
-        list($table, $insertData, $columnsData, $valuesData) = $this->query->getInsertMapFragments($this->insertMap);
+        list($table, $insertData, $columnsData, $valuesData) = $this->query->getMapFragments($this->insertMap, ['insert', 'columns', 'values'], 'into');
 
         $data = $this->resolveData($insertData, $columnsData, $valuesData);
         $explicitColumns = $this->resolveExplicitColumns($columnsData, $insertData);

@@ -12,12 +12,33 @@ final class MoneyType implements TypeHandlerInterface
 
     public function supports(mixed $value, ?ReflectionProperty $property = null): bool
     {
+        // If we have property context and it expects Money
+        if ($property !== null) {
+            $propertyType = $property->getType();
+            if ($propertyType instanceof ReflectionNamedType && $propertyType->getName() === Money::class) {
+                return true; // Handle any value for Money properties
+            }
+        }
+
+        // Otherwise, only support actual Money objects
         return $value instanceof Money;
     }
+    // public function supports(mixed $value, ?ReflectionProperty $property = null): bool
+    // {
+    //     return $value instanceof Money;
+    // }
 
     public function normalizeForDatabase(mixed $value, ?ReflectionProperty $property = null): mixed
     {
-        return $value?->getAmount();
+        if ($value instanceof Money) {
+            return $value->getAmount()->__toString();
+        }
+
+        if ($value instanceof Brick\Math\BigDecimal) {
+            return $value->__toString(); // It is already the amount
+        }
+
+        return $value;
     }
 
     public function normalizeForEntity(
@@ -27,6 +48,23 @@ final class MoneyType implements TypeHandlerInterface
     ): mixed {
         if ($value instanceof Money) {
             return $value;
+        }
+
+        if ($value === '' || $value === null) {
+            $propertyType = $property->getType();
+            if ($propertyType instanceof ReflectionNamedType && $propertyType->allowsNull()) {
+                return null;
+            }
+            if ($property->hasDefaultValue()) {
+                return $property->getDefaultValue();
+            }
+            throw new InvalidArgumentException(
+                sprintf(
+                    "Property '%s' in %s is not nullable and has no default value, but received an empty string.",
+                    $property->getName(),
+                    $property->getDeclaringClass()->getName(),
+                ),
+            );
         }
 
         $currencyCode = null;

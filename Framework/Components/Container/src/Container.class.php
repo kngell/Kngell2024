@@ -16,27 +16,6 @@ declare(strict_types=1);
  */
 class Container implements ContainerInterface
 {
-    /** @var array<string, BindingDefinition> */
-    protected array $bindings = [];
-
-    /** @var array<string, mixed> */
-    protected array $instances = [];
-
-    /** @var array<string, array> */
-    protected array $aliases = [];
-
-    /** @var array<string, array> */
-    protected array $tags = [];
-
-    /** @var array<string, array> */
-    protected array $contextualBindings = [];
-
-    /** @var array<string, array> */
-    protected array $reboundCallbacks = [];
-
-    /** @var array<string, array> */
-    protected array $methodBindings = [];
-
     /** @var ResolutionContext */
     protected ResolutionContext $resolutionContext;
 
@@ -46,12 +25,40 @@ class Container implements ContainerInterface
     /** @var bool */
     protected bool $autoWiring = true;
 
+    /** @var DependencyResolver */
+    private DependencyResolver $dependencyResolver;
+
+    /** @var CallableExecutor */
+    private CallableExecutor $callableExecutor;
+
+    /** @var InstanceManager */
+    private InstanceManager $instanceManager;
+
+    /** @var BindingRegistry */
+    private BindingRegistry $bindingRegistry;
+
+    /** @var ServiceTagManager */
+    private ServiceTagManager $tagManager;
+
+    /** @var ClassBuilder */
+    private ClassBuilder $classBuilder;
+
+    /** @var ContextualBindingManager */
+    private ContextualBindingManager $contextualManager;
+
     /** @var ContainerInterface */
     protected static ?ContainerInterface $instance = null;
 
-    private function __construct()
+    public function __construct()
     {
         $this->resolutionContext = new ResolutionContext();
+        $this->bindingRegistry = new BindingRegistry($this);
+        $this->instanceManager = new InstanceManager($this);
+        $this->dependencyResolver = new DependencyResolver($this);
+        $this->callableExecutor = new CallableExecutor($this->dependencyResolver, $this);
+        $this->tagManager = new ServiceTagManager($this, $this->dependencyResolver);
+        $this->classBuilder = new ClassBuilder($this, $this->dependencyResolver);
+        $this->contextualManager = new ContextualBindingManager($this);
         $this->registerCoreBindings();
     }
 
@@ -64,12 +71,11 @@ class Container implements ContainerInterface
         bool $shared = false,
         mixed $parameters = [],
     ): self {
-        $this->dropStaleInstances($abstract);
+        $this->instanceManager->dropStaleInstance($abstract);
 
-        $concrete = $concrete ?? $abstract;
         $parameters = is_array($parameters) ? $parameters : [$parameters];
 
-        $this->bindings[$abstract] = new BindingDefinition(
+        $this->bindingRegistry->register(
             abstract: $abstract,
             concrete: $concrete,
             shared: $shared,
@@ -97,7 +103,6 @@ class Container implements ContainerInterface
     public function lazy(string $abstract, Closure|string|null $concrete = null): self
     {
         return $this->factory($abstract, function ($container) use ($concrete, $abstract) {
-            // Resolve once and cache
             static $instance = null;
 
             if ($instance === null) {
@@ -119,9 +124,9 @@ class Container implements ContainerInterface
      */
     public function factory(string $abstract, Closure $factory): self
     {
-        $this->dropStaleInstances($abstract);
+        $this->instanceManager->dropStaleInstance($abstract);
 
-        $this->bindings[$abstract] = new BindingDefinition(
+        $this->bindingRegistry->register(
             abstract: $abstract,
             concrete: $abstract,
             shared: false,
@@ -170,11 +175,11 @@ class Container implements ContainerInterface
      */
     public function resolve(string $abstract, array $parameters = []): mixed
     {
-        $abstract = $this->getAlias($abstract);
+        $abstract = $this->bindingRegistry->resolveAlias($abstract);
 
         // Return existing singleton instance
-        if (array_key_exists($abstract, $this->instances)) {
-            return $this->instances[$abstract];
+        if ($this->instanceManager->has($abstract)) {
+            return $this->instanceManager->get($abstract);
         }
 
         try {
@@ -183,14 +188,14 @@ class Container implements ContainerInterface
             $instance = $this->build($abstract, $parameters);
 
             // Store singleton instances
-            if ($this->isShared($abstract)) {
-                $this->instances[$abstract] = $instance;
+            if ($this->bindingRegistry->isShared($abstract)) {
+                $this->instanceManager->set($abstract, $instance);
             }
 
             $this->resolutionContext->finishResolving($abstract);
 
-            // Fire rebound callbacks
-            $this->fireReboundCallbacks($abstract, $instance);
+            // Fire rebound callbacks for ALL instances
+            $this->instanceManager->fireReboundCallbacks($abstract, $instance);
 
             return $instance;
         } catch (Throwable $e) {
@@ -204,9 +209,10 @@ class Container implements ContainerInterface
      */
     public function bindParams(string $abstract, mixed $args, ?string $argName = null): self
     {
-        if ($this->isBound($abstract)) {
-            $binding = $this->bindings[$abstract];
-            $parameters = $binding->parameters;
+        $abstract = $this->bindingRegistry->resolveAlias($abstract);
+
+        if ($this->bindingRegistry->has($abstract)) {
+            $parameters = $this->bindingRegistry->getParameters($abstract);
 
             if ($argName !== null) {
                 $parameters[$argName] = $args;
@@ -214,7 +220,7 @@ class Container implements ContainerInterface
                 $parameters = is_array($args) ? $args : [$args];
             }
 
-            $this->bindings[$abstract] = $binding->withParameters($parameters);
+            $this->bindingRegistry->updateParameters($abstract, $parameters);
         } else {
             $parameters = $argName !== null ? [$argName => $args] : (is_array($args) ? $args : [$args]);
             $this->bind($abstract, null, false, $parameters);
@@ -228,10 +234,10 @@ class Container implements ContainerInterface
      */
     public function has(string $id): bool
     {
-        $id = $this->getAlias($id);
+        $id = $this->bindingRegistry->resolveAlias($id);
 
-        return isset($this->instances[$id]) ||
-               isset($this->bindings[$id]) ||
+        return $this->instanceManager->has($id) ||
+               $this->bindingRegistry->has($id) ||
                $this->canAutoWire($id);
     }
 
@@ -240,18 +246,22 @@ class Container implements ContainerInterface
      */
     public function instance(string $abstract, mixed $instance): mixed
     {
-        $this->dropStaleInstances($abstract);
-
-        $this->instances[$abstract] = $instance;
+        $this->instanceManager->dropStaleInstance($abstract);
+        $this->instanceManager->set($abstract, $instance);
 
         // Create a binding for the instance
-        $this->bindings[$abstract] = new BindingDefinition(
-            abstract: $abstract,
-            concrete: $instance,
-            shared: true,
-        );
+        if (is_object($instance)) {
+            $this->bindingRegistry->registerInstance($abstract, $instance);
+        } else {
+            $this->bindingRegistry->register(
+                abstract: $abstract,
+                concrete: $instance,
+                shared: true,
+            );
+        }
 
-        $this->fireReboundCallbacks($abstract, $instance);
+        // Fire rebound callbacks for the registered instance
+        $this->instanceManager->fireReboundCallbacks($abstract, $instance);
 
         return $instance;
     }
@@ -261,10 +271,10 @@ class Container implements ContainerInterface
      */
     public function isBound(string $abstract): bool
     {
-        $abstract = $this->getAlias($abstract);
+        $abstract = $this->bindingRegistry->resolveAlias($abstract);
 
-        return isset($this->bindings[$abstract]) ||
-               isset($this->instances[$abstract]);
+        return $this->bindingRegistry->has($abstract) ||
+               $this->instanceManager->has($abstract);
     }
 
     /**
@@ -272,19 +282,25 @@ class Container implements ContainerInterface
      */
     public function remove(string $abstract): bool
     {
-        $abstract = $this->getAlias($abstract);
+        $abstract = $this->bindingRegistry->resolveAlias($abstract);
 
         $removed = false;
 
-        if (isset($this->bindings[$abstract])) {
-            unset($this->bindings[$abstract]);
+        if ($this->bindingRegistry->remove($abstract)) {
             $removed = true;
         }
 
-        if (isset($this->instances[$abstract])) {
-            unset($this->instances[$abstract]);
+        if ($this->instanceManager->has($abstract)) {
+            $this->instanceManager->remove($abstract);
             $removed = true;
         }
+
+        // Remove from tags
+        $this->tagManager->removeFromTags($abstract);
+
+        // Remove contextual bindings
+        $this->contextualManager->removeContextualBindingsFor($abstract);
+        $this->contextualManager->removeMethodBindingsFor($abstract);
 
         return $removed;
     }
@@ -294,22 +310,66 @@ class Container implements ContainerInterface
      */
     public function flush(): void
     {
-        $this->bindings = [];
-        $this->instances = [];
-        $this->aliases = [];
-        $this->tags = [];
-        $this->contextualBindings = [];
-        $this->reboundCallbacks = [];
-        $this->methodBindings = [];
+        $this->bindingRegistry->clear();
+        $this->tagManager->clear();
+        $this->contextualManager->clear();
         $this->globalParameters = [];
         $this->resolutionContext->clear();
+        $this->instanceManager->clear();
+
+        // Update dependency resolver
+        $this->dependencyResolver->setGlobalParameters([]);
+        $this->dependencyResolver->setAutoWiring($this->autoWiring);
 
         // Re-register core bindings
         $this->registerCoreBindings();
     }
 
     // =========================================
-    // NEW ADVANCED FEATURES
+    // CONTEXTUAL BINDINGS
+    // =========================================
+
+    /**
+     * Add a contextual binding.
+     * When resolving $abstract for $concrete, use $implementation.
+     */
+    /**
+     * Add a contextual binding.
+     * When resolving $abstract for $concrete, use $implementation.
+     */
+    public function when(string $concrete): ContextualBindingBuilder
+    {
+        return new ContextualBindingBuilder($this->contextualManager, $concrete);
+    }
+
+    /**
+     * Internal method to add contextual binding (used by ContextualBindingBuilder).
+     */
+    public function addContextualBinding(string $concrete, string $abstract, mixed $implementation): void
+    {
+        $this->contextualManager->addContextualBinding($concrete, $abstract, $implementation);
+    }
+
+    /**
+     * Add a method binding.
+     */
+    public function bindMethod(string $concrete, string $method, array $bindings): self
+    {
+        $this->contextualManager->addMethodBinding($concrete, $method, $bindings);
+        return $this;
+    }
+
+    /**
+     * Call a method with method bindings applied.
+     */
+    public function callMethodBinding(object $instance, string $method, array $parameters = []): mixed
+    {
+        $parameters = $this->contextualManager->applyMethodBindings($instance, $method, $parameters);
+        return $this->call([$instance, $method], $parameters);
+    }
+
+    // =========================================
+    // ADVANCED FEATURES - TAGS & ALIASES
     // =========================================
 
     /**
@@ -317,7 +377,7 @@ class Container implements ContainerInterface
      */
     public function alias(string $abstract, string $alias): self
     {
-        $this->aliases[$alias] = $abstract;
+        $this->bindingRegistry->alias($abstract, $alias);
         return $this;
     }
 
@@ -326,33 +386,24 @@ class Container implements ContainerInterface
      */
     public function tag(string $abstract, array|string $tags): self
     {
-        $tags = is_array($tags) ? $tags : [$tags];
-
-        foreach ($tags as $tag) {
-            if (!isset($this->tags[$tag])) {
-                $this->tags[$tag] = [];
-            }
-            $this->tags[$tag][] = $abstract;
-        }
-
+        $this->tagManager->tag($abstract, $tags);
         return $this;
     }
 
     /**
-     * Resolve all services with a given tag.
+     * Resolve all services with a given tag (eager loading).
      */
     public function tagged(string $tag): array
     {
-        if (!isset($this->tags[$tag])) {
-            return [];
-        }
+        return $this->tagManager->getTagged($tag);
+    }
 
-        $services = [];
-        foreach ($this->tags[$tag] as $abstract) {
-            $services[] = $this->resolve($abstract);
-        }
-
-        return $services;
+    /**
+     * Get a lazy collection for a tag.
+     */
+    public function taggedLazy(string $tag): LazyTagCollection
+    {
+        return $this->tagManager->getTaggedLazy($tag);
     }
 
     /**
@@ -361,6 +412,7 @@ class Container implements ContainerInterface
     public function setGlobalParameters(array $parameters): self
     {
         $this->globalParameters = array_merge($this->globalParameters, $parameters);
+        $this->dependencyResolver->setGlobalParameters($this->globalParameters);
         return $this;
     }
 
@@ -370,6 +422,7 @@ class Container implements ContainerInterface
     public function setAutoWiring(bool $enabled): self
     {
         $this->autoWiring = $enabled;
+        $this->dependencyResolver->setAutoWiring($enabled);
         return $this;
     }
 
@@ -378,20 +431,7 @@ class Container implements ContainerInterface
      */
     public function call(callable|array|string $callback, array $parameters = []): mixed
     {
-        if (is_string($callback) && str_contains($callback, '@')) {
-            [$class, $method] = explode('@', $callback, 2);
-            $callback = [$this->resolve($class), $method];
-        }
-
-        if (is_array($callback)) {
-            [$object, $method] = $callback;
-            if (is_string($object)) {
-                $object = $this->resolve($object);
-            }
-            $callback = [$object, $method];
-        }
-
-        return $this->callWithDependencies($callback, $parameters);
+        return $this->callableExecutor->call($callback, $parameters);
     }
 
     /**
@@ -399,8 +439,16 @@ class Container implements ContainerInterface
      */
     public function rebinding(string $abstract, Closure $callback): self
     {
-        $this->reboundCallbacks[$abstract][] = $callback;
+        $this->instanceManager->onRebound($abstract, $callback);
         return $this;
+    }
+
+    /**
+     * Get the contextual binding manager (for ContextualBindingBuilder).
+     */
+    public function getContextualManager(): ContextualBindingManager
+    {
+        return $this->contextualManager;
     }
 
     /**
@@ -417,361 +465,37 @@ class Container implements ContainerInterface
      */
     protected function build(string $abstract, array $parameters = []): mixed
     {
-        $binding = $this->getBinding($abstract);
-
         // Handle factory bindings
-        if ($binding && $binding->hasFactory()) {
-            return $binding->factory->call($this, $this, $parameters);
+        if ($this->bindingRegistry->hasFactory($abstract)) {
+            $factory = $this->bindingRegistry->getFactory($abstract);
+            return $factory->call($this, $this, $parameters);
         }
 
         // Handle closure bindings
-        if ($binding && $binding->isClosure()) {
-            return $binding->concrete->call($this, $this, $parameters);
+        if ($this->bindingRegistry->isClosure($abstract)) {
+            $concrete = $this->bindingRegistry->getConcrete($abstract);
+            return $concrete->call($this, $this, $parameters);
         }
 
         // Get concrete class to instantiate
-        $concrete = $binding ? $binding->getConcrete() : $abstract;
+        $concrete = $this->bindingRegistry->getConcrete($abstract);
 
-        // Handle string/primitive values
+        // Handle string/primitive values or already instantiated objects
         if (!is_string($concrete) || !class_exists($concrete)) {
-            if ($binding && !empty($binding->parameters)) {
-                return $binding->parameters[0] ?? $concrete;
+            $parameters = $this->bindingRegistry->getParameters($abstract);
+            if (!empty($parameters)) {
+                return $parameters[0] ?? $concrete;
             }
             return $concrete;
         }
 
-        return $this->buildClass($concrete, $parameters, $binding);
-    }
-
-    /**
-     * Build a class instance with dependency injection.
-     */
-    protected function buildClass(string $concrete, array $parameters = [], ?BindingDefinition $binding = null): object
-    {
-        try {
-            $reflector = new ReflectionClass($concrete);
-        } catch (ReflectionException $e) {
-            throw ContainerException::cannotResolve($concrete, 'Class does not exist');
-        }
-
-        if (!$reflector->isInstantiable()) {
-            throw ContainerException::cannotResolve($concrete, 'Class is not instantiable');
-        }
-
-        $constructor = $reflector->getConstructor();
-
-        // No constructor - simple instantiation
-        if ($constructor === null) {
-            $instance = $reflector->newInstance();
-            return $this->injectContainerIfNeeded($instance, $reflector);
-        }
-
-        // 1. Resolve constructor dependencies
-        // This array contains all resolved values, including the array for the variadic parameter.
-        // E.g., [0 => $arg1, 1 => [$factory1, $factory2]]
-        $resolvedValues = $this->resolveConstructorDependencies(
-            $constructor,
-            $parameters,
-            $binding,
-        );
-
-        // 2. Prepare the arguments array, handling variadic parameters (THE FIX)
-        $args = [];
-
-        // Iterate over the ReflectionParameters to correctly map the dependencies
-        foreach ($constructor->getParameters() as $index => $parameter) {
-            $resolvedValue = $resolvedValues[$index];
-
-            if ($parameter->isVariadic()) {
-                // If it's a variadic parameter (e.g., ...$Factories), the resolved value
-                // is an array of services. We must unpack this array using array_merge
-                // so that the factories are passed as individual arguments to the constructor.
-                if (is_array($resolvedValue)) {
-                    $args = array_merge($args, $resolvedValue);
-                }
-            } else {
-                // For non-variadic parameters, just add the single value.
-                $args[] = $resolvedValue;
-            }
-        }
-
-        // 3. Instantiate the class using the flattened arguments array
-        $instance = $reflector->newInstanceArgs($args);
-        return $this->injectContainerIfNeeded($instance, $reflector);
-    }
-
-    /**
-     * Resolve constructor dependencies.
-     */
-    protected function resolveConstructorDependencies(
-        ReflectionMethod $constructor,
-        array $parameters = [],
-        ?BindingDefinition $binding = null,
-    ): array {
-        $dependencies = [];
-        $bindingParameters = $binding?->parameters ?? [];
-        $allParameters = array_merge($this->globalParameters, $bindingParameters, $parameters);
-
-        foreach ($constructor->getParameters() as $parameter) {
-            $dependency = $this->resolveDependency($parameter, $allParameters);
-            $dependencies[] = $dependency;
-        }
-
-        return $dependencies;
-    }
-
-    /**
-     * Resolve a single dependency parameter.
-     */
-    protected function resolveDependency(ReflectionParameter $parameter, array $parameters = []): mixed
-    {
-        $name = $parameter->getName();
-        $type = $parameter->getType();
-
-        // Check if parameter is provided explicitly
-        if (array_key_exists($name, $parameters)) {
-            return $parameters[$name];
-        }
-
-        // Check positional parameters
-        if (isset($parameters[$parameter->getPosition()])) {
-            return $parameters[$parameter->getPosition()];
-        }
-
-        // Handle typed parameters
-        if ($type instanceof ReflectionNamedType) {
-            // ✅ Check for variadic parameters (e.g. FormFactoryInterface ...$factories)
-            if ($parameter->isVariadic()) {
-                $typeName = $type->getName();
-
-                // Use the interface name itself as the tag
-                if (!empty($this->tags[$typeName] ?? [])) {
-                    return $this->tagged($typeName);
-                }
-
-                // Optionally: fallback to inferred string tag (like 'form_factories')
-                $tagName = $this->inferTagFromType($typeName);
-                if (!empty($this->tags[$tagName] ?? [])) {
-                    return $this->tagged($tagName);
-                }
-
-                // IMPORTANT: Returns an array. This array is unpacked in buildClass.
-                return [];
-            }
-
-            // Fallback to normal typed resolution
-            return $this->resolveTypedDependency($parameter, $type);
-        }
-
-        // Handle union types
-        if ($type instanceof ReflectionUnionType) {
-            return $this->resolveUnionTypeDependency($parameter, $type);
-        }
-
-        // Handle intersection types (PHP 8.1+)
-        if ($type instanceof ReflectionIntersectionType) {
-            return $this->resolveIntersectionTypeDependency($parameter, $type);
-        }
-
-        // Try default value
-        if ($parameter->isDefaultValueAvailable()) {
-            return $parameter->getDefaultValue();
-        }
-
-        // Allow null if nullable
-        if ($parameter->allowsNull()) {
-            return null;
-        }
-
-        throw ContainerException::cannotResolve(
-            $parameter->getDeclaringClass()?->getName() ?? 'unknown',
-            "Cannot resolve parameter [{$name}]",
-        );
-    }
-
-    protected function inferTagFromType(string $typeName): string
-    {
-        // Example convention: FormFactoryInterface → form_factories
-        // Convert CamelCase → snake_case and pluralize
-        $short = (new ReflectionClass($typeName))->getShortName();
-        $snake = strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $short));
-
-        // crude pluralization (customize if needed)
-        return str_ends_with($snake, 'y')
-            ? substr($snake, 0, -1) . 'ies'
-            : $snake . 's';
-    }
-
-    /**
-     * Resolve typed dependency (class, interface, or built-in type).
-     */
-    protected function resolveTypedDependency(ReflectionParameter $parameter, ReflectionNamedType $type): mixed
-    {
-        $typeName = $type->getName();
-
-        // Handle built-in types
-        if ($type->isBuiltin()) {
-            return $this->resolveBuiltinType($parameter, $typeName);
-        }
-
-        // Handle class/interface types
-        try {
-            return $this->resolve($typeName);
-        } catch (Throwable $e) {
-            if ($parameter->isDefaultValueAvailable()) {
-                return $parameter->getDefaultValue();
-            }
-
-            if ($parameter->allowsNull()) {
-                return null;
-            }
-
-            throw $e;
-        }
-    }
-
-    /**
-     * Resolve built-in type parameters.
-     */
-    protected function resolveBuiltinType(ReflectionParameter $parameter, string $typeName): mixed
-    {
-        $name = $parameter->getName();
-
-        // Check for specific parameter bindings
-        if (isset($this->globalParameters[$name])) {
-            return $this->castToType($this->globalParameters[$name], $typeName);
-        }
-
-        // Try default value
-        if ($parameter->isDefaultValueAvailable()) {
-            return $parameter->getDefaultValue();
-        }
-
-        // Handle nullable types
-        if ($parameter->allowsNull()) {
-            return null;
-        }
-
-        // Provide sensible defaults for common types
-        return match ($typeName) {
-            'string' => '',
-            'int' => 0,
-            'float' => 0.0,
-            'bool' => false,
-            'array' => [],
-            default => throw ContainerException::cannotResolve(
-                $parameter->getDeclaringClass()?->getName() ?? 'unknown',
-                "Cannot resolve built-in type [{$typeName}] for parameter [{$name}]",
-            )
-        };
-    }
-
-    /**
-     * Cast value to specific type.
-     */
-    protected function castToType(mixed $value, string $type): mixed
-    {
-        return match ($type) {
-            'string' => (string) $value,
-            'int' => (int) $value,
-            'float' => (float) $value,
-            'bool' => (bool) $value,
-            'array' => (array) $value,
-            default => $value
-        };
-    }
-
-    /**
-     * Resolve union type dependency.
-     */
-    protected function resolveUnionTypeDependency(ReflectionParameter $parameter, ReflectionUnionType $type): mixed
-    {
-        $types = $type->getTypes();
-
-        foreach ($types as $unionType) {
-            if ($unionType instanceof ReflectionNamedType) {
-                try {
-                    if ($unionType->isBuiltin()) {
-                        return $this->resolveBuiltinType($parameter, $unionType->getName());
-                    } else {
-                        return $this->resolve($unionType->getName());
-                    }
-                } catch (Throwable) {
-                    continue; // Try next type in union
-                }
-            }
-        }
-
-        if ($parameter->isDefaultValueAvailable()) {
-            return $parameter->getDefaultValue();
-        }
-
-        if ($parameter->allowsNull()) {
-            return null;
-        }
-
-        throw ContainerException::cannotResolve(
-            $parameter->getDeclaringClass()?->getName() ?? 'unknown',
-            "Cannot resolve union type for parameter [{$parameter->getName()}]",
-        );
-    }
-
-    /**
-     * Resolve intersection type dependency.
-     */
-    protected function resolveIntersectionTypeDependency(ReflectionParameter $parameter, ReflectionIntersectionType $type): mixed
-    {
-        // For intersection types, we need an object that implements all interfaces
-        // This is complex and might need specific handling based on your use case
-        $types = $type->getTypes();
-
-        if (!empty($types) && $types[0] instanceof ReflectionNamedType) {
-            try {
-                return $this->resolve($types[0]->getName());
-            } catch (Throwable) {
-                // Fall through to default handling
-            }
-        }
-
-        if ($parameter->isDefaultValueAvailable()) {
-            return $parameter->getDefaultValue();
-        }
-
-        if ($parameter->allowsNull()) {
-            return null;
-        }
-
-        throw ContainerException::cannotResolve(
-            $parameter->getDeclaringClass()?->getName() ?? 'unknown',
-            "Cannot resolve intersection type for parameter [{$parameter->getName()}]",
-        );
+        // Delegate class instantiation to ClassBuilder
+        return $this->classBuilder->build($concrete, $parameters, $this->bindingRegistry->get($abstract));
     }
 
     // =====================================================
     // HELPER METHODS
     // =====================================================
-
-    /**
-     * Get the binding for an abstract type.
-     */
-    protected function getBinding(string $abstract): ?BindingDefinition
-    {
-        return $this->bindings[$abstract] ?? null;
-    }
-
-    protected function getAlias(string $abstract): string|array
-    {
-        return $this->aliases[$abstract] ?? $abstract;
-    }
-
-    /**
-     * Check if an abstract type is shared (singleton).
-     */
-    protected function isShared(string $abstract): bool
-    {
-        $binding = $this->getBinding($abstract);
-        return $binding?->isShared() ?? false;
-    }
 
     /**
      * Check if a type can be auto-wired.
@@ -782,119 +506,7 @@ class Container implements ContainerInterface
             return false;
         }
 
-        try {
-            $reflector = new ReflectionClass($abstract);
-            return $reflector->isInstantiable();
-        } catch (ReflectionException) {
-            return false;
-        }
-    }
-
-    /**
-     * Drop stale instances when rebinding.
-     */
-    protected function dropStaleInstances(string $abstract): void
-    {
-        unset($this->instances[$abstract]);
-    }
-
-    /**
-     * Fire rebound callbacks.
-     */
-    protected function fireReboundCallbacks(string $abstract, mixed $instance): void
-    {
-        foreach ($this->getReboundCallbacks($abstract) as $callback) {
-            $callback($this, $instance);
-        }
-    }
-
-    /**
-     * Get rebound callbacks for an abstract type.
-     */
-    protected function getReboundCallbacks(string $abstract): array
-    {
-        return $this->reboundCallbacks[$abstract] ?? [];
-    }
-
-    /**
-     * Inject container into object if it has a container property.
-     */
-    protected function injectContainerIfNeeded(object $instance, ReflectionClass $reflector): object
-    {
-        if ($reflector->hasProperty('container')) {
-            $property = $reflector->getProperty('container');
-
-            if (!$property->isInitialized($instance)) {
-                $property->setValue($instance, $this);
-            }
-        }
-
-        return $instance;
-    }
-
-    /**
-     * Call a function/method with dependency injection.
-     */
-    protected function callWithDependencies(callable|array|string $callback, array $parameters = []): mixed
-    {
-        if (!is_array($callback) && !is_callable($callback)) {
-            throw new InvalidArgumentException('Callback must be callable or array.');
-        }
-        $reflector = $this->getCallReflector($callback);
-
-        // This array $resolvedValues will look like: [0 => $arg1, 1 => [$param2, $param3, ...]]
-        $resolvedValues = $this->resolveMethodDependencies($reflector, $parameters);
-
-        // Prepare the arguments array, handling variadic parameters (similar fix for method calls)
-        $args = [];
-        foreach ($reflector->getParameters() as $index => $parameter) {
-            $resolvedValue = $resolvedValues[$index];
-
-            // Check for variadic parameters and unpack them
-            if ($parameter->isVariadic() && is_array($resolvedValue)) {
-                $args = array_merge($args, $resolvedValue);
-            } else {
-                $args[] = $resolvedValue;
-            }
-        }
-
-        // If it's a method and not public, use reflection to invoke
-        if ($reflector instanceof ReflectionMethod && !$reflector->isPublic()) {
-            return $reflector->invokeArgs($callback[0], $args);
-        }
-
-        return call_user_func_array($callback, $args);
-    }
-
-    /**
-     * Get reflection for a callable.
-     */
-    protected function getCallReflector(callable|array $callback): ReflectionFunctionAbstract
-    {
-        if (!is_array($callback) && !is_callable($callback)) {
-            throw new InvalidArgumentException('Callback must be callable or array.');
-        }
-
-        if (is_array($callback)) {
-            return new ReflectionMethod($callback[0], $callback[1]);
-        }
-
-        return new ReflectionFunction($callback);
-    }
-
-    /**
-     * Resolve method dependencies.
-     */
-    protected function resolveMethodDependencies(ReflectionFunctionAbstract $reflector, array $parameters = []): array
-    {
-        $dependencies = [];
-
-        foreach ($reflector->getParameters() as $parameter) {
-            $dependency = $this->resolveDependency($parameter, $parameters);
-            $dependencies[] = $dependency;
-        }
-
-        return $dependencies;
+        return $this->classBuilder->canAutoWire($abstract);
     }
 
     public static function setInstance(?self $container = null): ?ContainerInterface

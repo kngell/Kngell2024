@@ -7,15 +7,27 @@ class ProductVariationShow extends Entity implements TimestampableInterface
     use EntityTimestampableTrait;
 
     protected const array RELATIONSHIPS = [
-        'stock_status' => StockStatus::class,
-        'variation_attribute' => VariationAttribute::class,
-        'variation_type' => VariationType::class,
+        'stock_status' => [
+            'class' => StockStatus::class,
+            'type' => 'one-to-one',
+            'collection' => false,
+        ],
+        'variation_attribute' => [
+            'class' => VariationAttribute::class,
+            'type' => 'one-to-many',
+            'collection' => false,
+        ],
+        'variation_type' => [
+            'class' => VariationType::class,
+            'type' => 'one-to-one',
+            'collection' => false,
+        ],
     ];
 
     #[EntityFieldId()]
     private int $id;
 
-    private string $sku;
+    private string $variationSku;
     private string $name;
     private VariationType $variationType;
 
@@ -24,28 +36,8 @@ class ProductVariationShow extends Entity implements TimestampableInterface
 
     private StockStatus $stockStatus;
     private int $stockQuantity;
-    private string $status;
+    private ProductVariationStatus $variationStatus;
     private ?float $priceModifier = null;
-
-    /**
-     * @return string
-     */
-    public function getSku(): string
-    {
-        return $this->sku;
-    }
-
-    /**
-     * @param string $sku
-     *
-     * @return ProductVariationShow
-     */
-    public function setSku(string $sku): ProductVariationShow
-    {
-        $this->sku = $sku;
-
-        return $this;
-    }
 
     /**
      * @return string
@@ -160,26 +152,6 @@ class ProductVariationShow extends Entity implements TimestampableInterface
     }
 
     /**
-     * @return string
-     */
-    public function getStatus(): string
-    {
-        return $this->status;
-    }
-
-    /**
-     * @param string $status
-     *
-     * @return ProductVariationShow
-     */
-    public function setStatus(string $status): ProductVariationShow
-    {
-        $this->status = $status;
-
-        return $this;
-    }
-
-    /**
      * @return float|null
      */
     public function getPriceModifier(): ?float
@@ -215,6 +187,46 @@ class ProductVariationShow extends Entity implements TimestampableInterface
     public function setId(int $id): ProductVariationShow
     {
         $this->id = $id;
+
+        return $this;
+    }
+
+    /**
+     * @return ProductVariationStatus
+     */
+    public function getVariationStatus(): ProductVariationStatus
+    {
+        return $this->variationStatus;
+    }
+
+    /**
+     * @param ProductVariationStatus $variationStatus
+     *
+     * @return ProductVariationShow
+     */
+    public function setVariationStatus(ProductVariationStatus $variationStatus): ProductVariationShow
+    {
+        $this->variationStatus = $variationStatus;
+
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getVariationSku(): string
+    {
+        return $this->variationSku;
+    }
+
+    /**
+     * @param string $variationSku
+     *
+     * @return ProductVariationShow
+     */
+    public function setVariationSku(string $variationSku): ProductVariationShow
+    {
+        $this->variationSku = $variationSku;
 
         return $this;
     }

@@ -41,7 +41,7 @@ final readonly class RelationshipExtractor
         }
 
         // Fallback: look for any property ending with 'id'
-        $reflection = CustomReflection::getInstance($entity)->getObject();
+        $reflection = $reflection = CustomReflection::getInstance($entity)->getClass();
         foreach ($reflection->getProperties() as $property) {
             $propertyName = $property->getName();
             if (str_ends_with(strtolower($propertyName), 'id')) {

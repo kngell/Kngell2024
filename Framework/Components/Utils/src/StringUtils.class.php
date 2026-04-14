@@ -17,6 +17,11 @@ final readonly class StringUtils
         return $string . $trailing;
     }
 
+    public static function isSnakeCase(string $value): bool
+    {
+        return preg_match('/^[a-z]+(?:_[a-z0-9]+)*$/', $value) === 1;
+    }
+
     public static function addLeading(string $string, string $leading): string
     {
         if (str_starts_with($string, $leading)) {
@@ -43,7 +48,7 @@ final readonly class StringUtils
         return false;
     }
 
-    public static function camelCase(string $string): string
+    public static function snakeCaseToCamelCase(string $string): string
     {
         return lcfirst(self::studlyCaps($string));
     }
@@ -90,7 +95,6 @@ final readonly class StringUtils
 
     public static function isSerialized($data, bool $strict = true): bool
     {
-        // If it isn't a string, it isn't serialized.
         if (!is_string($data)) {
             return false;
         }
@@ -142,8 +146,6 @@ final readonly class StringUtils
                 } elseif (!str_contains($data, '"')) {
                     return false;
                 }
-                // Fall through intentionally
-
                 // no break
             case 'a':
             case 'O':

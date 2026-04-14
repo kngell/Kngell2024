@@ -10,14 +10,13 @@ FileETag None
     RewriteEngine On
     RewriteBase /
 
-    # WebSocket Proxy (handled at VirtualHost level)
-    # Front Controller
+    # Front Controller - only for non-existent files
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-l
     RewriteRule ^(.*)$ index.php?url=$1 [L,QSA]
 
-    # Security Rules (removed storage from blocked paths)
+    # Security Rules
     RewriteRule ^(\.env|\.git|composer\.(json|lock))$ - [F,L,NC]
     RewriteRule ^(App|src|webpack|Framework|vendor|scripts|log|FilesTemplates|docs|dist|bin|Temp|tests|token|tools)/(.*)$ - [F,L,NC]
     RewriteRule \.(md|sql|bak|swp|phps|fla|psd|sh)$ - [F,L,NC]

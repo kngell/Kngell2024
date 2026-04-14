@@ -18,7 +18,7 @@ class FormArrayTransformer implements ToArrayTransformerInterface
     {
         $fieldMapping = $options['field_mapping'] ?? [];
         $formatValues = $options['format_values'] ?? true;
-        if (!empty($fieldMapping)) {
+        if (!$fieldMapping->isEmpty()) {
             $mappedData = $this->fieldMapper->applyMapping($entity, $fieldMapping, $formatValues);
             return $this->arrayFlattener->flatten($mappedData);
         }

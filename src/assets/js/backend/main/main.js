@@ -1,6 +1,6 @@
 import DashboardManager from "js/backend/shared/DashboardManager";
 import ProductListCheckboxManager from "js/backend/shared/ProducListCheckboxManager";
-import BrowserLogger from "js/utils/BrowserLogger";
+import BrowserLogger from "js/core/utils/BrowserLogger";
 
 const logger = new BrowserLogger("Main");
 

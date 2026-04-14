@@ -256,7 +256,7 @@
 
           &.has-active-child {
             .menu-list__item--dropdown-button {
-              cursor: default;
+              cursor: pointer;
             }
           }
         }

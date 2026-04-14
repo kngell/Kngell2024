@@ -2,7 +2,8 @@
 /*------------------- CONTAINER -----------------*/
 
 .container {
-  width: 144rem; // Exact Figma page frame width
+  max-width: 144rem;
+  width: 100%;
   margin: 0 auto;
   padding: 0; // No side padding like Figma
 

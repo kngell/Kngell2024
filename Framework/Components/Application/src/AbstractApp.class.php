@@ -24,6 +24,12 @@ abstract class AbstractApp extends Container
         'loadCookies' => false,
         'createAppProperties' => false,
     ];
+    protected bool $isCli = false;
+
+    public function __construct()
+    {
+        return parent::__construct();
+    }
 
     public function app(): App
     {
@@ -97,10 +103,7 @@ abstract class AbstractApp extends Container
     }
 
     /**
-     * Compare PHP version with the core version ensuring the correct version of
-     * PHP and K'nGELL framework is being used at all time in sync.
-     *
-     * @return void
+     * Compare PHP version with the core version.
      */
     protected function phpVersion(): void
     {
@@ -111,10 +114,7 @@ abstract class AbstractApp extends Container
     }
 
     /**
-     * Load the framework default enviornment configuration. Most configurations
-     * can be done from inside the app.yml file.
-     *
-     * @return void
+     * Load the framework default environment configuration.
      */
     protected function loadEnvironment(): void
     {
@@ -159,10 +159,7 @@ abstract class AbstractApp extends Container
     }
 
     /**
-     * Turn on global caching from public/index.php bootstrap file to make the cache
-     * object available globally throughout the application using the GlobalManager object.
-     *
-     * @return bool
+     * Turn on global caching.
      */
     protected function isCacheGlobal(): bool
     {
@@ -171,7 +168,7 @@ abstract class AbstractApp extends Container
 
     protected function loadSession(): SessionInterface
     {
-        // Set global parameters for session configuration
+        // Only called for HTTP, not CLI
         $this->setGlobalParameters([
             'sessionConfig' => $this->appConfig->getSession(),
             'sessionIdentifier' => $this->appConfig->getSession()['session_name'],
@@ -186,15 +183,13 @@ abstract class AbstractApp extends Container
         if ($this->isSessionGlobal() === true) {
             GlobalManager::set($this->app()->getGlobalSessionKey(), $this->session);
         }
+
         $this->bootMap[__FUNCTION__] = true;
         return $this->session;
     }
 
     /**
-     * Turn on global session from public/index.php bootstrap file to make the session
-     * object available globally throughout the application using the GlobalManager object.
-     *
-     * @return bool
+     * Turn on global session.
      */
     protected function isSessionGlobal(): bool
     {
@@ -203,6 +198,7 @@ abstract class AbstractApp extends Container
 
     protected function loadCookies()
     {
+        // Only called for HTTP, not CLI
         $this->bindParams(CookieEnvironment::class, $this->appConfig->getCookie());
         $this->bootMap[__FUNCTION__] = true;
         return $this->cookie = $this->resolve(CookieInterface::class);
@@ -215,7 +211,7 @@ abstract class AbstractApp extends Container
     {
         $app = self::getInstance();
         if (!$app->isFullyBooted()) {
-            $app->reboot();
+            $app->reBoot();
         }
         return $app->resolve($class, $args);
     }

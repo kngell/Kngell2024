@@ -24,6 +24,19 @@ class ProductRegionalPrice extends Entity implements TimestampableInterface, Sof
     private ?DateTimeImmutable $saleEndDate;
     private ?bool $isActive;
 
+    public function isCurrentlyOnSale(): bool
+    {
+        if ($this->salePrice === null || !$this->isActive) {
+            return false;
+        }
+
+        $now = new DateTimeImmutable();
+        $startMatch = $this->saleStartDate === null || $now >= $this->saleStartDate;
+        $endMatch = $this->saleEndDate === null || $now <= $this->saleEndDate;
+
+        return $startMatch && $endMatch;
+    }
+
     /**
      * @return int
      */

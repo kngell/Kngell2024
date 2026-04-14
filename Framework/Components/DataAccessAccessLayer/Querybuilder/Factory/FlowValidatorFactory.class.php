@@ -13,7 +13,7 @@ class FlowValidatorFactory
         $this->factories = $this->factories();
     }
 
-    public function create(SqlStatementType $statementType): ?FlowValidatorInterface
+    public function create(SqlStatement $statementType): ?FlowValidatorInterface
     {
         foreach ($this->factories as $factory) {
             if ($factory->supports($statementType)) {

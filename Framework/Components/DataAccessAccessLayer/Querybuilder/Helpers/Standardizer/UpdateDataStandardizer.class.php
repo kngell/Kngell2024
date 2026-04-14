@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 final class UpdateDataStandardizer extends AbstractDataStandardizer
 {
-    public function standardize(array $data): UpdatePayload
+    public function standardize(array $data): SqlGenericDataPayload
     {
         $data = $this->getRealData($data);
 
         if (empty($data)) {
-            return new UpdatePayload();
+            return new SqlGenericDataPayload();
         }
         return match (true) {
             $this->method === 'set' => $this->standardizeSet($data),
@@ -25,10 +25,20 @@ final class UpdateDataStandardizer extends AbstractDataStandardizer
         return 'update';
     }
 
-    private function standardizeSet(array $data): UpdatePayload
+    protected function standardizeConditions(array $data): SqlGenericDataPayload
     {
-        if (ArrayUtils::isSequential($data)) {
+        return new SqlGenericDataPayload($data, $this->method);
+    }
+
+    private function standardizeSet(array $data): SqlGenericDataPayload
+    {
+        if (ArrayUtils::isLikeKeyValuePair($data)) {
             $data = $this->toAssoc($data);
+        }
+        if (ArrayUtils::isSequential($data)) {
+            if (!ArrayUtils::isObjectList($data) || !ArrayUtils::isArrayList($data)) {
+                throw new BadQueryArgumentException('UPDATE/SET expects an object or array of column => value pairs');
+            }
         }
 
         if (!ArrayUtils::isAssoc($data)) {
@@ -36,18 +46,18 @@ final class UpdateDataStandardizer extends AbstractDataStandardizer
                 'UPDATE/SET expects an associative array of column => value pairs',
             );
         }
-        return new UpdatePayload($data, $this->method);
+        return new SqlGenericDataPayload($data, $this->method);
     }
 
-    private function standardizeSetColumns(array $data): UpdatePayload
+    private function standardizeSetColumns(array $data): SqlGenericDataPayload
     {
         if (!ArrayUtils::isStringList($data)) {
             throw new BadQueryArgumentException('UPDATE/SET_COLUMNS expects a list of columns');
         }
-        return new UpdatePayload($data, $this->method);
+        return new SqlGenericDataPayload($data, $this->method);
     }
 
-    private function standardizeSetValues(array $data): UpdatePayload
+    private function standardizeSetValues(array $data): SqlGenericDataPayload
     {
         if (ArrayUtils::isSequential($data) && !isset($this->map['setColumns'])) {
             throw new BadQueryArgumentException('UPDATE/SET_VALUES requires SET_COLUMNS to be called first');
@@ -58,11 +68,6 @@ final class UpdateDataStandardizer extends AbstractDataStandardizer
         if (count($this->map['setColumns']) !== count($data)) {
             throw new BadQueryArgumentException('The number of columns and values must match');
         }
-        return new UpdatePayload($data, $this->method);
-    }
-
-    private function standardizeConditions(array $data): UpdatePayload
-    {
-        return new UpdatePayload($data, $this->method);
+        return new SqlGenericDataPayload($data, $this->method);
     }
 }

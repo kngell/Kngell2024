@@ -13,10 +13,10 @@ class ClauseBuilderFactory
         $this->factories = $this->factories();
     }
 
-    public function create(SqlStatementType $statementType): ?ClauseBuilderInterface
+    public function create(SqlStatement $statement): ?ClauseBuilderInterface
     {
         foreach ($this->factories as $factory) {
-            if ($factory->supports($statementType)) {
+            if ($factory->supports($statement)) {
                 return $factory->create();
             }
         }

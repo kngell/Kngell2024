@@ -531,6 +531,14 @@
                     console.log(`[Custom Reload] Full reload triggered by server. Reason: ${data.reason}`);
                     // The page will reload, so no need for explicit ws.close() here.
                     window.location.reload(true); // Forces a full reload
+                } else if (data.type === 'css-update') {
+                    console.log(`[Custom Reload] CSS update triggered by server. Reason: ${data.reason}`);
+                    const links = document.querySelectorAll("link[rel='stylesheet']");
+                    links.forEach((link) => {
+                        const url = new URL(link.href);
+                        url.searchParams.set("reload", Date.now());
+                        link.href = url.href;
+                    });
                 }
                 // Add any other message types if you later decide to handle them differently
             };

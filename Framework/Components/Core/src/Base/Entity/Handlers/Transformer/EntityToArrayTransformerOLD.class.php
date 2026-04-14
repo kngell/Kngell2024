@@ -13,7 +13,7 @@ readonly class EntityToArrayTransformerOLD implements EntityToArrayTransformerIn
     public function toArray(Entity $entity): array
     {
         $array = [];
-        $reflection = CustomReflection::getInstance($entity)->getObject();
+        $reflection = $reflection = CustomReflection::getInstance($entity)->getClass();
 
         foreach ($reflection->getProperties(ReflectionProperty::IS_PRIVATE) as $property) {
             $propertyName = $property->getName();
@@ -30,7 +30,7 @@ readonly class EntityToArrayTransformerOLD implements EntityToArrayTransformerIn
     public function toOriginalArray(Entity $entity): array
     {
         $array = [];
-        $reflection = CustomReflection::getInstance($entity)->getObject();
+        $reflection = $reflection = CustomReflection::getInstance($entity)->getClass();
 
         foreach ($reflection->getProperties() as $prop) {
             $name = StringUtils::studlyCapsToUnderscore($prop->getName());
@@ -247,7 +247,7 @@ readonly class EntityToArrayTransformerOLD implements EntityToArrayTransformerIn
         ?TypePresenterFactory $presenterFactory,
     ): array {
         $result = [];
-        $reflection = CustomReflection::getInstance($entity)->getObject();
+        $reflection = $reflection = CustomReflection::getInstance($entity)->getClass();
 
         foreach ($reflection->getProperties(ReflectionProperty::IS_PRIVATE) as $property) {
             $propertyName = $property->getName();
@@ -467,7 +467,7 @@ readonly class EntityToArrayTransformerOLD implements EntityToArrayTransformerIn
     //     $value = $array;
 
     //     foreach ($keys as $key) {
-    //         // $key = StringUtils::camelCase($key);
+    //         // $key = StringUtils::snakeCaseToCamelCase($key);
     //         if (!is_array($value) || !array_key_exists($key, $value)) {
     //             return $default;
     //         }
@@ -487,7 +487,7 @@ readonly class EntityToArrayTransformerOLD implements EntityToArrayTransformerIn
 
         foreach ($keys as $key) {
             if ($current instanceof Entity) {
-                $camelKey = StringUtils::camelCase($key);
+                $camelKey = StringUtils::snakeCaseToCamelCase($key);
                 $lastProperty = $current->getProperty($key);
                 $getter = 'get' . $camelKey;
 
@@ -606,7 +606,7 @@ readonly class EntityToArrayTransformerOLD implements EntityToArrayTransformerIn
                     // Property is private, need reflection
                 }
             }
-            $reflection = CustomReflection::getInstance($entity)->getObject();
+            $reflection = $reflection = CustomReflection::getInstance($entity)->getClass();
             if ($reflection->hasProperty($keyProperty)) {
                 $property = $reflection->getProperty($keyProperty);
                 if ($property->isInitialized($entity)) {
@@ -615,7 +615,7 @@ readonly class EntityToArrayTransformerOLD implements EntityToArrayTransformerIn
             }
         }
 
-        $reflection = CustomReflection::getInstance($entity)->getObject();
+        $reflection = $reflection = CustomReflection::getInstance($entity)->getClass();
         foreach ($reflection->getProperties() as $property) {
             $propertyName = $property->getName();
             if (str_ends_with(strtolower($propertyName), 'id')) {

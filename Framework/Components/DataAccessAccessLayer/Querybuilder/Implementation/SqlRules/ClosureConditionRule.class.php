@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-class ClosureConditionRule extends AbstractConditionRules
+class ClosureConditionRule extends AbstractRules
 {
     protected array $tableAlias = [];
     protected array $aliasCheck = [];
@@ -14,6 +14,7 @@ class ClosureConditionRule extends AbstractConditionRules
         EntityManagerInterface $em,
         array $tables,
         string $method,
+        private QueryState $state,
         private mixed $conditions,
     ) {
         $this->em = $em;
@@ -76,12 +77,10 @@ class ClosureConditionRule extends AbstractConditionRules
             tableAlias: $this->tableAlias,
             aliasCheck: $this->aliasCheck,
             parameters: $this->parameters,
-            bindArr: $this->bindArr,
             logicalToPhysicalMap: $this->logicalToPhysicalMap,
             tables: $this->tables, // 🔥 CRITICAL: Pass tables for initialization
             joinContext: null,
             withAlias: false,
-            customAlias: null,
         );
 
         // Initialize BEFORE using the query
@@ -124,13 +123,13 @@ class ClosureConditionRule extends AbstractConditionRules
 
     private function processRegularCondition($condition): string
     {
-        // For non-closure conditions, use the existing WhereRules
-        $whereRules = new WhereRules($this->method, [$condition], $this->em, $this->tables);
+        // For non-closure conditions, use the existing WhereRule
+        $WhereRule = new WhereRule([$condition], $this->em, $this->method, $this->state, new ConditionNormalizer());
 
-        // Transfer state from the WhereRules to this closure rule
-        $this->mergeWhereRulesState($whereRules);
+        // Transfer state from the WhereRule to this closure rule
+        $this->mergeWhereRuleState();
 
-        return $whereRules->getRule([$condition]);
+        return $WhereRule->getRule([$condition]);
     }
 
     private function mergeNestedStateSafely(SqlSelectQuery $nestedQuery): void
@@ -141,15 +140,13 @@ class ClosureConditionRule extends AbstractConditionRules
         $this->tableAlias = array_merge($this->tableAlias, $nestedState->tableAlias);
         $this->aliasCheck = array_merge($this->aliasCheck, $nestedState->aliasCheck);
         $this->parameters = array_merge($this->parameters, $nestedState->parameters);
-        $this->bindArr = array_merge($this->bindArr, $nestedState->bindArr);
         $this->logicalToPhysicalMap = array_merge($this->logicalToPhysicalMap, $nestedState->logicalToPhysicalMap);
     }
 
-    private function mergeWhereRulesState(WhereRules $whereRules): void
+    private function mergeWhereRuleState(): void
     {
-        $this->tableAlias = array_merge($this->tableAlias, $whereRules->getTableAlias());
-        $this->aliasCheck = array_merge($this->aliasCheck, $whereRules->getAliasCheck());
-        $this->parameters = array_merge($this->parameters, $whereRules->getParameters());
-        $this->bindArr = array_merge($this->bindArr, $whereRules->getBindArr());
+        $this->tableAlias = array_merge($this->tableAlias, $this->state->tableAlias);
+        $this->aliasCheck = array_merge($this->aliasCheck, $this->state->aliasCheck);
+        $this->parameters = array_merge($this->parameters, $this->state->parameters);
     }
 }

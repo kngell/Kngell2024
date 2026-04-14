@@ -34,4 +34,9 @@ class NullObject implements NullObjectInterface
     {
         return true;
     }
+
+    public function isSuccess(): bool
+    {
+        return false;
+    }
 }

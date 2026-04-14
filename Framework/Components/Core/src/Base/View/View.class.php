@@ -22,7 +22,8 @@ class View implements ViewInterface
     {
         try {
             $templatePath = $this->viewEnv->getFile($templatePath);
-            return $this->renderViewContent($templatePath, $context);
+            $html = $this->renderViewContent($templatePath, $context);
+            return $this->formatOutput($html);
         } catch (ViewException $ex) {
             throw new ViewException("View Error: {$ex->getMessage()}");
         }
@@ -76,6 +77,17 @@ class View implements ViewInterface
         $this->request = $request;
     }
 
+    public function formatBytes(int $bytes): string
+    {
+        $units = ['B', 'KB', 'MB', 'GB', 'TB'];
+        $i = 0;
+        while ($bytes >= 1024 && $i < count($units) - 1) {
+            $bytes /= 1024;
+            $i++;
+        }
+        return round($bytes, 2) . ' ' . $units[$i];
+    }
+
     private function isDevEnv(): bool
     {
         if (isset($_ENV['NODE_ENV']) && $_ENV['NODE_ENV'] === 'development') {
@@ -91,7 +103,6 @@ class View implements ViewInterface
 
     private function renderViewContent(string $templatePath, array $context): string
     {
-        // Extract context variables
         extract($context, EXTR_SKIP);
 
         // Make view methods available in templates
@@ -106,11 +117,7 @@ class View implements ViewInterface
         $isUserLoggedIn = fn () => $this->isUserLoggedIn();
         $isDevEnv = fn () => $this->isDevEnv();
 
-        // Include helper functions
         require_once APP . 'Functions' . DS . 'functions.php';
-
-        // FIRST: Execute the template to capture head/body/footer sections
-        // This populates $this->_head, $this->_body, $this->_footer
         require_once $templatePath;
 
         if (!isset($this->_layout) || empty($this->_layout)) {
@@ -121,9 +128,68 @@ class View implements ViewInterface
         if (!file_exists($layoutPath)) {
             throw new ViewNotFoundException("Layout file '{$this->_layout}.php' not found in layout path.");
         }
+
         ob_start();
         require_once $layoutPath;
         return ob_get_clean();
+    }
+
+    private function formatOutput(string $html): string
+    {
+        if ($this->isDevEnv()) {
+            return $this->prettyPrintHtml($html);
+        }
+        return $this->minifyHtml($html);
+    }
+
+    private function prettyPrintHtml(string $html): string
+    {
+        $dom = new DOMDocument('1.0', 'UTF-8');
+        libxml_use_internal_errors(true);
+        $dom->loadHTML(
+            '<?xml encoding="UTF-8">' . $html,
+            LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD,
+        );
+        libxml_clear_errors();
+        $dom->preserveWhiteSpace = false;
+        $dom->formatOutput = true;
+        $formatted = $dom->saveHTML();
+        return preg_replace('/^<\?xml encoding="UTF-8">/', '', $formatted);
+    }
+
+    private function minifyHtml(string $html): string
+    {
+        $html = preg_replace('/<!--(?!\s*(?:\[if [^\]]+]|<!|>))(?:(?!-->).)*-->/s', '', $html);
+        $html = preg_replace('/>\s+</', '><', $html);
+        return trim($html);
+    }
+
+    private function formatOutputEnhanced(string $html, array $options = []): string
+    {
+        $defaults = [
+            'removeComments' => true,
+            'removeWhitespace' => true,
+            'prettyPrint' => $this->isDevEnv(),
+            'indentSize' => 2,
+        ];
+
+        $options = array_merge($defaults, $options);
+
+        if ($options['prettyPrint']) {
+            return $this->prettyPrintHtml($html);
+        }
+
+        $result = $html;
+
+        if ($options['removeComments']) {
+            $result = preg_replace('/<!--(?!\s*(?:\[if [^\]]+]|<!|>))(?:(?!-->).)*-->/s', '', $result);
+        }
+
+        if ($options['removeWhitespace']) {
+            $result = preg_replace('/>\s+</', '><', $result);
+        }
+
+        return trim($result);
     }
 
     private function css(string|null $path = null): string
@@ -136,24 +202,13 @@ class View implements ViewInterface
         return $this->viewEnv->getJs($path, $flag);
     }
 
-    /**
-     * Generate URL for assets like images, SVGs, etc.
-     *
-     * @param string $path Relative path to the asset
-     *
-     * @return string Full URL to the asset
-     */
     private function asset(string $path): string
     {
-        // Remove leading slash if present
         $path = ltrim($path, '/');
 
-        // Check if path already contains the assets directory
         if (!str_starts_with($path, 'assets/')) {
             $path = 'assets/' . $path;
         }
-
-        // Return full URL to the asset
         return HOST . '/public/' . $path;
     }
 
@@ -192,5 +247,21 @@ class View implements ViewInterface
     {
         $session = App::getInstance()->getSession();
         return $session->exists(CURRENT_USER_SESSION_NAME);
+    }
+
+    private function debugOutput(string $html, string $type = 'raw'): string
+    {
+        if (!$this->isDevEnv()) {
+            return $html;
+        }
+
+        switch ($type) {
+            case 'raw':
+                return '<pre>' . htmlspecialchars($html) . '</pre>';
+            case 'formatted':
+                return '<pre>' . htmlspecialchars($this->prettyPrintHtml($html)) . '</pre>';
+            default:
+                return $html;
+        }
     }
 }

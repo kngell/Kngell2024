@@ -1,0 +1,64 @@
+@use "css/backend/admin/abstracts/variables" as *;
+@use "css/backend/admin/abstracts/functions" as *;
+@use "text-style" as *;
+@use "icon_with_badge" as *;
+@use "required-badge" as *;
+
+@mixin form-section-header() {
+  $horizontal-padding: 2.4rem;
+
+  display: flex;
+  padding: 1.2rem $horizontal-padding;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  flex: 1 0 0;
+  position: relative;
+
+  &-left {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+
+    .icon-container {
+      @include icon_with_badge(
+        $with-badge: false,
+        $padding: 0,
+        $icon-size: 2.4rem,
+        $align-self: false
+      );
+    }
+
+    .title {
+      @include apply-text-style(
+        (
+          map: map-deep-get($poppins-map, regular),
+          weight: h6,
+          overrides: (
+            color: $text-neutral-primary
+          )
+        )
+      );
+    }
+  }
+
+  &-right {
+    @include required-badge();
+
+    &.hide {
+      display: none;
+    }
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    display: block;
+    bottom: 0;
+    left: $horizontal-padding;
+    right: $horizontal-padding;
+    height: 1px;
+    background-color: $border-neutral-secondary;
+    box-shadow: $shadow-s;
+  }
+}

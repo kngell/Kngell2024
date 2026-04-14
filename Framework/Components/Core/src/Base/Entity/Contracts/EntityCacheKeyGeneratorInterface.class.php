@@ -15,4 +15,6 @@ interface EntityCacheKeyGeneratorInterface
     public function extractIdentifierFromKey(string $cacheKey, string $entityClass): ?string;
 
     public function normalizeClassName(string $className): string;
+
+    public function getEntityPrefix(string $entityClass): string;
 }

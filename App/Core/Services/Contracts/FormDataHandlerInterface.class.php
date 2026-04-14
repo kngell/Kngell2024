@@ -25,4 +25,6 @@ interface FormDataHandlerInterface
     public function validateWebPaths(array $webPaths): array;
 
     public function getMetadataService(): FileMetadataService;
+
+    public function isEmptyData(array $data, array $additionalExcludeKeys = []): bool;
 }

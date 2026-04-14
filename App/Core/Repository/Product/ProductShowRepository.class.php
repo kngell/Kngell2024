@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 class ProductShowRepository extends Repository
 {
-    use NestedRelationshipAliasExpanderTrait;
+    // use NestedRelationshipAliasExpanderTrait;
 
-    private const array COLUMN_MAPS = [
+    protected const array COLUMN_MAPS = [
         'ProductShow' => [
             'public_id', 'pdt_id', 'sku', 'name', 'slug', 'description', 'short_description',
             'main_image', 'main_video', 'product_weight', 'product_dimension', 'stock_quantity',
@@ -23,24 +23,25 @@ class ProductShowRepository extends Repository
             'cost_price', 'sale_price', 'price_includes_tax', 'is_active',
         ],
         'ProductImageGallery' => ['id', 'image_url', 'alt_text', 'sort_order'],
-        'ProductVariationShow' => ['id', 'name', 'sku', 'price_modifier', 'stock_quantity', 'status', 'created_at', 'updated_at'],
+        'ProductVariationShow' => ['id', 'name', 'variation_sku', 'price_modifier', 'stock_quantity', 'variation_status', 'created_at', 'updated_at'],
         'VariationType' => ['id', 'name'],
         'VariationAttribute' => ['id', 'attribute_name', 'attribute_value'],
     ];
 
-    public function findByIds(array $conditions = [], ?int $limit = null, ?int $offset = null, ?string $keyField = null): void
+    public function fetchIds(array $conditions = [], ?int $limit = null, ?int $offset = null, ?string $keyField = null): void
     {
         try {
-            $qb = $this->getEnrichedQueryBuilder($conditions, [$keyField ?? 'product.public_id']);
+            $qb = $this->em->createQueryBuilder();
+            $select = $this->getEnrichedQueryBuilder($conditions, [$keyField ?? 'product.public_id'], $qb);
 
             if ($limit !== null) {
-                $qb->limit($limit);
+                $select->limit($limit);
             }
             if ($offset !== null) {
-                $qb->offset($offset);
+                $select->offset($offset);
             }
 
-            $qb->build();
+            $select->build();
         } catch (Throwable $th) {
             throw new RepositoryException('Cache lookup failed: ' . $th->getMessage(), 0, $th);
         }
@@ -50,8 +51,9 @@ class ProductShowRepository extends Repository
     {
         if ($this->isArray($conditions)) {
             try {
-                $qb = $this->getEnrichedQueryBuilder($conditions);
-                $qb->build();
+                $qb = $this->em->createQueryBuilder();
+                $select = $this->getEnrichedQueryBuilder($conditions, null, $qb);
+                $select->build();
             } catch (Throwable $th) {
                 throw $th;
             }
@@ -65,64 +67,71 @@ class ProductShowRepository extends Repository
         }
 
         try {
-            $qb = $this->getEnrichedQueryBuilder(['product.pdt_id' => $id]);
-            $qb->build();
+            $qb = $this->em->createQueryBuilder();
+            $find = $this->getEnrichedQueryBuilder(['product.pdt_id' => $id], null, $qb);
+            $find->build();
         } catch (Throwable $th) {
             throw new RepositoryException('Failed to find Product: ' . $th->getMessage(), 0, $th);
         }
     }
 
-    public function findAll(array $conditions = []): void
+    public function findAll(array $conditions = [], array $columns = []): void
     {
-        $this->findBy($conditions);
+        $this->findBy($conditions, null, null, $columns);
     }
 
-    public function findBy(array $conditions = [], ?int $limit = null, ?int $offset = null): void
+    public function findBy(array $conditions = [], ?int $limit = null, ?int $offset = null, array $columns = []): void
     {
-        $qb = $this->getEnrichedQueryBuilder($conditions);
+        $qb = $this->em->createQueryBuilder();
+        $select = $this->getEnrichedQueryBuilder($conditions, null, $qb);
         if ($limit) {
-            $qb->limit($limit);
+            $select->limit($limit);
         }
         if ($offset) {
-            $qb->offset($offset);
+            $select->offset($offset);
         }
-        $qb->build();
+        $select->build();
+        // $this->debugSql($qb);
     }
 
     public function count(array $conditions): void
     {
-        $this->em->createQueryBuilder()
-            ->with('countbl', $this->getEnrichedQueryBuilder($conditions, ['product.pdt_id']))
-            ->select('count(*) as totalRecord')
-            ->from('countbl')
-            ->build();
+        $qb = $this->em->createQueryBuilder();
+        $qb->with('countbl')
+        ->body($this->getEnrichedQueryBuilder($conditions, ['product.pdt_id'], $qb))
+        ->mainquery(
+            $qb->select('count(*) as totalRecord')
+            ->from('countbl'),
+        )->build();
+        // $this->debugSql($qb);
     }
 
-    private function getEnrichedQueryBuilder(array $conditions, ?array $columns = null): SqlSelectQueryBuilderInterface
+    private function getEnrichedQueryBuilder(array $conditions, ?array $columns, SqlCompositeQueryBuilderInterface $qb): SqlSelectQueryBuilderInterface
     {
         $isFullQuery = ($columns === null);
         $selectedColumns = $columns ?? self::COLUMN_MAPS['ProductShow'];
 
-        $qb = $this->em->createQueryBuilder()
-            ->selectWithAlias($selectedColumns)
+        $select = $qb->selectWithAlias($selectedColumns)
             ->distinct()
             ->from('product');
 
-        $this->applySmartJoins($qb, $conditions, $isFullQuery);
+        $this->applySmartJoins($select, $conditions, $isFullQuery);
 
-        $qb->where($conditions);
+        if (!empty($conditions)) {
+            $select->where($conditions);
+        }
 
         if ($isFullQuery) {
-            $qb->orderBy(
+            $select->orderBy(
                 'product.pdt_id ASC',
                 'product_image_gallery.sort_order ASC',
                 'variation_attribute.attribute_name ASC',
             );
         } else {
-            $qb->orderBy('product.pdt_id ASC');
+            $select->orderBy('product.pdt_id ASC');
         }
 
-        return $qb;
+        return $select;
     }
 
     private function applySmartJoins(SqlSelectQueryBuilderInterface $qb, array $conditions, bool $isFullQuery): void

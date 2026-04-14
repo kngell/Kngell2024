@@ -1,0 +1,373 @@
+@use "sass:map";
+@use "css/backend/admin/abstracts/variables" as *;
+@use "text-style" as *;
+@use "responsive" as *;
+@use "miscellaneous" as *;
+
+@mixin options-container(
+  $display: flex,
+  $padding: 0.8rem 0,
+  $align-items: center,
+  $gap: 0.8rem,
+  $align-self: stretch,
+  $responsive-breakpoint: md,
+  $responsive-flex-direction: column
+) {
+  display: $display;
+  padding: $padding;
+  align-items: $align-items;
+  gap: $gap;
+  align-self: $align-self;
+
+  @include respond-below($responsive-breakpoint) {
+    flex-direction: $responsive-flex-direction;
+  }
+}
+
+@mixin options-box(
+  $height: 8.4rem,
+  $padding: 0.8rem 1.6rem,
+  $flex-direction: column,
+  $align-items: flex-start,
+  $gap: 0.4rem,
+  $flex: 1 0 0,
+  $border-radius: $radius-s,
+  $border-width: 1px,
+  $border-color: $gray-200,
+  $cursor: pointer,
+  $position: relative,
+  $transition: true,
+
+  // Selected state
+  $selected-border-width: 2px,
+  $selected-border-color: $primary-500,
+  $selected-bg-color: $primary-50,
+
+  // Title styles
+  $title-font-size: $display-xs,
+  $title-font-weight: medium,
+  $title-color: $gray-400,
+  $title-selected-color: $primary-500,
+
+  // Description styles
+  $description-font-size: $text-s,
+  $description-font-weight: medium,
+  $description-color: $gray-400,
+  $description-selected-color: $black-800,
+
+  // Hover state
+  $hover-bg-color: $primary-50,
+  $hover-border-color: $primary-100,
+  $hover-title-color: $primary-400,
+
+  // Focus state
+  $focus-outline-width: 2px,
+  $focus-outline-color: $primary-500,
+  $focus-outline-offset: 2px,
+
+  // Checkmark
+  $checkmark-size: 20px,
+  $checkmark-top: 10px,
+  $checkmark-right: 10px,
+  $checkmark-bg-color: $primary-500,
+  $checkmark-border-radius: 50%,
+  $checkmark-icon-size: 12px
+) {
+  display: flex;
+  height: $height;
+  padding: $padding;
+  flex-direction: $flex-direction;
+  align-items: $align-items;
+  gap: $gap;
+  flex: $flex;
+  border-radius: $border-radius;
+  border: $border-width solid $border-color;
+  cursor: $cursor;
+  position: $position;
+
+  @if $transition {
+    @include transition;
+  }
+
+  // Title element
+  &__title {
+    align-self: stretch;
+    @include text-style(
+      $title-font-size,
+      $title-font-weight,
+      (
+        color: $title-color
+      )
+    );
+    @if $transition {
+      @include transition;
+    }
+  }
+
+  // Description element
+  &__description {
+    align-self: stretch;
+    @include text-style(
+      $description-font-size,
+      $description-font-weight,
+      (
+        color: $description-color
+      )
+    );
+    @if $transition {
+      @include transition;
+    }
+  }
+
+  // Selected state
+  &.selected {
+    border-width: $selected-border-width;
+    border-color: $selected-border-color;
+    background-color: $selected-bg-color;
+
+    .options-box__title {
+      color: $title-selected-color;
+    }
+
+    .options-box__description {
+      color: $description-selected-color;
+    }
+
+    // Checkmark indicator
+    &::after {
+      content: "";
+      position: absolute;
+      top: $checkmark-top;
+      right: $checkmark-right;
+      width: $checkmark-size;
+      height: $checkmark-size;
+      background-color: $checkmark-bg-color;
+      border-radius: $checkmark-border-radius;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z'/%3E%3C/svg%3E");
+      background-size: $checkmark-icon-size;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+  }
+
+  // Hover state (excluding selected items)
+  &:hover:not(.selected) {
+    background-color: $hover-bg-color;
+    border-color: $hover-border-color;
+
+    .options-box__title {
+      color: $hover-title-color;
+    }
+  }
+
+  // Focus state for the box itself
+  &:focus {
+    outline: $focus-outline-width solid $focus-outline-color;
+    outline-offset: $focus-outline-offset;
+  }
+
+  // Hidden radio input
+  input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+
+    // Focus state for accessibility (when radio gets focus)
+    &:focus + .options-box__title {
+      outline: $focus-outline-width solid $focus-outline-color;
+      outline-offset: $focus-outline-offset;
+    }
+  }
+}
+
+// Advanced map-based version for more complex configurations
+@mixin options-box-configurable($config: ()) {
+  $default-config: (
+    height: 8.4rem,
+    padding: 0.8rem 1.6rem,
+    flex-direction: column,
+    align-items: flex-start,
+    gap: 0.4rem,
+    flex: 1 0 0,
+    border-radius: $radius-s,
+    border-width: 1px,
+    border-color: $gray-200,
+    cursor: pointer,
+    position: relative,
+    transition: true,
+
+    selected-border-width: 2px,
+    selected-border-color: $primary-500,
+    selected-bg-color: $primary-50,
+
+    title-font-size: $display-xs,
+    title-font-weight: medium,
+    title-color: $gray-400,
+    title-selected-color: $primary-500,
+
+    description-font-size: $text-s,
+    description-font-weight: medium,
+    description-color: $gray-400,
+    description-selected-color: $black-800,
+
+    hover-bg-color: $primary-50,
+    hover-border-color: $primary-100,
+    hover-title-color: $primary-400,
+
+    focus-outline-width: 2px,
+    focus-outline-color: $primary-500,
+    focus-outline-offset: 2px,
+
+    checkmark-size: 20px,
+    checkmark-top: 10px,
+    checkmark-right: 10px,
+    checkmark-bg-color: $primary-500,
+    checkmark-border-radius: 50%,
+    checkmark-icon-size: 12px
+  );
+
+  $merged-config: map-merge($default-config, $config);
+
+  // Extract values from config
+  $height: map-get($merged-config, height);
+  $padding: map-get($merged-config, padding);
+  $flex-direction: map-get($merged-config, flex-direction);
+  $align-items: map-get($merged-config, align-items);
+  $gap: map-get($merged-config, gap);
+  $flex: map-get($merged-config, flex);
+  $border-radius: map-get($merged-config, border-radius);
+  $border-width: map-get($merged-config, border-width);
+  $border-color: map-get($merged-config, border-color);
+  $cursor: map-get($merged-config, cursor);
+  $position: map-get($merged-config, position);
+  $transition: map-get($merged-config, transition);
+
+  $selected-border-width: map-get($merged-config, selected-border-width);
+  $selected-border-color: map-get($merged-config, selected-border-color);
+  $selected-bg-color: map-get($merged-config, selected-bg-color);
+
+  $title-font-size: map-get($merged-config, title-font-size);
+  $title-font-weight: map-get($merged-config, title-font-weight);
+  $title-color: map-get($merged-config, title-color);
+  $title-selected-color: map-get($merged-config, title-selected-color);
+
+  $description-font-size: map-get($merged-config, description-font-size);
+  $description-font-weight: map-get($merged-config, description-font-weight);
+  $description-color: map-get($merged-config, description-color);
+  $description-selected-color: map-get($merged-config, description-selected-color);
+
+  $hover-bg-color: map-get($merged-config, hover-bg-color);
+  $hover-border-color: map-get($merged-config, hover-border-color);
+  $hover-title-color: map-get($merged-config, hover-title-color);
+
+  $focus-outline-width: map-get($merged-config, focus-outline-width);
+  $focus-outline-color: map-get($merged-config, focus-outline-color);
+  $focus-outline-offset: map-get($merged-config, focus-outline-offset);
+
+  $checkmark-size: map-get($merged-config, checkmark-size);
+  $checkmark-top: map-get($merged-config, checkmark-top);
+  $checkmark-right: map-get($merged-config, checkmark-right);
+  $checkmark-bg-color: map-get($merged-config, checkmark-bg-color);
+  $checkmark-border-radius: map-get($merged-config, checkmark-border-radius);
+  $checkmark-icon-size: map-get($merged-config, checkmark-icon-size);
+
+  display: flex;
+  height: $height;
+  padding: $padding;
+  flex-direction: $flex-direction;
+  align-items: $align-items;
+  gap: $gap;
+  flex: $flex;
+  border-radius: $border-radius;
+  border: $border-width solid $border-color;
+  cursor: $cursor;
+  position: $position;
+
+  @if $transition {
+    @include transition;
+  }
+
+  &__title {
+    align-self: stretch;
+    @include text-style(
+      $title-font-size,
+      $title-font-weight,
+      (
+        color: $title-color
+      )
+    );
+    @if $transition {
+      @include transition;
+    }
+  }
+
+  &__description {
+    align-self: stretch;
+    @include text-style(
+      $description-font-size,
+      $description-font-weight,
+      (
+        color: $description-color
+      )
+    );
+    @if $transition {
+      @include transition;
+    }
+  }
+
+  &.selected {
+    border-width: $selected-border-width;
+    border-color: $selected-border-color;
+    background-color: $selected-bg-color;
+
+    .options-box__title {
+      color: $title-selected-color;
+    }
+
+    .options-box__description {
+      color: $description-selected-color;
+    }
+
+    &::after {
+      content: "";
+      position: absolute;
+      top: $checkmark-top;
+      right: $checkmark-right;
+      width: $checkmark-size;
+      height: $checkmark-size;
+      background-color: $checkmark-bg-color;
+      border-radius: $checkmark-border-radius;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z'/%3E%3C/svg%3E");
+      background-size: $checkmark-icon-size;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+  }
+
+  &:hover:not(.selected) {
+    background-color: $hover-bg-color;
+    border-color: $hover-border-color;
+
+    .options-box__title {
+      color: $hover-title-color;
+    }
+  }
+
+  &:focus {
+    outline: $focus-outline-width solid $focus-outline-color;
+    outline-offset: $focus-outline-offset;
+  }
+
+  input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+
+    &:focus + .options-box__title {
+      outline: $focus-outline-width solid $focus-outline-color;
+      outline-offset: $focus-outline-offset;
+    }
+  }
+}

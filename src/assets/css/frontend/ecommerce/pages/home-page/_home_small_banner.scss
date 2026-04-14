@@ -108,7 +108,7 @@
         .image-container {
           max-height: 34.3rem;
           position: absolute;
-          left: -15.3rem;
+          left: -35rem;
           bottom: -1.5rem;
           max-width: calc(100% + 15.3rem);
 
@@ -731,6 +731,8 @@
       &__img-container {
         display: flex;
         max-width: 82.9rem;
+        // width: 60rem;
+        // aspect-ratio: 600 / 363;
         flex-direction: column;
         justify-content: center;
         align-items: center;

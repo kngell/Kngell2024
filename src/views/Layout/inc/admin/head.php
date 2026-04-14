@@ -44,6 +44,14 @@
                 if (data.type === 'full-reload') {
                     console.log("🔌 WebSocket: FULL RELOAD TRIGGERED", data.reason);
                     window.location.reload(true);
+                } else if (data.type === 'css-update') {
+                    console.log("🔌 WebSocket: CSS UPDATE TRIGGERED", data.reason);
+                    const links = document.querySelectorAll("link[rel='stylesheet']");
+                    links.forEach((link) => {
+                        const url = new URL(link.href);
+                        url.searchParams.set("reload", Date.now());
+                        link.href = url.href;
+                    });
                 }
             };
 

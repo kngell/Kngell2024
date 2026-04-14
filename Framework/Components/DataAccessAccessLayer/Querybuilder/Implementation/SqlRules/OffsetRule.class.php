@@ -24,7 +24,7 @@ class OffsetRule extends AbstractRules implements QueryRulesInterface
         $offsetValue = $normalized[0];
         $parameterName = $this->createOffsetParameter($offsetValue);
 
-        return ":{$parameterName}";
+        return "{$parameterName}";
     }
 
     protected function normalize(array $arrayInput): array

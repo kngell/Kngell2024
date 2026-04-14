@@ -19,23 +19,37 @@ class EntityRelationManager implements EntityRelationManagerInterface
         if (empty($tableAlias)) {
             return $name;
         }
+
         foreach ($tableAlias as $logicalKey => $alias) {
             $prefix = $alias . '_';
 
             if (str_starts_with($name, $prefix)) {
                 $physicalTable = $tableMap[$logicalKey] ?? $logicalKey;
-                $fieldName = substr($name, strlen($alias) + 1);
+                // $fieldName = substr($name, strlen($alias) + 1);
+                $fieldName = substr($name, strlen($prefix));
 
+                // Return as relationship.field for relationships
                 if (str_contains($logicalKey, '.')) {
                     return $logicalKey . '.' . $fieldName;
                 }
                 if (isset($relationships[$physicalTable])) {
                     return $physicalTable . '.' . $fieldName;
                 }
+
                 return $fieldName;
             }
         }
+
         return $name;
+    }
+
+    public function resetCurrentPointers(array &$relatedEntities): void
+    {
+        foreach ($relatedEntities as $key => &$data) {
+            if (isset($data['_is_collection'])) {
+                $data['_current_id'] = null;
+            }
+        }
     }
 
     public function hasActiveRelationships(
@@ -43,18 +57,7 @@ class EntityRelationManager implements EntityRelationManagerInterface
         array $tableAlias,
         array &$relatedEntities,
     ): bool {
-        if (!empty($relatedEntities)) {
-            return true;
-        }
-        $relationships = $entity->getRelationships();
-
-        foreach ($tableAlias as $relation => $alias) {
-            $baseRelation = $this->getBaseTable($relation);
-            if (isset($relationships[$baseRelation])) {
-                return true;
-            }
-        }
-        return false;
+        return !empty($relatedEntities) || !empty($tableAlias);
     }
 
     public function hydrateRelatedEntity(
@@ -65,112 +68,75 @@ class EntityRelationManager implements EntityRelationManagerInterface
         array $tableAlias,
         array $tableMap,
         array &$relatedEntities,
+        ?array $relationshipConfig = null,
     ): void {
-        $entityClass = $propertyName = $entity->getRelationPropertyName($dbRelationName);
-        $property = $entity->getProperty($propertyName);
-        $isCollection = $property && $property->getType() &&
-                       $property->getType()->getName() === 'array';
-        $mappingKey = $entity->getRelationshipKeyFromDataKey($dbRelationName);
+        // Get config if not provided
+        if ($relationshipConfig === null) {
+            $relationships = $entity->getRelationships();
+            $relationshipConfig = $relationships[$dbRelationName] ?? null;
+
+            if (!$relationshipConfig) {
+                throw new RuntimeException("Unknown relationship: {$dbRelationName}");
+            }
+        }
+
+        $entityClass = $relationshipConfig['class'];
+        $isCollection = ($relationshipConfig['collection'] ?? false) ||
+                       ($relationshipConfig['type'] ?? '') === 'one-to-many';
+
         if ($isCollection) {
-            $this->hydrateCollectionItem($mappingKey, $field, $value, $relatedEntities, $entity);
+            $this->hydrateCollectionItem(
+                relationName: $dbRelationName,
+                entityClass: $entityClass,
+                field: $field,
+                value: $value,
+                relatedEntities: $relatedEntities,
+                parentEntity: $entity,
+                relationshipConfig: $relationshipConfig,
+            );
             return;
         }
 
-        if (!array_key_exists($mappingKey, $relatedEntities)) {
-            $relatedEntities[$mappingKey] = $this->factory->create(
-                $entityClass,
-                $this->extractNestedTableAlias($mappingKey, $tableAlias),
-                $this->extractNestedTableMap($mappingKey, $tableAlias, $tableMap),
-            );
+        // Single entity (one-to-one)
+        if (!isset($relatedEntities[$dbRelationName])) {
+            $relatedEntities[$dbRelationName] = [
+                '_entity' => $this->factory->create(
+                    $entityClass,
+                    $this->extractNestedTableAlias($dbRelationName, $tableAlias),
+                    $this->extractNestedTableMap($dbRelationName, $tableAlias, $tableMap),
+                ),
+                '_config' => $relationshipConfig,
+            ];
         }
 
-        if ($field === '_all_data') {
-            $relatedEntities[$mappingKey]->assign($value);
+        if ($field === '_all_data' && is_array($value)) {
+            $relatedEntities[$dbRelationName]['_entity']->assign($value);
         } else {
-            $relatedEntities[$mappingKey]->__set($field, $value);
+            $relatedEntities[$dbRelationName]['_entity']->__set($field, $value);
         }
     }
 
     public function completeRelatedEntityHydration(Entity $entity, array $relatedEntities): void
     {
-        foreach ($relatedEntities as $officialKey => $relatedData) {
-            // 1. Get Class (e.g., ProductVariationShow)
-            $entityClass = $entity->getRelationClassName($officialKey);
+        foreach ($relatedEntities as $relationKey => $data) {
+            // Get relationship config
+            $relationships = $entity->getRelationships();
+            $config = $relationships[$relationKey] ?? ($data['_config'] ?? null);
 
-            // 2. Get Property (e.g., productVariationShow)
-            $propertyName = $entity->getRelationPropertyName($officialKey);
-
-            if (!$entityClass) {
+            if (!$config) {
                 continue;
             }
 
-            try {
-                $property = $entity->getProperty($propertyName);
-                // Check if it's a collection (array)
-                $isCollection = $property && $property->getType() && $property->getType()->getName() === 'array';
+            $isCollection = ($config['collection'] ?? false) ||
+                           ($config['type'] ?? '') === 'one-to-many';
 
-                if ($isCollection && is_array($relatedData) && isset($relatedData['_is_collection'])) {
-                    foreach ($relatedData['items'] as $itemData) {
-                        // Force entity creation to trigger recursive hydration
-                        $relatedEntity = ($itemData instanceof Entity)
-                            ? $itemData
-                            : $this->factory->createFromClient($entityClass, $itemData);
-
-                        // Use the property name here
-                        $this->addToEntityCollection($entity, $propertyName, $relatedEntity);
-                    }
-                } else {
-                    // Single entity logic
-                    $relatedEntity = ($relatedData instanceof Entity)
-                        ? $relatedData
-                        : $this->factory->createFromClient($entityClass, $relatedData);
-
-                    $property->setValue($entity, $relatedEntity);
-                }
-            } catch (Exception $e) {
-                // Property might not exist or be typed differently
+            if ($isCollection && isset($data['_is_collection'])) {
+                $this->completeCollectionHydration($entity, $relationKey, $data, $config);
+            } else {
+                $this->completeSingleEntityHydration($entity, $relationKey, $data, $config);
             }
         }
     }
-    // public function completeRelatedEntityHydration(Entity $entity, array $relatedEntities): void
-    // {
-    //     foreach ($relatedEntities as $dbRelationName => $relatedData) {
-    //         // 1. Get the CLASS name (e.g., ProductVariationShow::class)
-    //         $entityClass = $entity->getRelationClassName($dbRelationName);
-
-    //         // 2. Get the PROPERTY name (e.g., 'productVariationShow')
-    //         $propertyName = $entity->getRelationPropertyName($dbRelationName);
-
-    //         if (!$entityClass) {
-    //             continue;
-    //         }
-
-    //         try {
-    //             $property = $entity->getProperty($propertyName);
-    //             $isCollection = $property && $property->getType() && $property->getType()->getName() === 'array';
-
-    //             if ($isCollection && is_array($relatedData) && isset($relatedData['_is_collection'])) {
-    //                 foreach ($relatedData['items'] as $itemData) {
-    //                     if (empty($itemData)) {
-    //                         continue;
-    //                     }
-
-    //                     // Use createFromClient to ensure recursive assign() is called
-    //                     $relatedEntity = ($itemData instanceof Entity)
-    //                         ? $itemData
-    //                         : $this->factory->createFromClient($entityClass, $itemData);
-
-    //                     $this->addToEntityCollection($entity, $dbRelationName, $relatedEntity);
-    //                 }
-    //             } elseif (!$isCollection && $relatedData instanceof Entity) {
-    //                 $relatedData->completeHydration();
-    //                 $property->setValue($entity, $relatedData);
-    //             }
-    //         } catch (Exception $e) {
-    //             // Handle missing properties
-    //         }
-    //     }
-    // }
 
     public function extractPrefixedData(array $data, string $prefix): array
     {
@@ -208,38 +174,206 @@ class EntityRelationManager implements EntityRelationManagerInterface
 
         foreach ($collectionData as $data) {
             $childEntity = $this->factory->createFromClient($entityClass, $data);
-            $addMethod = 'add' . ucfirst(StringUtils::camelCase($relationName));
+            $addMethod = 'add' . ucfirst(StringUtils::snakeCaseToCamelCase($relationName));
             if (method_exists($parent, $addMethod)) {
                 $parent->$addMethod($childEntity);
             }
         }
     }
 
-    private function transformDataForChildEntity(array $data, array $childTableAlias): array
+    private function completeSingleEntityHydration(Entity $entity, string $relationKey, mixed $data, array $config): void
     {
-        $transformed = [];
+        $entityClass = $config['class'];
+        $propertyName = $entity->getRelationPropertyName($relationKey);
 
-        foreach ($data as $key => $value) {
-            if (str_contains($key, '.')) {
-                $parts = explode('.', $key);
+        try {
+            if (is_array($data) && isset($data['_entity']) && $data['_entity'] instanceof Entity) {
+                $relatedEntity = $data['_entity'];
+                $relatedEntity->completeHydration();
+            } else {
+                $relatedEntity = $this->factory->create(
+                    $entityClass,
+                    $this->extractNestedTableAlias($relationKey, $entity->getTableAlias()),
+                    $this->extractNestedTableMap($relationKey, $entity->getTableAlias(), $entity->getTableMap()),
+                );
 
-                $current = &$transformed;
-                foreach ($parts as $i => $part) {
-                    if ($i === count($parts) - 1) {
-                        $current[$part] = $value;
-                    } else {
-                        if (!isset($current[$part])) {
-                            $current[$part] = [];
-                        }
-                        $current = &$current[$part];
+                if (is_array($data)) {
+                    foreach ($data as $key => $value) {
+                        $relatedEntity->__set($key, $value);
                     }
                 }
-            } else {
-                $transformed[$key] = $value;
+                $relatedEntity->completeHydration();
             }
+
+            $property = $entity->getProperty($propertyName);
+            if ($property) {
+                $property->setValue($entity, $relatedEntity);
+            }
+        } catch (Exception $e) {
+            // Log error but continue
+            error_log("Failed to hydrate relationship {$relationKey}: " . $e->getMessage());
+        }
+    }
+
+    private function setEntityCollection(Entity $entity, string $propertyName, array $items): void
+    {
+        try {
+            $property = $entity->getProperty($propertyName);
+            if ($property && $property->getType() && $property->getType()->getName() === 'array') {
+                $property->setValue($entity, $items);
+                return;
+            }
+
+            // Try setter method
+            $setMethod = 'set' . ucfirst($propertyName);
+            if (method_exists($entity, $setMethod)) {
+                $entity->$setMethod($items);
+                return;
+            }
+
+            // Try adder method
+            $singularName = rtrim($propertyName, 's');
+            $addMethod = 'add' . ucfirst($singularName);
+            if (method_exists($entity, $addMethod)) {
+                foreach ($items as $item) {
+                    $entity->$addMethod($item);
+                }
+                return;
+            }
+
+            // Fallback: directly set property via reflection
+            $reflection = CustomReflection::getInstance($entity)->getClass();
+            $property = $reflection->getProperty($propertyName);
+            $property->setValue($entity, $items);
+        } catch (Exception $e) {
+            error_log("Failed to set collection {$propertyName}: " . $e->getMessage());
+        }
+    }
+
+    private function completeCollectionHydration(Entity $entity, string $relationName, array $collectionData, array $config): void
+    {
+        $entityClass = $config['class'];
+        $propertyName = $entity->getRelationPropertyName($relationName);
+
+        $items = [];
+        foreach ($collectionData['items'] as $itemId => $itemData) {
+            $nestedEntity = $this->factory->create(
+                $entityClass,
+                $this->extractNestedTableAlias($relationName, $entity->getTableAlias()),
+                $this->extractNestedTableMap($relationName, $entity->getTableAlias(), $entity->getTableMap()),
+            );
+
+            // Set entity data
+            foreach ($itemData['_entity_data'] as $key => $value) {
+                $nestedEntity->__set($key, $value);
+            }
+
+            // Handle nested relationship data
+            if (!empty($itemData['_nested'])) {
+                foreach ($itemData['_nested'] as $nestedPath => $nestedValue) {
+                    $nestedEntity->__set($nestedPath, $nestedValue);
+                }
+            }
+
+            // Complete hydration recursively
+            $nestedEntity->completeHydration();
+            $items[] = $nestedEntity;
         }
 
-        return $transformed;
+        // Set collection on parent entity
+        $this->setEntityCollection($entity, $propertyName, $items);
+    }
+
+    private function hydrateCollectionItem(
+        string $relationName,
+        string $entityClass,
+        string $field,
+        mixed $value,
+        array &$relatedEntities,
+        Entity $parentEntity,
+        array $relationshipConfig,
+    ): void {
+        if (!isset($relatedEntities[$relationName])) {
+            $relatedEntities[$relationName] = [
+                '_is_collection' => true,
+                '_entity_class' => $entityClass,
+                '_config' => $relationshipConfig,
+                'items' => [],
+                '_current_id' => null,
+                '_pending_data' => [],
+            ];
+        }
+
+        $collection = &$relatedEntities[$relationName];
+
+        if ($value === null) {
+            return;
+        }
+
+        $primaryKeyDbField = $this->factory->getPrimaryKeyField($entityClass);
+
+        if ($field === $primaryKeyDbField && $value === null) {
+            $collection['_skip_row'] = true;
+            return;
+        }
+
+        if (($collection['_skip_row'] ?? false) || $value === null) {
+            return;
+        }
+
+        // Handle nested relationship fields (containing dots)
+        if (str_contains($field, '.')) {
+            if (isset($collection['_current_id'])) {
+                $currentId = $collection['_current_id'];
+                if (!isset($collection['items'][$currentId])) {
+                    $collection['items'][$currentId] = [
+                        '_entity_data' => [],
+                        '_nested' => [],
+                    ];
+                }
+                $collection['items'][$currentId]['_nested'][$field] = $value;
+            } else {
+                $collection['_pending_data'][$field] = $value;
+            }
+            return;
+        }
+
+        // Primary key field - start new item
+        if ($field === $primaryKeyDbField) {
+            $collection['_skip_row'] = false;
+            $itemId = (string) $value;
+
+            if (!isset($collection['items'][$itemId])) {
+                $collection['items'][$itemId] = [
+                    '_entity_data' => [$primaryKeyDbField => $value],
+                    '_nested' => [],
+                ];
+            }
+
+            $collection['_current_id'] = $itemId;
+            $collection['items'][$itemId]['_entity_data'][$primaryKeyDbField] = $value;
+
+            // Apply any pending data for this item
+            if (isset($collection['_pending_data'])) {
+                foreach ($collection['_pending_data'] as $pField => $pValue) {
+                    if (str_contains($pField, '.')) {
+                        $collection['items'][$itemId]['_nested'][$pField] = $pValue;
+                    } else {
+                        $collection['items'][$itemId]['_entity_data'][$pField] = $pValue;
+                    }
+                }
+                $collection['_pending_data'] = [];
+            }
+            return;
+        }
+
+        // Regular field (not primary key, not nested)
+        if (isset($collection['_current_id'])) {
+            $currentId = $collection['_current_id'];
+            $collection['items'][$currentId]['_entity_data'][$field] = $value;
+        } else {
+            $collection['_pending_data'][$field] = $value;
+        }
     }
 
     private function extractNestedTableAlias(string $relationName, array $parentTableAlias): array
@@ -251,15 +385,6 @@ class EntityRelationManager implements EntityRelationManagerInterface
             if (str_starts_with($key, $prefix)) {
                 $nestedKey = substr($key, strlen($prefix));
                 $nested[$nestedKey] = $alias;
-            }
-        }
-
-        if (empty($nested)) {
-            foreach ($parentTableAlias as $key => $alias) {
-                if ($this->isChildOfRelation($key, $relationName)) {
-                    $nestedKey = $this->extractNestedKey($key, $relationName);
-                    $nested[$nestedKey] = $alias;
-                }
             }
         }
 
@@ -277,248 +402,7 @@ class EntityRelationManager implements EntityRelationManagerInterface
                 $nested[$nestedKey] = $physicalTable;
             }
         }
-        if (isset($parentTableMap[$relationName])) {
-            $nested[$relationName] = $parentTableMap[$relationName];
-        }
 
         return $nested;
-    }
-
-    private function isChildOfRelation(string $key, string $relationName): bool
-    {
-        $pattern = preg_quote($relationName, '/') . '\\.';
-        return (bool) preg_match('/^' . $pattern . '/', $key);
-    }
-
-    private function extractNestedKey(string $key, string $relationName): string
-    {
-        $prefix = $relationName . '.';
-        if (str_starts_with($key, $prefix)) {
-            return substr($key, strlen($prefix));
-        }
-        return $key;
-    }
-
-    private function hydrateCollectionItem(
-        string $relationName,
-        string $field,
-        mixed $value,
-        array &$relatedEntities,
-        Entity $parentEntity,
-    ): void {
-        if (!array_key_exists($relationName, $relatedEntities)) {
-            $relatedEntities[$relationName] = [
-                '_is_collection' => true,
-                'items' => [],
-            ];
-        }
-
-        $collection = &$relatedEntities[$relationName];
-
-        if (null === $value) {
-            return;
-        }
-
-        $entityClass = $parentEntity->getRelationshipsName($relationName);
-        $primaryKeyField = $this->factory->getPrimaryKeyField($entityClass);
-
-        // --- CASE 1: CACHE/BULK DATA (_all_data is an array of items) ---
-        // If we are restoring a collection from cache, $value is usually [[id=>1,...], [id=>2,...]]
-        if ($field === '_all_data' && is_array($value) && ArrayUtils::isArrayList($value)) {
-            foreach ($value as $index => $itemData) {
-                $itemId = (isset($itemData[$primaryKeyField]))
-                    ? (string) $itemData[$primaryKeyField]
-                    : (string) $index;
-
-                if (!isset($collection['items'][$itemId])) {
-                    $collection['items'][$itemId] = [];
-                }
-
-                $collection['items'][$itemId] = array_merge($collection['items'][$itemId], $itemData);
-            }
-            return;
-        }
-
-        // --- CASE 2: CARTESIAN / SINGLE ITEM DATA ---
-        $itemId = null;
-
-        // Try to determine the Item ID for this specific row
-        if ($field === '_all_data' && is_array($value) && isset($value[$primaryKeyField])) {
-            $itemId = (string) $value[$primaryKeyField];
-        } elseif ($field === $primaryKeyField || $field === $relationName . '.' . $primaryKeyField) {
-            $itemId = (string) $value;
-        }
-
-        if ($itemId !== null) {
-            if (!isset($collection['items'][$itemId])) {
-                $collection['items'][$itemId] = [];
-            }
-            $collection['_current_id'] = $itemId;
-
-            if ($field === '_all_data' && is_array($value)) {
-                $collection['items'][$itemId] = array_merge($collection['items'][$itemId], $value);
-            } else {
-                $collection['items'][$itemId][$field] = $value;
-            }
-
-            // Flush any data that arrived before the ID was known
-            if (isset($collection['_pending_data'])) {
-                foreach ($collection['_pending_data'] as $pField => $pValue) {
-                    $collection['items'][$itemId][$pField] = $pValue;
-                }
-                unset($collection['_pending_data']);
-            }
-            return;
-        }
-
-        // --- CASE 3: PENDING DATA (ID not yet found in this row) ---
-        if (isset($collection['_current_id'])) {
-            $currentId = $collection['_current_id'];
-            if ($field === '_all_data' && is_array($value)) {
-                $collection['items'][$currentId] = array_merge($collection['items'][$currentId], $value);
-            } else {
-                $collection['items'][$currentId][$field] = $value;
-            }
-        } else {
-            if (!isset($collection['_pending_data'])) {
-                $collection['_pending_data'] = [];
-            }
-            $collection['_pending_data'][$field] = $value;
-        }
-    }
-    // private function hydrateCollectionItem(
-    //     string $relationName,
-    //     string $field,
-    //     mixed $value,
-    //     array &$relatedEntities,
-    //     Entity $parentEntity,
-    // ): void {
-    //     if (!array_key_exists($relationName, $relatedEntities)) {
-    //         $relatedEntities[$relationName] = [
-    //             '_is_collection' => true,
-    //             'items' => [],
-    //         ];
-    //     }
-
-    //     $collection = &$relatedEntities[$relationName];
-
-    //     if (null === $value) {
-    //         return;
-    //     }
-
-    //     $entityClass = $parentEntity->getRelationshipsName($relationName);
-    //     $primaryKeyField = $this->factory->getPrimaryKeyField($entityClass);
-
-    //     $itemId = null;
-
-    //     if ($field === '_all_data' && is_array($value) && isset($value[$primaryKeyField])) {
-    //         $itemId = (string) $value[$primaryKeyField];
-    //     } elseif ($field === $primaryKeyField || $field === $relationName . '.' . $primaryKeyField) {
-    //         $itemId = (string) $value;
-    //     }
-
-    //     if ($itemId !== null) {
-    //         if (!isset($collection['items'][$itemId])) {
-    //             $collection['items'][$itemId] = [];
-    //         }
-    //         $collection['_current_id'] = $itemId;
-
-    //         if ($field === '_all_data' && is_array($value)) {
-    //             $collection['items'][$itemId] = array_merge($collection['items'][$itemId], $value);
-    //         } else {
-    //             $collection['items'][$itemId][$field] = $value;
-    //         }
-
-    //         if (isset($collection['_pending_data'])) {
-    //             foreach ($collection['_pending_data'] as $pField => $pValue) {
-    //                 $collection['items'][$itemId][$pField] = $pValue;
-    //             }
-    //             unset($collection['_pending_data']);
-    //         }
-    //         return;
-    //     }
-
-    //     if (isset($collection['_current_id'])) {
-    //         $currentId = $collection['_current_id'];
-    //         if ($field === '_all_data' && is_array($value)) {
-    //             $collection['items'][$currentId] = array_merge($collection['items'][$currentId], $value);
-    //         } else {
-    //             $collection['items'][$currentId][$field] = $value;
-    //         }
-    //     } else {
-    //         if (!isset($collection['_pending_data'])) {
-    //             $collection['_pending_data'] = [];
-    //         }
-    //         $collection['_pending_data'][$field] = $value;
-    //     }
-    // }
-
-    private function addToEntityCollection(Entity $entity, string $relationName, Entity $item): void
-    {
-        $getMethod = 'get' . ucfirst(StringUtils::camelCase($relationName));
-        if (method_exists($entity, $getMethod)) {
-            $currentCollection = $entity->$getMethod() ?? [];
-
-            // Check if item already exists (by ID or object identity)
-            $exists = false;
-            foreach ($currentCollection as $existingItem) {
-                if ($existingItem === $item ||
-                     $existingItem->getfieldValue($existingItem->getEntitykeyField()) === $item->getfieldValue($item->getEntitykeyField())) {
-                    $exists = true;
-                    break;
-                }
-            }
-
-            if (!$exists) {
-                $currentCollection[] = $item;
-
-                $setMethod = 'set' . ucfirst(StringUtils::camelCase($relationName));
-                if (method_exists($entity, $setMethod)) {
-                    $entity->$setMethod($currentCollection);
-                    return;
-                }
-            }
-        }
-        $addMethod = 'add' . ucfirst(StringUtils::camelCase($relationName));
-
-        if (method_exists($entity, $addMethod)) {
-            $entity->$addMethod($item);
-            return;
-        }
-
-        $getMethod = 'get' . ucfirst($relationName);
-        $setMethod = 'set' . ucfirst($relationName);
-
-        if (method_exists($entity, $getMethod) && method_exists($entity, $setMethod)) {
-            $currentCollection = $entity->$getMethod();
-            $currentCollection[] = $item;
-            $entity->$setMethod($currentCollection);
-            return;
-        }
-
-        try {
-            $relationKey = $entity->getRelationClassName($relationName);
-
-            if (!$relationKey) {
-                return;
-            }
-
-            $property = $entity->getProperty($relationKey);
-            if ($property->getType()->getName() === 'array') {
-                $currentValue = $property->getValue($entity) ?? [];
-                $currentValue[] = $item;
-                $property->setValue($entity, $currentValue);
-            }
-        } catch (Exception $e) {
-        }
-    }
-
-    private function getBaseTable(string $logicalTable): string
-    {
-        if (preg_match('/^(.+)_join_\d+$/', $logicalTable, $matches)) {
-            return $matches[1];
-        }
-
-        return $logicalTable;
     }
 }

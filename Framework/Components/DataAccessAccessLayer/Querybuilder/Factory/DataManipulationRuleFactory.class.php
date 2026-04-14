@@ -5,13 +5,13 @@ declare(strict_types=1);
 class DataManipulationRuleFactory extends AbstractRuleFactory
 {
     private const SUPPORTED_TYPES = [
-        SqlStatementType::INSERT,
-        SqlStatementType::UPDATE,
-        SqlStatementType::DELETE,
-        SqlStatementType::MERGE,
+        SqlStatement::INSERT,
+        SqlStatement::UPDATE,
+        SqlStatement::DELETE,
+        SqlStatement::MERGE,
     ];
 
-    public function supports(SqlStatementType $statement): bool
+    public function supports(SqlStatement $statement): bool
     {
         return in_array($statement, self::SUPPORTED_TYPES);
     }
@@ -20,25 +20,34 @@ class DataManipulationRuleFactory extends AbstractRuleFactory
     {
         $statement = SqlClause::tryFrom(strtoupper($method))->toStatementType();
 
-        return match($statement) {
-            SqlStatementType::INSERT => $this->initialize(new InsertRules(
+        $context = $this->state->statementContext;
+
+        return match(true) {
+            $statement === SqlStatement::INSERT => $this->initialize(new InsertRules(
                 $this->em,
                 $method,
                 $this->state,
                 $data,
             )),
-            SqlStatementType::UPDATE => $this->initialize(new SetRules(
+            $statement === SqlStatement::UPDATE && $context === StatementType::SIMPLE_UPDATE => $this->initialize(new SetRule(
                 $this->em,
                 $method,
                 $this->state,
                 $data,
             )),
-            SqlStatementType::DELETE => $this->initialize(new DeleteRules(
+            $statement === SqlStatement::UPDATE && $context === StatementType::BULK_UPDATE => $this->initialize(new BulkSetRule(
                 $this->em,
                 $method,
                 $this->state,
                 $data,
             )),
+            $statement === SqlStatement::UPDATE && $context === StatementType::BULK_UPDATE_MARIADB => $this->initialize(new BulkSetRule(
+                $this->em,
+                $method,
+                $this->state,
+                $data,
+            )),
+
             default => $this->initialize(new GenericRule(
                 $this->em,
                 $method,

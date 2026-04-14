@@ -25,12 +25,14 @@ final class AppConfig
     private string|null $routeHandler;
     private string|null $newRouter;
     private array $containerProviders = [];
+    private bool $isCli = false;
 
     /** @var AppConfig */
     private static $instance;
 
     private function __construct()
     {
+        $this->isCli = php_sapi_name() === 'cli';
     }
 
     final public function setup(): self
@@ -69,7 +71,18 @@ final class AppConfig
      */
     public function setErrorHandler(mixed $level = null): self
     {
-        $this->errorHandling = $this->config['error_handler']; //$errorHandling;
+        if (isset($this->config['error_handler'])) {
+            $this->errorHandling = $this->config['error_handler'];
+        } else {
+            $this->errorHandling = [
+                'error' => function ($errno, $errstr, $errfile, $errline) {
+                    return true;
+                },
+                'exception' => function (Throwable $e) {
+                    throw $e;
+                },
+            ];
+        }
         $this->errorLevel = $level;
         return $this;
     }
@@ -144,36 +157,22 @@ final class AppConfig
         return $this;
     }
 
-    /**
-     * Set the application container providers configuration from the session.yml file.
-     *
-     * @param array $ymlProviders
-     *
-     * @return self
-     */
     public function setContainerProviders(array $ymlProviders): self
     {
         $this->containerProviders = $ymlProviders;
         return $this;
     }
 
-    /**
-     * Turn on global session from public/index.php bootstrap file to make the session
-     * object available globally throughout the application using the GlobalManager object.
-     *
-     * @return bool
-     */
+    public function isCli(): bool
+    {
+        return $this->isCli;
+    }
+
     public function isSessionGlobal(): bool
     {
         return isset($this->isSessionGlobal) && $this->isSessionGlobal === true ? true : false;
     }
 
-    /**
-     * Turn on global caching from public/index.php bootstrap file to make the cache
-     * object available globally throughout the application using the GlobalManager object.
-     *
-     * @return bool
-     */
     public function isCacheGlobal(): bool
     {
         return isset($this->isCacheGlobal) && $this->isCacheGlobal === true ? true : false;

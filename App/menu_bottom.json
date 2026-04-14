@@ -1,0 +1,26 @@
+{
+  "Phone": {
+    "name": "Phone",
+    "icon": "icon-phone"
+  },
+  "Computers": {
+    "name": "Computers",
+    "icon": "icon-computers"
+  },
+  "Smart Watches": {
+    "name": "Smart Watches",
+    "icon": "icon-smart-watches"
+  },
+  "Cameras": {
+    "name": "Cameras",
+    "icon": "icon-cameras"
+  },
+  "Headphones": {
+    "name": "Headphones",
+    "icon": "icon-headphones"
+  },
+  "Gaming": {
+    "name": "Gaming",
+    "icon": "icon-gaming"
+  }
+}

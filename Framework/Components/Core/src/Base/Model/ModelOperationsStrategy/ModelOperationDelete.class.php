@@ -6,29 +6,56 @@ class ModelOperationDelete extends AbstractModelBaseOperations
 {
     public function execute(EntityManagerInterface $em, Entity $entity, mixed $params): QueryResult
     {
-        [$targetEntity, $conditions] = $this->utils->processConditions($entity, $params);
+        [$targetEntity, $conditions,$deleteOption] = $this->utils->processConditions($entity, $params);
 
-        if ($targetEntity instanceof Entity) {
-            return $this->softDelete($em, $targetEntity);
+        if ($targetEntity instanceof SoftDeletableInterface && $deleteOption === 'archive') {
+            return $this->softDelete($em, $targetEntity, $conditions);
         }
 
-        $em->getRepository($targetEntity)->delete($conditions);
-        return $this->getQueryResult($em);
+        return $this->hardDelete($em, $targetEntity, $conditions);
     }
 
-    private function softDelete(EntityManagerInterface $em, Entity $entity): QueryResult
+    private function softDelete(EntityManagerInterface $em, SoftDeletableInterface|Entity $entity, array $conditions = []): QueryResult
     {
-        if ($entity instanceof SoftDeletableInterface) {
-            $entity->softDelete();
+        if ($entity->isDeleted()) {
+            $result = $this->getQueryResult($em);
+            $result->setSkipped(true, 'Entity is already soft deleted');
+            return $result;
         }
+        if (!$entity->isTracking()) {
+            $entity->track();
+        }
+
+        $entity->softDelete();
 
         if ($entity instanceof TimestampableInterface) {
             $entity->setUpdatedAt(new DateTimeImmutable());
         }
 
         $em->setEntity($entity);
-        $em->getRepository($entity)->update([]);
+        $repository = $em->getRepository($entity);
+        $repository->update($em->table(), $conditions);
 
-        return $this->getQueryResult($em);
+        $result = $this->getQueryResult($em);
+
+        if ($result->getAffectedRows() === 0) {
+            $result->setSkipped(true, 'No records found to delete');
+        }
+
+        return $result;
+    }
+
+    private function hardDelete(EntityManagerInterface $em, Entity $entity, array $conditions = []): QueryResult
+    {
+        $repository = $em->getRepository($entity);
+        $repository->delete($conditions);
+
+        $result = $this->getQueryResult($em);
+
+        if ($result->getAffectedRows() === 0) {
+            $result->setSkipped(true, 'No records found to delete');
+        }
+
+        return $result;
     }
 }

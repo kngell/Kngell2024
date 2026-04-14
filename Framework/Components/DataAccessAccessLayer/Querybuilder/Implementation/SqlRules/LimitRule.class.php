@@ -25,7 +25,7 @@ class LimitRule extends AbstractRules implements QueryRulesInterface
         $limitValue = $normalized[0];
         $parameterName = $this->createParameter($limitValue, 'limit', $this->em->getTableAliasHelper(), null, $this->em->getEntity());
 
-        return ":{$parameterName}";
+        return "{$parameterName}";
     }
 
     protected function normalize(array $arrayInput): array

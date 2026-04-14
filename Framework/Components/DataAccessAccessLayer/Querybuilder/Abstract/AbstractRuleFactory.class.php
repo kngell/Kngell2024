@@ -7,7 +7,8 @@ abstract class AbstractRuleFactory extends AbstractRulesFactory implements RuleF
     public function __construct(
         protected EntityManagerInterface $em,
         protected QueryState $state,
+        protected BulkRowFactory $bulkRowFactory,
     ) {
-        parent::__construct($em, $state);
+        parent::__construct($em, $state, $bulkRowFactory);
     }
 }

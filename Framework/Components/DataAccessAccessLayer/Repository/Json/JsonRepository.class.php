@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Repository\Enum\BulkUpdateType;
+
 class JsonRepository extends AbstractRepository implements RepositoryInterface
 {
     public function __construct(private ?string $file = null)
@@ -18,9 +20,16 @@ class JsonRepository extends AbstractRepository implements RepositoryInterface
         return 0;
     }
 
-    public function update(array $conditions): ?int
+    public function update(array $conditions = []): int
     {
         return 0;
+    }
+
+    public function bulkUpdate(
+        mixed $data = null,
+        array $conditions = [],
+        ?BulkUpdateType $type = null,
+    ): void {
     }
 
     public function delete(array $conditions = []): int

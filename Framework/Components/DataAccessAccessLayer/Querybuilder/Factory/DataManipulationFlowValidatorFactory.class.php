@@ -7,17 +7,18 @@ class DataManipulationFlowValidatorFactory implements FlowValidatorFactoryInterf
     {
     }
 
-    public function supports(SqlStatementType $statement): bool
+    public function supports(SqlStatement $statement): bool
     {
-        return in_array($statement, [SqlStatementType::INSERT, SqlStatementType::UPDATE, SqlStatementType::DELETE, SqlStatementType::MERGE]);
+        return in_array($statement, [SqlStatement::INSERT, SqlStatement::UPDATE, SqlStatement::DELETE, SqlStatement::MERGE]);
     }
 
     public function create(): FlowValidatorInterface
     {
-        $statementType = $this->component->getSqlStatementType();
+        $statementType = $this->component->getStatement();
         return match (true) {
-            $statementType === SqlStatementType::INSERT => new QueryFlowValidatorForInsert($this->component),
-            $statementType === SqlStatementType::UPDATE => new QueryFlowValidatorForUpdate($this->component),
+            $statementType === SqlStatement::INSERT => new QueryFlowValidatorForInsert($this->component),
+            $statementType === SqlStatement::UPDATE => new QueryFlowValidatorForUpdate($this->component),
+            $statementType === SqlStatement::DELETE => new QueryFlowValidatorForDelete($this->component),
             default => new GenericQueryFlowValidator($this->component)
         };
     }

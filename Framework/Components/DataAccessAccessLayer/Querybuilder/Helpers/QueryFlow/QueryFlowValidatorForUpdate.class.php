@@ -15,7 +15,8 @@ class QueryFlowValidatorForUpdate implements FlowValidatorInterface
 
     private function validateRequiredClauses(array $queryFlow): void
     {
-        if (!isset($queryFlow['update'])) {
+        $update = isset($queryFlow['update']) || isset($queryFlow['bulkUpdate']);
+        if (!$update) {
             throw new QueryFlowException('UPDATE query requires update statement');
         }
         if (!isset($queryFlow['set'])) {

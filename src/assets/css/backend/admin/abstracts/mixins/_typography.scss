@@ -1,0 +1,33 @@
+@use "css/backend/admin/abstracts/variables" as *;
+
+@mixin text-display-m($weight: regular) {
+  @include typography(display-m, $weight);
+}
+
+@mixin text-display-s($weight: regular) {
+  @include typography(display-s, $weight);
+}
+
+@mixin text-display-xs($weight: regular) {
+  @include typography(display-xs, $weight);
+}
+
+@mixin text-l($weight: regular) {
+  @include typography(text-l, $weight);
+}
+
+@mixin text-m($weight: regular) {
+  @include typography(text-m, $weight);
+}
+
+@mixin text-s($weight: regular) {
+  @include typography(text-s, $weight);
+}
+
+@mixin gradient-bg($start, $end) {
+  background: linear-gradient(135deg, $start 0%, $end 100%);
+}
+
+@mixin card-shadow {
+  box-shadow: $soft-shadow;
+}

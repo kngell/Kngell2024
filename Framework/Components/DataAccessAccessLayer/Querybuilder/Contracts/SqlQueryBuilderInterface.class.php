@@ -10,5 +10,7 @@ interface SqlQueryBuilderInterface
 
     public function execute(): array;
 
-    public function getStatementType(): SqlStatementType;
+    public function getStatement(): ?SqlStatement;
+
+    public function setParent(?SqlComponent $parent): SqlComponent;
 }

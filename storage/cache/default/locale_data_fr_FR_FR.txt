@@ -1,1 +1,0 @@
-{"__type__":"json","data":{"decimal_separator":",","thousands_separator":".","fraction_digits":2,"date_format":"d\/m\/Y","datetime_format":"d\/m\/Y H:i:s","time_format":"H:i:s","first_day_of_week":1,"currency_position":"after","locale_name":"fr_FR","language":"fr","country":"FR"}}

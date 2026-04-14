@@ -11,11 +11,9 @@ interface SqlSelectQueryBuilderInterface extends SqlQueryBuilderInterface
     // =============================================
     public function select(string ...$columns): self;
 
-    public function with(string $cteName, Closure $closure): self;
-
     public function distinct(bool $enable = true): self;
 
-    public function from(null|string|Closure $table = null, ?string $alias = null): self;
+    public function from(mixed $table, ?string $alias = null): self;
 
     public function groupBy(string ...$columns): self;
 
@@ -81,7 +79,11 @@ interface SqlSelectQueryBuilderInterface extends SqlQueryBuilderInterface
     // ===========================================
     public function andWhere(mixed ...$conditions): self;
 
+    public function and(mixed ...$conditions): self;
+
     public function orWhere(mixed ...$conditions): self;
+
+    public function or(mixed ...$conditions): self;
 
     // ===========================================
     // SET COMBINATION

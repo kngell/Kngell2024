@@ -2,13 +2,6 @@
 
 declare(strict_types=1);
 
-/**
- * AuthMiddleware - Responsible for authenticating users.
- *
- * This middleware is responsible for:
- * 1. Authenticating users via tokens or session
- * 2. Making the authenticated user available for injection in controllers
- */
 class AuthMiddleware implements MiddlewareInterface
 {
     public function __construct(
@@ -18,18 +11,12 @@ class AuthMiddleware implements MiddlewareInterface
 
     public function process(Request $request, RequestHandlerInterface $next): Response|string
     {
-        // First attempt to authenticate via token (API authentication)
         $user = $this->authenticateViaToken($request);
 
-        // If token authentication failed, try session authentication
         if (!$user) {
             $user = $this->authenticateViaSession();
         }
-
-        // Make user available for injection in controllers (even if null)
-        // $user = App::diget('current.user');
         App::getInstance()->instance('current.user', $user);
-
         return $next->handle($request);
     }
 
@@ -91,6 +78,7 @@ class AuthMiddleware implements MiddlewareInterface
      */
     private function authenticateViaSession(): ?User
     {
+        return AuthService::currentUser();
         if ($this->session->exists(CURRENT_USER_SESSION_NAME)) {
             return AuthService::currentUser();
         }

@@ -5,13 +5,47 @@ product.saved: # Generic event for both create and update
     priority: 2
   - callback: SaveProductRegionalPriceListener
     priority: 3
+  - callback: CleanupProductCacheListener
+    priority: 4
   # - callback: GenerateDefaultRegionalPriceListener
   #   priority: 5
   # - callback: IndexProductSearchListener
   #   priority: 6
   # - callback: NotifyProductManagerListener
   #   priority: 7
-
+product.deleted:
+  # - callback: ProductBackupListener
+  #   priority: 0
+  # - callback: ProductVariationsCleanupListener
+  #   priority: 1
+  # - callback: CategoryCleanupListener
+  #   priority: 2
+  # - callback: RelatedProductsCleanupListener
+  #   priority: 3
+  # - callback: MediaCleanupListener
+  #   priority: 4
+  # - callback: TagAssociationsCleanupListener
+  #   priority: 5
+  # - callback: ProductRegionalPriceCleanupListener
+  #   priority: 6
+  # - callback: ProductWishlistsCleanupListener
+  #   priority: 7
+  # - callback: ReviewsCleanupListener
+  #   priority: 8
+  # - callback: SearchIndexCleanupListener
+  #   priority: 9
+  # - callback: InventoryCleanupListener
+  #   priority: 10
+  # - callback: CacheCleanupListener
+  #   priority: 11
+  # - callback: SEOCleanupListener
+  #   priority: 12
+  # - callback: AnalyticsCleanupListener
+  #   priority: 13
+  # - callback: ProductDeletionNotificationListener
+  #   priority: 14
+  - callback: CleanupPaginatedProductCacheListener
+    priority: 15
 user.registered:
   - callback: WelcomeEmailListener
     priority: 1
@@ -19,6 +53,18 @@ user.registered:
     priority: 2
   - callback: InitializeUserProfileListener
     priority: 3
+user.deleted:
+  - callback: UserDataCleanupListener
+    priority: 1
+  - callback: GDPRComplianceListener
+    priority: 2
+  - callback: UserAccountCleanupListener
+    priority: 3
+user.updated:
+  - callback: CacheInvalidationListener
+    priority: 1
+  - callback: SyncUserDataListener
+    priority: 2
 order.created:
   - callback: UpdateInventoryStockListener
     priority: 1
@@ -28,6 +74,20 @@ order.created:
     priority: 3
   - callback: UpdateOrderStatusToProcessingListener
     priority: 4
+order.updated:
+  - callback: OrderStatusChangeListener
+    priority: 1
+  - callback: OrderNotificationListener
+    priority: 2
+  - callback: InventoryUpdateListener
+    priority: 3
+order.cancelled:
+  - callback: InventoryRestockListener
+    priority: 1
+  - callback: OrderCancellationNotificationListener
+    priority: 2
+  - callback: RefundProcessingListener
+    priority: 3
 
 ResetPwEvent:
   - callback: BasicEmailListener
@@ -45,4 +105,41 @@ LogoutEvent:
     priority: 1
 PaymentEvent:
   - callback: ClearUserCartListener
+    priority: 1
+inventory.low_stock:
+  - callback: LowStockNotificationListener
+    priority: 1
+  - callback: ReorderTriggerListener
+    priority: 2
+
+inventory.out_of_stock:
+  - callback: OutOfStockNotificationListener
+    priority: 1
+  - callback: ProductStatusUpdateListener
+    priority: 2
+  - callback: BackorderProcessingListener
+    priority: 3
+admin.action:
+  - callback: AuditLogListener
+    priority: 1
+  - callback: AdminNotificationListener
+    priority: 2
+
+system.maintenance:
+  - callback: CacheWarmupListener
+    priority: 1
+  - callback: DatabaseOptimizationListener
+    priority: 2
+data_export.requested:
+  - callback: GDPRDataExportListener
+    priority: 1
+
+data_deletion.requested:
+  - callback: GDPRDataDeletionListener
+    priority: 1
+hero.saved:
+  - callback: CleanupHeroImageCacheListener
+    priority: 1
+SmallBanner.saved:
+  - callback: CleanupSmallBannerImageListener
     priority: 1

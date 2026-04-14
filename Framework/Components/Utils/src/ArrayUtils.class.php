@@ -13,6 +13,7 @@ final readonly class ArrayUtils
         if (empty($array)) {
             return null;
         }
+
         return array_values($array)[0];
     }
 
@@ -46,6 +47,23 @@ final readonly class ArrayUtils
             return true;
         }
         return empty($value);
+    }
+
+    public static function isMixed(array $array): bool
+    {
+        $keys = array_keys($array);
+        $count = count($keys);
+        if ($count === 0) {
+            return false;
+        }
+
+        $stringKeys = 0;
+        foreach ($keys as $key) {
+            if (is_string($key)) {
+                $stringKeys++;
+            }
+        }
+        return $stringKeys > 0 && $stringKeys < $count;
     }
 
     public static function isAssoc(array $array): bool
@@ -145,10 +163,21 @@ final readonly class ArrayUtils
 
     public static function isLikeKeyValuePair(array $data): bool
     {
-        if (count($data) % 2 !== 0) {
-            return true;
+        $count = count($data);
+
+        // Must have even number of elements (key-value pairs)
+        if ($count % 2 !== 0 || $count === 0) {
+            return false;
         }
-        return false;
+
+        // Validate all keys (even indexes) are strings
+        for ($i = 0; $i < $count; $i += 2) {
+            if (!is_string($data[$i])) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public static function isKeyValueList(array $data): bool

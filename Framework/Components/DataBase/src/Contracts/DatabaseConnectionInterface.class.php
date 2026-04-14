@@ -45,4 +45,16 @@ interface DatabaseConnectionInterface
     public function rollback(): bool;
 
     public function lastInsertId(string|null $name = null): string|false;
+
+    public function quote(string $value): string;
+
+    public function getAttribute(int $attribute): mixed;
+
+    public function getDriverName(): string;
+
+    public function getServerVersion(): string;
+
+    public function isMariaDB(): bool;
+
+    public function getDatabaseVersion(): float;
 }

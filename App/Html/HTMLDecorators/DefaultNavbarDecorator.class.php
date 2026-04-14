@@ -11,11 +11,12 @@ class DefaultNavbarDecorator extends AbstractHtmlDecorator
 
     public function page(): array
     {
+        $target = $this->getTarget();
         /** @var NavbarHtmlElement */
         $navElements = new NavbarHtmlElement(
-            $this->builder,
-            $this->session,
-            $this->request,
+            $target->builder,
+            $target->session,
+            $target->request,
         );
         return ['navComponent' => $navElements->display()];
     }

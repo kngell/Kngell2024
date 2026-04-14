@@ -8,16 +8,16 @@ class QueryState
         public array $tableAlias = [],
         public array $aliasCheck = [],
         public array $parameters = [],
-        public array $bindArr = [],
         public array $logicalToPhysicalMap = [],
         public array $tables = [],
-        public ?string $table = null,
         public ?string $joinContext = null,
         public bool $withAlias = false,
         public bool $distinct = false,
-        public ?string $customAlias = null,
         public bool $isSubquery = false,
         public ?string $subqueryMainTable = null,
+        public bool $isUpdate = false,
+        public bool $hasSetContent = true,
+        public ?StatementType $statementContext = null,
     ) {
     }
 
@@ -27,15 +27,15 @@ class QueryState
             tableAlias: $this->safeArrayMerge($this->tableAlias, $other->tableAlias),
             aliasCheck: $this->safeArrayMerge($this->aliasCheck, $this->addAliasCheck($other->aliasCheck)),
             parameters: $this->safeArrayMerge($this->parameters, $other->parameters),
-            bindArr: $this->safeArrayMerge($this->bindArr, $other->bindArr),
             logicalToPhysicalMap: $this->safeArrayMerge($this->logicalToPhysicalMap, $other->logicalToPhysicalMap),
             tables: $this->safeArrayMerge($this->tables, $other->tables),
-            table: $other->table ?? $this->table,
             joinContext: $other->joinContext ?? $this->joinContext,
             withAlias: $other->withAlias || $this->withAlias,
-            customAlias: $other->customAlias ?? $this->customAlias,
             isSubquery: $other->isSubquery ?? $this->isSubquery,
             subqueryMainTable: $other->subqueryMainTable ?? $this->subqueryMainTable,
+            isUpdate: $other->isUpdate ?? $this->isUpdate,
+            hasSetContent: $other->hasSetContent && $this->hasSetContent,
+            statementContext: $other->statementContext ?? $this->statementContext,
         );
     }
 

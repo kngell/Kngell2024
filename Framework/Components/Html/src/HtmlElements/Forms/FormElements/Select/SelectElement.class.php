@@ -37,6 +37,12 @@ class SelectElement extends AbstractHtmlElement
         return $this;
     }
 
+    public function placeholder(mixed $placeholder): self
+    {
+        $this->placeholder = $placeholder;
+        return $this;
+    }
+
     /**
      * @param string $id
      *
@@ -45,6 +51,12 @@ class SelectElement extends AbstractHtmlElement
     public function id(string $id): self
     {
         $this->id = $id;
+        return $this;
+    }
+
+    public function required(bool $required = true): self
+    {
+        $this->required = $required;
         return $this;
     }
 

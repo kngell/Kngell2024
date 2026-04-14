@@ -1,3 +1,6 @@
+import BrowserLogger from "js/core/utils/BrowserLogger";
+
+const logger = new BrowserLogger("ProductListCheckboxManager");
 export default class ProductListCheckboxManager {
   constructor(options = {}) {
     this.options = {
@@ -8,9 +11,22 @@ export default class ProductListCheckboxManager {
       ...options,
     };
 
-    this.selectAll = document.querySelector(this.options.selectAllSelector);
-    this.checkboxes = document.querySelectorAll(this.options.itemSelector);
-    this.rows = document.querySelectorAll(this.options.rowSelector);
+    const productTable = document.querySelector(".product-table");
+    if (productTable) {
+      this.selectAll = productTable.querySelector(this.options.selectAllSelector);
+      this.checkboxes = productTable.querySelectorAll(this.options.itemSelector);
+      this.rows = productTable.querySelectorAll(this.options.rowSelector);
+    } else {
+      this.selectAll = document.querySelector(this.options.selectAllSelector);
+      this.checkboxes = document.querySelectorAll(this.options.itemSelector);
+      this.rows = document.querySelectorAll(this.options.rowSelector);
+    }
+
+    logger.debug("ProductListCheckboxManager initialized:", {
+      selectAll: !!this.selectAll,
+      checkboxes: this.checkboxes.length,
+      rows: this.rows.length,
+    });
 
     this.init();
   }

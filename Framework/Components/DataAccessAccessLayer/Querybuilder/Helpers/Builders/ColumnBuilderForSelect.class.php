@@ -9,21 +9,21 @@ class ColumnBuilderForSelect
     ) {
     }
 
-    public function build(string $column, string $tableAlias): string
+    public function build(string $column, string $alias): string
     {
         if (ColumnTypeDetector::isComplexExpression($column)) {
-            return $this->buildComplexColumn($column, $tableAlias);
+            return $this->buildComplexColumn($column, $alias);
         }
 
         if (ColumnTypeDetector::isCountFunction($column)) {
-            return $this->buildCountColumn($column, $tableAlias);
+            return $this->buildCountColumn($column, $alias);
         }
 
         if (ColumnTypeDetector::isFunctionCall($column)) {
-            return $this->buildFunctionColumn($column, $tableAlias);
+            return $this->buildFunctionColumn($column, $alias);
         }
 
-        return $this->buildSimpleColumn($column, $tableAlias);
+        return $this->buildSimpleColumn($column, $alias);
     }
 
     private function buildSimpleColumn(string $column, string $tableAlias): string
@@ -49,7 +49,11 @@ class ColumnBuilderForSelect
         if (ColumnTypeDetector::isCountFunction($column)) {
             return $this->buildCountColumn($column, $tableAlias);
         }
-        return $column;
+        if ($this->isLiteralConstant($column)) {
+            return $column;
+        }
+
+        return $tableAlias . '.' . $column;
     }
 
     private function buildCountColumn(string $column, string $alias): string
@@ -111,5 +115,16 @@ class ColumnBuilderForSelect
     private function isSimpleColumn(string $value): bool
     {
         return ColumnTypeDetector::isSimpleColumn($value);
+    }
+
+    private function isLiteralConstant(string $value): bool
+    {
+        $parts = preg_split('/\s+as\s+/i', trim($value));
+        $source = trim($parts[0]);
+        return
+            is_numeric($source) ||
+            preg_match('/^\'.*\'$/', $source) ||
+            in_array(strtoupper($source), ['NULL', 'TRUE', 'FALSE'])
+        ;
     }
 }

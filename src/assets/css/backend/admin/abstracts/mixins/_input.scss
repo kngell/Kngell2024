@@ -5,7 +5,7 @@
 @use "css/backend/admin/abstracts/functions" as *;
 @use "miscellaneous" as *;
 @use "text-style" as *;
-@use "icon_with_bade" as *;
+@use "icon_with_badge" as *;
 
 // Global map to track all included styles
 $_included-styles: () !default;
@@ -591,7 +591,8 @@ $included-file-styles: () !default;
         display: flex;
         align-items: flex-start;
         cursor: pointer;
-        gap: $gap; // Space between checkbox and label content
+        gap: $gap;
+        @include apply-text-style(map.get($options, "default-label-style"));
         line-height: $non-text-line-height;
 
         @if $is-rtl {
@@ -694,6 +695,7 @@ $included-file-styles: () !default;
             transform: translateY(-50%) scale(1);
           }
         }
+        @include apply-text-style(map.get($options, "selected-label-style"));
       }
 
       // Disabled state
@@ -709,12 +711,17 @@ $included-file-styles: () !default;
   }
 
   // -- RADIO STYLES --
+
   @else if $type == "radio" {
     $is-rtl: $direction == rtl;
+    $checked-bg-color: map.get($options, "checked-bg-color"); // ADD THIS
     $dot-scale: map.get($options, "dot-scale");
     $dot-color: map.get($options, "dot-color");
     $dot-size: calc(#{$box-size} * #{$dot-scale});
     $radio-pile-style: map.get($options, "radio-pile-style");
+
+    // Calculate the position for the inner dot
+    $dot-offset: calc((#{$box-size} - #{$dot-size}) / 2);
 
     // Pill style for radios
     @if $radio-pile-style {
@@ -736,6 +743,9 @@ $included-file-styles: () !default;
         cursor: pointer;
         flex-grow: 1;
         line-height: $non-text-line-height;
+        @include apply-text-style(map.get($options, "default-label-style"));
+        width: fit-content;
+        cursor: pointer;
 
         @if $is-rtl {
           flex-direction: row-reverse;
@@ -778,10 +788,10 @@ $included-file-styles: () !default;
             transform 0.2s ease,
             opacity 0.2s ease;
           @if $is-rtl {
-            right: calc(#{$box-size} * ((1 - #{$dot-scale}) / 2));
+            right: $dot-offset; // FIXED: Use calculated offset
             transform: translateY(-50%) scale(0);
           } @else {
-            left: calc(#{$box-size} * ((1 - #{$dot-scale}) / 2));
+            left: $dot-offset; // FIXED: Use calculated offset
             transform: translateY(-50%) scale(0);
           }
         }
@@ -800,12 +810,21 @@ $included-file-styles: () !default;
         }
       }
 
-      // Checked state
+      // Checked state - FIXED: Added background color like checkbox
       &:checked + .#{$input-box}__label {
+        &::before {
+          background-color: $checked-bg-color;
+          border-color: $checked-bg-color;
+        }
         &::after {
           opacity: 1;
-          transform: translateY(-50%) scale(1);
+          @if $is-rtl {
+            transform: translateY(-50%) scale(1);
+          } @else {
+            transform: translateY(-50%) scale(1);
+          }
         }
+        @include apply-text-style(map.get($options, "selected-label-style"));
       }
 
       // Disabled state
@@ -833,7 +852,7 @@ $included-file-styles: () !default;
 
   // Selection indicator (pill style background)
   &:has([type="#{$type}"]:checked) {
-    background-color: map-deep-get($color-primary, primary-50);
+    // background-color: map-deep-get($color-primary, primary-50);
     border-color: map.get($options, "focus-color");
   }
 

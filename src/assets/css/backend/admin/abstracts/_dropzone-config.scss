@@ -1,0 +1,148 @@
+@use "sass:map";
+@use "variables" as *;
+@use "functions" as *;
+
+// Global configuration (applied to ALL dropzones)
+$global-dropzone-config: (
+  // Dimensions
+  "height": 18rem,
+  "width": 100%,
+  "padding": 2.4rem 1.6rem,
+
+  // Colors
+  "background": $background-neutral-primary,
+  "border-color": $border-neutral-primary,
+  "border-color-hover": $border-brand-primary,
+  "border-color-drag": $border-brand-primary,
+  "border-style": dashed,
+  "border-width": $stroke-m,
+
+  // Text styles
+  "main-text-style": (
+      map: map-deep-get($hahmlet-map, body, caption),
+      weight: caption,
+      overrides: (
+        color: $text-neutral-primary
+      )
+    ),
+  "hint-text-style": (
+    map: map-deep-get($hahmlet-map, body, caption),
+    weight: caption,
+    overrides: (
+      color: $text-neutral-secondary
+    )
+  ),
+
+  // Icon
+  "icon-name": "upload",
+  "icon-size": 2.4rem,
+  "icon-color": $icon-neutral-primary,
+  "icon-container-bg": transparent,
+  "icon-border-radius": 0,
+  "show-icon": true,
+
+  // Spacing
+  "gap-icon-text": 1.6rem,
+  "gap-text": 0.4rem,
+
+  // Effects
+  "border-radius": $radius-s,
+  "shadow": $shadow-m,
+  "shadow-hover": $shadow-l,
+  "shadow-drag": $shadow-l,
+
+  // States
+  "hover-scale": 1.02,
+  "drag-scale": 1.02,
+  "transition-duration": 0.2s,
+  "transition-timing": ease,
+
+  // Text content
+  "main-text": "Drag & drop or click to upload",
+  "hint-text": "PNG, JPG, GIF • Max 5MB",
+
+  // Optional features
+  "optional": false,
+  "optional-text": "Optional",
+  "optional-badge-bg": $background-neutral-tertiary,
+  "optional-badge-color": $text-neutral-tertiary,
+  "optional-badge-radius": $radius-xs,
+  "optional-badge-padding": 0.2rem 0.8rem,
+
+  // File preview
+  "show-preview": false,
+  "preview-height": 14rem,
+  "preview-bg": $background-neutral-tertiary,
+  "preview-border-radius": $radius-xs,
+  "preview-object-fit": contain,
+  "preview-max-width": 100%,
+  "preview-grid-gap": 1rem,
+  "preview-item-min-width": 100px,
+  "preview-item-max-width": 150px,
+
+  // Progress indicator
+  "show-progress": false,
+  "progress-height": 0.4rem,
+  "progress-bg": $background-neutral-tertiary,
+  "progress-fill": $border-brand-primary,
+  "progress-radius": $radius-full,
+
+  // Error state
+  "error-border-color": $border-semantic-error,
+  "error-text-color": $text-semantic-error,
+  "error-bg": $background-neutral-primary,
+  "error-shadow": $shadow-s
+);
+
+// State-specific overrides
+$state-dropzone-config: (
+  "empty": (
+    "height": 18rem,
+    "border-style": dashed
+  ),
+  "single-preview": (
+    "height": 18rem,
+    "preview-height": 14rem,
+    "border-style": solid,
+    "hover-scale": 1,
+    "show-preview": true,
+    "gap-icon-text": 0
+  ),
+  "multiple-preview": (
+    "height": 18rem,
+    "border-style": solid,
+    "hover-scale": 1,
+    "show-preview": true,
+    "gap-icon-text": 0,
+    "preview-item-min-width": 100px,
+    "preview-item-max-width": 120px,
+    "preview-grid-gap": 1rem
+  ),
+  "uploading": (
+    "height": 18rem,
+    "show-progress": true,
+    "border-style": dashed
+  )
+);
+
+// Instance-specific overrides (per box)
+$instance-overrides: () !default;
+
+// Master function to get final config
+@function get-dropzone-config($state, $instance-overrides: ()) {
+  // Start with global config
+  $config: $global-dropzone-config;
+
+  // Merge with state-specific config
+  $state-config: map.get($state-dropzone-config, $state);
+  @if $state-config {
+    $config: map.merge($config, $state-config);
+  }
+
+  // Merge with instance overrides (highest priority)
+  @if $instance-overrides {
+    $config: map.merge($config, $instance-overrides);
+  }
+
+  @return $config;
+}

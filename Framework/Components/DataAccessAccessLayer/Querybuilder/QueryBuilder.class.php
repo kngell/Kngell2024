@@ -6,45 +6,63 @@ class QueryBuilder extends AbstractQueryBuilder implements SqlCompositeQueryBuil
 {
     public function __construct(private EntityManagerInterface $em)
     {
+        parent::__construct($em);
     }
 
     public function select(string|array|Closure ...$columns): SqlSelectQueryBuilderInterface
     {
-        $query = (new SqlSelectQuery($this->em))->select($columns);
-        $this->queryComponent = $query;
+        $query = (new SqlSelectQuery($this->em, $this->isBulkQuery))
+        ->select($columns);
+        $lastComponent = end($this->executedComponents);
+        if ($lastComponent) {
+            $query->setQueryMap($lastComponent->getQueryMap());
+        }
+        $this->registerComponent($query, __FUNCTION__);
         $this->em->setQueryBuilder($this);
         return $query;
     }
 
     public function selectWithAlias(string|array|Closure ...$columns): SqlSelectQueryBuilderInterface
     {
-        $query = new SqlSelectQuery($this->em);
+        $query = new SqlSelectQuery($this->em, $this->isBulkQuery);
         $query->withAlias()->select($columns);
-        $this->queryComponent = $query;
+        $this->registerComponent($query, __FUNCTION__);
         $this->em->setQueryBuilder($this);
         return $query;
     }
 
-    public function with(string $cteTableName, SqlSelectQueryBuilderInterface|Closure $cteBody): SqlSelectQueryBuilderInterface
+    public function selectDistinctWithAliases(string|array|Closure ...$columns): SqlSelectQueryBuilderInterface
     {
-        $query = (new SqlSelectQuery($this->em))->with($cteTableName, $cteBody);
-        $this->queryComponent = $query;
+        $query = new SqlSelectQuery($this->em, $this->isBulkQuery);
+        $query->withAlias()->distinct()->select($columns);
+        $this->registerComponent($query, __FUNCTION__);
         $this->em->setQueryBuilder($this);
         return $query;
     }
 
-    public function withRecursive(string $cteTableName, SqlSelectQueryBuilderInterface|Closure $cteBody): SqlSelectQueryBuilderInterface
+    public function with(string $cteTableName): SqlCteSelectQueryBuilderInterface
     {
-        $query = (new SqlSelectQuery($this->em))->withRecursive($cteTableName, $cteBody);
-        $this->queryComponent = $query;
-        $this->em->setQueryBuilder($this);
-        return $query;
+        return $this->cteQuery($cteTableName, __FUNCTION__);
+    }
+
+    public function withRecursive(string $cteTableName): SqlCteSelectQueryBuilderInterface
+    {
+        return $this->cteQuery($cteTableName, __FUNCTION__);
     }
 
     public function update(null|string|Closure $table = null): SqlUpdateQueryBuilderInterface
     {
-        $query = (new SqlUpdateQuery($this->em))->update($table);
-        $this->queryComponent = $query;
+        $query = (new SqlUpdateQuery($this->em, $this->isBulkQuery))->update($table);
+        $this->registerComponent($query, __FUNCTION__);
+        $this->em->setQueryBuilder($this);
+        return $query;
+    }
+
+    public function bulkUpdate(null|string|Closure $table = null, null|BulkUpdateType $type = null): SqlUpdateQueryBuilderInterface
+    {
+        $this->isBulkQuery = true;
+        $query = (new SqlUpdateQuery($this->em, $this->isBulkQuery))->bulkUpdate($table, $type);
+        $this->registerComponent($query, __FUNCTION__);
         $this->em->setQueryBuilder($this);
         return $query;
     }
@@ -52,28 +70,40 @@ class QueryBuilder extends AbstractQueryBuilder implements SqlCompositeQueryBuil
     public function insert(mixed ...$data): SqlInsertQueryBuilderInterface
     {
         $query = new SqlInsertQuery($this->em)->insert($data);
-        $this->queryComponent = $query;
+        $this->registerComponent($query, __FUNCTION__);
         $this->em->setQueryBuilder($this);
         return $query;
     }
 
-    public function delete(string $table): SqlDeleteQueryBuilderInterface
+    public function delete(null|string|Closure $table = null, null|string $alias = null): SqlDeleteQueryBuilderInterface
     {
         $query = (new SqlDeleteQuery($this->em))->deleteFrom($table);
-        $this->queryComponent = $query;
+        $this->registerComponent($query, __FUNCTION__);
+        $this->em->setQueryBuilder($this);
         return $query;
     }
 
     public function createTable(string $table): SqlDdlQueryBuilderInterface
     {
         $query = new SqlDdlQuery($this->em);
-        $query->setMethod(SqlStatementType::CREATE->value);
-        $this->queryComponent = $query;
+        $query->setMethod(SqlStatement::CREATE->value);
+        $this->registerComponent($query, __FUNCTION__);
         return $query;
     }
 
-    public function getEntityManager(): EntityManagerInterface
+    private function cteQuery(string $cteTableName, string $method): SqlCteSelectQueryBuilderInterface
     {
-        return $this->em;
+        $query = (new SqlCteSelectQuery($this->em));
+
+        $lastComponent = end($this->executedComponents);
+        if ($lastComponent) {
+            $query->setQueryMap($lastComponent->getQueryMap());
+        }
+
+        $query->$method($cteTableName);
+
+        $this->registerComponent($query, __FUNCTION__);
+        $this->em->setQueryBuilder($this);
+        return $query;
     }
 }

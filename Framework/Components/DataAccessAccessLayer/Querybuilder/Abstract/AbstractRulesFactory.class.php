@@ -7,6 +7,7 @@ abstract class AbstractRulesFactory
     public function __construct(
         protected EntityManagerInterface $em,
         protected QueryState $state,
+        protected BulkRowFactory $bulkRowFactory,
     ) {
     }
 

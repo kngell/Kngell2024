@@ -16,6 +16,7 @@ class LabelElement extends AbstractHtmlElement
 
     /**
      * @param array $formErrors
+     *
      * @return LabelElement
      */
     #[Override]
@@ -27,6 +28,7 @@ class LabelElement extends AbstractHtmlElement
 
     /**
      * @param array $formValues
+     *
      * @return LabelElement
      */
     #[Override]
@@ -39,9 +41,10 @@ class LabelElement extends AbstractHtmlElement
     /**
      * @param string $content
      * @param bool $contentUp
+     *
      * @return LabelElement
      */
-    public function content(string $content, bool $contentUp = true): self
+    public function content(null|string|int $content, bool $contentUp = true): self
     {
         $this->content = $content;
         $this->contentUp = $contentUp;
@@ -50,6 +53,7 @@ class LabelElement extends AbstractHtmlElement
 
     /**
      * @param string $for
+     *
      * @return LabelElement
      */
     public function for(string $for): self
@@ -60,6 +64,7 @@ class LabelElement extends AbstractHtmlElement
 
     /**
      * @param string $formId
+     *
      * @return LabelElement
      */
     public function formId(string $formId): self
@@ -70,6 +75,7 @@ class LabelElement extends AbstractHtmlElement
 
     /**
      * @param string $id
+     *
      * @return LabelElement
      */
     public function id(string $id): self
@@ -80,6 +86,7 @@ class LabelElement extends AbstractHtmlElement
 
     /**
      * @param string ...$class
+     *
      * @return LabelElement
      */
     public function class(string ...$class): self

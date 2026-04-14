@@ -8,17 +8,18 @@ class StandardizerFactory
     {
     }
 
-    public function supports(SqlStatementType $statement): bool
+    public function supports(SqlStatement $statement): bool
     {
-        return in_array($statement, [SqlStatementType::INSERT, SqlStatementType::SELECT, SqlStatementType::UPDATE]);
+        return in_array($statement, [SqlStatement::INSERT, SqlStatement::SELECT, SqlStatement::UPDATE, SqlStatement::DELETE]);
     }
 
-    public function create(SqlStatementType $statement): DataStandardizerInterface
+    public function create(SqlStatement $statement): DataStandardizerInterface
     {
         return match (true) {
-            $statement === SqlStatementType::INSERT => new InsertDataStandardizer(),
-            $statement === SqlStatementType::SELECT => new SelectDataStandardizer(),
-            $statement === SqlStatementType::UPDATE => new UpdateDataStandardizer(),
+            $statement === SqlStatement::INSERT => new InsertDataStandardizer(),
+            $statement === SqlStatement::SELECT => new SelectDataStandardizer(),
+            $statement === SqlStatement::UPDATE => new UpdateDataStandardizer(),
+            $statement === SqlStatement::DELETE => new DeleteDataStandardizer(),
             default => new NullObject($this)
         };
     }

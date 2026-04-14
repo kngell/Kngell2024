@@ -8,16 +8,20 @@ final readonly class FieldMapper
     ) {
     }
 
-    public function applyMapping(Entity $source, array $mapping, bool $formatValues = true): array
+    public function applyMapping(Entity $source, ?FormFieldMappingPayloadInterface $mapping = null, bool $formatValues = true): array
     {
         $mappedData = [];
 
-        foreach ($mapping as $sourcePath => $targetPath) {
+        foreach ($mapping->getFieldMapping() as $sourcePath => $targetPath) {
             if (str_contains($sourcePath, '.*.')) {
-                $this->handleWildcardMapping($source, $mappedData, $sourcePath, $targetPath, $formatValues);
+                $this->handleWildcardMapping($source, $mappedData, $sourcePath, $targetPath, $formatValues, $mapping->getNumericFields());
             } else {
                 $value = $this->getNestedValue($source, $sourcePath, $formatValues);
-                $value = $this->applyFieldConstraints($targetPath, $value);
+                $value = $this->applyFieldConstraints(
+                    $targetPath,
+                    $value,
+                    $mapping !== null ? $mapping->getNumericFields() : [],
+                );
                 $this->setNestedValue($mappedData, $targetPath, $value);
             }
         }
@@ -25,7 +29,7 @@ final readonly class FieldMapper
         return $mappedData;
     }
 
-    private function handleWildcardMapping(Entity $data, array &$mappedData, string $source, string $target, bool $formatValues): void
+    private function handleWildcardMapping(Entity $data, array &$mappedData, string $source, string $target, bool $formatValues, array $numericKeys = []): void
     {
         $sourceParts = explode('.*.', $source, 2);
         $targetParts = explode('.*.', $target, 2);
@@ -63,7 +67,7 @@ final readonly class FieldMapper
                     $remaining = $targetRemaining ?? '';
                     $fullPath = $targetBase . '.' . $index . ($remaining !== '' ? '.' . $remaining : '');
 
-                    $cleanVal = $this->applyFieldConstraints($fullPath, $val);
+                    $cleanVal = $this->applyFieldConstraints($fullPath, $val, $numericKeys);
                     $this->setNestedValue($mappedData, $fullPath, $cleanVal);
                 }
             }
@@ -82,29 +86,56 @@ final readonly class FieldMapper
         return $data;
     }
 
-    private function applyFieldConstraints(string $target, mixed $value): mixed
+    private function applyFieldConstraints(string $target, mixed $value, array $numericKeys = []): mixed
     {
-        $numericKeys = ['price', 'modifier', 'amount', 'cost', 'fee'];
+        $sanitizedKeywords = array_filter(array_map('trim', $numericKeys));
         $isNumericTarget = false;
+        $matchedKeyword = '';
 
-        foreach ($numericKeys as $keyword) {
+        foreach ($sanitizedKeywords as $keyword) {
             if (str_contains($target, $keyword)) {
                 $isNumericTarget = true;
+                $matchedKeyword = $keyword;
                 break;
             }
         }
 
-        $isBooleanPrice = str_contains($target, 'includes_tax') || str_contains($target, 'is_');
-
-        if ($isNumericTarget && !$isBooleanPrice && $this->isFormattedNumeric($value)) {
-            return $this->stripFormatting($value);
-        }
-
-        if (str_ends_with($target, '[]')) {
-            return is_array($value) ? $value : ($value ? [$value] : []);
+        if ($isNumericTarget && $this->isFormattedNumeric($value)) {
+            return $this->stripFormatting($value, $matchedKeyword);
         }
 
         return $value;
+    }
+
+    private function stripFormatting(mixed $value, string $keyword = ''): mixed
+    {
+        if (!is_string($value) || empty($value)) {
+            return $value;
+        }
+
+        // 🎯 Rule: Quantities are Integers. No dots, no commas.
+        if ($keyword === 'quantity' || str_contains($keyword, 'quantity')) {
+            return preg_replace('/[^\d]/', '', $value);
+        }
+
+        // Existing logic for prices/modifiers (allowing decimals)
+        $clean = preg_replace('/[^\d,.]/', '', $value);
+
+        // Normalize logic for decimals...
+        if (str_contains($clean, '.') && str_contains($clean, ',')) {
+            $dotPos = strrpos($clean, '.');
+            $commaPos = strrpos($clean, ',');
+            if ($dotPos > $commaPos) {
+                $clean = str_replace(',', '', $clean);
+            } else {
+                $clean = str_replace('.', '', $clean);
+                $clean = str_replace(',', '.', $clean);
+            }
+        } elseif (str_contains($clean, ',')) {
+            $clean = str_replace(',', '.', $clean);
+        }
+
+        return $clean;
     }
 
     private function isFormattedNumeric(mixed $value): bool
@@ -126,7 +157,7 @@ final readonly class FieldMapper
 
         foreach ($keys as $key) {
             if ($current instanceof Entity) {
-                $camelKey = StringUtils::camelCase($key);
+                $camelKey = StringUtils::snakeCaseToCamelCase($key);
 
                 if ($current->hasProperty($camelKey)) {
                     $lastReflectionProp = $current->getProperty($camelKey);
@@ -142,7 +173,7 @@ final readonly class FieldMapper
 
                 $current = $value;
             } elseif (is_array($current)) {
-                $current = $current[$key] ?? $current[StringUtils::camelCase($key)] ?? null;
+                $current = $current[$key] ?? $current[StringUtils::snakeCaseToCamelCase($key)] ?? null;
                 $lastReflectionProp = null;
             } else {
                 return null;
@@ -175,30 +206,5 @@ final readonly class FieldMapper
 
         // Now $current is a reference to the leaf location
         $current = $value;
-    }
-
-    private function stripFormatting(mixed $value): mixed
-    {
-        if (!is_string($value) || empty($value)) {
-            return $value;
-        }
-
-        $clean = preg_replace('/[^\d,.]/', '', $value);
-
-        if (str_contains($clean, '.') && str_contains($clean, ',')) {
-            $dotPos = strrpos($clean, '.');
-            $commaPos = strrpos($clean, ',');
-
-            if ($dotPos > $commaPos) {
-                $clean = str_replace(',', '', $clean);
-            } else {
-                $clean = str_replace('.', '', $clean);
-                $clean = str_replace(',', '.', $clean);
-            }
-        } elseif (str_contains($clean, ',')) {
-            $clean = str_replace(',', '.', $clean);
-        }
-
-        return $clean;
     }
 }

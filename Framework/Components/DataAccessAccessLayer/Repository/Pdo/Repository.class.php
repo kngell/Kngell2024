@@ -4,8 +4,14 @@ declare(strict_types=1);
 
 class Repository implements RepositoryInterface
 {
-    public function __construct(protected EntityManagerInterface $em)
-    {
+    use BulkUpdateTrait;
+    use ConditionSegmenterTrait;
+    use SqlKeywordHandlerTrait;
+    protected const array COLUMN_MAPS = [];
+
+    public function __construct(
+        protected EntityManagerInterface $em,
+    ) {
     }
 
     public function create(): void
@@ -27,11 +33,11 @@ class Repository implements RepositoryInterface
         }
     }
 
-    public function update(array $conditions = []): void
+    public function update(null|string|Closure $table = null, array $conditions = []): void
     {
         try {
             $conditions = $this->conditions($conditions);
-            $this->em->createQueryBuilder()->update()->where($conditions)->build();
+            $this->em->createQueryBuilder()->update($table)->where($conditions)->build();
         } catch (Throwable $th) {
             throw $th;
         }
@@ -49,36 +55,26 @@ class Repository implements RepositoryInterface
         }
     }
 
+    /**
+     * For backward compatibility, keep findByIds but deprecate it.
+     *
+     * @deprecated Use fetchIds() instead - name better reflects purpose
+     */
     public function findByIds(array $conditions = [], ?int $limit = null, ?int $offset = null, ?string $keyField = null): void
     {
+        $this->fetchIds($conditions, $limit, $offset, $keyField);
     }
 
-    public function findOneBy(array $conditions = []): void
-    {
-        if ($this->isArray($conditions)) {
-            try {
-                $this->em->createQueryBuilder()->select()->where($conditions)->build();
-            } catch (Throwable $th) {
-                throw $th;
-            }
-        }
-    }
-
-    public function findAll(array $conditions = []): void
+    public function fetchIds(array $conditions = [], ?int $limit = null, ?int $offset = null, ?string $keyField = null): void
     {
         try {
-            $this->findBy($conditions);
-        } catch (Throwable $th) {
-            throw $th;
-        }
-    }
+            $keyField = $keyField ?? $this->em->getEntityKeyField();
+            $columns = [$keyField];
 
-    public function findBy(array $conditions = [], ?int $limit = null, ?int $offset = null): void
-    {
-        try {
-            $queryBuilder = $this->em->createQueryBuilder()->select()->where($conditions);
+            $queryBuilder = $this->em->createQueryBuilder()
+                ->select($columns)
+                ->where($conditions);
 
-            // Add pagination if provided
             if ($limit !== null) {
                 $queryBuilder->limit($limit);
             }
@@ -87,6 +83,49 @@ class Repository implements RepositoryInterface
             }
 
             $queryBuilder->build();
+        } catch (Throwable $th) {
+            throw new RepositoryException('Failed to fetch IDs: ' . $th->getMessage(), 0, $th);
+        }
+    }
+
+    public function findOneBy(array $conditions = [], array $columns = []): void
+    {
+        try {
+            $this->em->createQueryBuilder()->select($columns)->where($conditions)->build();
+        } catch (Throwable $th) {
+            throw $th;
+        }
+    }
+
+    public function findAll(array $conditions = [], array $columns = []): void
+    {
+        try {
+            $this->findBy($conditions, null, null, $columns);
+        } catch (Throwable $th) {
+            throw $th;
+        }
+    }
+
+    public function findBy(array $conditions = [], ?int $limit = null, ?int $offset = null, array $columns = []): void
+    {
+        try {
+            $queryBuilder = $this->em->createQueryBuilder();
+            $select = $queryBuilder->select($columns);
+
+            if (!empty($conditions)) {
+                $select->where($conditions);
+            }
+
+            // Add pagination if provided
+            if ($limit !== null) {
+                $select->limit($limit);
+            }
+            if ($offset !== null) {
+                $select->offset($offset);
+            }
+
+            $select->build();
+            // $this->debugSql($queryBuilder);
         } catch (Throwable $th) {
             throw $th;
         }
@@ -103,7 +142,23 @@ class Repository implements RepositoryInterface
 
     public function count(array $conditions): void
     {
-        $this->em->createQueryBuilder()->select('count(*) As totalRecords')->where($conditions)->build();
+        $count = $this->em->createQueryBuilder()->select('count(*) As totalRecords');
+        $conditions = $this->applyGlobalScopes($conditions);
+        if (!empty($conditions)) {
+            $this->applyMixedConditions($count, $conditions);
+        }
+        $count->build();
+    }
+
+    protected function getAllColumns(): array
+    {
+        $allColumns = [];
+        foreach (static::COLUMN_MAPS as $key => $columnMap) {
+            foreach ($columnMap as $column) {
+                $allColumns[] = $key . '.' . $column;
+            }
+        }
+        return $allColumns;
     }
 
     protected function isArray(array $conditions): bool
@@ -115,12 +170,45 @@ class Repository implements RepositoryInterface
         return true;
     }
 
-    private function conditions(array|string $conditions): array
+    protected function createDateRangeCondition(string $field, string $now = 'NOW()'): array
+    {
+        return [
+            '(', $field, '<=', $now, 'OR', "$field IS NULL", ')',
+        ];
+    }
+
+    protected function applyGlobalScopes(array $conditions): array
     {
         if (empty($conditions)) {
+            return ['deleted_at IS NULL'];
+        }
+
+        return [
+            '(', ...$conditions, ')',
+            'AND', 'deleted_at IS NULL',
+        ];
+    }
+
+    protected function debugSql(QueryBuilder $qb): void
+    {
+        (new DebugQuery())->debugSql($qb);
+    }
+
+    private function conditions(array $conditions = []): array
+    {
+        $entity = $this->em->getEntity();
+        if ($entity instanceof Entity && empty($conditions)) {
             $fieldId = $this->em->getEntityKeyField();
             $value = $this->em->getEntityKeyValue();
-            $conditions = [$fieldId => $value];
+            if ($value === null) {
+                throw new RuntimeException(
+                    'Cannot build conditions: entity key value is null. ' .
+                    'Entity: ' . get_class($this->em->getEntity()) . ', ' .
+                    'Key field: ' . $fieldId,
+                );
+            }
+
+            return [$fieldId => $value];
         }
         return $conditions;
     }

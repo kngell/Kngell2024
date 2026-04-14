@@ -8,6 +8,7 @@ class SqlFactoryRegistry
     private array $flowValidatorFactories;
     private array $ruleFactories;
     private array $standardizerFactories;
+    private array $clauseStandardizerFactory;
 
     public function __construct(
         private SqlComponent $component,
@@ -17,59 +18,63 @@ class SqlFactoryRegistry
         $this->initializeFactories();
     }
 
-    public function getClauseBuilder(SqlStatementType $type): ?ClauseBuilderInterface
+    public function getClauseBuilder(SqlStatement $type): ?ClauseBuilderInterface
     {
         return $this->findFactory($this->clauseBuilderFactories, $type)?->create();
     }
 
-    public function getFlowValidator(SqlStatementType $type): ?FlowValidatorInterface
+    public function getFlowValidator(SqlStatement $type): ?FlowValidatorInterface
     {
         return $this->findFactory($this->flowValidatorFactories, $type)?->create();
     }
 
-    public function getRule(string $method, array $data): ?QueryRulesInterface
+    public function getRule(string $method, mixed $data): ?QueryRulesInterface
     {
-        $statementType = SqlBuilderMethodRegistry::getClauseContext($method)->toStatementType();
-        if (!$statementType) {
+        $statement = SqlBuilderMethodRegistry::getClauseContext($method)->toStatementType();
+
+        if (!$statement) {
             return null;
         }
 
-        $factory = $this->findFactory($this->ruleFactories, $statementType);
+        $factory = $this->findFactory($this->ruleFactories, $statement);
         return $factory?->create($method, $data);
     }
 
-    public function getStandardizer(SqlStatementType $type): ?DataStandardizerInterface
+    public function getStandardizer(SqlStatement $type): ?DataStandardizerInterface
     {
         return $this->findFactory($this->standardizerFactories, $type)?->create($type);
     }
 
     private function initializeFactories(): void
     {
-        // Clause Builder Factories
         $this->clauseBuilderFactories = [
             new DataQueryClauseBuilderFactory($this->component),
             new DataManipulationClauseBuilderFactory($this->component),
         ];
 
-        // Flow Validator Factories
         $this->flowValidatorFactories = [
             new DataQueryFlowValidatorFactory($this->component),
             new DataManipulationFlowValidatorFactory($this->component),
         ];
 
         // Rule Factories
+        $bulkRowFactory = new BulkRowFactory();
         $this->ruleFactories = [
-            new DataQueryRuleFactory($this->em, $this->state),
-            new DataManipulationRuleFactory($this->em, $this->state),
+            new DataQueryRuleFactory($this->em, $this->state, $bulkRowFactory),
+            new DataManipulationRuleFactory($this->em, $this->state, $bulkRowFactory),
         ];
 
         // Standardizer Factories
         $this->standardizerFactories = [
             new StandardizerFactory(),
         ];
+
+        $this->clauseStandardizerFactory = [
+            new ClauseStandardizerFactory(),
+        ];
     }
 
-    private function findFactory(array $factories, SqlStatementType $type): mixed
+    private function findFactory(array $factories, SqlStatement $type): mixed
     {
         foreach ($factories as $factory) {
             if ($factory->supports($type)) {

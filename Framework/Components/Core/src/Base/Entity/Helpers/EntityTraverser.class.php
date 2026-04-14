@@ -38,9 +38,7 @@ final readonly class EntityTraverser
         if ($currentDepth >= $maxDepth) {
             return null;
         }
-        if ($property && $property->getName() === 'publicId') {
-            $stop = true;
-        }
+
         if ($formatValues && $this->typePresenterFactory !== null && $property !== null) {
             if (!($value instanceof Entity) && !$this->isCollection($value)) {
                 $value = $this->typePresenterFactory->displayValue($value, $property);
@@ -66,7 +64,7 @@ final readonly class EntityTraverser
         array $excludedProperties,
     ): array {
         $result = [];
-        $reflection = CustomReflection::getInstance($entity)->getObject();
+        $reflection = $reflection = CustomReflection::getInstance($entity)->getClass();
 
         foreach ($reflection->getProperties(ReflectionProperty::IS_PRIVATE) as $property) {
             $propertyName = $property->getName();
@@ -181,7 +179,7 @@ final readonly class EntityTraverser
             return $entity->getFieldValue($keyProperty);
         }
 
-        $reflection = CustomReflection::getInstance($entity)->getObject();
+        $reflection = $reflection = CustomReflection::getInstance($entity)->getClass();
         foreach ($reflection->getProperties() as $property) {
             $propertyName = $property->getName();
             if (str_ends_with(strtolower($propertyName), 'id')) {

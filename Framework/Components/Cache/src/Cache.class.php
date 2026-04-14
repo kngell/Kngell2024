@@ -17,6 +17,11 @@ class Cache extends AbstractCache
         }
     }
 
+    public function getCacheDirectory(): string
+    {
+        return $this->storage->getCacheDirectory();
+    }
+
     public function set(string $key, mixed $value, int|null $ttl = null): bool
     {
         $this->ensureCacheEntryIdentifierIsvalid($key);

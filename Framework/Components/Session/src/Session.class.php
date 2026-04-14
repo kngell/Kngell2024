@@ -7,16 +7,16 @@ class Session implements SessionInterface
     /** @var string */
     protected const SESSION_PATTERN = '/^[a-zA-Z0-9_\.]{1,64}$/';
 
-    protected SessionStorageInterface $storage;
+    protected ?SessionStorageInterface $storage;
     protected string|null $sessionIdentifier;
 
     /**
      * Class constructor.
      *
      * @param string $sessionIdentifier
-     * @param SessionStorageInterface $storage
+     * @param null|SessionStorageInterface $storage
      */
-    public function __construct(string|null $sessionIdentifier = null, SessionStorageInterface $storage)
+    public function __construct(string|null $sessionIdentifier = null, ?SessionStorageInterface $storage = null)
     {
         if ($sessionIdentifier !== null && $this->isSessionKeyValid($sessionIdentifier) === false) {
             throw new SessionInvalidArgumentException($sessionIdentifier . ' is not a valid session name');

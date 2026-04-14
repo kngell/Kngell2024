@@ -115,10 +115,9 @@ class ItemsValidator extends AbstractValidator
             if (in_array($ruleName, ['display', 'array', 'items'], true)) {
                 continue;
             }
-
-            // Use the validator creator to create and run the validator
             try {
-                $validator = $this->validatorCreator->create($ruleName, $display, $value, $ruleValue, $this->fieldName);
+                $validator = $this->validatorCreator->create($ruleName, $display, $value, $ruleValue, $fieldPath);
+
                 if ($validator !== null) {
                     $error = $validator->validate();
                     if ($error !== false && $error !== null) {

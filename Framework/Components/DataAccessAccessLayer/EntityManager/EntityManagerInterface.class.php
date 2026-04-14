@@ -51,4 +51,26 @@ interface EntityManagerInterface
     public function getDirtyData(): array;
 
     public function getLastOperationId(): null|int;
+
+    public function trackChangesWithData(array $data): void;
+
+    public function getEntityContext(): Entity;
+
+    public function reset(): self;
+
+    public function isCollectionOfEntities(): bool;
+
+    public function quote(string $value): string;
+
+    public function getAttribute(int $attribute): mixed;
+
+    public function getDriverName(): string;
+
+    public function getServerVersion(): string;
+
+    public function isMariaDB(): bool;
+
+    public function getDatabaseVersion(): float;
+
+    public function getSqlTypeHandler(): SqlTypeHandlerFactory;
 }

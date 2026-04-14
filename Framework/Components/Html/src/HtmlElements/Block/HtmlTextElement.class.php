@@ -12,7 +12,7 @@ class HtmlTextElement extends AbstractHtmlComponent
     public function generate(): string
     {
         if (isset($this->text)) {
-            return ' ' . $this->text . ' ';
+            return $this->text;
         }
         return '';
     }

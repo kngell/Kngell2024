@@ -16,7 +16,7 @@ class SelectOption extends AbstractHtmlComponent
 
     public function generate(): string
     {
-        if ($this->hasDefaultValue() && $this->getDefaultValue() === $this->key) {
+        if ($this->hasDefaultValue() && $this->getDefaultValue() === $this->getContent()) {
             $this->selected = true;
         }
         $option = [];
@@ -32,6 +32,12 @@ class SelectOption extends AbstractHtmlComponent
     public function disabled(bool $disabled = true): self
     {
         $this->disabled = $disabled;
+        return $this;
+    }
+
+    public function style(array $style): self
+    {
+        $this->style = $style;
         return $this;
     }
 

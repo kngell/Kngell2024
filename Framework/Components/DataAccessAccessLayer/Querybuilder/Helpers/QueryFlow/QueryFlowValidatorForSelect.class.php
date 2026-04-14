@@ -3,7 +3,7 @@
 declare(strict_types=1);
 class QueryFlowValidatorForSelect implements FlowValidatorInterface
 {
-    public function __construct(private SqlComponent $query)
+    public function __construct(private SqlSelectQuery $query)
     {
     }
 
@@ -17,7 +17,8 @@ class QueryFlowValidatorForSelect implements FlowValidatorInterface
     private function validateRequiredClauses(array $queryFlow): void
     {
         if (!isset($queryFlow['from']) && isset($queryFlow['select'])) {
-            throw new QueryFlowException('SELECT query requires FROM clause');
+            $this->query->assumeFromCurrentTable();
+            // throw new QueryFlowException('SELECT query requires FROM clause');
         }
     }
 

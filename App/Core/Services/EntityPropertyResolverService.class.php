@@ -45,7 +45,7 @@ class EntityPropertyResolverService
     private function getProperty(Entity $entity, string $propertyName): ?ReflectionProperty
     {
         try {
-            $reflection = CustomReflection::getInstance($entity)->getObject();
+            $reflection = $reflection = CustomReflection::getInstance($entity)->getClass();
             return $reflection->getProperty($propertyName);
         } catch (ReflectionException $e) {
             return null;

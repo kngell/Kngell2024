@@ -16,7 +16,7 @@ class Collection implements CollectionInterface
 
     public function isEmpty(): bool
     {
-        return $this->count === 0;
+        return $this->count() === 0;
     }
 
     public function addAll(array $parameters): self
@@ -268,7 +268,7 @@ class Collection implements CollectionInterface
         $this->items[$key] = $newValues;
     }
 
-    public function clear(string $key): void
+    public function clear(): void
     {
         $this->items = [];
     }

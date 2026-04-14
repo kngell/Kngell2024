@@ -70,7 +70,7 @@ class EntityToArrayTransformer implements EntityToArrayTransformerInterface
 
     public function toFormArray(
         Entity $entity,
-        array $fieldMapping = [],
+        ?FormFieldMappingPayloadInterface $fieldMapping = null,
         bool $flattenNested = true,
         bool $formatValues = true,
     ): array {

@@ -1,5 +1,6 @@
 <?php
 
+// DisplayFormat.php
 declare(strict_types=1);
 
 #[Attribute(Attribute::TARGET_PROPERTY)]
@@ -20,12 +21,18 @@ class DisplayFormat
         public ?int $decimals = null,
         public ?string $numberStyle = null,
 
-        // For other types
+        // For arrays/collections
         public ?string $separator = null,
         public ?int $maxItems = null,
+
+        // For units/measurements
         public ?bool $showUnit = null,
         public ?string $unit = null,
         public ?bool $compact = null,
+
+        // NEW: Obfuscation support
+        public ?bool $obfuscate = null,      // Whether to obfuscate IDs
+        public ?string $obfuscationStrategy = null, // 'hashid', 'encrypt', or null for default
 
         // General
         public ?string $prefix = null,

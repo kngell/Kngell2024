@@ -30,14 +30,6 @@ abstract class Event implements EventInterface
     }
 
     /**
-     * @return mixed
-     */
-    public function getResults(): mixed
-    {
-        return $this->results;
-    }
-
-    /**
      * @param mixed $results
      *
      * @return EventInterface
@@ -46,6 +38,34 @@ abstract class Event implements EventInterface
     {
         $this->results = $results;
         return $this;
+    }
+
+    public function addResult(string $key, mixed $value): self
+    {
+        $this->results[$key] = $value;
+        return $this;
+    }
+
+    public function getResults(): array
+    {
+        return $this->results;
+    }
+
+    public function hasDatabaseChanges(): bool
+    {
+        if (is_array($this->results)) {
+            foreach ($this->results as $result) {
+                if ($result instanceof QueryResult && $result->getAffectedRows() > 0) {
+                    return true;
+                }
+
+                if ($result === true) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     /**

@@ -14,11 +14,11 @@ class ProductVariation extends Entity implements TimestampableInterface
     private int $productId;
     private int $variationTypeId;
     private string $name;
-    private string $sku;
+    private string $variationSku;
     private ?Money $priceModifier;
     private int $stockQuantity = 0;
     private int $stockStatusId;
-    private ProductVariationStatus $status;
+    private ProductVariationStatus $variationStatus;
 
     /**
      * @return int
@@ -101,26 +101,6 @@ class ProductVariation extends Entity implements TimestampableInterface
     }
 
     /**
-     * @return string
-     */
-    public function getSku(): string
-    {
-        return $this->sku;
-    }
-
-    /**
-     * @param string $sku
-     *
-     * @return ProductVariation
-     */
-    public function setSku(string $sku): ProductVariation
-    {
-        $this->sku = $sku;
-
-        return $this;
-    }
-
-    /**
      * @return ?Money
      */
     public function getPriceModifier(): ?Money
@@ -183,19 +163,39 @@ class ProductVariation extends Entity implements TimestampableInterface
     /**
      * @return ProductVariationStatus
      */
-    public function getStatus(): ProductVariationStatus
+    public function getVariationStatus(): ProductVariationStatus
     {
-        return $this->status;
+        return $this->variationStatus;
     }
 
     /**
-     * @param ProductVariationStatus $status
+     * @param ProductVariationStatus $variationStatus
      *
      * @return ProductVariation
      */
-    public function setStatus(ProductVariationStatus $status): ProductVariation
+    public function setVariationStatus(ProductVariationStatus $variationStatus): ProductVariation
     {
-        $this->status = $status;
+        $this->variationStatus = $variationStatus;
+
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getVariationSku(): string
+    {
+        return $this->variationSku;
+    }
+
+    /**
+     * @param string $variationSku
+     *
+     * @return ProductVariation
+     */
+    public function setVariationSku(string $variationSku): ProductVariation
+    {
+        $this->variationSku = $variationSku;
 
         return $this;
     }

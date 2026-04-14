@@ -1,6 +1,6 @@
-import BrowserLogger from "js/utils/logger";
+import BrowserLogger from "js/core/utils/logger";
 import ValidatorFactory from "js/core/validation/factory/ValidatorFactory";
-import { ValidationUtils } from "js/core/validation/utils/ValidationUtils";
+import ValidatorCacheManager from "js/core/utils/CacheManager";
 
 const logger = new BrowserLogger("Validator");
 
@@ -11,11 +11,17 @@ export default class Validator {
     this.globalSettings = globalSettings;
     this.errors = {};
 
+    // Use the cache manager
+    this.cacheManager = new ValidatorCacheManager({
+      enableStats: true, // Enable stats for debugging
+      maxSize: 500, // Prevent memory leaks
+      ttl: 5 * 60 * 1000, // 5 minute TTL
+    });
+
     logger.debug("✅ Validator initialized", {
       ruleCount: Object.keys(this.rules).length,
     });
   }
-
   validateField(fieldName) {
     const fieldRules = this.getFieldRules(fieldName);
     const value = this.formData[fieldName];
@@ -29,7 +35,26 @@ export default class Validator {
     for (const [ruleName, ruleValue] of Object.entries(fieldRules)) {
       if (ruleName === "display") continue;
 
-      const validator = this.createValidator(ruleName, fieldName, value, ruleValue);
+      // Generate cache key using the cache manager
+      const cacheKey = this.cacheManager.generateKey(fieldName, ruleName, ruleValue);
+
+      // Get from cache
+      let validator = this.cacheManager.get(cacheKey);
+
+      if (!validator) {
+        validator = this.createValidator(ruleName, fieldName, value, ruleValue);
+        if (validator) {
+          // Store in cache
+          this.cacheManager.set(cacheKey, validator);
+          logger.debug(`🔄 Created and cached validator for: ${fieldName}:${ruleName}`);
+        }
+      } else {
+        // Update existing validator with current value and formData
+        validator.value = value;
+        validator.formData = this.formData;
+        logger.debug(`✅ Using cached validator for: ${fieldName}:${ruleName}`);
+      }
+
       if (validator) {
         try {
           const error = validator.validate(this.formData);
@@ -202,25 +227,6 @@ export default class Validator {
     return isValid;
   }
 
-  // validateAll() {
-  //   this.errors = {};
-  //   let isValid = true;
-
-  //   Object.keys(this.formData).forEach((fieldName) => {
-  //     if (!this.validateField(fieldName)) {
-  //       isValid = false;
-  //     }
-  //   });
-
-  //   logger.debug("Validation completed", {
-  //     isValid,
-  //     errorCount: Object.keys(this.errors).length,
-  //   });
-
-  //   return isValid;
-  // }
-
-  // Getter methods (no logic changes needed)
   getMessageTemplate(ruleName) {
     return this.globalSettings.messages?.[ruleName] || this.getDefaultMessage(ruleName);
   }
@@ -252,6 +258,9 @@ export default class Validator {
       upload_limit: "%s exceeds upload limit.",
       post_limit: "%s exceeds post limit.",
       mimes: "%s file type is not allowed.",
+      required: "%s is required.",
+      integer: "%s must be a whole number.", // 👈 ADD THIS
+      numeric: "%s must be a number.",
       default: "%s is invalid.",
     };
 
@@ -275,7 +284,9 @@ export default class Validator {
 
   parseNestedFieldName(fieldName) {
     // Handle bracket notation: variations[0][name]
-    const bracketRegex = /^(\w+)\[(\d+)\]\[(\w+)\]/;
+    // const bracketRegex = /^(\w+)\[(\d+)\]\[(\w+)\]/;
+    // let match = fieldName.match(bracketRegex);
+    const bracketRegex = /^(\w+)\[(\d+)\]\[(\w+)\]$/;
     let match = fieldName.match(bracketRegex);
 
     if (match) {
@@ -317,5 +328,15 @@ export default class Validator {
     } else {
       this.errors = {};
     }
+  }
+  clearCache(fieldName = null) {
+    if (fieldName) {
+      this.cacheManager.clearField(fieldName);
+    } else {
+      this.cacheManager.clear();
+    }
+  }
+  getCacheStats() {
+    return this.cacheManager.getStats();
   }
 }
