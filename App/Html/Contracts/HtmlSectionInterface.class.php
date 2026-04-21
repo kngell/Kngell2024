@@ -8,7 +8,7 @@ interface HtmlSectionInterface
 
     public function getConfig(array $formValues = []): array|AbstractHtmlComponent;
 
-    public function shouldRender(array $formValues = []): bool;
+    public function shouldRender(array|Entity $formValues = []): bool;
 
     public function getSectionLayout(array $fields, string $sectionKey, HtmlBuilder $form): null|array|AbstractHtmlComponent;
 }

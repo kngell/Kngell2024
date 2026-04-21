@@ -11,25 +11,19 @@ final readonly class FieldMapper
     public function applyMapping(Entity $source, ?FormFieldMappingPayloadInterface $mapping = null, bool $formatValues = true): array
     {
         $mappedData = [];
-
         foreach ($mapping->getFieldMapping() as $sourcePath => $targetPath) {
             if (str_contains($sourcePath, '.*.')) {
                 $this->handleWildcardMapping($source, $mappedData, $sourcePath, $targetPath, $formatValues, $mapping->getNumericFields());
             } else {
                 $value = $this->getNestedValue($source, $sourcePath, $formatValues);
-                $value = $this->applyFieldConstraints(
-                    $targetPath,
-                    $value,
-                    $mapping !== null ? $mapping->getNumericFields() : [],
-                );
+                $value = $this->applyFieldConstraints($targetPath, $value, $mapping?->getNumericFields() ?? []);
                 $this->setNestedValue($mappedData, $targetPath, $value);
             }
         }
-
         return $mappedData;
     }
 
-    private function handleWildcardMapping(Entity $data, array &$mappedData, string $source, string $target, bool $formatValues, array $numericKeys = []): void
+    private function handleWildcardMapping(Entity|array $data, array &$mappedData, string $source, string $target, bool $formatValues, array $numericKeys = []): void
     {
         $sourceParts = explode('.*.', $source, 2);
         $targetParts = explode('.*.', $target, 2);
@@ -40,36 +34,26 @@ final readonly class FieldMapper
         $targetBase = $targetParts[0];
         $targetRemaining = $targetParts[1] ?? null;
 
+        // We pass false to formatValues here because we want the raw array/collection to loop over
         $collection = $this->getNestedValue($data, $sourceBase, false);
+
         if (!is_iterable($collection)) {
             return;
         }
 
         foreach ($collection as $index => $item) {
             if ($sourceRemaining && str_contains($sourceRemaining, '.*.')) {
-                $currentTargetPath = $targetBase . '.' . $index;
-                $existingData = $this->getExistingNestedArray($mappedData, $currentTargetPath);
-                $this->handleWildcardMapping($item, $existingData, $sourceRemaining, $targetRemaining, $formatValues);
-                $this->setNestedValue($mappedData, $currentTargetPath, $existingData);
+                // Recurse for nested wildcards (like variation_attribute.*.id)
+                $this->handleWildcardMapping($item, $mappedData, $sourceRemaining, $targetRemaining, $formatValues, $numericKeys);
             } else {
+                // We are at the leaf (e.g., label, min, max)
                 $val = $this->getNestedValue($item, $sourceRemaining, $formatValues);
-                if ($targetRemaining !== null && str_ends_with($targetRemaining, '[]')) {
-                    $cleanTarget = rtrim($targetRemaining, '[]');
-                    $fullPath = $targetBase . ($cleanTarget ? '.' . $cleanTarget : '');
-                    if (!isset($mappedData[$fullPath])) {
-                        $mappedData[$fullPath] = [];
-                    }
 
-                    if ($val !== null) {
-                        $mappedData[$fullPath][] = $val;
-                    }
-                } else {
-                    $remaining = $targetRemaining ?? '';
-                    $fullPath = $targetBase . '.' . $index . ($remaining !== '' ? '.' . $remaining : '');
+                // Build the target path: price_ranges.brackets.0.label
+                $fullPath = $targetBase . '.' . $index . ($targetRemaining ? '.' . $targetRemaining : '');
 
-                    $cleanVal = $this->applyFieldConstraints($fullPath, $val, $numericKeys);
-                    $this->setNestedValue($mappedData, $fullPath, $cleanVal);
-                }
+                $cleanVal = $this->applyFieldConstraints($fullPath, $val, $numericKeys);
+                $this->setNestedValue($mappedData, $fullPath, $cleanVal);
             }
         }
     }
@@ -88,54 +72,44 @@ final readonly class FieldMapper
 
     private function applyFieldConstraints(string $target, mixed $value, array $numericKeys = []): mixed
     {
-        $sanitizedKeywords = array_filter(array_map('trim', $numericKeys));
-        $isNumericTarget = false;
-        $matchedKeyword = '';
-
-        foreach ($sanitizedKeywords as $keyword) {
-            if (str_contains($target, $keyword)) {
-                $isNumericTarget = true;
-                $matchedKeyword = $keyword;
-                break;
-            }
+        if (!is_string($value) || empty($value)) {
+            return $value;
         }
-
-        if ($isNumericTarget && $this->isFormattedNumeric($value)) {
-            return $this->stripFormatting($value, $matchedKeyword);
-        }
-
-        return $value;
+        return $this->isFormattedNumeric($value) ? $this->stripFormatting($value) : $value;
     }
 
-    private function stripFormatting(mixed $value, string $keyword = ''): mixed
+    private function stripFormatting(mixed $value): mixed
     {
         if (!is_string($value) || empty($value)) {
             return $value;
         }
 
-        // 🎯 Rule: Quantities are Integers. No dots, no commas.
-        if ($keyword === 'quantity' || str_contains($keyword, 'quantity')) {
-            return preg_replace('/[^\d]/', '', $value);
+        // HEURISTIC: If it contains directory separators or letters, it's likely a path/string
+        if (preg_match('/[a-zA-Z\/]/', $value)) {
+            return $value;
         }
 
-        // Existing logic for prices/modifiers (allowing decimals)
-        $clean = preg_replace('/[^\d,.]/', '', $value);
+        $clean = preg_replace('/[^\d,.-]/', '', $value);
 
-        // Normalize logic for decimals...
+        // Final sanity check: if the result is empty or not numeric, return original
+        if (empty($clean) || !is_numeric(str_replace([',', '.'], '', $clean))) {
+            return $value;
+        }
+
         if (str_contains($clean, '.') && str_contains($clean, ',')) {
             $dotPos = strrpos($clean, '.');
             $commaPos = strrpos($clean, ',');
-            if ($dotPos > $commaPos) {
-                $clean = str_replace(',', '', $clean);
-            } else {
+            if ($dotPos < $commaPos) {
                 $clean = str_replace('.', '', $clean);
                 $clean = str_replace(',', '.', $clean);
+            } else {
+                $clean = str_replace(',', '', $clean);
             }
         } elseif (str_contains($clean, ',')) {
             $clean = str_replace(',', '.', $clean);
         }
 
-        return $clean;
+        return (string) (float) $clean;
     }
 
     private function isFormattedNumeric(mixed $value): bool
@@ -143,7 +117,17 @@ final readonly class FieldMapper
         if (!is_string($value)) {
             return false;
         }
-        return preg_match('/^[^\d]*[\d,.]+[^\d]*$/', $value) === 1;
+
+        // Exclude common path/non-numeric patterns immediately
+        if (preg_match('/[a-zA-Z\/]/', $value)) {
+            return false;
+        }
+
+        $hasDigits = preg_match('/\d/', $value);
+        $hasFormatting = preg_match('/[,.]|^\d{1,3}(?:[.,]\d{3})*(?:[.,]\d+)?$/', $value);
+        $isPricePattern = preg_match('/^[\d.,\s$€£¥]+$/', $value);
+
+        return $hasDigits && ($hasFormatting || $isPricePattern);
     }
 
     private function getNestedValue(mixed $current, string $path, bool $formatValues): mixed
@@ -155,7 +139,9 @@ final readonly class FieldMapper
         $keys = explode('.', $path);
         $lastReflectionProp = null;
 
-        foreach ($keys as $key) {
+        foreach ($keys as $index => $key) {
+            $isLastKey = ($index === count($keys) - 1);
+
             if ($current instanceof Entity) {
                 $camelKey = StringUtils::snakeCaseToCamelCase($key);
 
@@ -166,15 +152,32 @@ final readonly class FieldMapper
                 }
                 $value = $current->getFieldValue($camelKey);
 
-                // If null, fallback to the raw key
                 if ($value === null) {
                     $value = $current->getFieldValue($key);
                 }
 
                 $current = $value;
+            }
+            // Handle Value Objects - similar to Entity but using getters
+            elseif (is_object($current)) {
+                $camelKey = StringUtils::snakeCaseToCamelCase($key);
+
+                $getter = 'get' . ucfirst($camelKey);
+                if (method_exists($current, $getter)) {
+                    $current = $current->$getter();
+                } elseif (property_exists($current, $camelKey)) {
+                    $current = $current->$camelKey;
+                } elseif (property_exists($current, $key)) {
+                    $current = $current->$key;
+                } else {
+                    return null;
+                }
+
+                if ($isLastKey && $formatValues && is_object($current)) {
+                    return $this->typePresenterFactory->displayValue($current);
+                }
             } elseif (is_array($current)) {
                 $current = $current[$key] ?? $current[StringUtils::snakeCaseToCamelCase($key)] ?? null;
-                $lastReflectionProp = null;
             } else {
                 return null;
             }
@@ -184,11 +187,29 @@ final readonly class FieldMapper
             }
         }
 
-        if ($formatValues && $lastReflectionProp !== null && $current !== null) {
-            return $this->typePresenterFactory->displayValue($current, $lastReflectionProp);
+        // Format the final value if needed
+        if ($formatValues && $current !== null) {
+            if ($lastReflectionProp !== null) {
+                $formattedValue = $this->typePresenterFactory->displayValue($current, $lastReflectionProp);
+                // Auto-clean numeric strings
+                return $this->autoCleanNumericValue($formattedValue);
+            }
+            if (is_object($current)) {
+                return $this->typePresenterFactory->displayValue($current);
+            }
+            return $this->autoCleanNumericValue($current);
         }
 
         return $current;
+    }
+
+    private function autoCleanNumericValue(mixed $value): mixed
+    {
+        if (!is_string($value) || !$this->isFormattedNumeric($value)) {
+            return $value;
+        }
+
+        return $this->stripFormatting($value);
     }
 
     private function setNestedValue(array &$array, string $path, mixed $value): void
@@ -197,14 +218,11 @@ final readonly class FieldMapper
         $current = &$array;
 
         foreach ($keys as $key) {
-            // If the segment doesn't exist, initialize it as an array
             if (!isset($current[$key]) || !is_array($current[$key])) {
                 $current[$key] = [];
             }
             $current = &$current[$key];
         }
-
-        // Now $current is a reference to the leaf location
         $current = $value;
     }
 }

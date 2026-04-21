@@ -23,10 +23,6 @@ final class MoneyType implements TypeHandlerInterface
         // Otherwise, only support actual Money objects
         return $value instanceof Money;
     }
-    // public function supports(mixed $value, ?ReflectionProperty $property = null): bool
-    // {
-    //     return $value instanceof Money;
-    // }
 
     public function normalizeForDatabase(mixed $value, ?ReflectionProperty $property = null): mixed
     {

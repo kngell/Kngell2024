@@ -7,9 +7,6 @@ class AdminController extends Controller
     public function __construct(
         FormCreatorService $frm,
         private ProductShowModel $product,
-        private PaginatedCacheFactory $factory,
-        private PaginationStateService $paginState,
-        private ObfuscatorManager $obfuscatorManager,
     ) {
         $this->layout('admin');
         $this->frm = $frm;
@@ -57,13 +54,7 @@ class AdminController extends Controller
     public function productList(): string
     {
         $this->pageTitle('Product List');
-        $product = new ProductListDecorator(
-            $this,
-            $this->factory,
-            $this->product,
-            $this->paginState,
-            $this->obfuscatorManager,
-        );
+        $product = $this->decorate(ProductListDecorator::class, $this);
         return $this->render('product-list', $product->page());
     }
 

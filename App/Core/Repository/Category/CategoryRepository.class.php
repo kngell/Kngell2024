@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 class CategoryRepository extends Repository
 {
-    public function findAll(array $conditions = [], array $columns = []): void
+    public function findAll(array $conditions = [], ?int $limit = null, ?int $offset = null, array $columns = []): void
     {
         try {
             /** @var QueryBuilder $qbFactory */
@@ -23,6 +23,7 @@ class CategoryRepository extends Repository
                 $anchor,
                 $recursive,
                 $mainQuery,
+                true,
             );
             if (!empty($whereConditions)) {
                 $this->applyMixedConditions($anchor, $whereConditions);

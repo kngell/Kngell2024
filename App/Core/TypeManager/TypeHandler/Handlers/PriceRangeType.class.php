@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 class PriceRangeType implements TypeHandlerInterface
 {
+    public function __construct(private CurrencyCodeProviderInterface $currencyProvider)
+    {
+    }
+
     public function supports(mixed $value, ?ReflectionProperty $property = null): bool
     {
         if ($property !== null) {
@@ -12,7 +16,6 @@ class PriceRangeType implements TypeHandlerInterface
                 return true;
             }
         }
-
         return $value instanceof PriceRange;
     }
 
@@ -31,26 +34,19 @@ class PriceRangeType implements TypeHandlerInterface
             return $rawValue;
         }
 
-        // Handle array from form submission
+        // Get currency from entity context or system default
+        $currencyCode = $this->getCurrencyCode($contextEntity);
+
+        // Handle array from form submission (has brackets with numeric values)
         if (is_array($rawValue) && isset($rawValue['brackets'])) {
-            return PriceRange::fromArray($rawValue);
+            return PriceRange::fromDatabaseArray($rawValue, $currencyCode);
         }
 
-        // Handle JSON string from database
+        // Handle JSON string from database (numeric values)
         if (is_string($rawValue)) {
             $decoded = json_decode($rawValue, true);
             if (json_last_error() === JSON_ERROR_NONE && isset($decoded['brackets'])) {
-                return PriceRange::fromArray($decoded);
-            }
-        }
-
-        // If we have min/max from the entity, generate default ranges
-        if ($contextEntity instanceof Category) {
-            $minPrice = $contextEntity->getMinPrice();
-            $maxPrice = $contextEntity->getMaxPrice();
-
-            if ($minPrice && $maxPrice) {
-                return PriceRange::fromMinMax($minPrice, $maxPrice);
+                return PriceRange::fromDatabaseArray($decoded, $currencyCode);
             }
         }
 
@@ -68,5 +64,32 @@ class PriceRangeType implements TypeHandlerInterface
         }
 
         return json_encode($entityValue->toArray());
+    }
+
+    private function getCurrencyCode(object $contextEntity): string
+    {
+        // Try to get currency from entity
+        if ($contextEntity instanceof Category) {
+            if (method_exists($contextEntity, 'getCurrencyCodeIfExists')) {
+                $currencyCode = $contextEntity->getCurrencyCodeIfExists();
+                if ($currencyCode) {
+                    return $currencyCode;
+                }
+            }
+
+            if (method_exists($contextEntity, 'getCurrencyIdIfExists')) {
+                $currencyId = $contextEntity->getCurrencyIdIfExists();
+                if ($currencyId) {
+                    try {
+                        return $this->currencyProvider->getCurrencyCode($currencyId);
+                    } catch (Throwable $e) {
+                        // Fall through to default
+                    }
+                }
+            }
+        }
+
+        // Fallback to system default currency
+        return $this->currencyProvider->getSystemDefaultCurrencyCode();
     }
 }

@@ -118,7 +118,6 @@ final readonly class ContainerClassRegistrator
             FileOperationsInterface::class => FileOperationsManager::class,
             ChangeTrackerInterface::class => ChangeTracker::class,
 
-            VariationBuilderInterface::class => DatabaseVariationBuilder::class,
             CurrencyLookupInterface::class => CurrencyService::class,
             RegionContextInterface::class => RegionContext::class,
             LoggerInterface::class => CustomLogger::class,
@@ -191,6 +190,20 @@ final readonly class ContainerClassRegistrator
                         );
                     },
                     $app->get(EntityIdentityMap::class),
+                );
+            },
+            MoneyType::class => function () use ($app) {
+                return new MoneyType(
+                    new LazyCurrencyCodeProvider(
+                        fn () => $app->get(CurrencyCodeProviderInterface::class),
+                    ),
+                );
+            },
+            PriceRangeType::class => function () use ($app) {
+                return new PriceRangeType(
+                    new LazyCurrencyCodeProvider(
+                        fn () => $app->get(CurrencyCodeProviderInterface::class),
+                    ),
                 );
             },
             //Forms
@@ -297,7 +310,6 @@ final readonly class ContainerClassRegistrator
             FormCreatorService::class,
             HtmlRegularSectionManager::class,
             FormProgressCalculator::class,
-            VariationBuilderInterface::class,
         ];
         foreach ($formServices as $service) {
             $app->tag($service, 'forms');

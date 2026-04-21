@@ -12,7 +12,7 @@
   "css/backend/admin/pages/contact": "/public/assets/css/css/backend/admin/pages/contact.css",
   "css/backend/admin/pages/product-list": "/public/assets/css/css/backend/admin/pages/product-list.css",
   "css/backend/admin/pages/product": "/public/assets/css/css/backend/admin/pages/product.css",
-  "css/backend/admin/modals/confirm-deletion": "/public/assets/css/css/backend/admin/modals/confirm-deletion.css",
+  "css/backend/admin/pages/confirm-deletion": "/public/assets/css/css/backend/admin/pages/confirm-deletion.css",
   "css/backend/admin/pages/hero-section": "/public/assets/css/css/backend/admin/pages/hero-section.css",
   "css/backend/admin/pages/small-banner-section": "/public/assets/css/css/backend/admin/pages/small-banner-section.css",
   "css/backend/admin/pages/category": "/public/assets/css/css/backend/admin/pages/category.css",

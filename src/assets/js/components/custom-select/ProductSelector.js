@@ -1,21 +1,19 @@
 import BrowserLogger from "js/core/utils/BrowserLogger";
-import CustomSelect from "./custom-select";
 import ProductCard from "./product-card";
 
 const logger = new BrowserLogger("ProductSelector");
 
 export default class ProductSelector {
-  constructor(selector, options = {}) {
+  constructor(selector, customSelectInstance, options = {}) {
     this.selector = selector;
+    this.customSelect = customSelectInstance;
     this.options = {
-      apiEndpoint: "/small-banner-search/load-products",
       onSelect: null,
       onReset: null,
       ...options
     };
 
     this.container = null;
-    this.customSelect = null;
     this.productCard = null;
     this.relationshipBody = null;
   }
@@ -27,7 +25,7 @@ export default class ProductSelector {
       return;
     }
 
-    this.relationshipBody = this.container.closest(".product-relationship__body");
+    this.relationshipBody = this.container.closest(".form-section__body");
 
     // Initialize ProductCard
     if (this.relationshipBody) {
@@ -39,65 +37,38 @@ export default class ProductSelector {
       });
     }
 
-    // Initialize CustomSelect
-    this.customSelect = new CustomSelect(this.selector, {
-      dataSource: async (page, limit) => {
-        const params = new URLSearchParams({
-          page,
-          limit,
-          search: ""
-        });
-        const response = await fetch(`${this.options.apiEndpoint}?${params}`);
-        const data = await response.json();
-        return {
-          items: (data.products || data.data || []).map((p) => ({
-            id: p.id,
-            value: p.id,
-            label: p.sku ? `${p.name} (${p.sku})` : p.name,
-            name: p.name,
-            sku: p.sku,
-            description: p.description,
-            shortDescription: p.shortDescription,
-            image: p.image
-          })),
-          total: data.total || 0,
-          hasMore: data.hasMore || false
-        };
-      },
-      placeholder:
-        this.container.querySelector(".text")?.dataset?.placeholder ||
-        "Search Product by name or Sku...",
-      emptyMessage: "No products found",
-      loadingMessage: "Loading products...",
-      enableSearch: true,
-      enableInfiniteScroll: true,
-      pageSize: 20,
-      onSelect: (value, text, item) => {
-        this.handleProductSelect(item);
-        if (this.options.onSelect) {
-          this.options.onSelect(value, text, item);
-        }
-      },
-      onReset: () => {
-        this.handleProductReset();
-        if (this.options.onReset) {
-          this.options.onReset();
-        }
-      }
-    });
+    // Attach to existing CustomSelect events
+    if (this.customSelect) {
+      // Store original handlers
+      const originalOnSelect = this.customSelect.options.onSelect;
+      const originalOnReset = this.customSelect.options.onReset;
 
-    this.customSelect.init();
+      // Wrap handlers
+      this.customSelect.options.onSelect = (value, text, item) => {
+        this.handleProductSelect(item);
+        if (originalOnSelect) originalOnSelect(value, text, item);
+        if (this.options.onSelect) this.options.onSelect(value, text, item);
+      };
+
+      this.customSelect.options.onReset = () => {
+        this.handleProductReset();
+        if (originalOnReset) originalOnReset();
+        if (this.options.onReset) this.options.onReset();
+      };
+    }
 
     // Set initial value if exists
     const hiddenInput = this.container.querySelector(".input-field__hidden-value");
-    if (hiddenInput?.value) {
+    if (hiddenInput?.value && this.customSelect) {
       this.loadAndSelectProduct(hiddenInput.value);
     }
   }
 
   async loadAndSelectProduct(productId) {
     try {
-      const response = await fetch(`${this.options.apiEndpoint}?id=${productId}`);
+      const apiEndpoint =
+        this.customSelect?.options?.apiEndpoint || "/small-banner-search/load-products";
+      const response = await fetch(`${apiEndpoint}?id=${productId}`);
       const data = await response.json();
       const product = data.product || data;
 
@@ -147,9 +118,6 @@ export default class ProductSelector {
   }
 
   destroy() {
-    if (this.customSelect) {
-      this.customSelect.destroy();
-    }
     if (this.productCard) {
       this.productCard.destroy();
     }

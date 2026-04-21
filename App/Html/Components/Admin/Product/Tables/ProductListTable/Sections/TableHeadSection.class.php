@@ -6,7 +6,7 @@ class TableHeadSection extends AbstractTableSection implements ProductTableSecti
 {
     private const string TABLE_HEAD_TEMPLATE_PATH = APP . DS . 'Views' . DS . 'Backend/admin/partials/products/productTableHead.php';
 
-    public function __construct(HtmlBuilder $builder, IconBuilder $icon, private FileContentManager $file, TypePresenterFactory $presenter)
+    public function __construct(HtmlBuilder $builder, IconBuilder $icon, private FileContentManager $file, HtmlSectionPresentationService $presenter)
     {
         parent::__construct($builder, $icon, $presenter);
     }

@@ -78,7 +78,7 @@ class FormFactoryRegistry
     {
         $factoryClasses = [
             MainProductFormFactory::class,
-            DeleteProductFormFactory::class,
+            ConfirmDeletionFormFactory::class,
             HeroFormFactory::class,
             SmallBannerFormFactory::class,
             CategoryFormFactory::class,
@@ -86,7 +86,8 @@ class FormFactoryRegistry
 
         foreach ($factoryClasses as $class) {
             try {
-                $reflection = new ReflectionClass($class);
+                // $cl = explode('::', $class, 1);
+                $reflection = CustomReflection::getInstance($class)->getClass();
 
                 $actions = $reflection->getConstant('SUPPORTED_ACTIONS') ?: [];
                 $routes = $reflection->getConstant('SUPPORTED_ROUTES') ?: [];

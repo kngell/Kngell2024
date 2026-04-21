@@ -94,6 +94,7 @@ class ProductShow extends Entity implements TimestampableInterface, SoftDeletabl
 
     //Sales
     private int $totalSales = 0;
+    private ?int $isOnSale = null;
 
     //Enum
     private ProductVisibility $productVisibility = ProductVisibility::VISIBLE;
@@ -684,6 +685,26 @@ class ProductShow extends Entity implements TimestampableInterface, SoftDeletabl
     public function setProductDimension(?Dimensions $productDimension): ProductShow
     {
         $this->productDimension = $productDimension;
+
+        return $this;
+    }
+
+    /**
+     * @return null|int
+     */
+    public function getIsOnSale(): ?int
+    {
+        return $this->isOnSale;
+    }
+
+    /**
+     * @param null|int $isOnSale
+     *
+     * @return ProductShow
+     */
+    public function setIsOnSale(?int $isOnSale): ProductShow
+    {
+        $this->isOnSale = $isOnSale;
 
         return $this;
     }

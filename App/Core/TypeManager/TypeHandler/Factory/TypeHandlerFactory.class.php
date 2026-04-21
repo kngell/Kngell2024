@@ -16,6 +16,8 @@ final class TypeHandlerFactory
     private bool $isInitialized = false;
 
     public function __construct(
+        private readonly PriceRangeType $priceRangeType,
+        private readonly MoneyType $moneyType,
     ) {
     }
 
@@ -247,10 +249,47 @@ final class TypeHandlerFactory
         ];
     }
 
+    // private function initializeTypeBasedHandlers(): void
+    // {
+    //     $this->typeBasedHandlers = [
+    //         // Scalar types (with both names for compatibility)
+    //         'bool' => new StandardType(),
+    //         'boolean' => new StandardType(),
+    //         'int' => new StandardType(),
+    //         'integer' => new StandardType(),
+    //         'float' => new StandardType(),
+    //         'double' => new StandardType(),
+    //         'string' => new StandardType(),
+    //         'array' => new ArrayType(),
+
+    //         // Class types
+    //         Entity::class => new EntityType(),
+    //         DateTime::class => new DateTimeType(),
+    //         DateTimeImmutable::class => new DateTimeType(),
+    //         DateTimeInterface::class => new DateTimeType(),
+
+    //         // Your custom types
+    //         PriceRange::class => $this->container->get(PriceRangeType::class),
+    //         Weight::class => new WeightType(),
+    //         Dimensions::class => new DimensionsType(),
+    //         UuidInterface::class => new UuidType(),
+
+    //         // Special handlers
+    //         'binary' => new BinaryType(),
+    //         'hex_literal' => new HexLiteralType(),
+    //         'enum' => new EnumType(),
+    //         'object' => new ObjectType(),
+    //     ];
+
+    //     // Add Money type if available
+    //     if (class_exists(Money::class)) {
+    //         $this->typeBasedHandlers[Money::class] = $this->container->get(MoneyType::class);
+    //     }
+    // }
     private function initializeTypeBasedHandlers(): void
     {
         $this->typeBasedHandlers = [
-            // Scalar types (with both names for compatibility)
+            // Scalar types
             'bool' => new StandardType(),
             'boolean' => new StandardType(),
             'int' => new StandardType(),
@@ -266,8 +305,8 @@ final class TypeHandlerFactory
             DateTimeImmutable::class => new DateTimeType(),
             DateTimeInterface::class => new DateTimeType(),
 
-            // Your custom types
-            PriceRange::class => new PriceRangeType(),
+            // Custom types — injected directly
+            PriceRange::class => $this->priceRangeType,
             Weight::class => new WeightType(),
             Dimensions::class => new DimensionsType(),
             UuidInterface::class => new UuidType(),
@@ -279,9 +318,8 @@ final class TypeHandlerFactory
             'object' => new ObjectType(),
         ];
 
-        // Add Money type if available
-        if (class_exists(Money::class)) {
-            $this->typeBasedHandlers[Money::class] = App::diGet(MoneyType::class);
+        if ($this->moneyType !== null) {
+            $this->typeBasedHandlers[Money::class] = $this->moneyType;
         }
     }
 }

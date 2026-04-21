@@ -4,5 +4,5 @@ declare(strict_types=1);
 
 interface StandAloneComponentInterface
 {
-    public function build(mixed $name = null): ?AbstractHtmlComponent;
+    public function build(mixed $params = null): ?AbstractHtmlComponent;
 }

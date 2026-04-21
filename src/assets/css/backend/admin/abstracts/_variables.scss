@@ -92,6 +92,21 @@ $background-semantic-error-subtle: map-deep-get(
   error,
   subtle
 );
+$background-semantic-error-lighter: map-deep-get(
+  $color-usage,
+  "background",
+  semantic,
+  error,
+  lighter
+);
+$background-semantic-error-normal: map-deep-get(
+  $color-usage,
+  "background",
+  semantic,
+  error,
+  normal
+);
+$background-semantic-error-bold: map-deep-get($color-usage, "background", semantic, error, bold);
 $background-brand-primary: map-deep-get($color-usage, "background", brand, primary);
 $background-brand-secondary: map-deep-get($color-usage, "background", brand, secondary);
 $background-brand-tertiary: map-deep-get($color-usage, "background", brand, tertiary);
@@ -206,7 +221,9 @@ $button-variants: (
   default-text: (
     background: map-get($color-neutral, gray, gray-50),
     color: map-get($color-neutral, black, black-500),
-    hover-background: map-get($color-neutral, gray, gray-100),
+    hover-background: map-get($color-neutral, gray, gray-300),
+    active-bg-color: map-get($color-neutral, gray, gray-400),
+    active-color: map-get($color-neutral, gray, gray-50),
     typography: map-get($text-m, semibold),
     radius: map-get($radius, full),
     shadow: null
@@ -215,6 +232,7 @@ $button-variants: (
     background: map-get($color-primary, primary-500),
     color: map-get($color-neutral, white),
     hover-background: map-get($color-primary, primary-600),
+    active-bg-color: map-get($color-primary, primary-900),
     typography: map-get($text-m, semibold),
     radius: map-get($radius, s),
     shadow: $soft-shadow
@@ -222,8 +240,8 @@ $button-variants: (
   secondary: (
     background: map-get($color-primary, primary-100),
     color: map-get($color-primary, primary-500),
-    hover-background: map-get($color-primary, primary-200),
-    // hover-color: map-get($color-neutral, white),
+    hover-background: map-get($color-primary, primary-300),
+    active-bg-color: map-get($color-primary, primary-400),
     typography: map-get($text-m, semibold),
     radius: map-get($radius, s),
     shadow: $soft-shadow
@@ -233,8 +251,10 @@ $button-variants: (
     background: transparent,
     color: map-get($color-neutral, gray, gray-400),
     border: 1px solid map-get($color-neutral, gray, gray-400),
-    hover-background: rgba(map-get($color-primary, primary-100), 0.1),
+    hover-background: rgba(map-get($color-primary, primary-200), 0.1),
     hover-color: map-get($color-neutral, black, black-500),
+    active-bg-color: map-get($color-neutral, black, black-500),
+    active-color: map-get($color-neutral, gray, gray-50),
     typography: map-get($text-m, medium),
     radius: map-get($radius, s),
     shadow: null
@@ -244,6 +264,7 @@ $button-variants: (
     color: map-deep-get($color-secondary, red, red-500),
     hover-background: map-deep-get($color-secondary, red, red-700),
     hover-color: map-get($color-secondary, red, red-50),
+    active-bg-color: map-get($color-secondary, red, red-200),
     typography: map-get($text-m, medium),
     radius: map-get($radius, s),
     shadow: null
@@ -252,6 +273,7 @@ $button-variants: (
     background: map-deep-get($color-secondary, red, red-500),
     color: map-get($color-neutral, white),
     hover-background: map-deep-get($color-secondary, red, red-600),
+    active-bg-color: map-deep-get($color-secondary, red, red-800),
     typography: map-get($text-m, medium),
     radius: map-get($radius, s),
     shadow: $hard-shadow

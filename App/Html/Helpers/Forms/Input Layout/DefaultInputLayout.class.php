@@ -9,8 +9,8 @@ class DefaultInputLayout implements InputLayoutInterface
         AbstractHtmlComponent $inputElement,
         string $fieldId,
         FormBuilder $form,
+        ?AbstractForm $formInstance = null,
     ): AbstractHtmlComponent {
-        // Handle buttons and dropzone separately
         if (in_array($field['type'] ?? '', ['button', 'dropzone'])) {
             return isset($field['wrapper-class'])
                 ? $form->tag('div')->class($field['wrapper-class'])->add($inputElement)

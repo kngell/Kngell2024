@@ -34,8 +34,7 @@ class DisplaySettingsSection extends BaseFieldSection
 
     public function getSectionLayout(array $fields, string $sectionKey, HtmlBuilder $form): ?AbstractHtmlComponent
     {
-        $sectionClass = 'display-settings';
-
+        $sectionClass = 'form-section';
         $defaultTheme = $this->formValues['small_banner_theme'] ?? null;
         if ($defaultTheme) {
             $this->formOptions->setDefaultOption($defaultTheme);
@@ -50,7 +49,7 @@ class DisplaySettingsSection extends BaseFieldSection
             ->addOption('Dark Mode', 'Dark theme for reduced eye strain', ['data-option' => Theme::DARK->value])
             ->build('small_banner_theme');
 
-        return $form->tag('div')->class($sectionClass)->add(
+        return $form->tag('div')->class($sectionClass, 'display-settings')->add(
             $this->header->getComponent(
                 title: 'Display Settings',
                 wrapperClass: $sectionClass . '__header',

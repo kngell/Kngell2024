@@ -47,7 +47,7 @@ class ProductShowRepository extends Repository
         }
     }
 
-    public function findOneBy(array $conditions = []): void
+    public function findOneBy(array $conditions = [], array $columns = []): void
     {
         if ($this->isArray($conditions)) {
             try {
@@ -75,9 +75,9 @@ class ProductShowRepository extends Repository
         }
     }
 
-    public function findAll(array $conditions = [], array $columns = []): void
+    public function findAll(array $conditions = [], ?int $limit = null, ?int $offset = null, array $columns = []): void
     {
-        $this->findBy($conditions, null, null, $columns);
+        $this->findBy($conditions, $limit, $offset, $columns);
     }
 
     public function findBy(array $conditions = [], ?int $limit = null, ?int $offset = null, array $columns = []): void
@@ -116,10 +116,19 @@ class ProductShowRepository extends Repository
             ->from('product');
 
         $this->applySmartJoins($select, $conditions, $isFullQuery);
-
-        if (!empty($conditions)) {
-            $select->where($conditions);
+        $orderBy = [];
+        if (isset($conditions['ORDER BY'])) {
+            $orderBy[] = $conditions['ORDER BY'];
         }
+        if (isset($conditions['order by'])) {
+            $orderBy[] = $conditions['order by'];
+        }
+        $conditions = $this->applySqlKeywordsForSelect(
+            $conditions,
+            $select,
+        );
+        $conditions = $this->applyGlobalScopes($conditions);
+        $this->applyMixedConditions($select, $conditions);
 
         if ($isFullQuery) {
             $select->orderBy(

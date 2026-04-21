@@ -24,7 +24,7 @@ $font: (
   size-base: 1.6rem,
   size-lg: 3.2rem,
   weight-normal: 400,
-  weight-medium: 500,
+  weight-medium: 500
 );
 /********* COLORS **********/
 $primary-color: #4a6cf7;
@@ -37,7 +37,7 @@ $colors-ecommerce: (
   gray-500: #656565,
   gray-600: #666666,
   gray-800: #2e2e2e,
-  focus: #0066cc,
+  focus: #0066cc
 );
 $bar-color1: #d9d9d9;
 //Buttuns
@@ -61,6 +61,7 @@ $color-gray-light6: #ebebeb;
 $color-yellow: #e1b000;
 $color-black-light: #0c0c0c;
 $color-gray: #ededed;
+$color-gray-dark: map.get($colors-ecommerce, gray-800);
 $color-big-card-light: #f9f9f9;
 $color-big-card-normal: #eaeaea;
 $color-big-card-dark: #2c2c2c;
@@ -127,13 +128,13 @@ $input-config: (
   focus-color: #007bff,
   label-color: #666,
   label-floating-color: #333,
-  font-size: 1.6rem,
+  font-size: 1.6rem
 );
 $padding: (
   top: 1.6rem,
   right: 1.6rem,
   bottom: 0.6rem,
-  left: 1.6rem,
+  left: 1.6rem
 );
 /* ************** BREAKPOINTS ************** */
 $breakpoints: (
@@ -142,7 +143,7 @@ $breakpoints: (
   "md": 768px,
   "lg": 992px,
   "xl": 1200px,
-  "xxl": 1400px,
+  "xxl": 1400px
 );
 // $breakpoints-short: (
 //   mobile: 480px,
@@ -160,7 +161,7 @@ $spacing: (
   2xl: 3.2rem,
   3xl: 5.2rem,
   4xl: 12rem,
-  10xl: 16rem,
+  10xl: 16rem
 );
 
 $sizes: (
@@ -175,5 +176,5 @@ $sizes: (
   logo-width-mobile: 6.4rem,
   logo-height: 3.2rem,
   logo-height-mobile: 2rem,
-  divider-height: 2.4rem,
+  divider-height: 2.4rem
 );

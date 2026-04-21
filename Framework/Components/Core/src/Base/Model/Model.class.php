@@ -191,6 +191,14 @@ abstract class Model
         return $this->em;
     }
 
+    public function getEntityKeyfield(): ?string
+    {
+        if (is_object($this->entity)) {
+            return $this->entity->getEntityKeyField();
+        }
+        return null;
+    }
+
     public function addToIdentityMap(Entity $entity): void
     {
         $id = $entity->getEntityPrimarykeyValue();

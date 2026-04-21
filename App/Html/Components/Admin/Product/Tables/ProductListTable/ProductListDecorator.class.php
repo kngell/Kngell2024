@@ -5,13 +5,13 @@ declare(strict_types=1);
 class ProductListDecorator extends AbstractHtmlDecorator
 {
     public function __construct(
-        Controller $controller,
         private PaginatedCacheFactory $factory,
         private ProductShowModel $model,
         private PaginationStateService $paginationService,
-        private ObfuscatorManager $obfuscatorManager,
+        private HtmlSectionPresentationService $presenter,
+        private IconBuilder $iconBuilder,
+        private FileContentManager $fileManager,
     ) {
-        parent::__construct($controller);
     }
 
     public function page(): array
@@ -40,13 +40,9 @@ class ProductListDecorator extends AbstractHtmlDecorator
         $productList = new ProductListTable(
             $products,
             $target->builder,
-            new IconBuilder(),
-            new FileContentManager(),
-            new TypePresenterFactory(
-                $target->translator,
-                $target->region,
-                $this->obfuscatorManager,
-            ),
+            $this->iconBuilder,
+            $this->fileManager,
+            $this->presenter,
             $target->flash,
         );
 

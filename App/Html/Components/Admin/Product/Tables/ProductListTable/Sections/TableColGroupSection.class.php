@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 class TableColGroupSection extends AbstractTableSection implements ProductTableSectionInterface
 {
-    public function __construct(HtmlBuilder $builder, IconBuilder $icon, TypePresenterFactory $presenter)
+    public function __construct(HtmlBuilder $builder, IconBuilder $icon, HtmlSectionPresentationService $presenter)
     {
         parent::__construct($builder, $icon, $presenter);
     }

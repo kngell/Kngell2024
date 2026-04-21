@@ -3,7 +3,7 @@
         <!-- Radios at form level (siblings to tabs and content) -->
         <input type="radio" name="form-tab" id="tab-category-infos" class="radio-tab" checked>
         <input type="radio" name="form-tab" id="tab-content-display" class="radio-tab">
-        <input type="radio" name="form-tab" id="tab-settings" class="radio-tab">
+        <input type="radio" name="form-tab" id="tab-price" class="radio-tab">
         <input type="radio" name="form-tab" id="tab-advanced" class="radio-tab" disabled>
         <div class="category-form__tabs">
             <label for="tab-category-infos" class="tab">
@@ -12,8 +12,8 @@
             <label for="tab-content-display" class="tab">
                 <h6 class="tab__text">Content and display</h6>
             </label>
-            <label for="tab-settings" class="tab">
-                <h6 class="tab__text">Display Settings</h6>
+            <label for="tab-price" class="tab">
+                <h6 class="tab__text">Price Range and nevaigation</h6>
             </label>
             <label for="tab-advanced" class="tab tab__disabled">
                 <h6 class="tab__text">Advanced (Disabled)</h6>
@@ -440,7 +440,7 @@
             <!-- TAB 3: Display Settings -->
             <div class="tab-content category-form__content--settings">
                 <div class="category-form__left">
-                    <div class="form-section display-settings">
+                    <div class="form-section price-range">
                         <div class="form-section__header">
                             <div class="form-section__header-left">
                                 <div class="icon-container">
@@ -453,8 +453,72 @@
                             </div>
                         </div>
                         <div class="form-section__body">
-                            <!-- Add your display settings fields here -->
-                            <p>Display settings content goes here</p>
+                            <div class="form-row horizontal">
+                                <div class="input-field">
+                                    <div class="input-field__body">
+                                        <input type="text" class="input-field__input" id="redirect_url"
+                                            placeholder=" " />
+                                        <label for="redirect_url" class="input-field__label">Redirect
+                                            URL</label>
+                                    </div>
+                                </div>
+                                <div class="input-field">
+                                    <div class="input-field__body">
+                                        <input type="text" class="input-field__input" id="redirect_url"
+                                            placeholder=" " />
+                                        <label for="redirect_url" class="input-field__label">Redirect
+                                            URL</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bracket-range">
+                                <div class="bracket-range__card">
+                                    <div class="bracket-range__card-header">
+                                        <span class="card-title">Bracket</span>
+                                        <div class="card-action">
+                                            <div class="card-action__add-btn">
+                                                <svg class="icon cancel" aria-label="Cancel" role="img">
+                                                    <use href="<?= $this->asset('img/icons-sprite.svg') ?>#icon-plus">
+                                                    </use>
+                                                </svg>
+                                            </div>
+                                            <div class="card-action__remove-btn">
+                                                <svg class="icon cancel" aria-label="Cancel" role="img">
+                                                    <use href="<?= $this->asset('img/icons-sprite.svg') ?>#icon-minus">
+                                                    </use>
+                                                </svg>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="bracket-range__card-body">
+                                        <div class="form-row">
+                                            <div class="input-field">
+                                                <div class="input-field__body">
+                                                    <input type="text" class="input-field__input" id="max_depth"
+                                                        placeholder=" " />
+                                                    <label for="max_depth" class="input-field__label">Label</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-row horizontal">
+                                            <div class="input-field">
+                                                <div class="input-field__body">
+                                                    <input type="number" class="input-field__input" id="max_depth"
+                                                        placeholder=" " />
+                                                    <label for="max_depth" class="input-field__label">Min</label>
+                                                </div>
+                                            </div>
+                                            <div class="input-field">
+                                                <div class="input-field__body">
+                                                    <input type="number" class="input-field__input" id="max_depth"
+                                                        placeholder=" " />
+                                                    <label for="max_depth" class="input-field__label">Max</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -246,6 +246,9 @@ final class TypePresenterFactory implements TypePresenterFactoryInterface
             Dimensions::class => new DimensionsPresenter($this->regionContext, $this->translator),
             UuidInterface::class => new UuidPresenter(),
 
+            // Add PriceRange presenter
+            PriceRange::class => new PriceRangeFormPresenter(),
+
             // Special types
             'enum' => new EnumPresenter($this->translator),
             'object' => new ObjectPresenter($this),

@@ -6,6 +6,15 @@ class CategoryBasicInformation extends BaseRegularSection
 {
     protected string $layoutType = self::LAYOUT_CUSTOM_ROWS;
 
+    public function __construct(
+        HtmlBuilder $builder,
+        IconBuilder $iconBuilder,
+        FormSectionHeader $header,
+        private CategoryService $categoryService,
+    ) {
+        parent::__construct($builder, $iconBuilder, $header);
+    }
+
     public function getKey(): string
     {
         return 'basic-information';
@@ -21,6 +30,9 @@ class CategoryBasicInformation extends BaseRegularSection
 
     protected function getFieldsConfig(array $formValues = []): array
     {
+        $this->formValues = $formValues;
+        $hasValue = !empty($formValues['product_id'] ?? null);
+        $options = $this->categoryService->getSelectOptions();
         return [
             // Index 0
             [
@@ -59,12 +71,18 @@ class CategoryBasicInformation extends BaseRegularSection
             [
                 'key' => 'parent',
                 'name' => 'parent_id',
-                'map' => 'category.id',
+                // 'map' => 'category.id',
                 'type' => 'custom-select',
-                'options' => [],
+                'options' => $options,
                 'label' => 'Select Parent category',
                 'searchable' => true,
-                'rightIcon' => 'icon-arrow-down',
+                'searchPlaceholder' => 'Category...',
+                'rightIcon' => ['icon' => 'icon-arrow-down', 'aria' => 'Dropdown arrow'],
+                'inputLayout' => 'custom-select',
+                'has-value' => $hasValue ? 'true' : 'false',
+                'footer' => [
+                    'error' => 'Please select a product',
+                ],
             ],
             // Index 5
             [
@@ -87,7 +105,7 @@ class CategoryBasicInformation extends BaseRegularSection
     {
         return [
             [
-                'indices' => [2, 3],
+                'indices' => [0, 1, 2, 3],
                 'class' => ['form-row', 'horizontal'],
             ],
             [

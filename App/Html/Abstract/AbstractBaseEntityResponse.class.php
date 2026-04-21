@@ -1,7 +1,7 @@
 <?php
 
 declare(strict_types=1);
-abstract class AbstractBaseEntityResponse extends AbstractFTOBaseResponse implements EntityResponseInterface
+abstract class AbstractBaseEntityResponse extends AbstractDTOBaseResponse implements EntityResponseInterface
 {
     public function __construct(
         array $image,

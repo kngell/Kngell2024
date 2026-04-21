@@ -60,7 +60,7 @@ class HeroSectionSaveService implements SaveServiceInterface
     public function getRedirectUrl(?int $entityId = null, string $operationType = ''): string
     {
         if (($operationType === 'insert' || $operationType === 'update') && $entityId) {
-            return "/hero-page/{$entityId}/hero-edit";
+            return "/hero-page/{$entityId}/edit";
         }
 
         return '';

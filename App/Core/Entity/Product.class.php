@@ -75,6 +75,7 @@ class Product extends Entity implements TimestampableInterface, SoftDeletableInt
     // 👤 Audit
     private ?int $createdBy = null;
     private ?int $updatedBy = null;
+    private ?int $isOnSale = null;
 
     #[NotPersisted]
     /** @var ProductRegionalPrice[] */
@@ -735,6 +736,26 @@ class Product extends Entity implements TimestampableInterface, SoftDeletableInt
     public function setTotalSales(int $totalSales): Product
     {
         $this->totalSales = $totalSales;
+
+        return $this;
+    }
+
+    /**
+     * @return null|int
+     */
+    public function getIsOnSale(): ?int
+    {
+        return $this->isOnSale;
+    }
+
+    /**
+     * @param null|int $isOnSale
+     *
+     * @return Product
+     */
+    public function setIsOnSale(?int $isOnSale): Product
+    {
+        $this->isOnSale = $isOnSale;
 
         return $this;
     }

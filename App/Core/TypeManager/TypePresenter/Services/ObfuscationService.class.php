@@ -28,7 +28,7 @@ class ObfuscationService
         foreach ($propertyMap as $field => $config) {
             $propertyInfo = $config;
 
-            if (!$propertyInfo['shouldObfuscate']) {
+            if (!$propertyInfo['shouldObfuscate'] || !isset($data[$field])) {
                 continue;
             }
             $value = $data[$field];

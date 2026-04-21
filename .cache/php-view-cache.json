@@ -24,7 +24,7 @@
     "outputPath": "/home/kngell/projects/kngell-ecom/App/Views/Layout/training.php"
   },
   "Backend/admin/product-list.php": {
-    "hash": "f4c541f7de0bbe43d6e048d187661c42a0e451115a425cd4c247e9a70e97e0c0",
+    "hash": "03cdb7c8a58250665bed6d912d82b020cfa565eda8b7fdd9c5a44fa8a4b791a2",
     "outputPath": "/home/kngell/projects/kngell-ecom/App/Views/Backend/admin/product-list.php"
   },
   "Backend/admin/product-add.php": {
@@ -388,7 +388,7 @@
     "outputPath": "/home/kngell/projects/kngell-ecom/App/Views/Layout/inc/training/header.php"
   },
   "Backend/admin/confirm-deletion.php": {
-    "hash": "f3b917e9919e2551ef3e7615984e05b4e8527519393ec191eb1c62de72fd5bfe",
+    "hash": "99a45c7795173048913cc3ba376e70c2534ed5224b604de16a15140142107b8a",
     "outputPath": "/home/kngell/projects/kngell-ecom/App/Views/Backend/admin/confirm-deletion.php"
   },
   "Frontend/components/authentication/signup/index.php": {
@@ -440,11 +440,11 @@
     "outputPath": "/home/kngell/projects/kngell-ecom/App/Views/Frontend/training/sass2/index.php"
   },
   "Frontend/ecommerce/index.php": {
-    "hash": "e90a5e5ea22d50366487497430fbd686e053edbb05ce39bd4878c80679a933c5",
+    "hash": "1d3e4d519225827dd513ef48a150817374628e68c3cd7d82ff4d12be7e849642",
     "outputPath": "/home/kngell/projects/kngell-ecom/App/Views/Frontend/ecommerce/index.php"
   },
   "Backend/admin/components/hero_section.php": {
-    "hash": "f7f7db386f11db44e229bcfc1211b79c83b4bbe80d8e068b4fbd5fd0ed0aa681",
+    "hash": "b32157d6f91f64d84eea24fd451b3dfeeedddb922e635064b4301cbd116c75b0",
     "outputPath": "/home/kngell/projects/kngell-ecom/App/Views/Backend/admin/components/hero_section.php"
   },
   "Backend/admin/components/small_banner.php": {
@@ -458,5 +458,9 @@
   "Backend/admin/input.php": {
     "hash": "e0bb60f0c446a9d127f249ebe23053648810244677deb1280f9c7e71ba4bfae5",
     "outputPath": "/home/kngell/projects/kngell-ecom/App/Views/Backend/admin/input.php"
+  },
+  "Backend/admin/confirm-deletion-modal.php": {
+    "hash": "359a4766bbf21e6ccd161ae787db03cd6733581474a223ae2f9f76d17f58f1b2",
+    "outputPath": "/home/kngell/projects/kngell-ecom/App/Views/Backend/admin/confirm-deletion-modal.php"
   }
 }

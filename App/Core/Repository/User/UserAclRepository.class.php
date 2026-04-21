@@ -14,7 +14,7 @@ class UserAclRepository extends Repository
         parent::__construct($em);
     }
 
-    public function findAll(array $conditions = [], array $columns = []): void
+    public function findAll(array $conditions = [], ?int $limit = null, ?int $offset = null, array $columns = []): void
     {
         $qb = $this->em->createQueryBuilder();
         $columns = $this->getAllColumns();

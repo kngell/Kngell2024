@@ -7,6 +7,7 @@ class HeroPageController extends Controller
     public function __construct(
         FormCreatorService $frm,
         private HeroModel $md,
+        private HtmlTemplatePathInterface $templatePath,
     ) {
         $this->frm = $frm;
         $this->layout('admin');
@@ -15,31 +16,67 @@ class HeroPageController extends Controller
     public function Add(): string
     {
         $this->pageTitle('Hero Section');
-        $hero = new HeroSectionFormDecorator(
-            controller: $this,
-            action:'hero-section-save/index',
+
+        $decorator = $this->decorate(
+            HeroSectionFormDecorator::class,
+            $this,
+            ['action' => 'hero-section-save/index'],
         );
-        return $this->render('/components/hero_section', $hero->page());
+
+        return $this->render(
+            '/components/hero_section',
+            $decorator->page(),
+        );
     }
 
-    public function heroEdit(#[Alias(['public_id', 'hero_id'])]string $id): string|Response
-    {
+    public function edit(
+        #[Alias(['public_id', 'hero_id'])]
+        string $id,
+    ): string|Response {
         $this->pageTitle('Edit Hero Section');
-        $action = 'hero-section-save/index';
+        $saveAction = 'hero-section-save/index';
 
-        list($values, $errors, $files) = $this->getFlashData($action);
+        [$values, $errors, $files] = $this->getFlashData($saveAction);
 
         if (empty($values) && isset($id)) {
             $values = $this->md->getById($id, 'hero_id');
         }
 
-        $decorator = new HeroSectionFormDecorator(
-            controller: $this,
-            action: $action,
-            formValues: $values,
-            formErrors:$errors,
-            files: $files,
+        $decorator = $this->decorate(
+            HeroSectionFormDecorator::class,
+            $this,
+            [
+                'action' => $saveAction,
+                'formValues' => $values,
+                'formErrors' => $errors,
+                'files' => $files,
+            ],
         );
-        return $this->render('/components/hero_section', $decorator->page());
+
+        $pageData = $decorator->page();
+        $pageData = $this->mergeDeletionModal($pageData, $id);
+
+        return $this->render('/components/hero_section', $pageData);
+    }
+
+    private function mergeDeletionModal(
+        array $pageData,
+        string $id,
+    ): array {
+        $flashKey = DeletionFlowConfig::flashKeyFor('Hero Section');
+        $deleteFlash = $this->flash->getData($flashKey);
+
+        if (!$deleteFlash || ($deleteFlash['id'] ?? null) !== $id) {
+            return $pageData;
+        }
+
+        $modalDecorator = new HeroDeletionDecorator(
+            $this,
+            'hero-delete/delete',
+            $deleteFlash,
+            $this->templatePath,
+        );
+
+        return array_merge($pageData, $modalDecorator->page());
     }
 }

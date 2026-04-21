@@ -15,6 +15,5 @@
         </div>
         <!-- Body -->
         {{confirmDeletionForm}}
-
     </div>
 </div>

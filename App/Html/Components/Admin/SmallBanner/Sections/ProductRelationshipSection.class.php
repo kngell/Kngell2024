@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 class ProductRelationshipSection extends BaseFieldSection
 {
-    
-
     public function __construct(
         HtmlBuilder $builder,
         IconBuilder $iconBuilder,
@@ -69,10 +67,10 @@ class ProductRelationshipSection extends BaseFieldSection
 
     public function getSectionLayout(array $fields, string $sectionKey, HtmlBuilder $form): ?AbstractHtmlComponent
     {
-        $sectionClass = 'product-relationship';
+        $sectionClass = 'form-section';
 
         return $form->tag('div')
-            ->class($sectionClass)
+            ->class($sectionClass, 'product-relationship')
             ->add(
                 $this->header->getComponent(
                     title: 'Product Relationship',
@@ -100,7 +98,7 @@ class ProductRelationshipSection extends BaseFieldSection
         return $form->tag('div')
             ->class($sectionClass . '__body')
             ->add(
-                $form->tag('div')->class('product-row')->add(...$fields),
+                $form->tag('div')->class('form-row')->add(...$fields),
                 $this->buildProductCard($form, $productData, $productId),
             );
     }

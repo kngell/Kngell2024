@@ -23,6 +23,8 @@ class ProductRegionalPrice extends Entity implements TimestampableInterface, Sof
     private ?DateTimeImmutable $saleStartDate;
     private ?DateTimeImmutable $saleEndDate;
     private ?bool $isActive;
+    private bool $isOnSale = true;
+    private ?int $discountPercent = null;
 
     public function isCurrentlyOnSale(): bool
     {
@@ -273,6 +275,46 @@ class ProductRegionalPrice extends Entity implements TimestampableInterface, Sof
     public function setIsActive(?bool $isActive): ProductRegionalPrice
     {
         $this->isActive = $isActive;
+
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIsOnSale(): bool
+    {
+        return $this->isOnSale;
+    }
+
+    /**
+     * @param bool $isOnSale
+     *
+     * @return ProductRegionalPrice
+     */
+    public function setIsOnSale(bool $isOnSale): ProductRegionalPrice
+    {
+        $this->isOnSale = $isOnSale;
+
+        return $this;
+    }
+
+    /**
+     * @return null|int
+     */
+    public function getDiscountPercent(): ?int
+    {
+        return $this->discountPercent;
+    }
+
+    /**
+     * @param null|int $discountPercent
+     *
+     * @return ProductRegionalPrice
+     */
+    public function setDiscountPercent(?int $discountPercent): ProductRegionalPrice
+    {
+        $this->discountPercent = $discountPercent;
 
         return $this;
     }

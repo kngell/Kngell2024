@@ -65,10 +65,10 @@ class CoreConfigurationSection extends BaseFieldSection
 
     public function getSectionLayout(array $fields, string $sectionKey, HtmlBuilder $form): ?AbstractHtmlComponent
     {
-        $sectionClass = 'core-configuration';
+        $sectionClass = 'form-section';
 
         return $form->tag('div')
-            ->class($sectionClass)
+            ->class($sectionClass, 'core-configuration')
             ->add(
                 $this->header->getComponent(
                     title: 'Basic Information',
@@ -78,7 +78,7 @@ class CoreConfigurationSection extends BaseFieldSection
                 $form->tag('div')
                     ->class($sectionClass . '__body')
                     ->add(
-                        $form->tag('div')->class('form-grid')->add(
+                        $form->tag('div')->class('form-row')->add(
                             $fields[0] ?? null,
                             $fields[1] ?? null,
                             $fields[2] ?? null,

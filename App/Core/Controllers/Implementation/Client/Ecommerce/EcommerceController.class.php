@@ -12,8 +12,8 @@ class EcommerceController extends Controller
     public function index(): string
     {
         $this->pageTitle('Ecommerce');
-        $decoratedPage = new ClientHeaderDecorator($this);
-        $decoratedPage = new IndexPageDecorator($decoratedPage);
+        $decoratedPage = $this->decorate(ClientHeaderDecorator::class, $this);
+        $decoratedPage = $this->decorate(IndexPageDecorator::class, $decoratedPage);
         return $this->render('index', $decoratedPage->page());
     }
 

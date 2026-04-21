@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 class IndexPageDecorator extends AbstractHtmlDecorator
 {
+    public function __construct(
+        private readonly IndexSectionProvider $provider,
+    ) {
+    }
+
     public function page(): array
     {
         $target = $this->getTarget();
@@ -17,14 +22,11 @@ class IndexPageDecorator extends AbstractHtmlDecorator
             );
         }
         $indexPage = new IndexPage(
-            $target->getProviderFactory(),
+            $this->provider,
             $target->getSectionManager(),
             $target->getBuilder(),
         );
-        [$heroSection,$smallBanner] = $indexPage->getHtmlElements();
-        return parent::page() + [
-            'heroSection' => $heroSection,
-            'smallBannerSection' => $smallBanner,
-        ];
+
+        return parent::page() + $indexPage->getHtmlElements();
     }
 }

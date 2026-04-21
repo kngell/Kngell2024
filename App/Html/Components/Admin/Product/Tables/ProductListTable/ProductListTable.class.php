@@ -11,8 +11,14 @@ class ProductListTable extends AbstractTable
      */
     private array $products;
 
-    public function __construct(array $products, private HtmlBuilder $builder, private IconBuilder $icon, private FileContentManager $file, private TypePresenterFactory $presenter, private FlashInterface $flash)
-    {
+    public function __construct(
+        array $products,
+        private HtmlBuilder $builder,
+        private IconBuilder $icon,
+        private FileContentManager $file,
+        private HtmlSectionPresentationService $presenter,
+        private FlashInterface $flash,
+    ) {
         $this->products = $products;
     }
 

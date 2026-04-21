@@ -20,6 +20,7 @@ abstract class Controller
     protected TranslatorServiceInterface $translator;
     protected NavigationHistoryService $navigationHistory;
     protected SectionProviderFactory $providerFactory;
+    protected DecoratorFactory $decoratorFactory;
     protected HtmlRegularSectionManager $sectionManager;
     private ViewInterface $view;
     private string $layout;
@@ -100,6 +101,14 @@ abstract class Controller
         return $this;
     }
 
+    protected function decorate(
+        string $decoratorClass,
+        self|AbstractHtmlDecorator $target,
+        array $params = [],
+    ): AbstractHtmlDecorator {
+        return $this->decoratorFactory->create($decoratorClass, $target, $params);
+    }
+
     protected function redirectWithError(string $message, ?string $redirectUrl = null): Response
     {
         $this->flash->add($message, FlashType::DANGER);
@@ -110,44 +119,9 @@ abstract class Controller
         return $this->redirect($targetUrl);
     }
 
-    // protected function handleViewError(Exception $e, string $viewPath): string
-    // {
-    //     if ($e instanceof AmbiguousViewException) {
-    //         // Log the ambiguity for debugging
-    //         error_log('View ambiguity in ' . static::class . ": {$e->getMessage()}");
-
-    //         // In development, show helpful error
-    //         if ($_ENV['APP_ENV'] === 'development') {
-    //             return "<div style='background: #ffebee; padding: 20px; border: 1px solid #c62828;'>
-    //                 <h3>Ambiguous View Reference</h3>
-    //                 <p><strong>Controller:</strong> " . static::class . "</p>
-    //                 <p><strong>View path:</strong> {$viewPath}</p>
-    //                 <p><strong>Error:</strong> {$e->getMessage()}</p>
-    //                 <p>Please specify the full path to disambiguate the view.</p>
-    //             </div>";
-    //         }
-
-    //         // In production, show generic error
-    //         return $this->render('errors/500', ['message' => 'View configuration error']);
-    //     }
-
-    //     if ($e instanceof ViewNotFoundException) {
-    //         // Let your error controller handle 404s
-    //         throw $e;
-    //     }
-
-    //     // Re-throw other exceptions
-    //     throw $e;
-    // }
-
     protected function getRedirectUrl(): string|null
     {
-        if ($this->session->exists('current_url')) {
-            $previousUrl = $this->session->get('current_url');
-            $this->session->delete('current_url');
-            return $previousUrl;
-        }
-        return $this->session->get('previous_url');
+        return $this->navigationHistory->getRedirectUrl();
     }
 
     protected function getFlashData(string $action): array

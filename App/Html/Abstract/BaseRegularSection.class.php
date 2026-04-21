@@ -129,9 +129,6 @@ abstract class BaseRegularSection extends BaseFieldSection
         );
     }
 
-    /**
-     * Build layout with custom row configurations using field indices.
-     */
     protected function buildCustomRowsLayout(AbstractHtmlComponent $body, array $fields, HtmlBuilder $form, RegularSectionConfig $config): void
     {
         $rowConfig = $this->getRowIndicesConfig();

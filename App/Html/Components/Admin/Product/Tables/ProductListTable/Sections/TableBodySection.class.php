@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-class TableBodySection extends AbstractTableSection implements ProductTableSectionInterface
+class TableBodySection extends AbstractTableSection
 {
     private const array TABLE_COLUMNS = [
         'col1' => 'product',
@@ -20,13 +20,17 @@ class TableBodySection extends AbstractTableSection implements ProductTableSecti
      */
     private array $products;
 
-    private TableCellBuilder $cellBuilder;
+    private HtmlSectionPresentationService $presenter;
 
-    public function __construct(HtmlBuilder $builder, IconBuilder $icon, array $products, TypePresenterFactory $presenter)
-    {
-        parent::__construct($builder, $icon, $presenter);
+    public function __construct(
+        HtmlBuilder $builder,
+        IconBuilder $icon,
+        array $products,
+        HtmlSectionPresentationService $presenter,
+    ) {
+        parent::__construct($builder, $icon);
         $this->products = $products;
-        $this->cellBuilder = new TableCellBuilder($builder, $presenter);
+        $this->presenter = $presenter;
     }
 
     public function supports(string $key): bool
@@ -38,9 +42,8 @@ class TableBodySection extends AbstractTableSection implements ProductTableSecti
     {
         $html = $this->builder;
         return $html->tag('tbody')->class('table__body')
-        ->custom(['aria-describedby' => 'table-desc'])->add(
-            ...$this->tableBodyRows(),
-        );
+            ->custom(['aria-describedby' => 'table-desc'])
+            ->add(...$this->tableBodyRows());
     }
 
     /**
@@ -50,7 +53,7 @@ class TableBodySection extends AbstractTableSection implements ProductTableSecti
     {
         $bodyRows = [];
         foreach ($this->products as $index => $product) {
-            $row = '_row' . $index + 1;
+            $row = '_row' . ($index + 1);
             $bodyRows[] = $this->tableBodyRow($product, $row);
         }
         return $bodyRows;
@@ -64,56 +67,32 @@ class TableBodySection extends AbstractTableSection implements ProductTableSecti
             $html->tag('th')->custom(['scope' => 'row'])->class('table__body--row-cell')->add(
                 $this->bodyCellProductStart($product, $this->id($colIndex, $row)),
             ),
-            $this->normalBodyCell($this->show($product, $product->getSku(), 'sku'), self::TABLE_COLUMNS['col1']),
-            $this->normalBodyCell($this->show($product, $product->getCategory()->getName(), 'category'), self::TABLE_COLUMNS['col2']),
-            $this->normalBodyCell($this->show($product, $product->getStockQuantity(), 'stockQuantity'), self::TABLE_COLUMNS['col3']),
-            $this->normalBodyCell($this->showRelated($product, 'productRegionalPrice', 'basePrice'), self::TABLE_COLUMNS['col4']),
-            $this->badgeBodyCell($this->showRelated($product, 'productStatus', 'name'), self::TABLE_COLUMNS['col6'], ['badge', 'badge--warning']),
-            $this->normalBodyCell($this->showField($product, 'createdAt'), self::TABLE_COLUMNS['col7']),
+            $this->normalBodyCell(
+                $this->presenter->show($product, $product->getSku(), 'sku'),
+                self::TABLE_COLUMNS['col1'],
+            ),
+            $this->normalBodyCell(
+                $this->presenter->show($product, $product->getCategory()->getName(), 'category'),
+                self::TABLE_COLUMNS['col2'],
+            ),
+            $this->normalBodyCell(
+                $this->presenter->show($product, $product->getStockQuantity(), 'stockQuantity'),
+                self::TABLE_COLUMNS['col3'],
+            ),
+            $this->normalBodyCell(
+                $this->presenter->showRelated($product, 'productRegionalPrice', 'basePrice'),
+                self::TABLE_COLUMNS['col4'],
+            ),
+            $this->badgeBodyCell(
+                $this->presenter->showRelated($product, 'productStatus', 'name'),
+                self::TABLE_COLUMNS['col6'],
+                ['badge', 'badge--warning'],
+            ),
+            $this->normalBodyCell(
+                $this->presenter->showField($product, 'createdAt'),
+                self::TABLE_COLUMNS['col7'],
+            ),
             $this->actionBodyCell($product),
-        );
-    }
-
-    private function tableBodyRowTest(ProductShow $product, string $row): AbstractHtmlComponent
-    {
-        $html = $this->builder;
-
-        return $html->tag('tr')->class('table__body--row')->add(
-            // Simple field
-            $this->normalBodyCell(
-                $this->showField($product, 'sku'),
-                'sku',
-            ),
-
-            // With value already fetched
-            $this->normalBodyCell(
-                $this->show($product, $product->getSku(), 'sku'),
-                'sku',
-            ),
-
-            // Related entity
-            $this->normalBodyCell(
-                $this->showRelated($product, 'category', 'name'),
-                'category',
-            ),
-
-            // Nested relationship
-            $this->normalBodyCell(
-                $this->showRelated($product, 'productRegionalPrice', 'basePrice'),
-                'price',
-            ),
-
-            // Boolean with translation
-            $this->normalBodyCell(
-                $this->showField($product, 'isFeatured'), // Will use BooleanPresenter
-                'featured',
-            ),
-
-            // Array (e.g., tags)
-            $this->normalBodyCell(
-                $this->showField($product, 'tags'), // Will use ArrayPresenter
-                'tags',
-            ),
         );
     }
 
@@ -170,21 +149,21 @@ class TableBodySection extends AbstractTableSection implements ProductTableSecti
         return $html->tag('td')->class('table__body--row-cell')->add(
             $html->tag('div')->class('action-container')->add(
                 $html->form()->action('product-show/index')->method('post')->class('body-cell-action', 'view-action')->add(
-                    $html->input('hidden')->name('public_id')->value($this->showField($product, 'public_id')),
+                    $html->input('hidden')->name('public_id')->value($this->presenter->showField($product, 'public_id')),
                     $html->button('submit')->class('icon-container')->add(
                         $this->icon->createIcon($html, 'icon-eye', 'Eye', ['eye']),
                         $html->tag('span')->class('visually-hidden')->content('View Product A'),
                     ),
                 ),
                 $html->form(false)->action('admin/product-edit')->method('get')->class('body-cell-action', 'edit-action')->add(
-                    $html->input('hidden')->name('public_id')->value($this->showField($product, 'public_id')),
+                    $html->input('hidden')->name('public_id')->value($this->presenter->showField($product, 'public_id')),
                     $html->button('submit')->class('icon-container')->add(
                         $this->icon->createIcon($html, 'icon-edit', 'Edit', ['edit']),
                         $html->tag('span')->class('visually-hidden')->content('Edit Product A'),
                     ),
                 ),
                 $html->form()->action('admin/confirm-product-deletion')->method('post')->class('body-cell-action', 'trash-action')->add(
-                    $html->input('hidden')->name('public_id')->value($this->showField($product, 'public_id')),
+                    $html->input('hidden')->name('public_id')->value($this->presenter->showField($product, 'public_id')),
                     $html->button('button')->class('icon-container', 'modal-open-btn')->custom(['data-action' => 'open-delete-modal'])->add(
                         $this->icon->createIcon($html, 'icon-trash', 'Delete', ['trash']),
                         $html->tag('span')->class('visually-hidden')->content('Delete Product A'),

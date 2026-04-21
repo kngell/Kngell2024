@@ -7,7 +7,7 @@ abstract class AbstractEventListener implements ListenerProviderInterface
     public function checkEvent(string $name): void
     {
         if (!$this->exists($name)) {
-            throw new BaseInvalidArgumentException("No event has been registered under [$name] , please check your config!");
+            error_log("No event has been registered under [$name] , please check your config!");
         }
     }
 

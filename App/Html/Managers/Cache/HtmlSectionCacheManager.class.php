@@ -154,6 +154,11 @@ final class HtmlSectionCacheManager
         return $this->pageCache->deletePattern($pattern);
     }
 
+    public function remember(string $key, callable $callback, ?int $ttl = null): mixed
+    {
+        return $this->pageCache->remember($key, $callback, $ttl);
+    }
+
     public function getStatistics(string $serviceClass): array
     {
         // Implementation depends on your cache system

@@ -36,6 +36,7 @@ class ProductRegionalPriceShow extends Entity implements TimestampableInterface
     private ?Product $product = null;
     private ?Region $region = null;
     private ?Currency $currency = null;
+    private bool $isOnSale = true;
 
     /**
      * @return int
@@ -295,6 +296,26 @@ class ProductRegionalPriceShow extends Entity implements TimestampableInterface
         $this->currency = $currency;
 
         return $this;
+    }
+
+    /**
+     * @param bool $isOnSale
+     *
+     * @return ProductRegionalPriceShow
+     */
+    public function setIsOnSale(bool $isOnSale): ProductRegionalPriceShow
+    {
+        $this->isOnSale = $isOnSale;
+
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIsOnSale(): bool
+    {
+        return $this->isOnSale;
     }
 
     protected function getRelationShip(string $name): string

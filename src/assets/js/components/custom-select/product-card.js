@@ -25,7 +25,6 @@ export default class ProductCard {
   }
 
   handleRemove(event) {
-    // Prevent form submission and stop event from bubbling to parent click listeners
     if (event) {
       event.preventDefault();
       event.stopPropagation();

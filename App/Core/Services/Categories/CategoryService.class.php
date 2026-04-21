@@ -1,20 +1,15 @@
 <?php
 
 declare(strict_types=1);
-
-/**
- * Single service that handles ALL category operations.
- */
 class CategoryService
 {
+    private const string SELECT_LABEL = '-- Select a Category --';
+
     public function __construct(
         private CategoryModel $model,
     ) {
     }
 
-    /**
-     * Get categories formatted for navigation.
-     */
     public function getNavCategories(bool $onlyWithIcons = true, ?int $parentId = null): array
     {
         $conditions = ['is_active' => true];
@@ -34,9 +29,6 @@ class CategoryService
         return array_map(fn ($cat) => $this->formatNavItem($cat), $categories);
     }
 
-    /**
-     * Get root categories (level 0).
-     */
     public function getRootCategories(bool $onlyWithIcons = true): array
     {
         $conditions = [
@@ -54,9 +46,19 @@ class CategoryService
         return array_map(fn ($cat) => $this->formatNavItem($cat), $categories);
     }
 
-    /**
-     * Get complete mega menu structure (nested).
-     */
+    public function getActiveOptions(): array
+    {
+        try {
+            $nestedTree = $this->getActiveNestedTree();
+
+            $options = ['' => self::SELECT_LABEL];
+            return array_merge($options, $this->buildIndentedOptions($nestedTree));
+        } catch (Throwable $e) {
+            error_log('CategoryOptionsService: Failed to load Categories - ' . $e->getMessage());
+            return $this->getDefaultOption();
+        }
+    }
+
     public function getMegaMenu(): array
     {
         $tree = $this->getActiveNestedTree();
@@ -84,9 +86,6 @@ class CategoryService
         }
     }
 
-    /**
-     * Get child categories of a specific parent.
-     */
     public function getChildCategories(int $parentId, bool $onlyWithIcons = false): array
     {
         $conditions = [
@@ -118,6 +117,11 @@ class CategoryService
     public function getNestedTree(): array
     {
         return $this->getActiveNestedTree();
+    }
+
+    private function getDefaultOption(): array
+    {
+        return ['' => self::SELECT_LABEL];
     }
 
     // ==================== PRIVATE METHODS ====================
@@ -199,6 +203,8 @@ class CategoryService
     {
         $options = [];
         $indent = str_repeat('-', strlen($prefix) * 2) . ' ';
+
+        $category = is_array($category) ? reset($category) : $category;
 
         $label = $prefix . $category->getName();
         $options[$category->getId()] = $label;

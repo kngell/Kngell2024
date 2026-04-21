@@ -21,4 +21,25 @@ class CategoryPageController extends Controller
         );
         return $this->render('/components/category', $hero->page());
     }
+
+    public function edit(#[Alias(['public_id', 'cat_id'])]string $id): string|Response
+    {
+        $this->pageTitle('Edit Category Section');
+        $action = 'category-save/index';
+
+        list($values, $errors, $files) = $this->getFlashData($action);
+
+        if (empty($values) && isset($id)) {
+            $values = $this->md->getById($id, 'cat_id');
+        }
+
+        $decorator = new CategoryFormDecorator(
+            controller: $this,
+            action: $action,
+            formValues: $values,
+            formErrors:$errors,
+            files: $files,
+        );
+        return $this->render('/components/category', $decorator->page());
+    }
 }

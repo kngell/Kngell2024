@@ -97,10 +97,10 @@ class Repository implements RepositoryInterface
         }
     }
 
-    public function findAll(array $conditions = [], array $columns = []): void
+    public function findAll(array $conditions = [], ?int $limit = null, ?int $offset = null, array $columns = []): void
     {
         try {
-            $this->findBy($conditions, null, null, $columns);
+            $this->findBy($conditions, $limit, $offset, $columns);
         } catch (Throwable $th) {
             throw $th;
         }

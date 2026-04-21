@@ -8,7 +8,9 @@ class IndexSectionProvider extends AbstractSectionProvider
         IconBuilder $iconBuilder,
         private HeroService $heroService,
         private SmallBannerService $smallBannerService,
-        private CategoryService $category,
+        private CategoryFrontendService $category,
+        private ProductCardService $product,
+        private HtmlSectionPresentationService $presenter,
     ) {
         parent::__construct($iconBuilder);
     }
@@ -16,17 +18,27 @@ class IndexSectionProvider extends AbstractSectionProvider
     public function registerSections(HtmlBuilder $html, ?HtmlSectionManagerInterface $manager = null): void
     {
         $sections = [
-            'hero_section' => new HeroSection(
+            new HeroSection(
                 $html,
                 $this->iconBuilder,
                 $this->heroService,
             ),
-            'small_banner_section' => new SmallBannerSection(
+            new SmallBannerSection(
                 $html,
                 $this->iconBuilder,
                 $this->smallBannerService,
             ),
-            'category-section' => new HomePageCategoriesSection($html, $this->iconBuilder),
+            new HomePageCategoriesSection(
+                $html,
+                $this->iconBuilder,
+                $this->category,
+            ),
+            new HomeProductSection(
+                $html,
+                $this->iconBuilder,
+                $this->product,
+                $this->presenter,
+            ),
         ];
 
         $registeredKeys = [];

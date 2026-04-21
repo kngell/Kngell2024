@@ -7,7 +7,7 @@ class IndexSectionProviderFactory implements SectionProviderFactoryInterface
         private IconBuilder $iconBuilder,
         private HeroService $heroService,
         private SmallBannerService $smallBannerService,
-        private CategoryService $categoryService,
+        private CategoryFrontendService $categoryService,
     ) {
     }
 

@@ -17,7 +17,8 @@ class CategoryForm extends AbstractForm
         'infos-right' => ['category-media', 'og-image', 'canonical-infos'],
         'content-left' => ['content-area'],
         'content-right' => ['content-style'],
-        'settings' => ['navigation-infos'],
+        'settings-left' => ['price-range'],
+        'settings-right' => ['navigation-infos'],
     ];
     private const array TAB_CONFIG = [
         'tab-category-infos' => [
@@ -32,19 +33,20 @@ class CategoryForm extends AbstractForm
             'sections' => ['content-left', 'content-right'],
             'contentClass' => 'category-form__content--content',
         ],
-        'tab-settings' => [
-            'title' => 'Navigation Settings',
+        'tab-price' => [
+            'title' => 'Price and settings',
             'state' => null,
-            'sections' => ['settings'],
+            'sections' => ['settings-left', 'settings-right'],
             'contentClass' => 'category-form__content--settings',
         ],
-        'tab-advanced' => [
-            'title' => 'Advanced (Disabled)',
-            'state' => 'disabled',
-            'sections' => [],
-            'contentClass' => 'category-form__content--advanced',
-        ],
+        // 'tab-advanced' => [
+        //     'title' => 'Advanced (Disabled)',
+        //     'state' => 'disabled',
+        //     'sections' => [],
+        //     'contentClass' => 'category-form__content--advanced',
+        // ],
     ];
+    private const array NUMERIC_FIELDS = ['min_price', 'max_price'];
 
     public function __construct(
         private readonly CategoryFormSectionProvider $provider,
@@ -77,11 +79,14 @@ class CategoryForm extends AbstractForm
         $this->provider->registerSections($this->builder, $this->sectionManager);
 
         $options = new FieldMappingPayload(
-            fieldMapping: $this->sectionManager->getFieldMapping(),
+            fieldMapping: $this->sectionManager->getFieldMapping($formValues),
+            numericFields: self::NUMERIC_FIELDS,
         );
 
         $this->formValues = $formValues instanceof Entity ? $formValues->toFormArray($options) : $formValues;
-        $this->fieldRenderer->setDefaultInputLayout(new FieldLayout());
+        // dd($options, $formValues, $this->formValues);
+        $this->registerFieldLayouts();
+        // $this->fieldRenderer->setDefaultInputLayout(new FieldLayout());
         $this->files = $files;
         $this->formErrors = $formErrors;
 
@@ -145,6 +150,19 @@ class CategoryForm extends AbstractForm
 
         return $tabs->getComponents($contentLayout);
     }
+
+    public function getInputLayoutNameForField(array $field): ?string
+    {
+        if (($field['type'] === 'custom-select')) {
+            return 'custom-select';
+        }
+
+        // Use input layout for all other input types
+        if (in_array($field['type'], ['text', 'textarea', 'email', 'number', 'url', 'search', 'select'])) {
+            return 'input';
+        }
+        return null;
+    }
     // public function getDefaultInputLayoutName(): ?string
     // {
     //     return 'modern'; // This form uses modern layout
@@ -170,7 +188,7 @@ class CategoryForm extends AbstractForm
 
     protected function getFormSections(): array
     {
-        return $this->sectionManager->getSections();
+        return $this->sectionManager->getSections($this->formValues);
     }
 
     protected function getFormId(): string
@@ -191,6 +209,12 @@ class CategoryForm extends AbstractForm
     protected function getProviderKey(): string
     {
         return self::PROVIDER_KEY;
+    }
+
+    private function registerFieldLayouts(): void
+    {
+        $this->fieldRenderer->registerNamedLayout('custom-select', new CustomSelectLayout());
+        $this->fieldRenderer->registerNamedLayout('input', new FieldLayout());
     }
 
     private function buildFormSections(array $sectionsConfig): array

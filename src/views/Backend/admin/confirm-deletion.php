@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 $this->start('head'); ?>
 <!-------Costum-------->
-<?= $this->css('css/backend/admin/pages/confirm-deletion') ?>
+<?= $this->css('css/backend/admin/modals/confirm-deletion') ?>
 <?php $this->end(); ?>
 <?php $this->start('body'); ?>
 <main class="dashboard__main main" id="main">

@@ -1,11 +1,6 @@
 <?php
 
 declare(strict_types=1);
-
-/**
- * WRITE-ONLY Service - For admin save operations
- * Implements SaveServiceInterface for the generic save handler.
- */
 class CategorySaveService implements SaveServiceInterface
 {
     public function __construct(
@@ -66,10 +61,10 @@ class CategorySaveService implements SaveServiceInterface
     public function getRedirectUrl(?int $entityId = null, string $operationType = ''): string
     {
         if (($operationType === 'insert' || $operationType === 'update') && $entityId) {
-            return "/admin/categories/{$entityId}/edit";
+            return "/category-page/{$entityId}/edit";
         }
 
-        return '/admin/categories';
+        return '/category-pages/list';
     }
 
     public function getSuccessMessage(string $operationType, bool $wasSkipped): string

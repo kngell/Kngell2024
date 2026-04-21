@@ -15,7 +15,7 @@ class SmallBannerSection extends AbstractBaseHtmlSection
 
     public function getKey(): string
     {
-        return 'small_banner_section';
+        return IndexPageSection::SMALL_BANNER->value;
     }
 
     public function getConfig(array $formValues = []): array|AbstractHtmlComponent

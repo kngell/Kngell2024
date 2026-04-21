@@ -27,3 +27,9 @@ body {
 input {
   @include input-reset;
 }
+a {
+  @include a-reset;
+}
+button {
+  @include button-reset;
+}

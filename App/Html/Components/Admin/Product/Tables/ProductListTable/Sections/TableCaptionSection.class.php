@@ -8,7 +8,7 @@ class TableCaptionSection extends AbstractTableSection implements ProductTableSe
     private const array TABLE_CAPTION_CLASS = ['visually-hidden'];
     private const string TABLE_CAPTION_ID = 'table-desc';
 
-    public function __construct(HtmlBuilder $builder, IconBuilder $icon, TypePresenterFactory $presenter)
+    public function __construct(HtmlBuilder $builder, IconBuilder $icon, HtmlSectionPresentationService $presenter)
     {
         parent::__construct($builder, $icon, $presenter);
     }

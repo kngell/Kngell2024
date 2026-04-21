@@ -8,6 +8,12 @@ trait CommonQueryMethodsTrait
 {
     public function getById(int|string $id, ?string $field = null): ?object
     {
+        if ($id && ctype_digit($id)) {
+            return $this->find($id)?->asClass();
+        }
+        if ($this->isUuidV4($id)) {
+            return $this->one(['public_id' => $id], true)?->asClass();
+        }
         if ($field !== null) {
             return $this->one([$field => $id], true)?->asClass();
         }
@@ -60,5 +66,13 @@ trait CommonQueryMethodsTrait
         $text = strtolower($text);
 
         return empty($text) ? 'n-a-' . substr(Uuid::uuid4()->toString(), 0, 8) : $text;
+    }
+
+    private function isUuidV4(string $str): bool
+    {
+        return preg_match(
+            '/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i',
+            $str,
+        ) === 1;
     }
 }

@@ -41,7 +41,7 @@ class PriceRangeBracket implements JsonSerializable
 
     public function contains(Money $price): bool
     {
-        if (!$price->getCurrency()->is($this->getCurrency())) {
+        if ($this->getCurrencyCode() !== $price->getCurrency()->getCurrencyCode()) {
             return false;
         }
 
@@ -59,14 +59,9 @@ class PriceRangeBracket implements JsonSerializable
     public function toArray(): array
     {
         return [
-            'min' => $this->min ? [
-                'amount' => $this->min->getAmount(),
-                'currency' => $this->min->getCurrency()->getCurrencyCode(),
-            ] : null,
-            'max' => $this->max ? [
-                'amount' => $this->max->getAmount(),
-                'currency' => $this->max->getCurrency()->getCurrencyCode(),
-            ] : null,
+            // Convert BigDecimal to string for JSON serialization
+            'min' => $this->min ? (string) $this->min->getAmount() : null,
+            'max' => $this->max ? (string) $this->max->getAmount() : null,
             'label' => $this->label,
             'product_count' => $this->productCount,
         ];
@@ -77,16 +72,7 @@ class PriceRangeBracket implements JsonSerializable
         return $this->toArray();
     }
 
-    public function getUrlParams(int $index): array
-    {
-        return [
-            'price_bracket' => $index,
-            'min_price' => $this->min?->getAmount(),
-            'max_price' => $this->max?->getAmount(),
-        ];
-    }
-
-    private function getCurrency(): string
+    private function getCurrencyCode(): string
     {
         return ($this->min ?? $this->max)?->getCurrency()->getCurrencyCode() ?? 'USD';
     }
@@ -101,22 +87,25 @@ class PriceRangeBracket implements JsonSerializable
             throw new InvalidArgumentException('Min price cannot be greater than max price');
         }
 
-        // Validate same currency
-        if ($min !== null && $max !== null && !$min->getCurrency()->is($max->getCurrency())) {
+        if ($min !== null && $max !== null &&
+            $min->getCurrency()->getCurrencyCode() !== $max->getCurrency()->getCurrencyCode()) {
             throw new InvalidArgumentException('Min and max prices must have the same currency');
         }
 
         return new self($min, $max, $label, $productCount);
     }
 
-    public static function fromArray(array $data): self
+    /**
+     * Create from database array (simple numeric values as strings).
+     */
+    public static function fromDatabaseArray(array $data, string $currencyCode): self
     {
-        $min = isset($data['min'])
-            ? Money::of($data['min']['amount'], $data['min']['currency'])
+        $min = isset($data['min']) && $data['min'] !== null && $data['min'] !== ''
+            ? Money::of((string) $data['min'], $currencyCode)
             : null;
 
-        $max = isset($data['max'])
-            ? Money::of($data['max']['amount'], $data['max']['currency'])
+        $max = isset($data['max']) && $data['max'] !== null && $data['max'] !== ''
+            ? Money::of((string) $data['max'], $currencyCode)
             : null;
 
         return self::create(

@@ -23,7 +23,7 @@ interface RepositoryInterface
 
     public function fetchIds(array $conditions = [], ?int $limit = null, ?int $offset = null, ?string $keyField = null): void;
 
-    public function findAll(array $conditions = [], array $columns = []): void;
+    public function findAll(array $conditions = [], ?int $limit = null, ?int $offset = null, array $columns = []): void;
 
     public function findBy(array $conditions = [], ?int $limit = null, ?int $offset = null, array $columns = []): void;
 

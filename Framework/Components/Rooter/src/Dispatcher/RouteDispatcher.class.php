@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-readonly class RouteDispatcher
+final readonly class RouteDispatcher
 {
     private const GLOBAL_MIDDLEWARES = [
         'previousPage',
@@ -72,18 +72,10 @@ readonly class RouteDispatcher
         }
     }
 
-    /**
-     * Resolves and instantiates all middlewares for the route.
-     *
-     * Ensures proper dependency injection and ordering to respect
-     * the new authentication/authorization flow.
-     */
     private function resolveMiddlewares(RouteInfo $route, App $app): array
     {
         // Get middleware names in the correct execution order
         $middlewareNames = $this->getOrderedMiddlewares($route);
-
-        // Ensure auth middleware is always first if other auth-related middlewares are present
         $this->ensureAuthMiddlewareFirst($middlewareNames);
 
         return array_map(function ($name) use ($app, $route) {
@@ -93,9 +85,7 @@ readonly class RouteDispatcher
 
             $middlewareClass = $this->globalMiddlewares[$name];
 
-            // Use contextual binding for middlewares that need route information
             if (in_array($name, ['auth', 'grantAccess', 'requireLogin'], true)) {
-                // Create a factory binding for this specific middleware instance
                 $factoryKey = "middleware.{$name}.{$route->getController()}";
 
                 $app->factory($factoryKey, function ($app) use ($middlewareClass, $route) {
@@ -104,8 +94,6 @@ readonly class RouteDispatcher
 
                 return $app->resolve($factoryKey);
             }
-
-            // For regular middlewares, use standard resolution
             return $app->resolve($middlewareClass);
         }, $middlewareNames);
     }
@@ -180,17 +168,6 @@ readonly class RouteDispatcher
         $controller = $app->resolve($route->getController());
 
         return $this->configureController($controller, $request, $app);
-        // $dispatcher = $this;
-
-        // return $app->call(function () use ($route, $request, $app, $dispatcher) {
-        //     $controller = $app->resolve($route->getController());
-
-        //     return $app->call([$dispatcher, 'configureController'], [
-        //         'controller' => $controller,
-        //         'request' => $request,
-        //         'app' => $app,
-        //     ]);
-        // });
     }
 
     private function configureController(Controller $controller, Request $request, App $app): Controller
@@ -210,7 +187,8 @@ readonly class RouteDispatcher
             ->setRegion($app->get(RegionContextInterface::class))
             ->setTranslator($app->get(TranslatorServiceInterface::class))
             ->setSectionManager($app->get(HtmlSectionManagerInterface::class))
-            ->setProviderFactory($app->get(SectionProviderFactory::class));
+            ->setProviderFactory($app->get(SectionProviderFactory::class))
+            ->setDecoratorFactory($app->get(DecoratorFactory::class));
     }
 
     /**

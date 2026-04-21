@@ -25,7 +25,7 @@ class CategoryContentSection extends BaseRegularSection
                 'name' => 'content',
                 'type' => 'textarea',
                 'label' => 'Content',
-                'rows' => 7,
+                'rows' => 8,
                 'footer' => [
                     'error' => '',
                 ],

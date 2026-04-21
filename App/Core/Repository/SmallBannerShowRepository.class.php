@@ -11,7 +11,7 @@ class SmallBannerShowRepository extends Repository
         'product' => ['pdt_id', 'name', 'slug', 'short_description', 'main_image'],
     ];
 
-    public function findAll(array $conditions = [], array $columns = []): void
+      public function findAll(array $conditions = [], ?int $limit = null, ?int $offset = null, array $columns = []): void
     {
         try {
             $columns = array_merge($columns, $this->getAllColumns());

@@ -23,8 +23,6 @@ trait ConditionSegmenterTrait
                 continue;
             }
 
-            // 2. Logical Token Consumption
-            // This is the fix: we skip the token so the Normalizer never sees it.
             if ($this->isLogicalSeparator($value)) {
                 $i++;
                 continue;

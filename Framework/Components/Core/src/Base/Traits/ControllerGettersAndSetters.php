@@ -247,6 +247,17 @@ trait ControllerGettersAndSetters
         return $this;
     }
 
+    /**
+     * @param DecoratorFactory $decoratorFactory
+     *
+     * @return Controller
+     */
+    public function setDecoratorFactory(DecoratorFactory $decoratorFactory): self
+    {
+        $this->decoratorFactory = $decoratorFactory;
+        return $this;
+    }
+
     protected function layout(string $layout): void
     {
         $this->layout = $layout;

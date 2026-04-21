@@ -30,9 +30,9 @@ final class CustomReflection
         return $this->classReflection;
     }
 
-    public static function getInstance(object $object): self
+    public static function getInstance(object|string $object): self
     {
-        $class = $object::class;
+        $class = is_object($object) ? $object::class : $object;
 
         if (!isset(self::$instances[$class])) {
             self::$instances[$class] = new self(

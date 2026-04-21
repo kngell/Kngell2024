@@ -41,7 +41,7 @@
       // Tabs container
       &__tabs {
         display: flex;
-        width: 100%;
+        width: calc(100% - 3px);
         align-items: center;
         gap: 0.8rem;
         position: sticky;
@@ -61,6 +61,16 @@
           @include transition();
           position: relative;
 
+          &:not(:last-child)::before {
+            content: "";
+            position: absolute;
+            right: -0.4rem; // Half of gap (0.8rem / 2)
+            top: 50%;
+            transform: translateY(-50%);
+            height: 60%;
+            width: 1px;
+            background-color: $border-neutral-secondary;
+          }
           &::after {
             content: "";
             position: absolute;
@@ -118,7 +128,7 @@
       // Active tab styles - radios and tabs are siblings
       #tab-category-infos:checked ~ .category-form__tabs label[for="tab-category-infos"],
       #tab-content-style:checked ~ .category-form__tabs label[for="tab-content-style"],
-      #tab-settings:checked ~ .category-form__tabs label[for="tab-settings"] {
+      #tab-price:checked ~ .category-form__tabs label[for="tab-price"] {
         color: $text-brand-primary;
         background-color: $background-brand-tertiary;
 
@@ -126,11 +136,15 @@
           background-color: $border-brand-primary;
           height: 2px;
         }
+        &:hover:not(.tab__disabled) {
+          color: $text-neutral-inverse-primary;
+          background-color: $background-brand-secondary;
+        }
       }
       // Show content - radios and content are siblings
       #tab-category-infos:checked ~ .category-form__content .category-form__content--infos,
       #tab-content-style:checked ~ .category-form__content .category-form__content--content,
-      #tab-settings:checked ~ .category-form__content .category-form__content--settings {
+      #tab-price:checked ~ .category-form__content .category-form__content--settings {
         display: flex;
         justify-content: flex-start;
         align-items: flex-start;
@@ -145,40 +159,16 @@
         align-items: flex-start;
         border-radius: $radius-m;
         background-color: $background-neutral-tertiary;
-
         .form-section {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          width: 100%;
-
-          &__header {
-            @include form-section-header();
-          }
-
           &__body {
-            display: flex;
-            padding: 1.6rem 2.4rem;
-            flex-direction: column;
-            gap: 1.6rem;
-            width: 100%;
             @include input-field(
               (select, custom-select, textarea),
               (
                 "select-floating-label": true
               )
             );
-
             .form-row {
-              display: flex;
-              align-items: center;
-              gap: 1.6rem;
-
               &.vertical {
-                flex-direction: column;
-                justify-content: center;
-                align-items: flex-start;
-
                 .settings {
                   display: flex;
                   justify-content: flex-end;
@@ -189,6 +179,92 @@
                   .toggle-switch {
                     @include toggle-switch();
                   }
+                }
+              }
+            }
+            .bracket-range {
+              display: flex;
+              flex-direction: column;
+              align-items: flex-start;
+              gap: 1.6rem;
+              width: 100%;
+              &__card {
+                display: flex;
+                padding: 1.6rem;
+                flex-direction: column;
+                justify-content: center;
+                align-items: flex-start;
+                gap: 1.6rem;
+                align-self: stretch;
+                border-radius: $radius-m;
+                background-color: $background-brand-tertiary;
+                box-shadow: $shadow-s;
+                &-header {
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  width: 100%;
+                  .card-title {
+                    @include apply-text-style(
+                      (
+                        map: map-deep-get($roboto-map, regular),
+                        weight: normal,
+                        overrides: (
+                          color: inherit
+                        )
+                      )
+                    );
+                  }
+                  .card-action {
+                    @include flex-center;
+                    gap: 1.6rem;
+                    &__add-btn,
+                    &__remove-btn {
+                      @include icon-with-badge(
+                        $with-badge: false,
+                        $icon-size: calc(2.4rem + 0.4rem),
+                        $padding: 0.4rem,
+                        $align-self: false
+                      );
+                      @include transition;
+                      border-radius: $radius-s;
+                      box-shadow: $shadow-s;
+                      &:hover,
+                      &:active {
+                        .icon {
+                          color: $text-brand-inverse;
+                        }
+                      }
+                      &:hover {
+                        transform: scale(1.15);
+                      }
+                    }
+                    &__add-btn {
+                      background: $background-neutral-tertiary;
+                      &:hover {
+                        background-color: $background-brand-secondary;
+                      }
+                      &:active {
+                        background-color: $background-brand-primary;
+                      }
+                    }
+                    &__remove-btn {
+                      background-color: $background-semantic-error-subtle;
+                      &:hover {
+                        background-color: $background-semantic-error-normal;
+                      }
+                      &:active {
+                        background-color: $background-semantic-error-bold;
+                      }
+                    }
+                  }
+                }
+                &-body {
+                  display: flex;
+                  flex-direction: column;
+                  align-items: flex-start;
+                  gap: 1.6rem;
+                  align-self: stretch;
                 }
               }
             }

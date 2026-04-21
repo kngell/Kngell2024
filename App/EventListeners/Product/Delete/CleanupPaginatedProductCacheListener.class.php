@@ -13,7 +13,7 @@ class CleanupPaginatedProductCacheListener implements EventListenerInterface
     public function handle(EventInterface $event): ?object
     {
         $payload = $event->getParams();
-        $productId = $payload['product_data']['pdt_id'] ?? null;
+        $productId = $payload['data']['pdt_id'] ?? null;
 
         if (!$productId) {
             return null;

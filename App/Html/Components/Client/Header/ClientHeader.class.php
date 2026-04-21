@@ -7,7 +7,7 @@ class ClientHeader extends AbstractHtml
     protected const string PROVIDER_KEY = 'header';
 
     public function __construct(
-        private readonly SectionProviderFactory $providerFactory,
+        private readonly HeaderSectionProvider $provider,
         private readonly HtmlRegularSectionManager $sectionManager,
         private HtmlBuilder $builder,
     ) {
@@ -16,8 +16,7 @@ class ClientHeader extends AbstractHtml
     public function getHtmlElements(): array
     {
         $html = $this->builder;
-        $provider = $this->providerFactory->getProvider($this->getProviderKey());
-        $provider->registerSections($this->builder, $this->sectionManager);
+        $this->provider->registerSections($this->builder, $this->sectionManager);
 
         ['header_top' => $headerTop,'header_bottom' => $headerBottom] = $this->buildLayout($html);
 

@@ -15,7 +15,7 @@ class HeroSection extends AbstractBaseHtmlSection
 
     public function getKey(): string
     {
-        return 'hero_section';
+        return IndexPageSection::HERO->value;
     }
 
     public function getConfig(array $formValues = []): array|AbstractHtmlComponent
@@ -35,16 +35,22 @@ class HeroSection extends AbstractBaseHtmlSection
         );
     }
 
-    private function heroContent(Hero $hero): AbstractHtmlComponent
+    private function heroContent(?Hero $hero = null): ?AbstractHtmlComponent
     {
+        if ($hero === null) {
+            return null;
+        }
         $html = $this->htmlBuilder;
         return $html->tag('div')->class('hero__content-text')->add(
             ...$this->heroContentText($hero),
         );
     }
 
-    private function heroImage(EntityResponseInterface $response, Hero $hero): AbstractHtmlComponent
+    private function heroImage(EntityResponseInterface $response, ?Hero $hero = null): ?AbstractHtmlComponent
     {
+        if ($hero === null) {
+            return null;
+        }
         $html = $this->htmlBuilder;
 
         // Escape all attributes
@@ -59,8 +65,11 @@ class HeroSection extends AbstractBaseHtmlSection
         );
     }
 
-    private function heroCta(Hero $hero): AbstractHtmlComponent
+    private function heroCta(?Hero $hero = null): ?AbstractHtmlComponent
     {
+        if ($hero === null) {
+            return null;
+        }
         $html = $this->htmlBuilder;
         $ctaText = $this->escape($hero->getCtaText() ?? '');
         return $html->button('button')

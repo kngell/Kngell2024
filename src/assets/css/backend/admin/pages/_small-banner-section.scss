@@ -23,11 +23,10 @@
     }
     .small-banner-frm {
       display: flex;
-      // width: 100%;
+      width: 100%;
       align-items: flex-start;
       gap: 0.4rem;
       position: relative;
-
       border-radius: $radius-m;
       background-color: $background-neutral-primary;
       @include input-field(
@@ -36,17 +35,6 @@
           "select-floating-label": true
         )
       );
-      // &__left,
-      // &__right {
-      //   display: flex;
-      //   padding: 1.6rem 0;
-      //   flex-direction: column;
-      //   align-items: flex-start;
-      //   gap: 1.6rem;
-      //   flex-shrink: 0;
-      //   border-radius: $radius-m;
-      //   background: $background-neutral-primary;
-      // }
       &__left,
       &__right {
         display: flex;
@@ -60,39 +48,102 @@
       }
       &__left {
         width: 67.68rem;
-        .core-configuration,
-        .product-relationship,
-        .custom-override {
-          display: flex;
-          padding: 1.6rem 0;
-          flex-direction: column;
-          align-items: flex-start;
-          gap: 1.6rem;
-          align-self: stretch;
+        .form-section {
           border-radius: $radius-m;
           box-shadow: $shadow-s;
-
-          &__header {
-            @include form-section-header;
-          }
           &__body {
-            display: flex;
-            align-items: flex-start;
-            width: 100%;
-            padding: 0.8rem 2.4rem;
-            gap: 1.6rem;
-            .form-grid {
-              display: flex;
-              align-items: flex-start;
-              gap: 1.6rem;
-              width: 100%;
-            }
-            .column {
+            flex-direction: column;
+            border-radius: $radius-m;
+            .product-row {
               display: flex;
               flex-direction: column;
+              justify-content: center;
               align-items: flex-start;
-              gap: 1.6rem;
-              flex: 1 0 0;
+              width: 100%;
+            }
+            .product-card {
+              display: none;
+              border-radius: $radius-s;
+              &__left {
+                display: flex;
+                align-items: center;
+                gap: 1.6rem;
+                flex: 1 0 0;
+                .img-container {
+                  display: flex;
+                  width: 12rem;
+                  aspect-ratio: 1 / 1;
+                  flex-direction: column;
+                  justify-content: center;
+                  align-items: center;
+                  border-radius: $radius-s;
+                  background-color: $background-neutral-secondary;
+                  svg {
+                    width: 4.2rem;
+                    height: 4.2rem;
+                  }
+                  .image {
+                    width: 100%;
+                    object-fit: contain;
+                  }
+                }
+                .product-info {
+                  display: flex;
+                  flex-direction: column;
+                  align-items: flex-start;
+                  gap: 0.8rem;
+                  flex: 1 0 0;
+                  &__title {
+                    @include apply-text-style(
+                      (
+                        map: map-deep-get($roboto-map, regular),
+                        weight: h6,
+                        overrides: (
+                          color: $text-neutral-primary
+                        )
+                      )
+                    );
+                  }
+                  &__sku {
+                    @include apply-text-style(
+                      (
+                        map: map-deep-get($hahmlet-map, body, caption),
+                        weight: caption,
+                        overrides: (
+                          color: $text-neutral-tertiary
+                        )
+                      )
+                    );
+                  }
+                  &__short-description {
+                    @include apply-text-style(
+                      (
+                        map: map-deep-get($hahmlet-map, body, caption),
+                        weight: caption,
+                        overrides: (
+                          color: $text-neutral-secondary
+                        )
+                      )
+                    );
+                  }
+                }
+              }
+              &.is-visible {
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+                padding: 1.6rem 1.6rem;
+                gap: 1.6rem;
+                align-self: stretch;
+                background-color: $background-neutral-primary;
+                button {
+                  @include transition;
+                  @include icon-with-badge($with-badge: false, $icon-size: 2.4rem, $padding: 0);
+                  &:hover {
+                    background-color: $background-neutral-tertiary;
+                  }
+                }
+              }
             }
           }
         }
@@ -100,28 +151,28 @@
       &__right {
         flex: 1 0 0;
         .media-section,
-        .display-settings {
-          display: flex;
-          padding: 1.6rem 0;
-          flex-direction: column;
-          align-items: flex-start;
-          gap: 1.6rem;
-          align-self: stretch;
+        .form-section {
+          // display: flex;
+          // padding: 1.6rem 0;
+          // flex-direction: column;
+          // align-items: flex-start;
+          // gap: 1.6rem;
+          // align-self: stretch;
           border-radius: $radius-m;
           box-shadow: $shadow-s;
-          &__header {
-            @include form-section-header;
-            .icon {
-              fill: $border-neutral-primary;
-            }
-          }
+          // &__header {
+          //   @include form-section-header;
+          //   .icon {
+          //     fill: $border-neutral-primary;
+          //   }
+          // }
           &__body {
-            display: flex;
-            padding: 0.8rem 2.4rem;
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 1.6rem;
-            align-self: stretch;
+            // display: flex;
+            // padding: 0.8rem 2.4rem;
+            // flex-direction: column;
+            // align-items: flex-start;
+            // gap: 1.6rem;
+            // align-self: stretch;
             @include dropzone(
               (
                 "single-class": "upload-single",
@@ -176,104 +227,6 @@
               }
               &__right {
                 @include toggle-switch();
-              }
-            }
-          }
-        }
-      }
-      .core-configuration__body {
-        flex-direction: column;
-      }
-      .product-relationship__body {
-        flex-direction: column;
-        border-radius: $radius-m;
-        .product-row {
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          align-items: flex-start;
-          width: 100%;
-        }
-        .product-card {
-          display: none;
-          border-radius: $radius-s;
-          &__left {
-            display: flex;
-            align-items: center;
-            gap: 1.6rem;
-            flex: 1 0 0;
-            .img-container {
-              display: flex;
-              width: 12rem;
-              aspect-ratio: 1 / 1;
-              flex-direction: column;
-              justify-content: center;
-              align-items: center;
-              border-radius: $radius-s;
-              background-color: $background-neutral-secondary;
-              svg {
-                width: 4.2rem;
-                height: 4.2rem;
-              }
-              .image {
-                width: 100%;
-                object-fit: contain;
-              }
-            }
-            .product-info {
-              display: flex;
-              flex-direction: column;
-              align-items: flex-start;
-              gap: 0.8rem;
-              flex: 1 0 0;
-              &__title {
-                @include apply-text-style(
-                  (
-                    map: map-deep-get($roboto-map, regular),
-                    weight: h6,
-                    overrides: (
-                      color: $text-neutral-primary
-                    )
-                  )
-                );
-              }
-              &__sku {
-                @include apply-text-style(
-                  (
-                    map: map-deep-get($hahmlet-map, body, caption),
-                    weight: caption,
-                    overrides: (
-                      color: $text-neutral-tertiary
-                    )
-                  )
-                );
-              }
-              &__short-description {
-                @include apply-text-style(
-                  (
-                    map: map-deep-get($hahmlet-map, body, caption),
-                    weight: caption,
-                    overrides: (
-                      color: $text-neutral-secondary
-                    )
-                  )
-                );
-              }
-            }
-          }
-          &.is-visible {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            padding: 1.6rem 1.6rem;
-            gap: 1.6rem;
-            align-self: stretch;
-            background-color: $background-neutral-primary;
-            button {
-              @include transition;
-              @include icon-with-badge($with-badge: false, $icon-size: 2.4rem, $padding: 0);
-              &:hover {
-                background-color: $background-neutral-tertiary;
               }
             }
           }

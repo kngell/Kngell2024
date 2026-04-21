@@ -44,7 +44,7 @@ abstract class AbstractForm extends AbstractHtml implements FormTemplateInterfac
             ->formErrors($this->formErrors);
 
         return $form->name($this->getFormName())
-           ->novalidate()
+            ->novalidate()
             ->method('post')
             ->action($action)
             ->id($this->getFormId())
@@ -135,7 +135,9 @@ abstract class AbstractForm extends AbstractHtml implements FormTemplateInterfac
 
     public function renderButton(array $buttonConfig, FormBuilder $form): AbstractHtmlComponent
     {
-        return $this->buttonBuilder->build($buttonConfig, $form, $this);
+        return $this->buttonBuilder
+        ->addConfig($buttonConfig)
+        ->build($buttonConfig, $form, $this);
     }
 
     public function renderButtonGroup(array $buttonConfig, FormBuilder $form): AbstractHtmlComponent

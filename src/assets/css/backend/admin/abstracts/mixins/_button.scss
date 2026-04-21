@@ -16,10 +16,7 @@
   text-decoration: none;
   line-height: 1.2;
 
-  transition:
-    background-color 0.2s ease,
-    color 0.2s ease,
-    box-shadow 0.2s ease;
+  @include transition;
 }
 
 /// ------------------------------
@@ -31,6 +28,8 @@
   $color: map-deep-get-list($button-variants, ($variant, color), currentColor);
   $hover-bg: map-deep-get-list($button-variants, ($variant, hover-background), $bg);
   $hover-color: map-deep-get-list($button-variants, ($variant, hover-color), $color);
+  $active-bg: map-deep-get-list($button-variants, ($variant, active-bg-color), $bg);
+  $active-color: map-deep-get-list($button-variants, ($variant, active-color), $color);
   $border: map-deep-get-list($button-variants, ($variant, border), none);
   $radius: map-deep-get-list($button-variants, ($variant, radius), map-deep-get($radius, m));
   $shadow: map-deep-get-list($button-variants, ($variant, shadow), none);
@@ -44,6 +43,11 @@
   &:hover {
     background: $hover-bg;
     color: $hover-color;
+  }
+  &:active {
+    color: $active-color;
+    background: $active-bg;
+    transform: scale(1.05);
   }
 }
 

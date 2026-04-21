@@ -12,7 +12,7 @@ final class TableSectionFactory
      */
     private array $products;
 
-    public function __construct(array $products, private HtmlBuilder $builder, private IconBuilder $icon, private FileContentManager $file, private TypePresenterFactory $presenter)
+    public function __construct(array $products, private HtmlBuilder $builder, private IconBuilder $icon, private FileContentManager $file, private HtmlSectionPresentationService $presenter)
     {
         $this->products = $products;
         $this->registerTableSection();

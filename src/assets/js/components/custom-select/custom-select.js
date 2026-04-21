@@ -348,7 +348,9 @@ export default class CustomSelect {
   }
 
   handleToggle(e) {
+    e.preventDefault();
     e.stopPropagation();
+    logger.debug(`handleToggle called, isOpen: ${this.isOpen}`);
     if (this.isOpen) {
       this.closeDropdown();
     } else {

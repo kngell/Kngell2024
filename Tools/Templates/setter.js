@@ -23,9 +23,6 @@ module.exports = (prop) => {
         for (let i = 0; i < lineCount; i++) {
           firstLines += document.lineAt(i).text + "\n";
         }
-
-        // Look for class definition in the first 50 lines
-        // This avoids most comments but focuses on the actual class definition
         const lines = firstLines.split("\n");
         for (const line of lines) {
           const trimmed = line.trim();
