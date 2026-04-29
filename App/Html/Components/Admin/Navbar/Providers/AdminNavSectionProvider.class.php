@@ -18,10 +18,10 @@ class AdminNavSectionProvider extends AbstractSectionProvider
             'admin_nav_section' => new AsideNavigationSection(
                 $html,
                 $this->iconBuilder,
-                $this->config,
                 new AdminMenuItemComponent(
                     $html,
                     $this->iconBuilder,
+                    $this->config,
                     $this->request->getPathFromUri(),
                 ),
             ),

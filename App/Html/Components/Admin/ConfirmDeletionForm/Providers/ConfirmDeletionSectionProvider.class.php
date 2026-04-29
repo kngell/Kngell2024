@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 class ConfirmDeletionSectionProvider extends AbstractSectionProvider
 {
-    public function __construct(IconBuilder $iconBuilder)
+    public function __construct(IconBuilder $iconBuilder, private FormOptions $options)
     {
         parent::__construct($iconBuilder);
     }
@@ -13,7 +13,7 @@ class ConfirmDeletionSectionProvider extends AbstractSectionProvider
     {
         $sections = [
             new DeletionSummarySection($html, $this->iconBuilder),
-            new DeletionOptionSection($html, $this->iconBuilder),
+            new DeletionOptionSection($html, $this->iconBuilder, $this->options),
             new DeletionImpactSection($html, $this->iconBuilder),
             new DeletionCheckBoxSection($html, $this->iconBuilder),
         ];

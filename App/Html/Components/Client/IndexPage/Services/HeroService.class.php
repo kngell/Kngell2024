@@ -9,10 +9,10 @@ class HeroService extends AbstractSingleEntityService
 {
     public function __construct(
         private HeroModel $model,
-        ImageOptimizerFactory $imageOptimizerFactory,
+        private ImageOptimizerFactory $imageOptimizerFactory,
         HeroCacheManagerFactory $factory,
     ) {
-        parent::__construct($imageOptimizerFactory, $factory->create());
+        parent::__construct($factory->create());
     }
 
     public function getDefaultResponse(): EntityResponseInterface

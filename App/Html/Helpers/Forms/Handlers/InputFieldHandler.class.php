@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 class InputFieldHandler implements FieldHandlerInterface
 {
-    private const array INPUT_TYPE = ['text', 'number', 'email', 'password', 'tel', 'url'];
+    private const array INPUT_TYPE = ['text', 'number', 'email', 'password', 'tel', 'url', 'checkbox', 'radio'];
 
     public function supports(string $fieldType): bool
     {
@@ -15,9 +15,14 @@ class InputFieldHandler implements FieldHandlerInterface
     {
         $fieldId = $field['id'] ?? $formInstance->getFieldId($field);
 
+        $class = ['input-field__input'];
+        if ($field['type'] === 'checkbox') {
+            $class = ['input-field__checkbox-input'];
+        }
+
         $inputField = $form->input($field['type'] ?? 'text')
             ->name($field['name'])
-            ->class('input-field__input')
+            ->class(...$class)
             ->id($field['id'] ?? $fieldId)
             ->placeholder(' ');
 

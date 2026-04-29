@@ -1,372 +1,231 @@
-import BrowserLogger from "js/core/utils/BrowserLogger";
+import BaseFormManager from "js/components/Managers/BaseFormManager";
 import ProductComponentsManager from "js/backend/pages/products-save/Managers/ProductComponentsManager";
-import FormHandler from "js/core/forms/FormHandler";
+import BrowserLogger from "js/core/utils/BrowserLogger";
 
-const logger = new BrowserLogger("ProductMain");
+class ProductSaveMain extends BaseFormManager {
+  constructor(options = {}) {
+    super({
+      enableDropzone: true,
+      enableCustomSelect: true,
+      enableRadioOptions: true,
+      enableToggleSwitch: true,
+      enableActionBar: true,
+      resetOnSuccess: options.resetOnSuccess || true,
+      notificationContainerId: options.notificationContainerId || "product-notifications",
 
-export default class ProductSaveMain {
-  constructor() {
+      notificationConfig: {
+        error: {
+          permanent: true,
+          duration: 8000,
+          position: "top-right"
+        },
+        success: {
+          permanent: false,
+          duration: 3000,
+          position: "top-right"
+        },
+        warning: {
+          permanent: false,
+          duration: 5000,
+          position: "top-right"
+        }
+      },
+
+      ...options
+    });
+
+    // Product-specific components manager
     this.componentsManager = null;
-    this.formHandlers = [];
-    this.isInitialized = false;
-    // REMOVED: this.notificationManager = null;
-    this.init();
   }
 
-  async init() {
-    if (this.isInitialized) return;
+  getDefaultNotificationContainerId() {
+    return "product-notifications";
+  }
 
+  getFormSelector() {
+    return 'form[data-validate="true"][data-validation-rules*="product"], form#product-form';
+  }
+
+  getValidationRules() {
+    return "productRules";
+  }
+
+  // ─── ProductComponentsManager Integration ───────────────────
+
+  /**
+   * Initialize ProductComponentsManager as part of specific components
+   */
+  async initSpecificComponents() {
     try {
-      logger.info("Initializing product create/edit page");
-
-      // NO NotificationManager here - FormHandler will handle it
-
+      this.logger.debug("Initializing ProductComponentsManager...");
       this.componentsManager = new ProductComponentsManager();
       await this.componentsManager.initialize();
-      logger.debug("Components manager initialized");
-
-      // Small delay to ensure DOM is fully ready
-      setTimeout(() => {
-        this.initializeFormHandlers();
-      }, 100);
+      this.logger.debug("ProductComponentsManager initialized successfully");
     } catch (error) {
-      logger.error("Initialization failed:", error);
-      this.showCriticalError(error.message);
+      this.logger.error("Failed to initialize ProductComponentsManager:", error);
     }
-  }
-
-  async initializeFormHandlers() {
-    try {
-      // Double-check that forms exist
-      const forms = document.querySelectorAll('form[data-validate="true"]');
-
-      logger.debug(`Found ${forms.length} form(s) with data-validate="true"`, {
-        forms: Array.from(forms).map((f) => ({
-          id: f.id,
-          action: f.action,
-          method: f.method,
-          rules: f.dataset.validationRules
-        }))
-      });
-
-      if (forms.length === 0) {
-        logger.warn("No forms found with data-validate='true'");
-        return;
-      }
-
-      // Create form handlers for each form - FormHandler will manage all notifications
-      const handlerPromises = Array.from(forms).map(async (form) => {
-        try {
-          logger.debug(`Creating form handler for form: ${form.id || "unnamed"}`);
-
-          const handler = new FormHandler(form, {
-            rulesName: form.dataset.validationRules || "productRules",
-            enableRealTime: true,
-            submissionMode: "ajax",
-            ajaxHandler: true,
-
-            // Configure notification behavior for product forms
-            // FormHandler will use this config internally
-            notificationConfig: {
-              error: {
-                permanent: true, // Product errors are permanent
-                duration: 8000,
-                position: "top-right"
-              },
-              success: {
-                permanent: false, // Success auto-closes
-                duration: 3000,
-                position: "top-right"
-              },
-              warning: {
-                permanent: false,
-                duration: 5000,
-                position: "top-right"
-              },
-              info: {
-                permanent: false,
-                duration: 5000,
-                position: "top-right"
-              }
-            },
-
-            // Custom notification container for product forms
-            notificationContainerId: "product-notifications",
-            notificationPosition: "top-right",
-
-            // Components manager for custom data processing
-            componentsManager: this.componentsManager,
-
-            // Redirect delays
-            redirectDelays: {
-              success: 1500,
-              error: 1000,
-              warning: 2500,
-              info: 2000,
-              danger: 1000
-            },
-
-            // Success callback - business logic ONLY (no notifications)
-            onSuccess: (result, context, handler) => {
-              logger.success("Product form submitted successfully", {
-                result,
-                context,
-                formId: handler.form.id
-              });
-
-              // Business logic: handle redirects or post-submit actions
-              if (result.redirect) {
-                // Navigate after a short delay (FormHandler already showed success notification)
-                setTimeout(() => {
-                  window.location.href = result.redirect;
-                }, 1500);
-              } else if (result.operation === "insert") {
-                // Business logic for new products
-                logger.debug("New product created");
-                // Example: reset form, show custom message, etc.
-              }
-            },
-
-            // Error callback - business logic ONLY (no notifications)
-            onError: (error, handler) => {
-              logger.error("Product form submission failed:", {
-                message: error.message,
-                formId: handler.form.id,
-                details: error.original
-              });
-
-              // Business logic only: analytics, error tracking, etc.
-              // Example: Track error for analytics
-              if (window.ga) {
-                window.ga("send", "event", "Form", "Error", error.message);
-              }
-
-              // Example: Log to error tracking service
-              if (window.Sentry) {
-                window.Sentry.captureException(error.original || error);
-              }
-            },
-
-            // Initialization callback - business logic only
-            onInitialize: (handler) => {
-              logger.debug(`Form handler initialized: ${handler.form.id}`);
-            }
-          });
-
-          const initializedHandler = await handler.initialize();
-          logger.success(`Form handler initialized for form: ${form.id || "unnamed"}`);
-
-          return initializedHandler;
-        } catch (error) {
-          logger.error(`Failed to initialize handler for form:`, error);
-          // Don't show notification here - FormHandler would show it if it was initialized
-          // Just log and return null
-          return null;
-        }
-      });
-
-      const handlers = await Promise.all(handlerPromises);
-      this.formHandlers = handlers.filter((h) => h !== null);
-
-      if (this.formHandlers.length > 0) {
-        this.isInitialized = true;
-        logger.success(`Initialized ${this.formHandlers.length} form handler(s)`);
-
-        // Log validation status (debug only)
-        this.logValidationStatus();
-
-        // No success notification here - that's FormHandler's job
-        // Users will see a success message when they actually submit the form
-      } else {
-        logger.warn("No form handlers were successfully initialized");
-        // Critical error - show using fallback (no FormHandler available)
-        this.showCriticalError("Failed to initialize product forms. Please refresh the page.");
-      }
-    } catch (error) {
-      logger.error("Failed to initialize form handlers:", error);
-      this.showCriticalError("Failed to initialize product forms. Please refresh the page.");
-    }
-  }
-
-  logValidationStatus() {
-    const status = this.getValidationStatus();
-    logger.debug("Current validation status:", status);
-  }
-
-  getFormHandler(form) {
-    if (!form) return null;
-
-    // Try to find by element reference
-    let handler = this.formHandlers.find((handler) => handler.form === form);
-
-    // If not found, try by ID
-    if (!handler && form.id) {
-      handler = this.formHandlers.find((handler) => handler.form.id === form.id);
-    }
-
-    return handler;
   }
 
   /**
-   * Validate all forms on the page
+   * Override to include ProductComponentsManager in custom data processing
    */
-  async validateAllForms() {
-    if (this.formHandlers.length === 0) {
-      logger.warn("No form handlers available for validation");
-      return [];
-    }
-
-    const results = await Promise.all(
-      this.formHandlers.map(async (handler) => {
-        try {
-          const isValid = await handler.validateAll();
-          return {
-            formId: handler.form.id,
-            isValid,
-            handler
-          };
-        } catch (error) {
-          logger.error(`Validation failed for form:`, error);
-          return {
-            formId: handler.form.id,
-            isValid: false,
-            error: error.message
-          };
+  getCustomDataProcessors() {
+    return [
+      // Add ProductComponentsManager data to form submission
+      (data, formEl) => {
+        if (this.componentsManager && this.componentsManager.getData) {
+          const componentsData = this.componentsManager.getData?.();
+          if (componentsData) {
+            Object.assign(data, componentsData);
+            this.logger.debug("Added ProductComponentsManager data to form:", componentsData);
+          }
         }
-      })
-    );
-
-    logger.debug("Validation results:", results);
-    return results;
+        return data;
+      }
+    ];
   }
 
-  /**
-   * Get validation status for debugging
-   */
-  getValidationStatus() {
+  // ─── Override Deletion Modal Config ─────────────────────────
+
+  getDeletionModalConfig() {
     return {
-      isInitialized: this.isInitialized,
-      hasComponentsManager: !!this.componentsManager,
-      formHandlersCount: this.formHandlers.length,
-      formStatuses: this.formHandlers.map((handler) => ({
-        ...handler.getStatus(),
-        formId: handler.form.id,
-        formAction: handler.form.action,
-        hasValidator: !!handler.validator
-      })),
-      componentsStatus: this.componentsManager?.getStatus?.()
+      onEntityDeleted: (entityId, result) => {
+        this.logger.success("Product deleted:", entityId);
+        if (result.redirect) {
+          window.location.href = result.redirect;
+        }
+      },
+      notificationConfig: {
+        error: { permanent: true, duration: 8000 },
+        success: { permanent: false, duration: 3000 }
+      }
     };
   }
 
-  /**
-   * Show critical error message (only for initialization failures)
-   * This is a fallback when FormHandler isn't available
-   */
-  showCriticalError(message) {
-    // Simple DOM-based error for critical initialization failures
-    const errorDiv = document.createElement("div");
-    errorDiv.className = "critical-error";
-    errorDiv.style.cssText = `
-      background: #f8d7da;
-      border: 1px solid #f5c6cb;
-      color: #721c24;
-      padding: 15px;
-      margin: 20px;
-      border-radius: 4px;
-      font-size: 14px;
-      position: fixed;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 10000;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    `;
-    errorDiv.innerHTML = `
-      <strong>⚠️ Initialization Error:</strong> ${message}
-      <br>
-      <button onclick="location.reload()" style="
-        background: #721c24;
-        color: white;
-        border: none;
-        padding: 8px 16px;
-        margin-top: 10px;
-        border-radius: 3px;
-        cursor: pointer;
-        font-weight: 500;
-      ">Reload Page</button>
-    `;
+  // ─── Override Action Bar Config ────────────────────────────
 
-    document.body.prepend(errorDiv);
+  getActionBarConfig() {
+    return {
+      addButtonSelector: ".btn-add-product",
+      deleteButtonSelector: ".btn-delete-product"
+    };
   }
 
-  /**
-   * Manual form submission with custom options
-   */
-  async submitForm(formElement, options = {}) {
-    const handler = this.getFormHandler(formElement);
-    if (!handler) {
-      // No handler available - can't show notification (FormHandler not available)
-      logger.error("Form handler not found");
-      return null;
-    }
+  // ─── Entity Lifecycle Hooks ────────────────────────────────
 
-    try {
-      const result = await handler.submit(options);
-      return result;
-    } catch (error) {
-      // FormHandler already shows the error notification
-      // Just log and re-throw
-      logger.error("Form submission error:", error);
-      throw error;
-    }
+  onEntityDeleted(entityId, result) {
+    this.logger.success("Product deleted:", entityId);
+    // Additional cleanup if needed
   }
 
-  /**
-   * Clean up resources
-   */
-  destroy() {
-    // Destroy form handlers
-    this.formHandlers.forEach((handler) => {
-      try {
-        handler.destroy();
-        logger.debug(`Destroyed handler for form: ${handler.form.id}`);
-      } catch (error) {
-        logger.warn("Error destroying form handler:", error);
+  onBeforeDelete(context) {
+    this.logger.debug("Before deleting product:", context);
+    return true;
+  }
+
+  onBeforeAdd(context) {
+    this.logger.debug("Before adding new product:", context);
+    return true;
+  }
+
+  // ─── Form Success Handler ──────────────────────────────────
+
+  onSuccess(result, context) {
+    this.logger.success("Product form submitted successfully");
+
+    if (this.options.resetOnSuccess && result.operation === "insert") {
+      this.formHandler?.form?.reset();
+
+      // Reset ProductComponentsManager
+      if (this.componentsManager?.reset) {
+        this.componentsManager.reset();
+        this.logger.debug("ProductComponentsManager reset");
       }
-    });
-    this.formHandlers = [];
 
-    // Destroy components manager
+      // Reset custom selects if enabled
+      if (this.options.resetCustomSelectsOnSuccess) {
+        this.resetAllCustomSelects();
+      }
+
+      this.dropzoneInstances.forEach((dz) => dz.reset?.());
+    }
+
+    // Handle redirects
+    if (result.redirect) {
+      setTimeout(() => {
+        window.location.href = result.redirect;
+      }, 1500);
+    }
+  }
+
+  onError(error) {
+    const errorKey = error.message || JSON.stringify(error);
+    const now = Date.now();
+
+    if (this._lastErrorLogKey === errorKey && now - this._lastErrorLogTime < 1000) {
+      this.logger.debug("Suppressing duplicate error log");
+      return;
+    }
+
+    this._lastErrorLogKey = errorKey;
+    this._lastErrorLogTime = now;
+
+    this.logger.error("Product form submission failed:", error);
+  }
+
+  // ─── Public API Extensions ─────────────────────────────────
+
+  getComponentsManager() {
+    return this.componentsManager;
+  }
+
+  getValidationStatus() {
+    const baseStatus = {
+      isInitialized: !!this.formHandler,
+      hasComponentsManager: !!this.componentsManager,
+      componentsStatus: this.componentsManager?.getStatus?.() || null
+    };
+
+    if (this.formHandler) {
+      return {
+        ...baseStatus,
+        ...this.formHandler.getStatus?.()
+      };
+    }
+
+    return baseStatus;
+  }
+
+  // ─── Destroy Override ──────────────────────────────────────
+
+  destroy() {
+    // Destroy ProductComponentsManager
     if (this.componentsManager) {
       try {
         this.componentsManager.destroy();
+        this.logger.debug("ProductComponentsManager destroyed");
       } catch (error) {
-        logger.warn("Error destroying components manager:", error);
+        this.logger.warn("Error destroying ProductComponentsManager:", error);
       }
       this.componentsManager = null;
     }
 
-    this.isInitialized = false;
-    logger.debug("ProductMain destroyed");
+    // Call parent destroy
+    super.destroy();
   }
 }
 
-// Wait for DOM to be fully loaded before initializing
+const initProductSaveMain = () => {
+  if (!window.productMainInstance) {
+    window.productMainInstance = new ProductSaveMain();
+    window.productMainInstance._init();
+  }
+};
+
 if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", () => {
-    const isProductFormPage = document.querySelector('form[data-validate="true"]') !== null;
-
-    if (isProductFormPage) {
-      logger.debug("DOM loaded, initializing ProductSaveMain");
-      window.productMain = new ProductSaveMain();
-    }
-  });
+  document.addEventListener("DOMContentLoaded", initProductSaveMain);
 } else {
-  // DOM is already loaded
-  const isProductFormPage = document.querySelector('form[data-validate="true"]') !== null;
-
-  if (isProductFormPage) {
-    logger.debug("DOM already loaded, initializing ProductSaveMain");
-    window.productMain = new ProductSaveMain();
-  }
+  initProductSaveMain();
 }
+
+export default ProductSaveMain;

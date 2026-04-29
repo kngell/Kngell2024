@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-abstract class AbstractSelectHandler implements FieldHandlerInterface
+abstract class AbstractSelectHandler extends AbstractSelectLikeHandler
 {
     public function supports(string $fieldType): bool
     {
@@ -14,85 +14,91 @@ abstract class AbstractSelectHandler implements FieldHandlerInterface
         return $this->buildSelectElement($field, $form, $formInstance);
     }
 
-    protected function buildSelectElement(array $field, FormBuilder $form, AbstractForm $formInstance): AbstractHtmlComponent
-    {
-        $formValues = $formInstance->getFormValues();
+    protected function buildSelectElement(
+        array $field,
+        FormBuilder $form,
+        AbstractForm $formInstance,
+    ): AbstractHtmlComponent {
         $fieldId = $formInstance->getFieldId($field);
 
         $select = $form->select()
             ->id($fieldId)
-            ->class('input-field__select')
+            ->class($this->getSelectClasses($field))
             ->name($field['name'])
-            ->placeholder(' '); // Space for floating label
+            ->placeholder(' ');
 
-        // Set required attribute
         if (!empty($field['required'])) {
             $select->required();
         }
 
-        // Set disabled attribute
         if (!empty($field['disabled'])) {
-            $select->attribute('disabled', 'disabled');
+            $select->disabled(true);
         }
 
-        // Get current value
-        $currentValue = $this->getSelectedValue($field, $formInstance);
+        $this->configureSelect($select, $field, $form, $formInstance);
 
-        // Build options
+        $currentValue = $this->getSelectedValue($field, $formInstance);
         $options = $this->getOptionData($field, $formInstance);
 
         foreach ($options as $optionValue => $label) {
-            $isSelected = $this->shouldSelectOption($currentValue, $optionValue, $field);
-            $isDisabled = $this->isOptionDisabled($optionValue, $field);
+            $option = $form->option((string) $optionValue, (string) $label)
+                ->selected($this->shouldSelectOption($currentValue, $optionValue, $field))
+                ->disabled($this->isOptionDisabled($optionValue, $field));
 
-            $option = $form->option((string) $optionValue, $label)
-                ->selected($isSelected)
-                ->disabled($isDisabled);
-
+            $this->configureOption($option, $optionValue, $label, $field, $form, $formInstance);
             $select->add($option);
         }
 
-        return $select;
+        return $this->decorateSelect($select, $field, $form, $formInstance);
     }
 
-    protected function getOptionData(array $field, AbstractForm $formInstance): array
-    {
-        return $field['options'] ?? [];
-    }
-
-    protected function shouldSelectOption($currentValue, $optionValue, array $field): bool
-    {
-        // If current value matches option value
+    protected function shouldSelectOption(
+        ?string $currentValue,
+        string|int $optionValue,
+        array $field,
+    ): bool {
         if ($currentValue !== null && $currentValue !== '' && (string) $currentValue === (string) $optionValue) {
             return true;
         }
 
-        // If no value and option is empty (placeholder)
-        if (empty($currentValue) && $optionValue === '') {
+        if (($currentValue === null || $currentValue === '') && $optionValue === '') {
             return true;
         }
 
         return false;
     }
 
-    protected function isOptionDisabled($optionValue, array $field): bool
+    protected function isOptionDisabled(string|int $optionValue, array $field): bool
     {
         return false;
     }
 
-    protected function getSelectedValue(array $field, AbstractForm $formInstance): ?string
-    {
-        $formValues = $formInstance->getFormValues();
-
-        // Priority: form values > field value > null
-        if (isset($formValues[$field['name']])) {
-            return $formValues[$field['name']];
-        }
-
-        if (isset($field['value'])) {
-            return $field['value'];
-        }
-
-        return null;
+    protected function configureSelect(
+        AbstractHtmlComponent $select,
+        array $field,
+        FormBuilder $form,
+        AbstractForm $formInstance,
+    ): void {
     }
+
+    protected function configureOption(
+        AbstractHtmlComponent $option,
+        string|int $optionValue,
+        mixed $label,
+        array $field,
+        FormBuilder $form,
+        AbstractForm $formInstance,
+    ): void {
+    }
+
+    protected function decorateSelect(
+        AbstractHtmlComponent $select,
+        array $field,
+        FormBuilder $form,
+        AbstractForm $formInstance,
+    ): AbstractHtmlComponent {
+        return $select;
+    }
+
+    abstract protected function getSelectClasses(array $field): string;
 }

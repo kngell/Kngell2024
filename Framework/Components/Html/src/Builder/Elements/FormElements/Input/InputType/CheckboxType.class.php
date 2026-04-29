@@ -8,6 +8,9 @@ class CheckboxType extends AbstractInput
 
     protected function populateField(): void
     {
+        if (!isset($this->name)) {
+            return;
+        }
         $submittedValue = $this->inputValue($this->name, $this->value ?? '');
 
         $isChecked = !empty($submittedValue) && in_array($submittedValue, [

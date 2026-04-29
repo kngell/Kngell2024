@@ -49,7 +49,6 @@ class HeaderBottomSection extends AbstractBaseHtmlSection
 
         $link->add(
             $this->iconBuilder->createIcon(
-                $html,
                 $category['icon'],
                 $category['name'],
                 [

@@ -9,7 +9,7 @@ class IndexSectionProvider extends AbstractSectionProvider
         private HeroService $heroService,
         private SmallBannerService $smallBannerService,
         private CategoryFrontendService $category,
-        private ProductCardService $product,
+        private ProductService $product,
         private HtmlSectionPresentationService $presenter,
     ) {
         parent::__construct($iconBuilder);

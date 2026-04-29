@@ -183,7 +183,7 @@ class ProductRelationshipSection extends BaseFieldSection
     {
         $cardElements = [];
         $cardElements[] = $form->tag('div')->class('img-container')->add(
-            $this->iconBuilder->createIcon($form, 'icon-image', 'No Product Selected', ['image', 'placeholder']),
+            $this->iconBuilder->createIcon('icon-image', 'No Product Selected', ['image', 'placeholder']),
         );
         $cardElements[] = $form->tag('div')->class('product-info')->add(
             $form->tag('h6')->class('product-info__title')->content('No product selected'),
@@ -206,7 +206,7 @@ class ProductRelationshipSection extends BaseFieldSection
                 ->class('image')
                 ->src($imageUrl)
                 ->alt($productData['name'] ?? $productData['title'] ?? 'Product Image')
-            : $this->iconBuilder->createIcon($form, 'icon-image', 'No image available', ['image', 'fallback']);
+            : $this->iconBuilder->createIcon('icon-image', 'No image available', ['image', 'fallback']);
 
         return $form->tag('div')->class('img-container')->add($imageHtml);
     }
@@ -234,7 +234,7 @@ class ProductRelationshipSection extends BaseFieldSection
                     ->attribute('data-remove-product', 'true')
                     ->attribute('type', 'button')
                     ->add(
-                        $this->iconBuilder->createIcon($form, 'icon-close', 'Remove product', ['close']),
+                        $this->iconBuilder->createIcon('icon-close', 'Remove product', ['close']),
                     ),
             );
     }

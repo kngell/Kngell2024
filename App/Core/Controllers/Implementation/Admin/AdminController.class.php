@@ -28,9 +28,12 @@ class AdminController extends Controller
     {
         $this->pageTitle('Add Product');
 
-        $decorator = new ProductFormDecorator(
-            controller: $this,
-            action:'product-save/index',
+        $decorator = $this->decorate(
+            ProductFormDecorator::class,
+            $this,
+            [
+                'action' => 'product-save/index',
+            ],
         );
         return $this->render('product-add', $decorator->page());
     }
@@ -55,7 +58,7 @@ class AdminController extends Controller
     {
         $this->pageTitle('Product List');
         $product = $this->decorate(ProductListDecorator::class, $this);
-        return $this->render('product-list', $product->page());
+        return $this->render('/components/table-list', $product->page());
     }
 
     public function productEdit(#[Alias(['public_id', 'pdt_id'])]string $id): string|Response
@@ -71,13 +74,12 @@ class AdminController extends Controller
                 : $this->product->getByUuid($id);
         }
 
-        $decorator = new ProductFormDecorator(
-            controller: $this,
-            action: $action,
-            formValues: $values,
-            formErrors:$errors,
-            files: $files,
-        );
+        $decorator = $this->decorate(ProductFormDecorator::class, $this, [
+            'action' => $action,
+            'formValues' => $values,
+            'formErrors' => $errors,
+            'files' => $files,
+        ]);
         // dd($values);
         return $this->render('product-add', $decorator->page());
     }

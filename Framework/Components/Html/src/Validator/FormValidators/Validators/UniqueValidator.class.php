@@ -23,12 +23,12 @@ class UniqueValidator extends AbstractValidator
         }
         $model = $this->md;
         $column = $this->extractFieldName($this->fieldName);
-        $ruleType = $this->ruleValue;
+        // $ruleType = $this->ruleValue;
 
         if (is_array($this->ruleValue)) {
             $modelName = ucfirst(StringUtils::snakeCaseToCamelCase($this->ruleValue['modelName'])) . 'Model';
             $column = $this->ruleValue['fieldNames'][0] ?? $this->fieldName;
-            $ruleType = $this->ruleValue['ignore'] ?? 'ignore_current';
+            // $ruleType = $this->ruleValue['ignore'] ?? 'ignore_current';
 
             $model = App::diGet($modelName);
         }
@@ -43,7 +43,11 @@ class UniqueValidator extends AbstractValidator
                 $existingRecord = $existingRecord->asClass();
                 $isSameRecord = $this->isSameRecord($existingRecord, $model);
                 if (!$isSameRecord) {
-                    return $this->buildErrorMessage($this->errorParams);
+                    [$message,$classes] = $this->buildErrorMessage($this->errorParams);
+                    return $this->errorMessage(
+                        sprintf($message, $this->display),
+                        $classes,
+                    );
                 }
                 return false;
             }

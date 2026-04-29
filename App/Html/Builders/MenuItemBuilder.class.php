@@ -9,23 +9,14 @@ final class MenuItemBuilder
     ) {
     }
 
-    /**
-     * Build a menu item with all necessary data.
-     */
     public function buildItem(string $key, array|string $config, array $routes): array
     {
         if (is_string($config)) {
-            // Simple string path
             return $this->buildFromString($key, $config, $routes);
         }
-
-        // Array config
         return $this->buildFromArray($key, $config, $routes);
     }
 
-    /**
-     * Build a dropdown menu.
-     */
     public function buildDropdown(string $key, array $config, array $routes): array
     {
         return [

@@ -862,6 +862,114 @@ $input-field-config: (
     }
 
     // Custom checkbox square
+    // &__checkbox-custom {
+    //   width: 2rem;
+    //   height: 2rem;
+    //   border: 0.2rem solid config("border-neutral-secondary");
+    //   border-radius: $radius-xs;
+    //   @include flex-center;
+    //   position: relative;
+    //   flex-shrink: 0;
+    //   background-color: config("background-neutral-primary");
+    //   @include transition(all, config("transition-duration"), config("transition-timing"));
+
+    //   // Checkmark
+    //   &::after {
+    //     content: "";
+    //     width: 0.4rem;
+    //     height: 0.8rem;
+    //     border: solid $background-neutral-primary;
+    //     border-width: 0 0.2rem 0.2rem 0;
+    //     transform: rotate(45deg) scale(0);
+    //     @include transition(all, config("transition-duration"), config("transition-timing"));
+    //   }
+
+    //   // Hover state
+    //   #{$selector}__checkbox:hover & {
+    //     border-color: config("border-brand-primary");
+    //   }
+
+    //   // Checked state
+    //   #{$selector}__checkbox-input:checked + & {
+    //     background-color: config("border-brand-primary");
+    //     border-color: config("border-brand-primary");
+
+    //     &::after {
+    //       transform: rotate(45deg) scale(1);
+    //     }
+    //   }
+
+    //   // Focus state
+    //   #{$selector}__checkbox-input:focus + & {
+    //     border-color: config("border-brand-primary");
+    //     box-shadow: 0 0 0 0.2rem rgba(config("border-brand-primary"), 0.2);
+    //   }
+
+    //   // Error state
+    //   #{$selector}.is-error & {
+    //     border-color: config("border-semantic-error");
+
+    //     #{$selector}__checkbox-input:checked + & {
+    //       background-color: config("border-semantic-error");
+    //       border-color: config("border-semantic-error");
+    //     }
+    //   }
+
+    //   // Disabled state
+    //   #{$selector}.is-disabled & {
+    //     border-color: config("border-neutral-disabled");
+    //     background-color: config("background-neutral-disabled");
+    //     cursor: not-allowed;
+
+    //     &::after {
+    //       border-color: config("text-neutral-disabled");
+    //     }
+
+    //     #{$selector}__checkbox-input:checked + & {
+    //       background-color: config("border-neutral-disabled");
+    //     }
+    //   }
+    // }
+
+    // // Checkbox label
+    // &__checkbox-label {
+    //   @include apply-text-style(config("input-text-style"));
+    //   cursor: pointer;
+
+    //   // Disabled state
+    //   #{$selector}.is-disabled & {
+    //     color: config("text-neutral-disabled");
+    //     cursor: not-allowed;
+    //   }
+
+    //   // Error state
+    //   #{$selector}.is-error & {
+    //     color: config("text-semantic-error");
+    //   }
+    // }
+    // &__checkbox-custom {
+    //   width: 2rem;
+    //   height: 2rem;
+    //   border: 0.2rem solid config("border-neutral-secondary");
+    //   border-radius: $radius-xs;
+    //   @include flex-center;
+    //   position: relative;
+    //   flex-shrink: 0;
+    //   background-color: config("background-neutral-primary");
+    //   @include transition(all, config("transition-duration"), config("transition-timing"));
+
+    //   &::after {
+    //     content: "";
+    //     width: 0.4rem;
+    //     height: 0.8rem;
+    //     border: solid $background-neutral-primary;
+    //     border-width: 0 0.2rem 0.2rem 0;
+    //     transform: rotate(45deg) scale(0);
+    //     @include transition(all, config("transition-duration"), config("transition-timing"));
+    //   }
+    // }
+
+    // ── Base custom checkbox ──
     &__checkbox-custom {
       width: 2rem;
       height: 2rem;
@@ -873,7 +981,6 @@ $input-field-config: (
       background-color: config("background-neutral-primary");
       @include transition(all, config("transition-duration"), config("transition-timing"));
 
-      // Checkmark
       &::after {
         content: "";
         width: 0.4rem;
@@ -883,51 +990,130 @@ $input-field-config: (
         transform: rotate(45deg) scale(0);
         @include transition(all, config("transition-duration"), config("transition-timing"));
       }
+    }
 
-      // Hover state
-      #{$selector}__checkbox:hover & {
-        border-color: config("border-brand-primary");
+    // ── Hover ──
+    &__checkbox:hover &__checkbox-custom {
+      border-color: config("border-brand-primary");
+    }
+
+    // ── Checked ──
+    &__checkbox-input:checked + &__checkbox-custom {
+      background-color: config("border-brand-primary");
+      border-color: config("border-brand-primary");
+
+      &::after {
+        transform: rotate(45deg) scale(1);
       }
+    }
 
-      // Checked state
-      #{$selector}__checkbox-input:checked + & {
-        background-color: config("border-brand-primary");
-        border-color: config("border-brand-primary");
+    // ── Focus ──
+    &__checkbox-input:focus + &__checkbox-custom {
+      border-color: config("border-brand-primary");
+      box-shadow: 0 0 0 0.2rem rgba(config("border-brand-primary"), 0.2);
+    }
 
-        &::after {
-          transform: rotate(45deg) scale(1);
-        }
+    // ── Error ──
+    &.is-error &__checkbox-custom {
+      border-color: config("border-semantic-error");
+    }
+
+    &.is-error &__checkbox-input:checked + &__checkbox-custom {
+      background-color: config("border-semantic-error");
+      border-color: config("border-semantic-error");
+
+      &::after {
+        transform: rotate(45deg) scale(1);
       }
+    }
 
-      // Focus state
-      #{$selector}__checkbox-input:focus + & {
-        border-color: config("border-brand-primary");
-        box-shadow: 0 0 0 0.2rem rgba(config("border-brand-primary"), 0.2);
+    // ── Disabled ──
+    &.is-disabled &__checkbox-custom {
+      border-color: config("border-neutral-disabled");
+      background-color: config("background-neutral-disabled");
+      cursor: not-allowed;
+
+      &::after {
+        border-color: config("text-neutral-disabled");
       }
+    }
 
-      // Error state
-      #{$selector}.is-error & {
-        border-color: config("border-semantic-error");
+    &.is-disabled &__checkbox-input:checked + &__checkbox-custom {
+      background-color: config("border-neutral-disabled");
 
-        #{$selector}__checkbox-input:checked + & {
-          background-color: config("border-semantic-error");
-          border-color: config("border-semantic-error");
-        }
+      &::after {
+        transform: rotate(45deg) scale(1);
       }
+    }
 
-      // Disabled state
-      #{$selector}.is-disabled & {
-        border-color: config("border-neutral-disabled");
-        background-color: config("background-neutral-disabled");
-        cursor: not-allowed;
+    // ── Label ──
+    &__checkbox-label {
+      @include apply-text-style(config("input-text-style"));
+      cursor: pointer;
+    }
 
-        &::after {
-          border-color: config("text-neutral-disabled");
-        }
+    &.is-disabled &__checkbox-label {
+      color: config("text-neutral-disabled");
+      cursor: not-allowed;
+    }
 
-        #{$selector}__checkbox-input:checked + & {
-          background-color: config("border-neutral-disabled");
-        }
+    &.is-error &__checkbox-label {
+      color: config("text-semantic-error");
+    }
+
+    // Hover
+    &__checkbox:hover #{$selector}__checkbox-custom {
+      border-color: config("border-brand-primary");
+    }
+
+    // Checked
+    &__checkbox-input:checked + #{$selector}__checkbox-custom {
+      background-color: config("border-brand-primary");
+      border-color: config("border-brand-primary");
+
+      &::after {
+        transform: rotate(45deg) scale(1);
+      }
+    }
+
+    // Focus
+    &__checkbox-input:focus + #{$selector}__checkbox-custom {
+      border-color: config("border-brand-primary");
+      box-shadow: 0 0 0 0.2rem rgba(config("border-brand-primary"), 0.2);
+    }
+
+    // Error
+    &.is-error #{$selector}__checkbox-custom {
+      border-color: config("border-semantic-error");
+    }
+
+    // Error + Checked
+    &.is-error #{$selector}__checkbox-input:checked + #{$selector}__checkbox-custom {
+      background-color: config("border-semantic-error");
+      border-color: config("border-semantic-error");
+
+      &::after {
+        transform: rotate(45deg) scale(1);
+      }
+    }
+
+    // Disabled
+    &.is-disabled #{$selector}__checkbox-custom {
+      border-color: config("border-neutral-disabled");
+      background-color: config("background-neutral-disabled");
+      cursor: not-allowed;
+
+      &::after {
+        border-color: config("text-neutral-disabled");
+      }
+    }
+
+    // Disabled + Checked
+    &.is-disabled #{$selector}__checkbox-input:checked + #{$selector}__checkbox-custom {
+      background-color: config("border-neutral-disabled");
+
+      &::after {
+        transform: rotate(45deg) scale(1);
       }
     }
 
@@ -936,13 +1122,11 @@ $input-field-config: (
       @include apply-text-style(config("input-text-style"));
       cursor: pointer;
 
-      // Disabled state
       #{$selector}.is-disabled & {
         color: config("text-neutral-disabled");
         cursor: not-allowed;
       }
 
-      // Error state
       #{$selector}.is-error & {
         color: config("text-semantic-error");
       }

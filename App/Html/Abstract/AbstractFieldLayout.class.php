@@ -178,7 +178,7 @@ abstract class AbstractFieldLayout implements InputLayoutInterface
 
         $iconContainer = $form->tag('div')->class('input-field__icon-left');
 
-        $iconElement = $formInstance?->createIcon($form, $icon, $aria, $classes);
+        $iconElement = $formInstance?->createIcon($icon, $aria, $classes);
         if ($iconElement) {
             $iconContainer->add($iconElement);
         }
@@ -215,7 +215,7 @@ abstract class AbstractFieldLayout implements InputLayoutInterface
             if (!empty($icon)) {
                 $iconContainer = $form->tag('div')->class('input-field__icon-right');
 
-                $iconElement = $formInstance?->createIcon($form, $icon, $aria, $classes);
+                $iconElement = $formInstance?->createIcon($icon, $aria, $classes);
                 if ($iconElement) {
                     $iconContainer->add($iconElement);
                     $rightContainer->add($iconContainer);

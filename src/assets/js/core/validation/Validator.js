@@ -15,11 +15,11 @@ export default class Validator {
     this.cacheManager = new ValidatorCacheManager({
       enableStats: true, // Enable stats for debugging
       maxSize: 500, // Prevent memory leaks
-      ttl: 5 * 60 * 1000, // 5 minute TTL
+      ttl: 5 * 60 * 1000 // 5 minute TTL
     });
 
     logger.debug("✅ Validator initialized", {
-      ruleCount: Object.keys(this.rules).length,
+      ruleCount: Object.keys(this.rules).length
     });
   }
   validateField(fieldName) {
@@ -180,7 +180,7 @@ export default class Validator {
     const errorParams = {
       message: messageTemplate,
       classes,
-      fieldName: fieldName,
+      fieldName: fieldName
     };
 
     return ValidatorFactory.createValidator(
@@ -189,7 +189,7 @@ export default class Validator {
       display,
       value,
       ruleValue,
-      this.formData,
+      this.formData
     );
   }
 
@@ -221,7 +221,7 @@ export default class Validator {
     logger.debug("Validation completed", {
       isValid,
       errorCount: Object.keys(this.errors).length,
-      errorKeys: Object.keys(this.errors),
+      errorKeys: Object.keys(this.errors)
     });
 
     return isValid;
@@ -261,7 +261,7 @@ export default class Validator {
       required: "%s is required.",
       integer: "%s must be a whole number.", // 👈 ADD THIS
       numeric: "%s must be a number.",
-      default: "%s is invalid.",
+      default: "%s is invalid."
     };
 
     return defaultMessages[ruleName] || defaultMessages.default;
@@ -277,7 +277,7 @@ export default class Validator {
           index: match[2],
           nestedArrayName: match[3],
           nestedIndex: match[4],
-          field: match[5],
+          field: match[5]
         }
       : null;
   }
@@ -293,7 +293,7 @@ export default class Validator {
       return {
         arrayName: match[1],
         index: match[2],
-        field: match[3],
+        field: match[3]
       };
     }
 
@@ -305,7 +305,7 @@ export default class Validator {
       return {
         arrayName: match[1],
         index: match[2],
-        field: match[3],
+        field: match[3]
       };
     }
 

@@ -1,7 +1,13 @@
 <?php
 
 declare(strict_types=1);
-
+/**
+ * @property FlashInterface $flash
+ * @property Request $request
+ * @property Response $response
+ *
+ * @method Response redirect(string $url)
+ */
 trait AjaxResponseTrait
 {
     private function respondSuccess(

@@ -65,6 +65,7 @@ class CategoryForm extends AbstractForm
             builder: $builder,
             fieldRenderer: $fieldRenderer,
             sectionRenderer: $sectionRenderer,
+            buttonBuilder: new ButtonBuilder($builder, $iconBuilder),
             fieldGroupRenderer: $fieldGroupRenderer,
             dropzoneRenderer: $dropzoneRenderer,
             idGenerator: $idGenerator,
@@ -100,12 +101,14 @@ class CategoryForm extends AbstractForm
 
         $footer = new FooterProvider(
             builder:$this->builder,
-            iconBuilder:$this->iconBuilder,
-            formId:$this->getFormId(),
-            footerClass:['category__footer'],
-            renderProgressBar:true,
-            submitText: 'Save',
-            submitIcon:'icon-save',
+            buttonBuilder:$this->buttonBuilder,
+            dto: FooterDTO::forInlineForm(
+                formId:$this->getFormId(),
+                footerClass:['category__footer'],
+                renderProgressBar:true,
+                submitText: 'Save',
+                submitIcon:'icon-save',
+            ),
         );
         $htmlParts[] = $footer->renderFooter();
 
@@ -117,7 +120,7 @@ class CategoryForm extends AbstractForm
      *
      * @return AbstractHtmlComponent[]
      */
-    public function buildLayout(HtmlBuilder $form): array
+    public function buildLayout(?HtmlBuilder $form = null): array
     {
         $sectionsConfig = $this->getFormSections();
         $formSections = $this->buildFormSections($sectionsConfig);

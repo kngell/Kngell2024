@@ -70,7 +70,7 @@ abstract class AbstractDeleteController extends Controller
 
     // --- Private helpers ---
 
-    private function resolveRedirectUrl(): string
+    protected function resolveRedirectUrl(): string
     {
         return $this->getRedirectUrl()
             ?? DeletionFlowConfig::DEFAULT_REDIRECT->value;

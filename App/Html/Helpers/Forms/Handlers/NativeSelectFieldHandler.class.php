@@ -4,83 +4,53 @@ declare(strict_types=1);
 
 class NativeSelectFieldHandler extends AbstractSelectHandler
 {
-    public function supports(string $fieldType): bool
+    #[Override]
+    protected function getSelectClasses(array $field): string
     {
-        return $fieldType === 'select';
+        return 'input-field__select';
     }
 
-    protected function buildSelectElement(array $field, FormBuilder $form, AbstractForm $formInstance): AbstractHtmlComponent
-    {
-        $fieldId = $formInstance->getFieldId($field);
-
-        $select = $form->select()
-            ->id($fieldId)
-            ->class('input-field__select')
-            ->name($field['name'])
-            ->placeholder(' ');
-
-        // Set required attribute
-        if (!empty($field['required'])) {
-            $select->required();
-        }
-
-        // Set disabled attribute
-        if (!empty($field['disabled'])) {
-            $select->disabled($field['disabled']);
-        }
-
-        // Get current value
-        $currentValue = $this->getSelectedValue($field, $formInstance);
-
-        // Build options
-        $options = $this->getOptionData($field, $formInstance);
-
-        foreach ($options as $optionValue => $label) {
-            $isSelected = $this->shouldSelectOption($currentValue, $optionValue, $field);
-            $isDisabled = $this->isOptionDisabled($optionValue, $field);
-
-            $option = $form->option((string) $optionValue, $label)
-                ->selected($isSelected)
-                ->disabled($isDisabled);
-
-            if (!empty($field['optionClass']) and is_array($field['optionClass'])) {
-                $option->class(...$field['optionClass']);
-            }
-
-            $select->add($option);
-        }
-
-        return $select;
-    }
-
+    #[Override]
     protected function getOptionData(array $field, AbstractForm $formInstance): array
     {
         $options = parent::getOptionData($field, $formInstance);
 
-        // Add placeholder as first option if provided
-        if (!empty($field['placeholder']) && !isset($options[''])) {
+        if (!empty($field['placeholder']) && !array_key_exists('', $options)) {
             $options = ['' => $field['placeholder']] + $options;
         }
 
         return $options;
     }
 
-    protected function isOptionDisabled($optionValue, array $field): bool
+    #[Override]
+    protected function isOptionDisabled(string|int $optionValue, array $field): bool
     {
-        // Disable placeholder option if placeholder is set
         return $optionValue === '' && isset($field['placeholder']);
     }
 
+    #[Override]
     protected function getSelectedValue(array $field, AbstractForm $formInstance): ?string
     {
-        // Get value from form values or direct field value
-        $formValues = $formInstance->getFormValues();
-        $value = $formValues[$field['name']] ?? $field['value'] ?? null;
+        $value = parent::getSelectedValue($field, $formInstance);
 
-        if (empty($value) && isset($field['placeholder'])) {
+        if (($value === null || $value === '') && isset($field['placeholder'])) {
             return '';
         }
 
         return $value;
+    }
+
+    #[Override]
+    protected function configureOption(
+        AbstractHtmlComponent $option,
+        string|int $optionValue,
+        mixed $label,
+        array $field,
+        FormBuilder $form,
+        AbstractForm $formInstance,
+    ): void {
+        if (!empty($field['optionClass']) && is_array($field['optionClass'])) {
+            $option->class(...$field['optionClass']);
+        }
     }
 }

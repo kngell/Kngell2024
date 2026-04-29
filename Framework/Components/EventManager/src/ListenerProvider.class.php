@@ -1,13 +1,13 @@
 <?php
 
 declare(strict_types=1);
-class ListenerProvider extends AbstractEventListener
+class ListenerProvider extends AbstractListenerProvider
 {
     public function __construct(private array $listeners = [], private array $log = [])
     {
     }
 
-    public function getListenersForEvent(EventInterface $event): iterable
+    public function getListenersForEvent(EventInterface $event): ?iterable
     {
         $eventName = $event->getName();
 

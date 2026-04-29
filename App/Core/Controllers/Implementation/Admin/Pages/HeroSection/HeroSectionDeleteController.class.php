@@ -16,6 +16,11 @@ class HeroSectionDeleteController extends AbstractDeleteController
 
     protected function getLabel(): string
     {
-        return 'Hero Section';
+        return DeletionLabel::HERO->value;
+    }
+
+    protected function resolveRedirectUrl(): string
+    {
+        return '/hero-list/index';
     }
 }

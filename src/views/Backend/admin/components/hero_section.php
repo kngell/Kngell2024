@@ -2,6 +2,7 @@
 $this->start('head'); ?>
 <!-------Costum-------->
 <?= $this->css('css/backend/admin/pages/hero-section') ?>
+<?= $this->css('css/backend/admin/pages/confirm-deletion') ?>
 <?php $this->end(); ?>
 <?php $this->start('body'); ?>
 <main class="dashboard__main main" id="main">

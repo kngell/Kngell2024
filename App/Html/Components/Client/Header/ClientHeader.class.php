@@ -16,7 +16,7 @@ class ClientHeader extends AbstractHtml
     public function getHtmlElements(): array
     {
         $html = $this->builder;
-        $this->provider->registerSections($this->builder, $this->sectionManager);
+        $this->provider->registerSections($html, $this->sectionManager);
 
         ['header_top' => $headerTop,'header_bottom' => $headerBottom] = $this->buildLayout($html);
 
@@ -25,7 +25,13 @@ class ClientHeader extends AbstractHtml
         return [$headerTopHtml, $headerBottomHtml];
     }
 
-    public function buildLayout(HtmlBuilder $html): array
+    /**
+     * @return array{
+     *     header_top: AbstractHtmlComponent[],
+     *     header_bottom: AbstractHtmlComponent[]
+     * }
+     */
+    public function buildLayout(?HtmlBuilder $html = null): array
     {
         return $this->sectionManager->getSections();
     }

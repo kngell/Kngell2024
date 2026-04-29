@@ -9,10 +9,10 @@ class CategoryFrontendService extends AbstractCollectionEntityService
 {
     public function __construct(
         private CategoryModel $model,
-        ImageOptimizerFactory $imageOptimizerFactory,
+        private ImageOptimizerFactory $imageOptimizerFactory,
         CategoryCacheManagerFactory $factory,
     ) {
-        parent::__construct($imageOptimizerFactory, $factory->create());
+        parent::__construct($factory->create());
     }
 
     public function getOrganizedForPage(?string $page = null): array

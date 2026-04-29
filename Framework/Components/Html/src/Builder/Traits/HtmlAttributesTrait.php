@@ -4,32 +4,32 @@ declare(strict_types=1);
 
 trait HtmlAttributesTrait
 {
-    protected string $accesskey = '';
+    protected string $accesskey;
     protected array $class = [];
-    protected string $contenteditable = '';
-    protected string $data = '';
-    protected string $dir = '';
-    protected string $draggable = '';
-    protected string $enterkeyhint = '';
-    protected bool $hidden = false;
-    protected string $id = '';
-    protected string $inert = '';
-    protected string $inputmode = '';
-    protected string $lang = '';
-    protected string $popover = '';
-    protected string $spellcheck = '';
+    protected string $contenteditable;
+    protected string $data;
+    protected string $dir;
+    protected string $draggable;
+    protected string $enterkeyhint;
+    protected bool $hidden;
+    protected string $id;
+    protected string $inert;
+    protected string $inputmode;
+    protected string $lang;
+    protected string $popover;
+    protected string $spellcheck;
     protected array $style = [];
-    protected int $tabindex = 0;
-    protected string $title = '';
-    protected string $translate = '';
-    protected string $align = '';
-    protected string $href = '';
-    protected string|null $src = null;
-    protected string $alt = '';
-    protected string $script = '';
-    protected string $text = '';
-    protected bool $controls = false;
-    protected string $dataBsToggle = '';
+    protected int $tabindex;
+    protected string $title;
+    protected string $translate;
+    protected string $align;
+    protected string $href;
+    protected string|null $src;
+    protected string $alt;
+    protected string $script;
+    protected string $text;
+    protected bool $controls;
+    protected string $dataBsToggle;
     protected array $custom = [];
 
     public function accesskey(string $accesskey): static
@@ -48,6 +48,16 @@ trait HtmlAttributesTrait
     {
         $this->data = $data;
         return $this;
+    }
+
+    public function hasInputBoxContainer(): bool
+    {
+        foreach ($this->class as $className) {
+            if (str_starts_with(trim($className), 'input-box')) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public function dir(string $dir): static
@@ -199,7 +209,7 @@ trait HtmlAttributesTrait
 
     public function custom(array $custom): static
     {
-        $this->custom = $custom;
+        $this->custom = array_merge($this->custom, $custom);
         return $this;
     }
 

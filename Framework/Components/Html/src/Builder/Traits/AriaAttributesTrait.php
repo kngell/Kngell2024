@@ -5,11 +5,12 @@ declare(strict_types=1);
 trait AriaAttributesTrait
 {
     protected array $aria = [];
-    protected string $ariaLabel = '';
-    protected bool $ariaHaspopup = false;
-    protected bool $ariaExpanded = false;
-    protected bool $ariaHidden = false;
-    protected string $role = '';
+    protected string $ariaLabel;
+    protected bool $ariaHaspopup;
+    protected bool $ariaExpanded;
+    protected bool $ariaHidden;
+    protected string $role;
+    protected string $scope;
 
     public function aria(string ...$props): static
     {
@@ -51,6 +52,18 @@ trait AriaAttributesTrait
     public function role(string $role): static
     {
         $this->role = $role;
+        return $this;
+    }
+
+    /**
+     * @param string $scope
+     *
+     * @return static
+     */
+    public function scope(string $scope): static
+    {
+        $this->scope = $scope;
+
         return $this;
     }
 }

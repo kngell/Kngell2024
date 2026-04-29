@@ -7,8 +7,9 @@ class HeroConfirmDeletionController extends AbstractConfirmDeletionController
     public function __construct(
         private HeroDeleteValidator $validator,
         HtmlTemplatePathInterface $templatePath,
+        FormCreatorService $frm,
     ) {
-        parent::__construct($templatePath);
+        parent::__construct($templatePath, $frm);
     }
 
     protected function getValidator(): AbstractDeleteValidator
@@ -18,12 +19,12 @@ class HeroConfirmDeletionController extends AbstractConfirmDeletionController
 
     protected function getLabel(): string
     {
-        return 'Hero Section';
+        return DeletionLabel::HERO->value;
     }
 
     protected function getDeleteRoute(): string
     {
-        return 'hero-delete/delete';
+        return '/hero-section-delete/delete';
     }
 
     protected function getEntityKeyfield(): ?string
@@ -31,31 +32,26 @@ class HeroConfirmDeletionController extends AbstractConfirmDeletionController
         return $this->validator->getEntityKeyfield();
     }
 
-    protected function getConfirmRedirectUrl(string $id): string
+    protected function getConfirmRedirectUrl(array $identifier): string
     {
-        return "/hero-section/ $id/edit/";
+        $id = $identifier['value'];
+        return "/hero-page/$id/edit/";
     }
 
     protected function createDeletionDecorator(array $data): object
     {
-        return new HeroDeletionDecorator(
-            $this,
-            $this->getDeleteRoute(),
-            $data,
-            $this->templatePath,
+        $dto = ConfirmDeletionDTO::fromFlashData(
+            flashData: $data,
+            label: $this->getLabel(),
+            deleteRoute: $this->getDeleteRoute(),
+            cancelRoute: '/hero-confirm-deletion/cancel',
+            isVisible: false,
         );
-    }
 
-    protected function buildFlashData(
-        string $id,
-        DeletionValidatorResult $validationResult,
-    ): array {
-        return array_merge(
-            parent::buildFlashData($id, $validationResult),
-            [
-                'position' => $validationResult->getMetadata('position'),
-                'page' => $validationResult->getMetadata('page'),
-            ],
+        return $this->decorate(
+            ConfirmDeletionDecorator::class,
+            $this,
+            ['dto' => $dto],
         );
     }
 }

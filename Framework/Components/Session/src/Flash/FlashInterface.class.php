@@ -33,6 +33,8 @@ interface FlashInterface
 
     public function getData(string $key): ?array;
 
+    public function removeData(string $key): void;
+
     public function peekData(string $key): ?array;
 
     public function hasData(string $key): bool;

@@ -44,6 +44,11 @@ class QueryResult implements Countable, IteratorAggregate
         $this->close();
     }
 
+    public function getSqlOperation(): ?SqlStatement
+    {
+        return $this->statementType;
+    }
+
     public function getAffectedRows(): int
     {
         $this->initialize();

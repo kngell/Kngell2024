@@ -50,47 +50,27 @@ final class PaginationCacheManager
             'identifiers' => $identifiers,
         ];
     }
-    // public function getPageKeys(int $page, int $perPage, callable $fetchKeysCallback): array
-    // {
-    //     $pageCacheKey = $this->generatePageCacheKey($page, $perPage);
-    //     $cachedPage = $this->pageCache->get($pageCacheKey);
 
-    //     if (is_array($cachedPage) && isset($cachedPage['entity_keys'])) {
-    //         $this->logDebug('Page cache hit', ['page' => $page, 'perPage' => $perPage]);
-    //         return [
-    //             'entity_keys' => $cachedPage['entity_keys'],
-    //             'identifiers' => $cachedPage['identifiers'] ?? [],
-    //         ];
-    //     }
+    public function invalidateAllPages(): void
+    {
+        $tagName = $this->getPageTag();
+        $this->pageCache->invalidateTags([$tagName]);
+        $this->logDebug('All page caches invalidated via tag', [
+            'entity' => $this->entityClass,
+            'tag' => $tagName,
+        ]);
+    }
 
-    //     // Cache miss - fetch from source
-    //     $identifiers = $fetchKeysCallback();
+    public function invalidateAll(): void
+    {
+        $this->invalidateCount();
+        $this->invalidateAllPages();
+    }
 
-    //     if (empty($identifiers)) {
-    //         $this->cacheEmptyPage($pageCacheKey);
-    //         return ['entity_keys' => [], 'identifiers' => []];
-    //     }
-
-    //     $entityKeys = $this->generateEntityCacheKeys($identifiers);
-
-    //     $this->pageCache->set($pageCacheKey, [
-    //         'entity_keys' => $entityKeys,
-    //         'identifiers' => $identifiers,
-    //         'timestamp' => time(),
-    //         'count' => count($entityKeys),
-    //     ], self::PAGE_TTL);
-
-    //     $this->logDebug('Page cache miss, stored in cache', [
-    //         'page' => $page,
-    //         'perPage' => $perPage,
-    //         'count' => count($identifiers),
-    //     ]);
-
-    //     return [
-    //         'entity_keys' => $entityKeys,
-    //         'identifiers' => $identifiers,
-    //     ];
-    // }
+    public function getPageTag(): string
+    {
+        return 'pages_' . $this->keyGenerator->normalizeClassName($this->entityClass);
+    }
 
     public function getTotalCount(callable $fetchCountCallback, bool $forceRefresh = false): int
     {
@@ -190,12 +170,12 @@ final class PaginationCacheManager
 
     private function cacheEmptyPage(string $pageCacheKey): void
     {
-        $this->pageCache->set($pageCacheKey, [
+        $this->pageCache->setWithTags($pageCacheKey, [
             'entity_keys' => [],
             'identifiers' => [],
             'timestamp' => time(),
             'count' => 0,
-        ], self::PAGE_TTL);
+        ], self::PAGE_TTL, [$this->getPageTag()]);
     }
 
     private function logDebug(string $message, array $context = []): void

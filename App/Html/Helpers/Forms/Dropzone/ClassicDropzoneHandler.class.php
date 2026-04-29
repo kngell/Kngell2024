@@ -88,7 +88,6 @@ class ClassicDropzoneHandler extends AbstractDropzoneHandler
             ->class('media-avatar')
             ->add(
                 $this->iconBuilder->createIcon(
-                    $form,
                     $field['icon'] ?? 'icon-media-image',
                     $field['icon-aria'] ?? 'Media Image Avatar',
                 ),
@@ -117,13 +116,13 @@ class ClassicDropzoneHandler extends AbstractDropzoneHandler
                                 ->value($webPath),
                         ),
                         $form->tag('div')->class('media-preview__item--icon-success')->add(
-                            $this->iconBuilder->createIcon($form, 'icon-success', 'Success', ['success']),
+                            $this->iconBuilder->createIcon('icon-success', 'Success', ['success']),
                         ),
                         $form->button('button')->type('button')
                             ->class('media-preview__item--icon-remove')
                             ->add(
                                 $form->tag('span')->class('btn__icon')->add(
-                                    $this->iconBuilder->createIcon($form, 'icon-cancel', 'Remove', ['cancel']),
+                                    $this->iconBuilder->createIcon('icon-cancel', 'Remove', ['cancel']),
                                 ),
                             ),
                         $form->tag('div')->class('media-preview__item--filename')->content($fileName),

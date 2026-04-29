@@ -7,6 +7,18 @@ final class SmallBannerCacheManagerFactory extends AbstractHtmlSectionCacheFacto
     private const string CACHE_FOLDER = 'small_banner';
     private const string ENTITY_CLASS = SmallBannerShow::class;
 
+    #[Override]
+    protected function pageTTl(): int
+    {
+        return 3600;
+    }
+
+    #[Override]
+    protected function entityTtl(): int
+    {
+        return 3600;
+    }
+
     protected function cacheFolder(): string
     {
         return self::CACHE_FOLDER;

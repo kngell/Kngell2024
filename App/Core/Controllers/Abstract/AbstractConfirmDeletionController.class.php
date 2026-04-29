@@ -8,11 +8,13 @@ abstract class AbstractConfirmDeletionController extends Controller
 
     public function __construct(
         protected HtmlTemplatePathInterface $templatePath,
+        FormCreatorService $frm,
     ) {
         $this->layout('admin');
+        $this->frm = $frm;
     }
 
-    public function confirm(): Response|string
+    public function confirm(): Response
     {
         $isAjax = $this->request->isAjax();
         $id = $this->resolveEntityId();
@@ -20,32 +22,38 @@ abstract class AbstractConfirmDeletionController extends Controller
 
         if (empty($id)) {
             return $this->respondError(
-                $isAjax,
-                'No ' . strtolower($this->getLabel()) . ' selected.',
-                $redirectUrl,
-                FlashType::WARNING,
-                HttpStatusCode::HTTP_BAD_REQUEST,
+                isAjax: $isAjax,
+                message: 'No ' . strtolower($this->getLabel()) . ' selected.',
+                redirect: $redirectUrl,
+                flashType: FlashType::WARNING,
+                statusCode: HttpStatusCode::HTTP_BAD_REQUEST,
             );
         }
 
-        $existingData = $this->flash->getData($this->getFlashKey());
+        $existingData = $this->flash->peekData($this->getFlashKey());
         if ($existingData && ($existingData['id'] ?? null) === $id) {
-            return $this->renderConfirmResponse(
-                $existingData,
-                $isAjax,
-                $id,
-            );
+            return $this->renderConfirmResponse($existingData, $isAjax, $id);
         }
 
-        $validationResult = $this->getValidator()->validate($id);
+        try {
+            $validationResult = $this->getValidator()->validate($id);
+        } catch (Throwable $e) {
+            return $this->respondError(
+                isAjax: $isAjax,
+                message: 'An unexpected error occurred during validation.',
+                redirect: $redirectUrl,
+                flashType: FlashType::DANGER,
+                statusCode: HttpStatusCode::HTTP_INTERNAL_SERVER_ERROR,
+            );
+        }
 
         if (!$validationResult->isValid()) {
             return $this->respondError(
-                $isAjax,
-                $validationResult->getErrorMessage(),
-                $redirectUrl,
-                FlashType::DANGER,
-                HttpStatusCode::HTTP_BAD_REQUEST,
+                isAjax: $isAjax,
+                message: $validationResult->getErrorMessage(),
+                redirect: $redirectUrl,
+                flashType: FlashType::DANGER,
+                statusCode: HttpStatusCode::HTTP_BAD_REQUEST,
             );
         }
 
@@ -55,6 +63,24 @@ abstract class AbstractConfirmDeletionController extends Controller
         return $this->renderConfirmResponse($flashData, $isAjax, $id);
     }
 
+    public function cancel(): Response
+    {
+        $this->flash->removeData($this->getFlashKey());
+
+        $isAjax = $this->request->isAjax();
+        $redirectUrl = $this->resolveRedirectUrl();
+
+        if ($isAjax) {
+            return $this->respondSuccess(
+                isAjax: true,
+                message: 'Deletion cancelled.',
+                redirect: $redirectUrl,
+                flashType: FlashType::INFO,
+            );
+        }
+
+        return $this->redirect($redirectUrl);
+    }
     // --- Abstract contracts ---
 
     abstract protected function getValidator(): AbstractDeleteValidator;
@@ -63,19 +89,14 @@ abstract class AbstractConfirmDeletionController extends Controller
 
     abstract protected function getDeleteRoute(): string;
 
-    abstract protected function getConfirmRedirectUrl(string $id): string;
+    abstract protected function getConfirmRedirectUrl(array $id): string;
 
     abstract protected function createDeletionDecorator(array $data): object;
 
-    // --- Overridable ---
-
-    protected function getEntityKeyfield(): ?string
-    {
-        return null;
-    }
+    abstract protected function getEntityKeyfield(): ?string;
 
     protected function buildFlashData(
-        string $id,
+        array $id,
         DeletionValidatorResult $validationResult,
     ): array {
         return [
@@ -89,37 +110,60 @@ abstract class AbstractConfirmDeletionController extends Controller
     }
 
     // --- Private helpers ---
-
-    private function resolveEntityId(): string
+    private function resolveEntityId(): array
     {
+        $post = $this->request->getPost();
         $keyField = $this->getEntityKeyfield();
 
-        return $keyField
-            ? $this->request->getPost()->get($keyField, '')
-            : $this->request->getPost()->get('public_id', '');
+        // Try keyField first
+        $value = $post->get($keyField, '');
+        if (!empty($value)) {
+            return ['key' => $keyField, 'value' => $value];
+        }
+
+        // Fallback to public_id
+        $value = $post->get('public_id', '');
+        if (!empty($value)) {
+            return ['key' => 'public_id', 'value' => $value];
+        }
+
+        return ['key' => '', 'value' => ''];
     }
 
     private function renderConfirmResponse(
         array $flashData,
         bool $isAjax,
-        string $id,
-    ): Response|string {
+        array $id,
+    ): Response {
         if ($isAjax) {
-            $decorator = $this->createDeletionDecorator($flashData);
-            $pageData = $decorator->page();
-
-            if (empty($pageData['confirmDeletionModal'])) {
+            try {
+                $decorator = $this->createDeletionDecorator($flashData);
+                $pageData = $decorator->page();
+            } catch (Throwable $e) {
                 return $this->respondError(
-                    true,
-                    'Failed to generate deletion confirmation modal.',
-                    $this->resolveRedirectUrl(),
-                    FlashType::DANGER,
-                    HttpStatusCode::HTTP_INTERNAL_SERVER_ERROR,
+                    isAjax: true,
+                    message: 'An error occurred while preparing the deletion confirmation.',
+                    redirect: $this->resolveRedirectUrl(),
+                    flashType: FlashType::DANGER,
+                    statusCode: HttpStatusCode::HTTP_INTERNAL_SERVER_ERROR,
                 );
             }
 
-            return new JsonResponse(
-                array_merge(['success' => true], $pageData),
+            if (empty($pageData['confirmDeletionModal'])) {
+                return $this->respondError(
+                    isAjax: true,
+                    message: 'Failed to generate deletion confirmation modal.',
+                    redirect: $this->resolveRedirectUrl(),
+                    flashType: FlashType::DANGER,
+                    statusCode: HttpStatusCode::HTTP_INTERNAL_SERVER_ERROR,
+                );
+            }
+
+            return $this->respondSuccess(
+                isAjax: true,
+                message: 'Confirmation ready.',
+                redirect: $this->getConfirmRedirectUrl($id),
+                extraData: $pageData,
             );
         }
 

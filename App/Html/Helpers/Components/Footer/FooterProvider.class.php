@@ -1,8 +1,7 @@
 <?php
 
 declare(strict_types=1);
-
-class FooterProvider
+final class FooterProvider
 {
     private const array FOOTER_CLASS = ['buttons-group'];
 
@@ -10,16 +9,10 @@ class FooterProvider
 
     public function __construct(
         private HtmlBuilder $builder,
-        private IconBuilder $iconBuilder,
-        private ?string $formId = null,
-        private array $footerClass = ['product__footer'],
-        private bool $renderProgressBar = false,
-        private int $completionPercentage = 0,
-        private string $submitText = 'Add Product',
-        private string $submitIcon = 'icon-plus',
-        private array $submitClass = [],
+        private ButtonBuilder $buttonBuilder,
+        private FooterDTO $dto,
     ) {
-        $this->buildFooter($completionPercentage);
+        $this->buildFooter();
     }
 
     public function renderFooter(): string
@@ -27,9 +20,6 @@ class FooterProvider
         return $this->footer->generate();
     }
 
-    /**
-     * @return AbstractHtmlComponent
-     */
     public function getFooter(): AbstractHtmlComponent
     {
         return $this->footer;
@@ -37,90 +27,121 @@ class FooterProvider
 
     private function buildFooter(): void
     {
-        $form = $this->builder->form();
-        $footerClass = array_merge($this->footerClass, self::FOOTER_CLASS);
-        $this->footer = $form->tag('div')
+        $footerClass = array_merge(
+            $this->dto->footerClass,
+            self::FOOTER_CLASS,
+        );
+
+        $this->footer = $this->builder->tag('div')
             ->class(...$footerClass)
             ->add(
-                $this->renderProgressBar ?
-                $this->renderCompletionProgress($this->completionPercentage, $form) : null,
-                $this->renderActionButtons($form),
+                $this->dto->renderProgressBar
+                    ? $this->renderCompletionProgress($this->dto->completionPercentage)
+                    : null,
+                $this->renderActionButtons(),
             );
     }
 
-    private function renderCompletionProgress(int $percentage, FormBuilder $form): AbstractHtmlComponent
+    private function renderCompletionProgress(int $percentage): AbstractHtmlComponent
     {
-        return $form->tag('div')
+        $html = $this->builder;
+
+        return $html->tag('div')
             ->class('completeness')
             ->add(
-                $form->tag('span')
+                $html->tag('span')
                     ->class('completeness__text')
-                    ->content('Product completion:'),
-                $form->tag('div')
+                    ->content('Completion:'),
+                $html->tag('div')
                     ->class('completeness__progress-container')
                     ->add(
-                        $form->tag('div')
+                        $html->tag('div')
                             ->class('completeness-progress')
                             ->add(
-                                $form->tag('div')
+                                $html->tag('div')
                                     ->class('completeness-progress--bar')
-                                    ->custom(['style' => "width: {$percentage}%;"]),
+                                    ->custom([
+                                        'style' => "width: {$percentage}%;",
+                                    ]),
                             ),
-                        $form->tag('span')
+                        $html->tag('span')
                             ->class('completeness-percentage')
                             ->content("{$percentage}%"),
                     ),
             );
     }
 
-    private function renderActionButtons(FormBuilder $form): AbstractHtmlComponent
+    private function renderActionButtons(): AbstractHtmlComponent
     {
-        return $form->tag('div')
+        return $this->builder->tag('div')
             ->class('buttons')
             ->add(
-                $this->createCancelButton($form),
-                $this->createSubmitButton($form),
+                $this->buildCancelButton(),
+                $this->buildSubmitButton(),
             );
     }
 
-    private function createCancelButton(FormBuilder $form): AbstractHtmlComponent
+    /**
+     * Cancel button strategy:
+     * - Standalone (wrapWithForm): wrap in no-JS form for graceful degradation
+     * - Inline: bare button, JS handles close
+     */
+    private function buildCancelButton(): ?AbstractHtmlComponent
     {
-        return $form->button()
-            ->type('button')
-            ->class('btn', 'btn--outlined', 'btn--md-compact', 'btn--icon-left')
-            ->add(
-                $form->tag('span')
-                    ->class('btn__icon')
-                    ->add(
-                        $this->iconBuilder->createIcon($form, 'icon-cancel', 'Cancel'),
-                    ),
-                $form->tag('span')
-                    ->class('btn__label')
-                    ->content('Cancel'),
-            );
+        $config = $this->dto->getCancelButtonConfig();
+        $button = $this->buttonBuilder->build($config);
+
+        if ($button === null) {
+            return null;
+        }
+
+        if ($this->dto->wrapWithForm && $this->dto->cancelRoute !== '#') {
+            return $this->wrapInNoJsForm($button, $this->dto->cancelRoute);
+        }
+
+        return $button;
     }
 
-    private function createSubmitButton(FormBuilder $form): AbstractHtmlComponent
+    /**
+     * Submit button strategy:
+     * - Has formId: button uses form="" attribute, no wrapper needed
+     * - Standalone without formId: wrap in its own form
+     * - Inline: bare button, lives inside the form already
+     */
+    private function buildSubmitButton(): ?AbstractHtmlComponent
     {
-        $submitClass = $this->submitClass;
-        if (empty($submitClass)) {
-            $submitClass = ['btn', 'btn--primary', 'btn--md-compact', 'btn--icon-left'];
+        $config = $this->dto->getSubmitButtonConfig();
+        $button = $this->buttonBuilder->build($config);
+
+        if ($button === null) {
+            return null;
         }
-        $button = $form->button()
-            ->type('submit')
-            ->class(...$submitClass);
-        if ($this->formId !== null) {
-            $button->custom(['form' => $this->formId]);
+
+        if ($this->dto->submitNeedsWrapper()) {
+            return $this->wrapInForm($button, $this->dto->action);
         }
-        return $button->add(
-            $form->tag('span')
-                    ->class('btn__icon')
-                    ->add(
-                        $this->iconBuilder->createIcon($form, $this->submitIcon, $this->submitText),
-                    ),
-            $form->tag('span')
-                    ->class('btn__label')
-                    ->content($this->submitText),
-        );
+
+        return $button;
+    }
+
+    private function wrapInNoJsForm(
+        AbstractHtmlComponent $button,
+        string $action,
+    ): AbstractHtmlComponent {
+        return $this->builder->form()
+            ->action($action)
+            ->method($this->dto->method)
+            ->custom(['data-nojs-only' => ''])
+            ->add($button);
+    }
+
+    private function wrapInForm(
+        AbstractHtmlComponent $button,
+        string $action,
+    ): AbstractHtmlComponent {
+        return $this->builder->form()
+            ->action($action)
+            ->method($this->dto->method)
+            ->add($button);
     }
 }

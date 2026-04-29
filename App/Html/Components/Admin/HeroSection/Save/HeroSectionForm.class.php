@@ -31,6 +31,7 @@ class HeroSectionForm extends AbstractForm
             builder: $builder,
             fieldRenderer: $fieldRenderer,
             sectionRenderer: $sectionRenderer,
+            buttonBuilder: new ButtonBuilder($builder, $iconBuilder),
             fieldGroupRenderer: $fieldGroupRenderer,
             dropzoneRenderer: $dropzoneRenderer,
             idGenerator: $idGenerator,
@@ -63,20 +64,24 @@ class HeroSectionForm extends AbstractForm
         )->generate();
 
         $footer = new FooterProvider(
-            builder:$this->builder,
-            iconBuilder:$this->iconBuilder,
-            formId:$this->getFormId(),
-            footerClass:['hero__footer'],
-            renderProgressBar:true,
-            submitText: 'Save Hero',
-            submitIcon:'icon-save',
+            builder: $this->builder,
+            buttonBuilder: $this->buttonBuilder,
+            dto: FooterDTO::forInlineForm(
+                formId: $this->getFormId(),
+                footerClass: [
+                    'hero__footer',
+                ],
+                renderProgressBar:true,
+                submitText: 'Save Hero',
+                submitIcon: 'icon-save',
+            ),
         );
         $htmlParts[] = $footer->renderFooter();
 
         return implode(' ', $htmlParts);
     }
 
-    public function buildLayout(HtmlBuilder $form): array
+    public function buildLayout(?HtmlBuilder $form = null): array
     {
         $sectionsConfig = $this->getFormSections();
         $leftComponents = [];

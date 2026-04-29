@@ -5,23 +5,14 @@ class HeroMain extends BaseFormManager {
     super({
       enableDropzone: true,
       enableCustomSelect: false,
-      enableRadioOptions: false,
+      enableRadioOptions: true,
+      enableActionBar: true, // Make sure action bar is enabled
       resetOnSuccess: options.resetOnSuccess || true,
-      notificationPosition: options.notificationPosition || "top-right",
-      maxNotifications: options.maxNotifications || 3,
-      notificationDuration: options.notificationDuration || 5000,
       notificationContainerId: options.notificationContainerId || "hero-notifications",
 
-      // Just pass configuration - FormHandler handles the rest
       notificationConfig: {
-        error: {
-          permanent: true, // Hero form errors are permanent
-          duration: 8000
-        },
-        success: {
-          permanent: false,
-          duration: 3000
-        }
+        error: { permanent: true, duration: 8000 },
+        success: { permanent: false, duration: 3000 }
       },
 
       ...options
@@ -40,6 +31,38 @@ class HeroMain extends BaseFormManager {
     return "heroRules";
   }
 
+  // IMPORTANT: Override deletion modal config
+  getDeletionModalConfig() {
+    return {
+      onEntityDeleted: (entityId, result) => {
+        this.logger.success("Hero deleted:", entityId);
+        // Optionally redirect or remove from DOM
+        if (result.redirect) {
+          window.location.href = result.redirect;
+        }
+      },
+      // You can also add custom notification config for deletion
+      notificationConfig: {
+        error: { permanent: true, duration: 8000 },
+        success: { permanent: false, duration: 3000 }
+      }
+    };
+  }
+
+  // Override action bar config if needed
+  getActionBarConfig() {
+    return {
+      addButtonSelector: ".btn-add-hero",
+      deleteButtonSelector: ".btn-delete-hero"
+      // Add any custom selectors for your hero page
+    };
+  }
+
+  onEntityDeleted(entityId, result) {
+    this.logger.success("Hero deleted:", entityId);
+    // Additional cleanup if needed
+  }
+
   onSuccess(result, context) {
     this.logger.success("Hero form submitted successfully");
 
@@ -49,18 +72,24 @@ class HeroMain extends BaseFormManager {
     }
   }
 
-  // No onError needed - FormHandler handles notifications
+  onBeforeDelete(context) {
+    this.logger.debug("Before deleting hero:", context);
+    // Return false to cancel deletion
+    return true;
+  }
 }
 
-// Auto-initialize
+const initHeroMain = () => {
+  if (!window.heroMainInstance) {
+    window.heroMainInstance = new HeroMain();
+    window.heroMainInstance._init();
+  }
+};
+
 if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", () => {
-    window.HeroMain = new HeroMain();
-    window.HeroMain._init();
-  });
+  document.addEventListener("DOMContentLoaded", initHeroMain);
 } else {
-  window.HeroMain = new HeroMain();
-  window.HeroMain._init();
+  initHeroMain();
 }
 
 export default HeroMain;

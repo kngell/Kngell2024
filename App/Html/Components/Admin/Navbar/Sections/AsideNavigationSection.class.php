@@ -9,8 +9,7 @@ class AsideNavigationSection extends AbstractBaseHtmlSection
     public function __construct(
         HtmlBuilder $builder,
         IconBuilder $iconBuilder,
-        private NavigationConfigParser $configParser,
-        private MenuItemComponentInterface $menuItem,
+        private MenuItemComponentInterface $menu,
     ) {
         parent::__construct($builder, $iconBuilder);
     }
@@ -22,8 +21,8 @@ class AsideNavigationSection extends AbstractBaseHtmlSection
 
     public function getConfig(array $formValues = []): array|AbstractHtmlComponent
     {
-        $navigationItems = $this->loadNavigationItems();
-        $menuItems = $this->buildMenuItems($navigationItems);
+        $navigationItems = $this->menu->loadNavigationItems(self::MENU_PATH);
+        $menuItems = $this->menu->buildMenuItems($navigationItems);
         $html = $this->htmlBuilder;
         return $html->tag('nav')
             ->aria('label', 'Admin Navigation')
@@ -33,40 +32,5 @@ class AsideNavigationSection extends AbstractBaseHtmlSection
                     ->role('menubar')
                     ->add(...$menuItems),
             );
-    }
-
-    private function loadNavigationItems(): array
-    {
-        try {
-            $config = (new JsonFile(self::MENU_PATH))->getContentAsArray();
-            return $this->configParser->parse($config);
-        } catch (Exception $e) {
-            throw new InvalidArgumentException('Failed to load navigation config: ' . $e->getMessage(), $e->getCode());
-        }
-    }
-
-    private function buildMenuItems(array $navigationItems): array
-    {
-        $menuItems = [];
-
-        foreach ($navigationItems as $item) {
-            try {
-                if ($item->type === 'regular') {
-                    $menuItems[] = $this->menuItem->getRegularItem(
-                        $item,
-                        ['menu-list__item'],
-                        ['menu-list__item--link'],
-                    );
-                } elseif ($item->type === 'dropdown') {
-                    $menuItems[] = $this->menuItem->getDropdownItem($item);
-                }
-            } catch (Exception $e) {
-                // Skip invalid items but log the error
-                error_log("Failed to create menu item '{$item->name}': " . $e->getMessage());
-                continue;
-            }
-        }
-
-        return $menuItems;
     }
 }

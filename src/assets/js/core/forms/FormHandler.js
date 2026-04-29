@@ -241,13 +241,19 @@ export default class FormHandler {
       this.setSubmitButtonLoading(false);
     });
   }
-  /**
-   * Find and store the submit button
-   */
+
   findSubmitButton() {
-    this.submitButton = this.form.querySelector(
-      'button[type="submit"], input[type="submit"], .btn-primary, [data-submit="true"]'
-    );
+    // Button inside the form
+    const internal = this.form.querySelector('button[type="submit"], input[type="submit"]');
+    if (internal) return internal;
+
+    // Button outside the form using form="" attribute
+    const formId = this.form.id;
+    if (formId) {
+      return document.querySelector(`button[form="${CSS.escape(formId)}"][type="submit"]`);
+    }
+
+    return null;
   }
 
   /**
@@ -318,26 +324,76 @@ export default class FormHandler {
     return this.validator.validator.validateField(fieldName);
   }
 
-  /**
-   * Submit the form programmatically
-   */
   async submit() {
-    if (!this.validator) return;
+    if (!this.validator) {
+      throw new Error("FormHandler not initialized");
+    }
 
-    // Enable real-time validation for submission
     this.enableRealTimeValidation();
 
-    // Trigger form submission
-    const submitEvent = new Event("submit", {
-      bubbles: true,
-      cancelable: true
-    });
-    this.form.dispatchEvent(submitEvent);
+    return this.validator.handleSubmit(new Event("submit", { bubbles: true, cancelable: true }));
   }
+  async handleSubmit(event) {
+    if (event instanceof Event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
 
-  /**
-   * Clear all errors
-   */
+    if (this.isSubmitting) {
+      logger.warn("Form is already submitting");
+      return;
+    }
+
+    const submitButton = this.findSubmitButton();
+
+    try {
+      this.isSubmitting = true;
+      this.setSubmitButtonState(submitButton, true);
+      this.errorService.clearAllErrors(this.form);
+
+      const formData = this.dataProcessor.processFormData(this.form);
+      this.validator.formData = formData;
+
+      if (!this.validator.validateAll()) {
+        const errors = this.validator.getErrors();
+        this.displayErrors(errors);
+        throw new Error("Form validation failed");
+      }
+
+      if (this.customSubmitHandler) {
+        return await this.customSubmitHandler(this.form, this);
+      }
+
+      return await this.handleSubmissionBasedOnMode();
+    } finally {
+      this.isSubmitting = false;
+      this.setSubmitButtonState(submitButton, false);
+    }
+  }
+  setSubmitButtonState(button, submitting) {
+    if (!button) return;
+
+    if (submitting) {
+      if (!button.dataset.originalText) {
+        const label = button.querySelector(".btn__label");
+        button.dataset.originalText = label ? label.textContent : button.textContent;
+      }
+      button.disabled = true;
+      button.classList.add("processing");
+    } else {
+      if (button.dataset.originalText) {
+        const label = button.querySelector(".btn__label");
+        if (label) {
+          label.textContent = button.dataset.originalText;
+        } else {
+          button.textContent = button.dataset.originalText;
+        }
+        delete button.dataset.originalText;
+      }
+      button.disabled = false;
+      button.classList.remove("processing");
+    }
+  }
   clearAllErrors() {
     if (this.validator?.errorService) {
       this.validator.errorService.clearAllErrors();

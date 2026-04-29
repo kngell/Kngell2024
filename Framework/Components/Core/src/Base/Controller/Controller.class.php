@@ -104,7 +104,7 @@ abstract class Controller
     protected function decorate(
         string $decoratorClass,
         self|AbstractHtmlDecorator $target,
-        array $params = [],
+        array|object $params = [],
     ): AbstractHtmlDecorator {
         return $this->decoratorFactory->create($decoratorClass, $target, $params);
     }

@@ -123,21 +123,21 @@ abstract class AbstractForm extends AbstractHtml implements FormTemplateInterfac
             );
     }
 
-    public function createIcon(FormBuilder $form, string $icon, string $ariaLabel, array $additionalClasses = []): AbstractHtmlComponent
+    public function createIcon(string $icon, string $ariaLabel, array $additionalClasses = []): AbstractHtmlComponent
     {
-        return $this->iconBuilder->createIcon($form, $icon, $ariaLabel, $additionalClasses);
+        return $this->iconBuilder->createIcon($icon, $ariaLabel, $additionalClasses);
     }
 
     public function createIconWrapper(string $icon, string $wrapperClass, string $ariaLabel, FormBuilder $form): AbstractHtmlComponent
     {
-        return $this->iconBuilder->createIconWrapper($icon, $wrapperClass, $ariaLabel, $form);
+        return $this->iconBuilder->createIconWrapper($icon, $wrapperClass, $ariaLabel);
     }
 
     public function renderButton(array $buttonConfig, FormBuilder $form): AbstractHtmlComponent
     {
         return $this->buttonBuilder
         ->addConfig($buttonConfig)
-        ->build($buttonConfig, $form, $this);
+        ->build($buttonConfig);
     }
 
     public function renderButtonGroup(array $buttonConfig, FormBuilder $form): AbstractHtmlComponent
@@ -145,7 +145,7 @@ abstract class AbstractForm extends AbstractHtml implements FormTemplateInterfac
         $content = $buttonConfig['content'];
         $buttonComponents = [];
         foreach ($content as $buttonItem) {
-            $buttonComponents[] = $this->buttonBuilder->build($buttonItem, $form, $this);
+            $buttonComponents[] = $this->buttonBuilder->build($buttonItem);
         }
         return $form->tag('div')->class($buttonConfig['wrapperClass'] ?? '')->add(...$buttonComponents);
     }
@@ -213,7 +213,7 @@ abstract class AbstractForm extends AbstractHtml implements FormTemplateInterfac
         return $this->formValues;
     }
 
-    abstract public function buildLayout(HtmlBuilder $form): array;
+    abstract public function buildLayout(?HtmlBuilder $form = null): array;
 
     public function getDefaultInputLayoutName(): ?string
     {

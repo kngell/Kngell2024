@@ -15,10 +15,9 @@ class CategoryPageController extends Controller
     public function Add(): string
     {
         $this->pageTitle('Category');
-        $hero = new CategoryFormDecorator(
-            controller: $this,
-            action:'category-save/index',
-        );
+        $hero = $this->decorate(CategoryFormDecorator::class, $this, [
+            'action' => 'category-save/index',
+        ]);
         return $this->render('/components/category', $hero->page());
     }
 
@@ -33,13 +32,12 @@ class CategoryPageController extends Controller
             $values = $this->md->getById($id, 'cat_id');
         }
 
-        $decorator = new CategoryFormDecorator(
-            controller: $this,
-            action: $action,
-            formValues: $values,
-            formErrors:$errors,
-            files: $files,
-        );
+        $decorator = $this->decorate(CategoryFormDecorator::class, $this, [
+            'action' => $action,
+            'formValues' => $values,
+            'formErrors' => $errors,
+            'files' => $files,
+        ]);
         return $this->render('/components/category', $decorator->page());
     }
 }

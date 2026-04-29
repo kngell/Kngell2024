@@ -22,17 +22,16 @@ class ProductModel extends AbstractSaveModel
         return $this->em->persist()->getQueryResult()->asArray();
     }
 
-    public function getProductById(int|string $id): Product|null
+    public function getProductById(int|string $id, ?string $field = null): ?Product
     {
-        if (is_int($id)) {
-            $product = $this->find($id);
-        } else {
-            $product = $this->one(['public_id' => $id]);
-        }
-        if ($product->exists()) {
-            return $product->asClass();
-        }
-        return null;
+        $product = match(true) {
+            is_numeric($id) => $this->find((int) $id),
+            $field !== null => $this->one([$field => $id]),
+            $this->isValidUuid($id) => $this->one(['public_id' => $id]),
+            default => throw new ModelRuntimeException("Invalid identifier: {$id}")
+        };
+
+        return $product?->exists() ? $product->asClass() : null;
     }
 
     public function getProductsWithColumns(array $columns, int $page = 1, int $limit = 20, string $search = ''): array
@@ -47,7 +46,7 @@ class ProductModel extends AbstractSaveModel
         return [];
     }
 
-    public function deleteProductByUuId(string $id, ?string $deleteOption = null): ?QueryResult
+    public function deleteProductByUuId($id, ?string $deleteOption = null): ?QueryResult
     {
         $params = [];
         if ($deleteOption !== null) {
@@ -80,6 +79,11 @@ class ProductModel extends AbstractSaveModel
             }
         }
         return $data;
+    }
+
+    private function isValidUuid(string $uuid): bool
+    {
+        return (bool) preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $uuid);
     }
 
     private function validateProductData(array $data): void

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 class EventManager extends AbstractEventManager
 {
-    public function __construct(private ListenerProviderInterface $listeners)
+    public function __construct(private ListenerProviderInterface $provider)
     {
     }
 
@@ -14,16 +14,16 @@ class EventManager extends AbstractEventManager
 
         $event = $this->getEvent($event, $object);
 
-        $this->listeners->checkEvent(name: $event->getName());
+        $this->provider->checkEvent(name: $event->getName());
 
         $listeners = $this->getListenersForEvent(event: $event);
         foreach ($listeners as ['callback' => $listener]) {
             /** @var EventListenerInterface */
-            $listenerObj = $this->listeners->listnerCanBeInstantiated(class: $listener);
+            $listenerObj = $this->provider->listnerCanBeInstantiated(class: $listener);
             $eventResults = $listenerObj->handle(event: $event);
             $event->addResult($listener, $eventResults);
             if ($debug) {
-                $this->listeners->log()[$event->getName()][] = $eventResults;
+                $this->provider->log()[$event->getName()][] = $eventResults;
             }
         }
         return $event;
@@ -31,19 +31,22 @@ class EventManager extends AbstractEventManager
 
     public function add(string $eventName, EventListenerInterface $listener, int $priority = 0): self
     {
-        $this->listeners->add($eventName, $listener, $priority);
+        $this->provider->add($eventName, $listener, $priority);
         return $this;
     }
 
     public function remove(EventInterface $event, string $listener): void
     {
-        $this->listeners->remove($event, $listener);
+        $this->provider->remove($event, $listener);
     }
 
     private function getListenersForEvent(EventInterface $event): iterable
     {
         /** @var array */
-        $listeners = $this->listeners->getListenersForEvent(event: $event);
+        $listeners = $this->provider->getListenersForEvent(event: $event);
+        if ($listeners === null) {
+            return [];
+        }
         uasort($listeners, function ($listenerA, $listenerB) {
             return $listenerB['priority'] - $listenerA['priority'];
         });

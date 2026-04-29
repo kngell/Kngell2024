@@ -36,6 +36,8 @@ abstract class AbstractHtmlSectionCacheFactory
         return new HtmlSectionCacheManager(
             $cache,
             $cacheManager,
+            $this->pageTTl(),
+            $this->entityTtl(),
             $this->logger,
         );
     }
@@ -62,12 +64,16 @@ abstract class AbstractHtmlSectionCacheFactory
         return self::BASE_CACHE_PATH;
     }
 
-    abstract protected function cacheFolder(): string;
-
     protected function cacheSubFolder(): string
     {
         return 'entities';
     }
 
+    abstract protected function cacheFolder(): string;
+
     abstract protected function entityClass(): string;
+
+    abstract protected function pageTTl(): int;
+
+    abstract protected function entityTtl(): int;
 }

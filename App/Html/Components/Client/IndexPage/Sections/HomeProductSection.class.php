@@ -33,7 +33,7 @@ class HomeProductSection extends AbstractBaseHtmlSection
     public function __construct(
         HtmlBuilder $htmlBuilder,
         IconBuilder $iconBuilder,
-        private ProductCardService $service,
+        private ProductService $service,
         private HtmlSectionPresentationService $presenter,
     ) {
         parent::__construct($htmlBuilder, $iconBuilder);
@@ -116,7 +116,7 @@ class HomeProductSection extends AbstractBaseHtmlSection
                             $html->tag('span')
                                 ->class('product-card__top--like')
                                 ->add(
-                                    $this->iconBuilder->createIcon($html, 'icon-like', 'LIKE', ['like']),
+                                    $this->iconBuilder->createIcon('icon-like', 'LIKE', ['like']),
                                 ),
                         ),
                     $html->div()

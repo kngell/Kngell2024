@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 class ProductShowModel extends Model
 {
-    private null|string $entiKeyField = null;
-
     public function deleteProduct(int $id): bool
     {
         $queryResult = $this->find($id);
@@ -89,13 +87,5 @@ class ProductShowModel extends Model
         }
 
         return $orderedProducts;
-    }
-
-    /**
-     * @return null|string
-     */
-    public function getEntiKeyField(): ?string
-    {
-        return $this->entiKeyField;
     }
 }

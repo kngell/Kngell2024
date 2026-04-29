@@ -6,12 +6,11 @@ use Psr\Log\LoggerInterface;
 
 final class HtmlSectionCacheManager
 {
-    private const int PAGE_TTL = 3600;
-    private const int ENTITY_TTL = 3600;
-
     public function __construct(
         private CacheInterface $pageCache,
         private EntityCacheManager $entityCache,
+        private int $pageTtl = 3600,
+        private int $entityTtl = 3600,
         private ?LoggerInterface $logger = null,
     ) {
     }
@@ -49,7 +48,7 @@ final class HtmlSectionCacheManager
         $entity = $pageLoader($page);
 
         if ($entity) {
-            $this->entityCache->cacheEntity($entity, self::ENTITY_TTL);
+            $this->entityCache->cacheEntity($entity, $this->entityTtl);
 
             // Cache the page→ID mapping
             $this->cachePageEntityId($page, $serviceClass, $entity->getEntityPrimarykeyValue());
@@ -98,7 +97,7 @@ final class HtmlSectionCacheManager
         if (!empty($entities)) {
             // Cache each entity by ID
             foreach ($entities as $entity) {
-                $this->entityCache->cacheEntity($entity, self::ENTITY_TTL);
+                $this->entityCache->cacheEntity($entity, $this->entityTtl);
             }
 
             // Cache the page→IDs mapping
@@ -115,7 +114,7 @@ final class HtmlSectionCacheManager
         return $this->pageCache->delete($cacheKey);
     }
 
-    public function invalidateEntity(Entity $entity, string $serviceClass): bool
+    public function invalidateEntity(Entity $entity): bool
     {
         return $this->entityCache->invalidateEntity((string) $entity->getEntityPrimarykeyValue());
     }
@@ -125,11 +124,11 @@ final class HtmlSectionCacheManager
      *
      * @param array<Entity> $entities
      */
-    public function invalidateEntities(array $entities, string $serviceClass): bool
+    public function invalidateEntities(array $entities): bool
     {
         $success = true;
         foreach ($entities as $entity) {
-            if (!$this->invalidateEntity($entity, $serviceClass)) {
+            if (!$this->invalidateEntity($entity)) {
                 $success = false;
             }
         }
@@ -148,11 +147,11 @@ final class HtmlSectionCacheManager
         return $this->pageCache->getKeys($pattern) ?? [];
     }
 
-    public function clearSection(string $serviceClass): bool
-    {
-        $pattern = $this->getSectionPattern($serviceClass);
-        return $this->pageCache->deletePattern($pattern);
-    }
+    // public function clearSection(string $serviceClass): bool
+    // {
+    //     $pattern = $this->getSectionPattern($serviceClass);
+    //     return $this->pageCache->deletePattern($pattern);
+    // }
 
     public function remember(string $key, callable $callback, ?int $ttl = null): mixed
     {
@@ -184,13 +183,13 @@ final class HtmlSectionCacheManager
     private function cachePageEntityId(string $page, string $serviceClass, string|int $entityId): void
     {
         $cacheKey = $this->getPageCacheKey($page, $serviceClass);
-        $this->pageCache->set($cacheKey, (string) $entityId, self::PAGE_TTL);
+        $this->pageCache->set($cacheKey, (string) $entityId, $this->pageTtl);
     }
 
     private function cachePageEntityIds(string $page, string $serviceClass, array $entityIds): void
     {
         $cacheKey = $this->getPageCacheKey($page, $serviceClass);
-        $this->pageCache->set($cacheKey, $entityIds, self::PAGE_TTL);
+        $this->pageCache->set($cacheKey, $entityIds, $this->pageTtl);
     }
 
     private function getPageCacheKey(string $page, string $serviceClass): string

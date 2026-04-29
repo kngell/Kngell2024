@@ -67,27 +67,6 @@ final class ValidationMessageService
         return 'en';
     }
 
-    private static function localizeMessage(string $message, string $locale): string
-    {
-        // Simple localization - you can extend this with translation files
-        $translations = [
-            'fr' => [
-                '%s is required.' => '%s est requis.',
-                '%s must be at least %s characters.' => '%s doit avoir au moins %s caractères.',
-                '%s must be at most %s characters.' => '%s doit avoir au maximum %s caractères.',
-                '%s format is invalid.' => 'Le format de %s est invalide.',
-                // Add more translations as needed
-            ],
-            'es' => [
-                '%s is required.' => '%s es requerido.',
-                '%s must be at least %s characters.' => '%s debe tener al menos %s caracteres.',
-                // Add more translations as needed
-            ],
-        ];
-
-        return $translations[$locale][$message] ?? $message;
-    }
-
     private function getDefaultMessages(): array
     {
         return [
@@ -108,5 +87,26 @@ final class ValidationMessageService
             'boolean' => '%s must be true or false.',
             'default' => '%s is invalid.',
         ];
+    }
+
+    private static function localizeMessage(string $message, string $locale): string
+    {
+        // Simple localization - you can extend this with translation files
+        $translations = [
+            'fr' => [
+                '%s is required.' => '%s est requis.',
+                '%s must be at least %s characters.' => '%s doit avoir au moins %s caractères.',
+                '%s must be at most %s characters.' => '%s doit avoir au maximum %s caractères.',
+                '%s format is invalid.' => 'Le format de %s est invalide.',
+                // Add more translations as needed
+            ],
+            'es' => [
+                '%s is required.' => '%s es requerido.',
+                '%s must be at least %s characters.' => '%s debe tener al menos %s caracteres.',
+                // Add more translations as needed
+            ],
+        ];
+
+        return $translations[$locale][$message] ?? $message;
     }
 }

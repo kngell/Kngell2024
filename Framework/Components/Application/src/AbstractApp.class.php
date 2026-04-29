@@ -24,6 +24,15 @@ abstract class AbstractApp extends Container
         'loadCookies' => false,
         'createAppProperties' => false,
     ];
+    protected array $bootOrder = [
+        'loadErrorHandlers',
+        'phpVersion',
+        'loadEnvironment',
+        'loadCache',
+        'loadSession',
+        'loadCookies',
+        'createAppProperties',
+    ];
     protected bool $isCli = false;
 
     public function __construct()
@@ -85,7 +94,6 @@ abstract class AbstractApp extends Container
             'defaultRegion' => $this->appConfig->getConfig()['default_region'],
             'previousUrlIgnore' => $this->appConfig->getConfig()['security']['excluded_paths']['previous_url_ignore'],
             'safeRedirectExclude' => $this->appConfig->getConfig()['security']['excluded_paths']['safe_redirect_exclude'],
-            'sessionConfig' => $this->appConfig->getSession(),
         ]);
 
         // Create aliases for commonly used services
@@ -102,13 +110,31 @@ abstract class AbstractApp extends Container
         $this->bootMap[__FUNCTION__] = true;
     }
 
-    /**
-     * Compare PHP version with the core version.
-     */
+    protected function createCliProperties(): void
+    {
+        $this->setGlobalParameters([
+            'app.name' => $this->appConfig->getConfig()['app']['app_name'] ?? 'Application',
+            'app.version' => $this->appConfig->getConfig()['app']['app_version'] ?? '1.0.0',
+            'app.debug' => $this->appConfig->getConfig()['app']['debug'] ?? false,
+            'app.environment' => $this->appConfig->getConfig()['app']['environment'] ?? 'production',
+        ]);
+
+        // Mark session/cookie as N/A for CLI
+        $this->bootMap['loadSession'] = true;
+        $this->bootMap['loadCookies'] = true;
+        $this->bootMap['createAppProperties'] = true;
+    }
+
+    // Fix
     protected function phpVersion(): void
     {
-        if (version_compare($phpVersion = PHP_VERSION, $coreVersion = $this->appConfig->getConfig()['app']['app_version'], '<')) {
-            die(sprintf('You are runninig PHP %s, but the core framework requires at least PHP %s', $phpVersion, $coreVersion));
+        $minPhpVersion = AppConfig::APP_MIN_VERSION; // '8.2.11'
+        if (version_compare(PHP_VERSION, $minPhpVersion, '<')) {
+            die(sprintf(
+                'You are running PHP %s, but the core framework requires at least PHP %s',
+                PHP_VERSION,
+                $minPhpVersion,
+            ));
         }
         $this->bootMap[__FUNCTION__] = true;
     }
@@ -128,8 +154,26 @@ abstract class AbstractApp extends Container
     protected function loadErrorHandlers(): void
     {
         error_reporting($this->appConfig->getErrorHandlerLevel());
-        set_error_handler($this->appConfig->getErrorHandling()['error']);
-        set_exception_handler($this->appConfig->getErrorHandling()['exception']);
+
+        $errorHandling = $this->appConfig->getErrorHandling();
+        if (!is_callable($errorHandling['error'])) {
+            throw new RuntimeException(sprintf(
+                'Error handler [%s] is not callable. Check your app.yml error_handler configuration.',
+                is_string($errorHandling['error']) ? $errorHandling['error'] : gettype($errorHandling['error']),
+            ));
+        }
+
+        if (!is_callable($errorHandling['exception'])) {
+            throw new RuntimeException(sprintf(
+                'Exception handler [%s] is not callable. Check your app.yml error_handler configuration.',
+                is_string($errorHandling['exception']) ? $errorHandling['exception'] : gettype($errorHandling['exception']),
+            ));
+        }
+        set_error_handler($errorHandling['error']);
+        set_exception_handler($errorHandling['exception']);
+
+        new ErrorHandling();
+
         $this->bootMap[__FUNCTION__] = true;
     }
 
@@ -143,9 +187,18 @@ abstract class AbstractApp extends Container
             $cacheConfig,
         ]);
 
-        // Use factory binding for cache creation
-        $this->factory(CacheInterface::class, function ($app) use ($envConfig): CacheInterface {
-            $cacheFactory = new CacheFactory($envConfig, new DirectoryManager(), new FileContentManager());
+        // // Use factory binding for cache creation
+        // $this->factory(CacheInterface::class, function ($app) use ($envConfig): CacheInterface {
+        //     $cacheFactory = new CacheFactory($envConfig, new DirectoryManager(), new FileContentManager());
+        //     return $cacheFactory->create();
+        // });
+        // Fix: Use singleton instead of factory
+        $this->singleton(CacheInterface::class, function ($app) use ($envConfig): CacheInterface {
+            $cacheFactory = new CacheFactory(
+                $envConfig,
+                new DirectoryManager(),
+                new FileContentManager(),
+            );
             return $cacheFactory->create();
         });
 

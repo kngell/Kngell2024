@@ -20,7 +20,7 @@ class HeroPageController extends Controller
         $decorator = $this->decorate(
             HeroSectionFormDecorator::class,
             $this,
-            ['action' => 'hero-section-save/index'],
+            ['action' => '/hero-section-save/index'],
         );
 
         return $this->render(
@@ -34,7 +34,8 @@ class HeroPageController extends Controller
         string $id,
     ): string|Response {
         $this->pageTitle('Edit Hero Section');
-        $saveAction = 'hero-section-save/index';
+        $saveAction = '/hero-section-save/index';
+        $deleteAction = '/hero-confirm-deletion/confirm';
 
         [$values, $errors, $files] = $this->getFlashData($saveAction);
 
@@ -47,6 +48,7 @@ class HeroPageController extends Controller
             $this,
             [
                 'action' => $saveAction,
+                'deleteAction' => $deleteAction,
                 'formValues' => $values,
                 'formErrors' => $errors,
                 'files' => $files,
@@ -64,17 +66,28 @@ class HeroPageController extends Controller
         string $id,
     ): array {
         $flashKey = DeletionFlowConfig::flashKeyFor('Hero Section');
-        $deleteFlash = $this->flash->getData($flashKey);
+
+        $deleteFlash = $this->flash->peekData($flashKey);
 
         if (!$deleteFlash || ($deleteFlash['id'] ?? null) !== $id) {
             return $pageData;
         }
 
-        $modalDecorator = new HeroDeletionDecorator(
+        $dto = ConfirmDeletionDTO::fromFlashData(
+            flashData: $deleteFlash,
+            label: 'Hero Section',
+            deleteRoute: '/hero-section-delete/delete',
+            cancelRoute: '/hero-confirm-deletion/cancel',
+            isVisible: true,
+            isAjax: $this->request->isAjax(),
+        );
+
+        $modalDecorator = $this->decorate(
+            ConfirmDeletionDecorator::class,
             $this,
-            'hero-delete/delete',
-            $deleteFlash,
-            $this->templatePath,
+            [
+                'dto' => $dto,
+            ],
         );
 
         return array_merge($pageData, $modalDecorator->page());

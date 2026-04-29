@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 trait EventAttributesTrait
 {
-    protected string $onclick = '';
-    protected string $ondblclick = '';
-    protected string $onmousedown = '';
-    protected string $onmouseup = '';
-    protected string $onmouseover = '';
-    protected string $onmousemove = '';
-    protected string $onmouseout = '';
-    protected string $onkeypress = '';
-    protected string $onkeydown = '';
-    protected string $onkeyup = '';
-    protected string $onchange = '';
+    protected string $onclick;
+    protected string $ondblclick;
+    protected string $onmousedown;
+    protected string $onmouseup;
+    protected string $onmouseover;
+    protected string $onmousemove;
+    protected string $onmouseout;
+    protected string $onkeypress;
+    protected string $onkeydown;
+    protected string $onkeyup;
+    protected string $onchange;
 
     public function onclick(string $onclick): static
     {

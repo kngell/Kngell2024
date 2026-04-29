@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 abstract class AbstractDeleteValidator
 {
-    public function validate(string $id): DeletionValidatorResult
+    public function validate(array $id): DeletionValidatorResult
     {
         $result = new DeletionValidatorResult();
 
@@ -40,14 +40,11 @@ abstract class AbstractDeleteValidator
         return $result;
     }
 
-    public function getEntityKeyfield(): ?string
-    {
-        return null;
-    }
+    abstract public function getEntityKeyfield(): ?string;
 
     abstract protected function getLabel(): string;
 
-    abstract protected function findRecord(string $id): ?object;
+    abstract protected function findRecord(array $id): ?object;
 
     abstract protected function resolveDisplayName(Entity $record): string;
 
@@ -63,7 +60,7 @@ abstract class AbstractDeleteValidator
     }
 
     protected function checkBusinessRules(
-        string $id,
+        array $id,
         Entity $record,
         DeletionValidatorResult $result,
     ): void {

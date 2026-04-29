@@ -30,6 +30,8 @@ $rules = [
     'increment_style' => ['style' => 'post'],
     'indentation_type' => true,
     'linebreak_after_opening_tag' => true,
+    // REMOVED: 'whitespace_around_symbol_in_multiline_array' => true, // No longer exists
+    // REMOVED: 'no_empty_array_short_syntax' => true, // This doesn't exist either
     'lowercase_cast' => true,
     'lowercase_keywords' => true,
     'magic_constant_casing' => true,
@@ -157,31 +159,19 @@ $rules = [
     'ordered_class_elements' => [
         'order' => [
             'use_trait',
-
-            // Constants
             'constant_public',
             'constant_protected',
             'constant_private',
-
-            // Properties
             'property_public',
             'property_protected',
             'property_private',
             'property_public_static',
             'property_protected_static',
             'property_private_static',
-
-            // Constructor/Destructor
             'construct',
             'destruct',
-
-            // Magic methods
             'magic',
-
-            // PHPUnit methods
             'phpunit',
-
-            // Methods
             'method_public',
             'method_protected',
             'method_private',
@@ -189,7 +179,7 @@ $rules = [
             'method_protected_static',
             'method_private_static',
         ],
-        'sort_algorithm' => 'none', // Changed from 'none' to 'alpha' for proper sorting
+        'sort_algorithm' => 'none',
     ],
 
     'class_attributes_separation' => [

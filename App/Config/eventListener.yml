@@ -1,12 +1,14 @@
 product.saved: # Generic event for both create and update
-  - callback: SaveProductImageGalleryListener
-    priority: 1
-  - callback: SaveProductVariationListener
-    priority: 2
-  - callback: SaveProductRegionalPriceListener
-    priority: 3
-  - callback: CleanupProductCacheListener
-    priority: 4
+  - callback: SyncProductImageGalleryListener
+    priority: 10
+  - callback: SyncProductRegionalPriceListener
+    priority: 10
+  - callback: SyncProductVariationListener
+    priority: 10
+  - callback: CleanupProductPaginatedCacheListener
+    priority: 50
+  - callback: CleanupProductImageCacheListener
+    priority: 50
   # - callback: GenerateDefaultRegionalPriceListener
   #   priority: 5
   # - callback: IndexProductSearchListener
@@ -14,6 +16,17 @@ product.saved: # Generic event for both create and update
   # - callback: NotifyProductManagerListener
   #   priority: 7
 product.deleted:
+  - callback: DeleteProductVariationListener
+    priority: 10
+  - callback: DeleteProductRegionalPriceListener
+    priority: 10
+  - callback: DeleteProductImageGalleryListener
+    priority: 10
+  - callback: CleanupProductImageCacheListener
+    priority: 50
+  - callback: CleanupProductPaginatedCacheListener
+    priority: 50
+
   # - callback: ProductBackupListener
   #   priority: 0
   # - callback: ProductVariationsCleanupListener
@@ -44,8 +57,7 @@ product.deleted:
   #   priority: 13
   # - callback: ProductDeletionNotificationListener
   #   priority: 14
-  - callback: CleanupPaginatedProductCacheListener
-    priority: 15
+
 user.registered:
   - callback: WelcomeEmailListener
     priority: 1
@@ -139,6 +151,19 @@ data_deletion.requested:
     priority: 1
 hero.saved:
   - callback: CleanupHeroImageCacheListener
+    priority: 0
+  - callback: CleanupHeroPaginatedCacheListener
+    priority: 1
+  # - callback: InvalidateHeroCdnCacheListener     # CDN edge cache
+  #   priority: 2
+  # - callback: UpdateHeroSearchIndexListener       # Search index
+  #   priority: 3
+  # - callback: InvalidateHeroApiCacheListener      # API response cache
+  #   priority: 4
+hero.deleted:
+  - callback: CleanupHeroImageCacheListener
+    priority: 0
+  - callback: CleanupHeroPaginatedCacheListener
     priority: 1
 SmallBanner.saved:
   - callback: CleanupSmallBannerImageListener

@@ -6,10 +6,10 @@ class App extends AbstractApp
 {
     public function __construct()
     {
+        parent::__construct();
         $this->isCli = php_sapi_name() === 'cli';
         AppConstants::enable();
         $this->appConfig = AppConfig::getInstance()->setup();
-        parent::__construct();
         $this->registerCoreBindings();
         ContainerClassRegistrator::register($this);
     }
@@ -26,9 +26,8 @@ class App extends AbstractApp
             $this->loadCookies();
             $this->createAppProperties();
         } else {
-            $this->bootMap['createAppProperties'] = true;
+            $this->createCliProperties();
         }
-
         return $this;
     }
 
@@ -60,9 +59,12 @@ class App extends AbstractApp
 
     public function reBoot(): void
     {
-        foreach ($this->bootMap as $boot => $value) {
-            if ($value === false) {
-                $this->$boot();
+        foreach ($this->bootOrder as $step) {
+            if ($this->bootMap[$step] === false) {
+                if ($step === 'loadSession' && $this->isCli) {
+                    continue;
+                }
+                $this->$step();
             }
         }
     }

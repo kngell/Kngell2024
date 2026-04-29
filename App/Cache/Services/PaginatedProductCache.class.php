@@ -58,30 +58,6 @@ final class PaginatedProductCache extends AbstractPaginatedCacheService
             return $this->pageTracker->clearProductPages($identifier, $this->paginationCacheManager);
         }
     }
-    // public function invalidateProductWithPages(string $identifier): array
-    // {
-    //     // Ensure identifier has 'p_' prefix
-    //     if (strpos($identifier, 'p_') !== 0) {
-    //         $identifier = 'p_' . $identifier;
-    //     }
-
-    //     // 1. Invalidate the individual product entity cache
-    //     $this->invalidateEntity($identifier);
-
-    //     // 2. Clear all pages that contain this product using tracker
-    //     $clearedPages = $this->pageTracker->clearProductPages($identifier, $this->paginationCacheManager);
-
-    //     // 3. Invalidate count cache
-    //     $this->invalidateAll();
-
-    //     $this->logDebug('Product and its pages invalidated', [
-    //         'identifier' => $identifier,
-    //         'pages_cleared' => count($clearedPages),
-    //         'page_keys' => $clearedPages,
-    //     ]);
-
-    //     return $clearedPages;
-    // }
 
     public function clearPageCache(int $page, int $perPage): bool
     {

@@ -21,7 +21,7 @@ trait ElementFactoryTrait
 
     public function select(): SelectElement
     {
-        return new SelectElement($this->token);
+        return new SelectElement();
     }
 
     public function option(string $key = '', mixed $value = null): SelectOption

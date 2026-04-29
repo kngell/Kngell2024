@@ -23,7 +23,7 @@ class ClassBuilder
     public function build(string $concrete, array $parameters = [], ?BindingDefinition $binding = null): object
     {
         try {
-            $reflector = new ReflectionClass($concrete);
+            $reflector = CustomReflection::getInstance($concrete)->getClass();
         } catch (ReflectionException $e) {
             throw ContainerException::cannotResolve($concrete, 'Class does not exist');
         }

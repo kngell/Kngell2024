@@ -13,7 +13,7 @@ class NavbarHtmlElement extends AbstractNavbarHtmlElement
         $this->menuItems = json_decode(file_get_contents(FileSearchManager::get(APP, 'menu_acl.json')), true);
     }
 
-    public function buildLayout(HtmlBuilder $html): array
+    public function buildLayout(?HtmlBuilder $html = null): array
     {
         throw new Exception('Not implemented');
     }

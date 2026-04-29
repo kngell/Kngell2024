@@ -1,0 +1,22 @@
+.order-table {
+  @include table(
+    (
+      min-width: 80rem,
+      col-widths: (
+        start: 25%,
+        normal: 15%,
+        badge: 10%,
+        action: 10%
+      ),
+      accent-color: map-deep-get($color-secondary, secondary-500),
+      color-modifiers: (
+        order-id: map-deep-get($color-secondary, secondary-500),
+        overdue: map-deep-get($color-danger, danger-500)
+      )
+    )
+  );
+}
+
+.table {
+  @include table;
+}

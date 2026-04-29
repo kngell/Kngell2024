@@ -2,54 +2,76 @@
 
 declare(strict_types=1);
 
-class ConfirmDeletionDecorator extends AbstractHtmlDecorator
+class ConfirmDeletionDecorator extends AbstractHtmlDecorator implements RuntimeConfigurableInterface
 {
-    private const string TEMPLATE_NAME = 'confirmProductDeletionModal';
+    private const string TEMPLATE_NAME = 'confirmDeletionModal';
+
+    protected ConfirmDeletionDTO $dto;
 
     public function __construct(
-        Controller $controller,
-        private string $action,
-        private array|Entity $formValues = [],
-        private ?HtmlTemplatePathManager $templateManager = null,
+        private ?HtmlTemplatePathManager $templateManager,
+        private readonly IconBuilder $iconBuilder,
     ) {
-        parent::__construct($controller);
     }
 
     public function page(): array
     {
         $target = $this->getTarget();
-        $deletionModalHtml = $this->templateManager->getTemplate(self::TEMPLATE_NAME);
-        $form = $target->form($this->action, $this->formValues);
-        [$iconWarning, $iconCancel, $iconDelete,$iconClose] = $this->icons($target);
-        $deletionModalHtml = str_replace('{{icon-warning}}', $iconWarning, $deletionModalHtml);
-        $deletionModalHtml = str_replace('{{icon-cancel}}', $iconCancel, $deletionModalHtml);
-        $deletionModalHtml = str_replace('{{icon-delete}}', $iconDelete, $deletionModalHtml);
-        $deletionModalHtml = str_replace('{{icon-close}}', $iconClose, $deletionModalHtml);
-        $deletionModalHtml = str_replace('{{deletion_subtitle}}', $this->deletionSubTitle($target), $deletionModalHtml);
-        $deletionModalHtml = str_replace('{{confirmDeletionForm}}', $form, $deletionModalHtml);
+        $html = $target->builder;
+
+        $modalHtml = $this->templateManager->getTemplate(
+            self::TEMPLATE_NAME,
+        );
+
+        $formValues = $this->dto->toFormValues();
+        $form = $target->form(
+            $this->dto->deleteRoute,
+            $formValues,
+        );
+
+        [$iconWarning, $iconCancel, $iconDelete, $iconClose] =
+            $this->buildIcons();
+
+        $subtitle = $html->tag('p')
+            ->class('content__text')
+            ->content($this->dto->subtitle);
+
+        $modalHtml = strtr($modalHtml, [
+            '{{visible}}' => $this->dto->isVisible ? 'active' : '',
+            '{{cancel-route}}' => $this->dto->cancelRoute,
+            '{{icon-warning}}' => $iconWarning,
+            '{{icon-cancel}}' => $iconCancel,
+            '{{icon-delete}}' => $iconDelete,
+            '{{icon-close}}' => $iconClose,
+            '{{deletion_subtitle}}' => $subtitle->generate(),
+            '{{confirmDeletionForm}}' => $form,
+        ]);
 
         return parent::page() + [
-            'confirmDeletionModal' => $deletionModalHtml,
+            'confirmDeletionModal' => $modalHtml,
         ];
     }
 
-    private function deletionSubTitle(Controller $target): string
+    private function buildIcons(): array
     {
-        $html = $target->builder;
-        $productName = $this->formValues['product_name'] ?? '';
-        $htmlText = 'This action will remove ' . htmlspecialchars($productName) . ' from your storefront.';
-        return $html->tag('p')->class('content__text')->add(
-            $html->text($htmlText),
-        )->generate();
-    }
+        $iconBuilder = $this->iconBuilder;
 
-    private function icons(Controller $target): array
-    {
-        $iconBuilder = new IconBuilder();
-        $iconWarning = $iconBuilder->createIcon($target->builder, 'icon-warning', 'Warning', ['warning']);
-        $iconCancel = $iconBuilder->createIcon($target->builder, 'icon-cancel', 'Cancel', ['cancel']);
-        $iconDelete = $iconBuilder->createIcon($target->builder, 'icon-trash', 'Delete', ['delete']);
-        $iconClose = $iconBuilder->createIcon($target->builder, 'icon-close', 'Close Modal', ['close']);
-        return [$iconWarning->generate(), $iconCancel->generate(), $iconDelete->generate(), $iconClose->generate()];
+        $icons = [
+            ['icon-warning', 'Warning', ['warning']],
+            ['icon-cancel', 'Cancel', ['cancel']],
+            ['icon-trash', 'Delete', ['delete']],
+            ['icon-close', 'Close Modal', ['close']],
+        ];
+
+        return array_map(
+            fn (array $config) => $iconBuilder
+                ->createIcon(
+                    $config[0],
+                    $config[1],
+                    $config[2],
+                )
+                ->generate(),
+            $icons,
+        );
     }
 }

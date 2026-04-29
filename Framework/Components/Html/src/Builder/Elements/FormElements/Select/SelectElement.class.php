@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 class SelectElement extends AbstractHtmlElement
 {
-    public function __construct(TokenInterface $token)
+    public function __construct()
     {
-        parent::__construct($token);
+        parent::__construct();
         $this->tag = 'select';
     }
 

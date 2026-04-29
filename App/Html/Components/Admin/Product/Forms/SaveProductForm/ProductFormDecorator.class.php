@@ -2,22 +2,59 @@
 
 declare(strict_types=1);
 
-class ProductFormDecorator extends AbstractHtmlDecorator
+class ProductFormDecorator extends AbstractFormDecorator
 {
-    public function __construct(
-        Controller $controller,
-        private string $action,
-        private array|Entity $formValues = [],
-        private array $formErrors = [],
-        private array $files = [],
-    ) {
-        parent::__construct($controller);
+    protected const array HEADER_BTN_CONFIG = [
+        [
+            'type' => 'submit',
+            'label' => 'Delete',
+            'action' => '/product-confirm-deletion/confirm',
+            'formName' => 'hero_delete_form',
+            'requiresEditMode' => true,
+            'requiresEntityId' => true,
+            'size' => 'md-compact',
+            'ariaLabel' => 'Delete',
+            'style' => 'danger',
+            'icon' => 'icon-trash',
+            'iconPosition' => 'left',
+            'attributes' => [],
+            'class' => [],
+        ],
+        [
+            'type' => 'submit',
+            'label' => 'Add New',
+            'action' => '/admin/product-add',
+            'formName' => 'hero_add_form',
+            'requiresEditMode' => false,
+            'requiresEntityId' => false,
+            'size' => 'md-compact',
+            'ariaLabel' => 'Add New',
+            'style' => 'primary',
+            'icon' => 'icon-plus',
+            'iconPosition' => 'left',
+            'attributes' => [],
+            'class' => [],
+        ],
+    ];
+
+    protected const array BREADCRUMBS_LINKS = [
+        'Dashboard',
+        'Products',
+        'Add Product',
+    ];
+
+    protected function getFormKey(): string
+    {
+        return 'productForm';
     }
 
-    public function page(): array
+    protected function getHeaderKey(): ?string
     {
-        $target = $this->getTarget();
-        $frmHtml = $target->form($this->action, $this->formValues, $this->formErrors, $this->files);
-        return $this->controller->page() + ['product_form' => $frmHtml];
+        return 'productMainHeader';
+    }
+
+    protected function headerTitle(): ?string
+    {
+        return 'Add Product';
     }
 }

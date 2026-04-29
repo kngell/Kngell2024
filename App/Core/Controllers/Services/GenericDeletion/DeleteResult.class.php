@@ -6,7 +6,7 @@ class DeleteResult
 {
     private function __construct(
         private bool $success,
-        private ?string $id,
+        private array $id,
         private ?string $name,
         private ?string $errorMessage,
         private array $errorDetails,
@@ -24,7 +24,7 @@ class DeleteResult
         return $this->success;
     }
 
-    public function getId(): ?string
+    public function getId(): array
     {
         return $this->id;
     }
@@ -75,7 +75,7 @@ class DeleteResult
     }
 
     public static function success(
-        string $id,
+        array $id,
         string $name,
         int $affectedRows = 0,
         bool $wasSkipped = false,
@@ -105,7 +105,7 @@ class DeleteResult
     ): self {
         return new self(
             success: false,
-            id: null,
+            id: [],
             name: null,
             errorMessage: $errorMessage,
             errorDetails: $errorDetails,

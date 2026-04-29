@@ -11,8 +11,8 @@ class JoinClause extends SqlQuery implements RegularClauseComponentInterface
         string|Closure $table,
         bool $withAlias,
         private SqlSelectQueryBuilderInterface|Closure|null $selectQuery = null,
-        ?EntityManagerInterface $em,
-        ?string $method,
+        ?EntityManagerInterface $em = null,
+        ?string $method = null,
     ) {
         parent::__construct(self::CLAUSE, null, $em);
         $this->withAlias = $withAlias;

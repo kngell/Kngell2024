@@ -64,27 +64,23 @@ abstract class AbstractPaginatedCacheService implements PaginatedCachingServiceI
         );
     }
 
+    public function invalidateCount(): void
+    {
+        $this->paginationCacheManager->invalidateCount();
+    }
+
     public function invalidateEntity(string $identifier): bool
     {
         return $this->entityCacheManager->invalidateEntity($identifier);
     }
 
-    // public function invalidateAll(): void
-    // {
-    //     $this->paginationCacheManager->invalidateCount();
-    //     // Note: Entity cache invalidation would be handled separately
-    // }
-
     public function invalidateAll(): void
     {
-        $this->paginationCacheManager->invalidateCount();
-
-        $tagName = 'pages_' . $this->entityClass;
-        $this->paginationCacheManager->getPageCache()->invalidateTags([$tagName]);
+        // Delegate entirely to the manager — it owns the tag naming
+        $this->paginationCacheManager->invalidateAll();
 
         $this->logDebug('Global cache invalidation triggered', [
             'entity' => $this->entityClass,
-            'tag_cleared' => $tagName,
         ]);
     }
 
@@ -123,11 +119,11 @@ abstract class AbstractPaginatedCacheService implements PaginatedCachingServiceI
 
     abstract protected function getTotalCountFromSource(): int;
 
-    abstract protected function generatePageCacheKey(int $page, int $perPage): string;
+    // abstract protected function generatePageCacheKey(int $page, int $perPage): string;
 
-    abstract protected function generateEntityCacheKey(string $identifier): string;
+    // abstract protected function generateEntityCacheKey(string $identifier): string;
 
-    abstract protected function generateCountCacheKey(): string;
+    // abstract protected function generateCountCacheKey(): string;
 
     // =================== PROTECTED HELPERS ===================
 

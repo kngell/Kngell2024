@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-abstract class AbstractEventListener implements ListenerProviderInterface
+abstract class AbstractListenerProvider implements ListenerProviderInterface
 {
     public function checkEvent(string $name): void
     {

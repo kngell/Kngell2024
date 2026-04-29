@@ -2,37 +2,68 @@
 
 declare(strict_types=1);
 
-abstract class AbstractHtml implements HtmlComponentsInterface
+abstract class AbstractHtml
 {
-    public const string ICON_SPRITE = 'icons-sprite.svg';
-
-    public function getFieldSectionLayout(array $fields, string $sectionKey, HtmlBuilder $form): ?AbstractHtmlComponent
-    {
+    public function getFieldSectionLayout(
+        array $fields,
+        string $sectionKey,
+        HtmlBuilder $form,
+    ): ?AbstractHtmlComponent {
         return null;
     }
 
-    abstract public function buildLayout(HtmlBuilder $html): array;
-
+    /** @return AbstractHtmlComponent[] */
     public function getHtmlElements(): array
     {
         return [];
     }
 
-    abstract protected function getProviderKey(): string;
-
-    protected function media(string|null $media): string
+    public function getTable(): ?string
     {
-        if (null !== $media) {
-            if (StringUtils::isSerialized($media)) {
-                $mediaArray = unserialize($media);
-                $file = $mediaArray[0];
-                $file = preg_replace('/([^:])(\/{2,})/', '$1/', $file);
-                return HOST . $file;
-            } else {
-                return !str_contains($media, 'http') ? HOST . DS . $media : $media;
-            }
+        return null;
+    }
+
+    /** @return AbstractHtmlComponent[] */
+    abstract public function buildLayout(?HtmlBuilder $html = null): array;
+
+    protected function getProviderKey(): ?string
+    {
+        return null;
+    }
+
+    protected function media(?string $media): string
+    {
+        if ($media === null) {
+            return $this->getDefaultMediaPath();
         }
 
+        if (StringUtils::isSerialized($media)) {
+            return $this->resolveSerializedMedia($media);
+        }
+
+        return $this->resolveMediaPath($media);
+    }
+
+    private function getDefaultMediaPath(): string
+    {
         return HOST . DS . 'public' . DS . 'Upload' . DS . 'images' . DS . 'default.png';
+    }
+
+    private function resolveSerializedMedia(string $media): string
+    {
+        $mediaArray = unserialize($media, ['allowed_classes' => false]);
+        $file = $mediaArray[0] ?? '';
+        $file = preg_replace('/([^:])(\/{2,})/', '$1/', $file);
+
+        return HOST . $file;
+    }
+
+    private function resolveMediaPath(string $media): string
+    {
+        if (str_contains($media, 'http')) {
+            return $media;
+        }
+
+        return HOST . DS . $media;
     }
 }

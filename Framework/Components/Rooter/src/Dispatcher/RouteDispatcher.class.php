@@ -49,7 +49,6 @@ final readonly class RouteDispatcher
             // Resolve middlewares using improved container
             $middlewareInstances = $this->resolveMiddlewares($route, $app);
 
-            // Use method injection for controller request creation
             $controllerRequest = $app->call(function (App $container) use ($route, $app, $request, $arguments, $url) {
                 return $container->resolve(ControllerRequest::class, [
                     'route' => $route,

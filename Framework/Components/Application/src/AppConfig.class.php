@@ -72,7 +72,11 @@ final class AppConfig
     public function setErrorHandler(mixed $level = null): self
     {
         if (isset($this->config['error_handler'])) {
-            $this->errorHandling = $this->config['error_handler'];
+            $handlers = $this->config['error_handler'];
+            $this->errorHandling = [
+                'error' => $this->resolveCallable($handlers['error']),
+                'exception' => $this->resolveCallable($handlers['exception']),
+            ];
         } else {
             $this->errorHandling = [
                 'error' => function ($errno, $errstr, $errfile, $errline) {
@@ -189,6 +193,18 @@ final class AppConfig
         return null;
     }
 
+    private function resolveCallable(string $handler): callable
+    {
+        if (str_contains($handler, '::')) {
+            [$class, $method] = explode('::', $handler);
+            if (!class_exists($class) || !method_exists($class, $method)) {
+                throw new RuntimeException("Invalid error handler: {$handler}");
+            }
+            return [$class, $method];
+        }
+        throw new RuntimeException("Invalid handler format: {$handler}");
+    }
+
     /**
      * Returns the default route handler mechanism.
      *
@@ -217,7 +233,7 @@ final class AppConfig
     public static function getInstance(): self
     {
         if (!isset(static::$instance)) {
-            static::$instance = new static();
+            static::$instance = new self();
         }
         return static::$instance;
     }

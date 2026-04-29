@@ -120,7 +120,7 @@ class PaginationNavSection implements PaginationSectionInterface
         }
 
         return $button->add(
-            $this->icon->createIcon($html, 'icon-arrow-left', 'Arrow Left', ['arrow-left'])->ariaHidden(),
+            $this->icon->createIcon('icon-arrow-left', 'Arrow Left', ['arrow-left'])->ariaHidden(),
         );
     }
 
@@ -146,7 +146,7 @@ class PaginationNavSection implements PaginationSectionInterface
         }
 
         return $button->add(
-            $this->icon->createIcon($html, 'icon-arrow-right', 'Arrow Right', ['arrow-right'])->ariaHidden(),
+            $this->icon->createIcon('icon-arrow-right', 'Arrow Right', ['arrow-right'])->ariaHidden(),
         );
     }
 }

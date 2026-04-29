@@ -87,7 +87,7 @@ validation:
     required: "%s is required."
     min: "%s must be at least %s characters."
     max: "%s must be at most %s characters."
-    pattern: "%s format is invalid."
+    pattern: "%s can only contain letters, numbers, hyphens, and underscores."
     numeric: "%s must be a number."
     integer: "%s must be a whole number."
     decimal: "%s must be a decimal number."
@@ -221,7 +221,7 @@ validation:
     variations[][name]:
       required: "Variation name is required."
       min: "Variation name must be at least 1 character."
-    variations[][sku]:
+    variations[0][sku]:
       required: "Variation SKU is required."
       pattern: "Variation SKU can only contain letters, numbers, hyphens, and underscores."
     variations[][attributes][][attribute_name]:
@@ -282,7 +282,7 @@ security:
     default: PASSWORD_DEFAULT
     bcrypt: PASSWORD_BCRYPT
     argon2i: PASSWORD_ARGON2I
-    argon2id: PASSWORD_ARGON2ID] # other options are [default, bcrypt, argon2i and argon2iD]
+    argon2id: PASSWORD_ARGON2ID # other options are [default, bcrypt, argon2i and argon2iD]
 
   excluded_paths:
     # Paths that should NEVER be set as the 'previous_url' (due to POST/security/internal logic)
@@ -370,17 +370,17 @@ default_region: EU
 default_locale: en_US
 builtin_locale_data:
   en_US:
-  decimal_separator: "."
-  thousands_separator: ","
-  fraction_digits: 2
-  date_format: "m/d/Y"
-  datetime_format: "m/d/Y H:i:s"
-  time_format: "h:i:s A"
-  first_day_of_week: 0
-  currency_position: "before"
-  locale_name: "English (United States)"
-  language: "en"
-  country: "US"
+    decimal_separator: "."
+    thousands_separator: ","
+    fraction_digits: 2
+    date_format: "m/d/Y"
+    datetime_format: "m/d/Y H:i:s"
+    time_format: "h:i:s A"
+    first_day_of_week: 0
+    currency_position: "before"
+    locale_name: "English (United States)"
+    language: "en"
+    country: "US"
   en_EU:
     decimal_separator: ","
     thousands_separator: "."

@@ -6,6 +6,8 @@ use Ramsey\Uuid\Uuid;
 
 trait CommonQueryMethodsTrait
 {
+    protected ?string $entiKeyField = null;
+
     public function getById(int|string $id, ?string $field = null): ?object
     {
         if ($id && ctype_digit($id)) {
@@ -18,6 +20,65 @@ trait CommonQueryMethodsTrait
             return $this->one([$field => $id], true)?->asClass();
         }
         return null;
+    }
+
+    public function getAllKeys(int $page, int $perPage): array
+    {
+        $ids = $this->ids($page, $perPage, ['deleted_at IS NULL']);
+        if ($ids->isSuccess()) {
+            $this->entiKeyField = $ids->getEntityKeyField();
+            return $ids->asArray();
+        }
+        return [];
+    }
+
+    public function hasRelationShips(): bool
+    {
+        return $this->entity->hasRelationships();
+    }
+
+    /**
+     * @return null|string
+     */
+    public function getEntiKeyField(): ?string
+    {
+        if ($this->entiKeyField === null) {
+            return $this->entity?->getEntityKeyField();
+        }
+        return $this->entiKeyField;
+    }
+
+    public function getAllByKeys(array $keys): array
+    {
+        if (empty($keys)) {
+            return [];
+        }
+        $field = $this->entity->getEntityKeyField() ?? 'public_id';
+        $conditions = [$field, $keys, 'deleted_at IS NULL'];
+
+        $fetchedEntities = $this->all($conditions)->asClass();
+        // dd($keys, $fetchedEntities);
+        if (!is_array($fetchedEntities)) {
+            return [];
+        }
+        $entitiesById = [];
+        foreach ($fetchedEntities as $entity) {
+            $entity->completeHydration();
+            $id = $field === 'public_id' ? $entity->getPublicId() : $entity->getEntityPrimaryKeyValue();
+            if ($id instanceof Ramsey\Uuid\UuidInterface) {
+                $entitiesById[$id->toString()] = $entity;
+            } elseif (is_string($id) || is_int($id)) {
+                $entitiesById[$id] = $entity;
+            }
+        }
+        $orderedEntities = [];
+        foreach ($keys as $key) {
+            if (isset($entitiesById[$key])) {
+                $orderedEntities[] = $entitiesById[$key];
+            }
+        }
+
+        return $orderedEntities;
     }
 
     protected function generateUniqueSlug(string $name): string

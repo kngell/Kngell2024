@@ -8,10 +8,9 @@ declare(strict_types=1);
 abstract class AbstractCollectionEntityService extends AbstractBaseSectionService implements CollectionEntityServiceInterface
 {
     public function __construct(
-        ImageOptimizerFactory $imageOptimizerFactory,
         HtmlSectionCacheManager $cache,
     ) {
-        parent::__construct($imageOptimizerFactory, $cache);
+        parent::__construct($cache);
     }
 
     public function getForPage(?string $page = null): array

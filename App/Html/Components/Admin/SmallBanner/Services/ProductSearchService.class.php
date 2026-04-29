@@ -62,7 +62,7 @@ final class ProductSearchService
                     'name' => $product['name'] ?? '',
                     'sku' => $product['sku'] ?? '',
                     'description' => $product['short_description'] ?? '',
-                    'image' => $product['main_image'] ?? $this->iconBuilder->createIcon($html, 'icon-image', $product['name'] ?? 'Product', ['img'])->generate(),
+                    'image' => $product['main_image'] ?? $this->iconBuilder->createIcon('icon-image', $product['name'] ?? 'Product', ['img'])->generate(),
                 ];
             }, $products);
 

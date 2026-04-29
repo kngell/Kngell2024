@@ -4,6 +4,7 @@
 @use "breadcrumb" as *;
 
 @mixin page-title {
+  width: 100%;
   display: flex;
   align-items: flex-end;
   gap: 2.4rem;

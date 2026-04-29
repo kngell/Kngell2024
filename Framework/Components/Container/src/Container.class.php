@@ -173,34 +173,84 @@ class Container implements ContainerInterface
     /**
      * Resolve an instance with full dependency injection.
      */
+    // public function resolve(string $abstract, array $parameters = []): mixed
+    // {
+    //     $abstract = $this->bindingRegistry->resolveAlias($abstract);
+
+    //     // Return existing singleton instance
+    //     if ($this->instanceManager->has($abstract)) {
+    //         return $this->instanceManager->get($abstract);
+    //     }
+
+    //     try {
+    //         $this->resolutionContext->startResolving($abstract);
+
+    //         $instance = $this->build($abstract, $parameters);
+
+    //         // Store singleton instances
+    //         if ($this->bindingRegistry->isShared($abstract)) {
+    //             $this->instanceManager->set($abstract, $instance);
+    //         }
+
+    //         $this->resolutionContext->finishResolving($abstract);
+
+    //         // Fire rebound callbacks for ALL instances
+    //         $this->instanceManager->fireReboundCallbacks($abstract, $instance);
+
+    //         return $instance;
+    //     } catch (Throwable $e) {
+    //         $this->resolutionContext->finishResolving($abstract);
+    //         throw $e;
+    //     }
+    // }
     public function resolve(string $abstract, array $parameters = []): mixed
     {
-        $abstract = $this->bindingRegistry->resolveAlias($abstract);
+        $abstract = $this->bindingRegistry->resolveAlias($abstract);    // ✅ exists
 
         // Return existing singleton instance
-        if ($this->instanceManager->has($abstract)) {
-            return $this->instanceManager->get($abstract);
+        if ($this->instanceManager->has($abstract)) {                    // ✅ exists
+            return $this->instanceManager->get($abstract);               // ✅ exists
+        }
+
+        // Early detection: unbound interface with no binding
+        if (interface_exists($abstract)
+            && !$this->bindingRegistry->has($abstract)                   // ✅ exists
+            && !$this->instanceManager->has($abstract)                   // ✅ exists
+        ) {
+            throw ContainerException::unboundInterface(
+                $abstract,
+                $this->resolutionContext->getResolutionStack(),           // ✅ exists
+            );
         }
 
         try {
-            $this->resolutionContext->startResolving($abstract);
+            $this->resolutionContext->startResolving($abstract);         // ✅ exists
 
             $instance = $this->build($abstract, $parameters);
 
             // Store singleton instances
-            if ($this->bindingRegistry->isShared($abstract)) {
-                $this->instanceManager->set($abstract, $instance);
+            if ($this->bindingRegistry->isShared($abstract)) {           // ✅ exists
+                $this->instanceManager->set($abstract, $instance);       // ✅ exists
             }
 
-            $this->resolutionContext->finishResolving($abstract);
+            $this->resolutionContext->finishResolving($abstract);        // ✅ exists
 
-            // Fire rebound callbacks for ALL instances
-            $this->instanceManager->fireReboundCallbacks($abstract, $instance);
+            // Fire rebound callbacks
+            $this->instanceManager->fireReboundCallbacks($abstract, $instance); // ✅ exists
 
             return $instance;
-        } catch (Throwable $e) {
+        } catch (ContainerException $e) {
             $this->resolutionContext->finishResolving($abstract);
             throw $e;
+        } catch (Throwable $e) {
+            $this->resolutionContext->finishResolving($abstract);
+
+            throw ContainerException::buildFailed(
+                $abstract,
+                $abstract,
+                $e,
+                $this->resolutionContext->getResolutionStack(),
+            );
         }
     }
 
@@ -463,36 +513,116 @@ class Container implements ContainerInterface
     /**
      * Build an instance of the given type.
      */
+    // protected function build(string $abstract, array $parameters = []): mixed
+    // {
+    //     // Handle factory bindings
+    //     if ($this->bindingRegistry->hasFactory($abstract)) {
+    //         $factory = $this->bindingRegistry->getFactory($abstract);
+    //         return $factory->call($this, $this, $parameters);
+    //     }
+
+    //     // Handle closure bindings
+    //     if ($this->bindingRegistry->isClosure($abstract)) {
+    //         $concrete = $this->bindingRegistry->getConcrete($abstract);
+    //         return $concrete->call($this, $this, $parameters);
+    //     }
+
+    //     // Get concrete class to instantiate
+    //     $concrete = $this->bindingRegistry->getConcrete($abstract);
+
+    //     // Handle string/primitive values or already instantiated objects
+    //     if (!is_string($concrete) || !class_exists($concrete)) {
+    //         $parameters = $this->bindingRegistry->getParameters($abstract);
+    //         if (!empty($parameters)) {
+    //             return $parameters[0] ?? $concrete;
+    //         }
+    //         return $concrete;
+    //     }
+
+    //     // Delegate class instantiation to ClassBuilder
+    //     return $this->classBuilder->build($concrete, $parameters, $this->bindingRegistry->get($abstract));
+    // }
     protected function build(string $abstract, array $parameters = []): mixed
     {
         // Handle factory bindings
-        if ($this->bindingRegistry->hasFactory($abstract)) {
-            $factory = $this->bindingRegistry->getFactory($abstract);
-            return $factory->call($this, $this, $parameters);
+        if ($this->bindingRegistry->hasFactory($abstract)) {           // ✅ exists
+            $factory = $this->bindingRegistry->getFactory($abstract);  // ✅ exists
+            try {
+                return $factory->call($this, $this, $parameters);
+            } catch (Throwable $e) {
+                throw ContainerException::buildFailed(
+                    $abstract,
+                    'factory',
+                    $e,
+                    $this->resolutionContext->getResolutionStack(),    // ✅ exists
+                );
+            }
         }
 
         // Handle closure bindings
-        if ($this->bindingRegistry->isClosure($abstract)) {
-            $concrete = $this->bindingRegistry->getConcrete($abstract);
-            return $concrete->call($this, $this, $parameters);
+        if ($this->bindingRegistry->isClosure($abstract)) {            // ✅ exists
+            $concrete = $this->bindingRegistry->getConcrete($abstract); // ✅ exists
+            try {
+                return $concrete->call($this, $this, $parameters);
+            } catch (Throwable $e) {
+                throw ContainerException::buildFailed(
+                    $abstract,
+                    'closure',
+                    $e,
+                    $this->resolutionContext->getResolutionStack(),
+                );
+            }
         }
 
         // Get concrete class to instantiate
-        $concrete = $this->bindingRegistry->getConcrete($abstract);
+        $concrete = $this->bindingRegistry->getConcrete($abstract);     // ✅ exists
 
-        // Handle string/primitive values or already instantiated objects
-        if (!is_string($concrete) || !class_exists($concrete)) {
-            $parameters = $this->bindingRegistry->getParameters($abstract);
-            if (!empty($parameters)) {
-                return $parameters[0] ?? $concrete;
-            }
+        // Handle non-string values (already-instantiated objects, arrays, etc.)
+        if (!is_string($concrete)) {
+            // Objects, arrays, integers, etc. — return as-is
             return $concrete;
         }
 
-        // Delegate class instantiation to ClassBuilder
-        return $this->classBuilder->build($concrete, $parameters, $this->bindingRegistry->get($abstract));
-    }
+        // String concrete that isn't a real class
+        if (!class_exists($concrete) && !interface_exists($concrete)) {
+            $registeredParams = $this->bindingRegistry->getParameters($abstract); // ✅ exists
 
+            // If there are explicit parameters, this is a value binding
+            if (!empty($registeredParams)) {
+                return $registeredParams[0] ?? $concrete;
+            }
+
+            // If it was explicitly bound as a value, return it
+            if ($this->bindingRegistry->isBoundAsValue($abstract)) {   // 🆕 new method
+                return $concrete;
+            }
+
+            // OTHERWISE: This is a broken binding — throw a clear error
+            throw ContainerException::unresolvable(
+                $abstract,
+                $concrete,
+                $this->resolutionContext->getResolutionStack(),
+            );
+        }
+
+        // Delegate class instantiation to ClassBuilder
+        try {
+            return $this->classBuilder->build(
+                $concrete,
+                $parameters,
+                $this->bindingRegistry->get($abstract),                  // ✅ exists
+            );
+        } catch (ContainerException $e) {
+            throw $e; // Already formatted with context
+        } catch (Throwable $e) {
+            throw ContainerException::buildFailed(
+                $abstract,
+                $concrete,
+                $e,
+                $this->resolutionContext->getResolutionStack(),
+            );
+        }
+    }
     // =====================================================
     // HELPER METHODS
     // =====================================================

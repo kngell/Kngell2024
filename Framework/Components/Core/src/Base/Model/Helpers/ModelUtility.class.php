@@ -23,7 +23,12 @@ class ModelUtility implements ModelUtilityInterface
                     $deleteOption = $params['deleteOption'];
                     unset($params['deleteOption']);
                 }
-                return [$defaultEntity, $params, $deleteOption];
+                if (array_key_exists('conditions', $params)) {
+                    $conditions = $params['conditions'];
+                    unset($params['conditions']);
+                }
+                $conditions = $conditions ?? $params;
+                return [$defaultEntity, $conditions, $deleteOption];
             } else {
                 if ($defaultEntity->entityKeyIsInitialzed()) {
                     $params = [$defaultEntity->getEntityKeyField() => $defaultEntity->getEntityPrimarykeyValue()];

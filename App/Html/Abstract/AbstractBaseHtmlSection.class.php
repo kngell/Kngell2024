@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 abstract class AbstractBaseHtmlSection implements HtmlSectionInterface
 {
+    protected array $context = [];
+
     public function __construct(
         protected readonly HtmlBuilder $htmlBuilder,
         protected readonly IconBuilder $iconBuilder,
@@ -20,6 +22,14 @@ abstract class AbstractBaseHtmlSection implements HtmlSectionInterface
     public function getSectionLayout(array $fields, string $sectionKey, HtmlBuilder $form): null|array|AbstractHtmlComponent
     {
         return null;
+    }
+
+    /**
+     * @return array
+     */
+    public function getContext(): array
+    {
+        return $this->context;
     }
 
     protected function escape(?string $value, array $options = []): ?string
@@ -63,5 +73,28 @@ abstract class AbstractBaseHtmlSection implements HtmlSectionInterface
         }
 
         return htmlspecialchars($result, ENT_QUOTES, $options['encoding']);
+    }
+
+    protected function thumbnail(?string $media = null, string $alt = ''): AbstractHtmlComponent
+    {
+        $html = $this->htmlBuilder;
+        $container = $html->tag('div')->class('details__image-container');
+
+        if ($media !== null) {
+            return $container->add(
+                $html->tag('img')
+                    ->src($media)
+                    ->class('image')
+                    ->alt('Entity Image'),
+            );
+        }
+
+        return $container->add(
+            $this->iconBuilder->createIcon(
+                'icon-media-image',
+                'Thumbnail',
+                ['image'],
+            ),
+        );
     }
 }

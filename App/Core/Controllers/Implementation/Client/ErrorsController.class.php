@@ -5,13 +5,13 @@ class ErrorsController extends Controller
 {
     public function __construct()
     {
-        $this->layout('default');
+        $this->layout('admin');
     }
 
     public function index(array $data): String
     {
         $this->pageTitle('Errors');
-        return $this->render('errors' . DS . 'dev', $data);
+        return $this->render('dev', $data);
     }
 
     public function e500(): String
@@ -20,7 +20,7 @@ class ErrorsController extends Controller
         return $this->render('500');
     }
 
-    public function e400(): string
+    public function e404(): string
     {
         $this->pageTitle('Errors');
         return $this->render('404');

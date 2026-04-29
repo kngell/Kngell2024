@@ -21,4 +21,6 @@ interface PaginatedCachingServiceInterface
     public function warmPageCache(int $page, int $perPage): bool;
 
     public function getEntityClass(): string;
+
+    public function invalidateCount(): void;
 }

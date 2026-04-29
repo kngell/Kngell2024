@@ -5,7 +5,8 @@ declare(strict_types=1);
 final class FormOptions implements StandAloneComponentInterface
 {
     private array $options = [];
-    private string $defaultOption = Theme::LIGHT->value;
+    private ?string $inputName = null;
+    private string $defaultOption = '';
 
     public function __construct(
         private HtmlBuilder $htmlBuilder,
@@ -13,15 +14,18 @@ final class FormOptions implements StandAloneComponentInterface
     }
 
     public function addOption(
+        string $value,
         string $title,
         ?string $description = null,
-        array $attribute = [],
+        array $attributes = [],
     ): self {
         $this->options[] = [
+            'value' => $value,
             'title' => $title,
             'description' => $description,
-            'attribute' => $attribute,
+            'attributes' => $attributes,
         ];
+
         return $this;
     }
 
@@ -29,26 +33,39 @@ final class FormOptions implements StandAloneComponentInterface
     {
         foreach ($options as $option) {
             $this->addOption(
-                $option['title'],
-                $option['description'] ?? null,
+                value: $option['value'],
+                title: $option['title'],
+                description: $option['description'] ?? null,
+                attributes: $option['attributes'] ?? [],
             );
         }
 
         return $this;
     }
 
+    public function setInputName(string $name): self
+    {
+        $this->inputName = $name;
+
+        return $this;
+    }
+
     public function build(mixed $params = null): AbstractHtmlComponent
     {
-        $container = $this->htmlBuilder->tag('div')
-            ->class('options');
+        $html = $this->htmlBuilder;
+
+        $inputName = $this->inputName
+            ?? (is_string($params) ? $params : 'option');
+
+        $container = $html->tag('div')->class('options');
 
         foreach ($this->options as $option) {
-            $container->add($this->buildOption($option, $params));
+            $container->add(
+                $this->buildOption($option, $inputName),
+            );
         }
-        return $container->add(
-            $this->htmlBuilder->input('hidden')
-            ->name('small_banner_theme')->value($this->defaultOption),
-        );
+
+        return $container;
     }
 
     /**
@@ -63,35 +80,49 @@ final class FormOptions implements StandAloneComponentInterface
         return $this;
     }
 
-    private function buildOption(array $option, mixed $params): ?AbstractHtmlComponent
-    {
-        if (!is_string($params)) {
-            return null;
-        }
-
+    private function buildOption(
+        array $option,
+        string $inputName,
+    ): AbstractHtmlComponent {
         $html = $this->htmlBuilder;
-        $optionBox = $html->tag('div')->class('options-box');
+        $value = $option['value'];
 
-        if (array_key_exists('attribute', $option)) {
-            $optionBox->custom($option['attribute']);
-        }
+        $optionBox = $html->tag('div')
+            ->class('options-box')
+            ->custom(array_merge(
+                [
+                    'data-option' => $value,
+                    'role' => 'button',
+                    'tabindex' => '0',
+                ],
+                $option['attributes'],
+            ));
 
-        // Get the option value from data-option attribute
-        $optionValue = $option['attribute']['data-option'] ?? null;
-
-        // Create the radio input
         $radioInput = $html->input('radio')
-            ->name($params)
-            ->value($optionValue)
-            ->style(['display' => 'none;']);
-        if ($this->defaultOption === $optionValue) {
-            $radioInput->defaultValue($optionValue);
+            ->name($inputName)
+            ->id($inputName . '-' . $value)
+            ->value($value)
+            ->style(['display' => 'none']);
+
+        if ($this->defaultOption === $value) {
+            $radioInput->defaultValue($value);
+            $optionBox->class('selected');
         }
 
-        return $optionBox->role('button')->add(
-            $radioInput,
-            $html->tag('span')->class('options-box__title')->content($option['title']),
-            $html->tag('span')->class('options-box__description')->content($option['description']),
-        );
+        $title = $html->tag('span')
+            ->class('options-box__title')
+            ->content($option['title']);
+
+        $optionBox->add($radioInput, $title);
+
+        if (!empty($option['description'])) {
+            $optionBox->add(
+                $html->tag('span')
+                    ->class('options-box__description')
+                    ->content($option['description']),
+            );
+        }
+
+        return $optionBox;
     }
 }

@@ -104,6 +104,12 @@ class Flash implements FlashInterface
         return $this->session->flush($uniqueKey . '_flash_data');
     }
 
+    public function removeData(string $key): void
+    {
+        $uniqueKey = 'data_' . md5(trim($key));
+        $this->session->delete($uniqueKey . '_flash_data');
+    }
+
     public function hasData(string $key): bool
     {
         $uniqueKey = 'data_' . md5(trim($key));
@@ -145,9 +151,9 @@ class Flash implements FlashInterface
         $formAction = $this->normalizeFormAction($formAction);
         $formKey = 'form_' . md5($formAction);
 
-        $values = $this->session->flush($formKey . '_values') ?? [];
-        $errors = $this->session->flush($formKey . '_errors') ?? [];
-        $files = $this->session->flush($formKey . '_files') ?? [];
+        $values = $this->peekData($formKey . '_values') ?? [];
+        $errors = $this->peekData($formKey . '_errors') ?? [];
+        $files = $this->peekData($formKey . '_files') ?? [];
         return [
             'values' => $values,
             'errors' => $errors,

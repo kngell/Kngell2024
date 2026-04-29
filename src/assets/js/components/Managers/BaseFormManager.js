@@ -4,6 +4,8 @@ import FormHandler from "js/core/forms/FormHandler";
 import CustomSelect from "js/components/custom-select/custom-select";
 import RadioOptions from "js/components/Options/RadioOptions";
 import ToggleSwitch from "js/components/ToggleSwitch/ToggleSwitch";
+import AdminActionBar from "js/components/AdminMainHeader/AdminActionBar";
+import DeletionModal from "js/components/Modals/DeletionModal";
 
 export default class BaseFormManager {
   constructor(options = {}) {
@@ -12,6 +14,7 @@ export default class BaseFormManager {
       enableCustomSelect: false,
       enableRadioOptions: false,
       enableToggleSwitch: false,
+      enableActionBar: true,
       resetOnSuccess: false,
       resetCustomSelectsOnSuccess: false,
       notificationPosition: "top-right",
@@ -23,11 +26,15 @@ export default class BaseFormManager {
 
     this.dropzoneInstances = [];
     this.formHandler = null;
-    this.customSelects = []; // Store CustomSelect instances
+    this.customSelects = [];
     this.radioOptions = null;
     this.toggleSwitches = [];
+    this.actionBar = null;
+    this.deletionModal = null;
     this.logger = new BrowserLogger(this.constructor.name);
   }
+
+  // ─── Override Hooks: Notifications ──────────────────────────
 
   /**
    * Override in child class
@@ -35,6 +42,8 @@ export default class BaseFormManager {
   getDefaultNotificationContainerId() {
     return "default-notifications";
   }
+
+  // ─── Override Hooks: Form ───────────────────────────────────
 
   /**
    * Override in child class to provide form selector
@@ -49,6 +58,8 @@ export default class BaseFormManager {
   getValidationRules() {
     return "defaultRules";
   }
+
+  // ─── Override Hooks: Radio Options ──────────────────────────
 
   /**
    * Override in child class to provide radio option name
@@ -71,6 +82,8 @@ export default class BaseFormManager {
     // Hook for child classes
   }
 
+  // ─── Override Hooks: Custom Select ──────────────────────────
+
   getCustomDataProcessors() {
     return [];
   }
@@ -79,13 +92,78 @@ export default class BaseFormManager {
     return [];
   }
 
+  // ─── Override Hooks: Toggle Switch ──────────────────────────
+
+  onToggleChange(event) {
+    // Hook for child classes
+  }
+
+  // ─── Override Hooks: Deletion Modal & Action Bar ────────────
+
+  /**
+   * Override in child class to provide deletion modal config overrides.
+   * @returns {Object}
+   */
+  getDeletionModalConfig() {
+    return {};
+  }
+
+  /**
+   * Override in child class to provide action bar config overrides.
+   * @returns {Object}
+   */
+  getActionBarConfig() {
+    return {};
+  }
+
+  // ─── Entity Lifecycle Hooks ─────────────────────────────────
+
+  /**
+   * Called after an entity is successfully deleted via the deletion modal.
+   * Override in child class for page-specific cleanup
+   * (e.g., redirect, remove DOM element, refresh list).
+   *
+   * @param {string} entityId
+   * @param {Object} result - Server response
+   */
+  onEntityDeleted(entityId, result) {
+    this.logger.success("Entity deleted:", entityId);
+  }
+
+  /**
+   * Called before the deletion modal AJAX request fires.
+   * Return false to cancel the deletion flow.
+   *
+   * @param {Object} context - { data, formAction, button, form }
+   * @returns {boolean|void}
+   */
+  onBeforeDelete(context) {
+    // Override in child class
+  }
+
+  /**
+   * Called before navigating to the add page.
+   * Return false to cancel navigation.
+   *
+   * @param {Object} context - { data, formAction, button, form }
+   * @returns {boolean|void}
+   */
+  onBeforeAdd(context) {
+    // Override in child class
+  }
+
+  // ─── Override Hook: Child-Specific Components ───────────────
+
   /**
    * Hook for child classes to initialize their own specific components
    * (like EntitySelector, custom widgets, etc.)
+   * Called after all standard components are initialized.
    */
   initSpecificComponents() {
     // Override in child class
   }
+
+  // ─── Form Callbacks ─────────────────────────────────────────
 
   onSuccess(result, context) {
     this.logger.success(`${this.constructor.name} form submitted successfully`);
@@ -116,9 +194,12 @@ export default class BaseFormManager {
     this.logger.error(`${this.constructor.name} form submission failed:`, error);
   }
 
+  // ─── Notification Container ─────────────────────────────────
+
   ensureNotificationContainer() {
     const containerId =
       this.options.notificationContainerId || this.getDefaultNotificationContainerId();
+
     if (!document.getElementById(containerId)) {
       const container = document.createElement("div");
       container.id = containerId;
@@ -128,10 +209,82 @@ export default class BaseFormManager {
     }
   }
 
+  // ─── Deletion Modal Init ───────────────────────────────────
+
+  initDeletionModal() {
+    const baseConfig = {
+      onEntityDeleted: (entityId, result) => {
+        this.onEntityDeleted(entityId, result);
+      },
+      onModalOpened: () => this.logger.debug("Deletion modal opened"),
+      onModalClosed: () => this.logger.debug("Deletion modal closed"),
+      notificationConfig: {
+        error: {
+          permanent: this.options.notificationConfig?.error?.permanent ?? true,
+          duration: this.options.notificationConfig?.error?.duration ?? 8000
+        },
+        success: {
+          permanent: this.options.notificationConfig?.success?.permanent ?? false,
+          duration: this.options.notificationConfig?.success?.duration ?? 3000
+        }
+      }
+    };
+
+    const overrides = this.getDeletionModalConfig();
+
+    this.deletionModal = new DeletionModal({
+      ...baseConfig,
+      ...overrides
+    });
+  }
+
+  // ─── Action Bar Init ───────────────────────────────────────
+
+  initActionBar() {
+    if (!this.deletionModal) {
+      this.logger.warn("Deletion modal not initialized before action bar — initializing now");
+      this.initDeletionModal();
+    }
+
+    const baseConfig = {
+      deletionModal: this.deletionModal,
+      onBeforeDelete: (context) => this.onBeforeDelete(context),
+      onBeforeAdd: (context) => this.onBeforeAdd(context)
+    };
+
+    const overrides = this.getActionBarConfig();
+
+    this.actionBar = new AdminActionBar({
+      ...baseConfig,
+      ...overrides
+    }).init();
+  }
+
+  // ─── Main Initialization ────────────────────────────────────
+  // checkDeletionModal() {
+  //   if (!this.deletionModal) {
+  //     this.logger.warn("Deletion modal not initialized");
+  //     return;
+  //   }
+
+  //   const deleteTriggers = document.querySelectorAll('[data-action="confirm-delete"]');
+  //   this.logger.debug(`Found ${deleteTriggers.length} delete triggers`);
+
+  //   deleteTriggers.forEach((trigger) => {
+  //     this.logger.debug("Delete trigger:", trigger);
+  //   });
+  // }
   async _init() {
     this.logger.debug(`Initializing ${this.constructor.name}`);
 
     try {
+      // ── Action bar + deletion modal (independent of main form) ──
+      if (this.options.enableActionBar) {
+        this.initDeletionModal();
+        this.initActionBar();
+      }
+
+      // ── Find the main form ──
       let form = document.querySelector(this.getFormSelector());
       let attempts = 0;
       const maxAttempts = 10;
@@ -145,27 +298,30 @@ export default class BaseFormManager {
 
       if (!form) {
         this.logger.warn(`No form found for ${this.constructor.name}`);
+        // Still call child-specific init (action bar is already active)
+        await this.initSpecificComponents();
+        this.logger.success(`${this.constructor.name} initialized (action bar only)`);
         return;
       }
 
-      this.logger.debug(`Form found, initializing components...`);
+      this.logger.debug("Form found, initializing components...");
 
-      // Initialize generic custom selects
+      // ── Custom selects ──
       if (this.options.enableCustomSelect) {
         this.initCustomSelects();
       }
 
-      // Initialize toggle switches
+      // ── Toggle switches ──
       if (this.options.enableToggleSwitch) {
         this.initToggleSwitches();
       }
 
-      // Initialize radio options
+      // ── Radio options ──
       if (this.options.enableRadioOptions) {
         this.initRadioOptions();
       }
 
-      // Initialize dropzones
+      // ── Dropzones ──
       if (this.options.enableDropzone) {
         await new Promise((resolve) => setTimeout(resolve, 200));
 
@@ -189,11 +345,12 @@ export default class BaseFormManager {
         }
       }
 
+      // ── Child-specific components ──
       await this.initSpecificComponents();
 
-      // Build custom data processors
+      // ── Custom data processors ──
       const customDataProcessors = [
-        (data, form) => {
+        (data, formEl) => {
           if (this.options.enableRadioOptions && this.radioOptions) {
             const value = this.radioOptions.getValue();
             if (value) {
@@ -206,7 +363,7 @@ export default class BaseFormManager {
         ...this.getCustomDataProcessors()
       ];
 
-      // Initialize form handler
+      // ── Form handler ──
       this.formHandler = new FormHandler(form, {
         rulesName: form.dataset.validationRules || this.getValidationRules(),
         enableRealTime: true,
@@ -231,7 +388,7 @@ export default class BaseFormManager {
         },
 
         ajaxOptions: {
-          timeout: 30000,
+          timeout: 300000,
           json: false,
           contentType: false,
           processData: false,
@@ -250,12 +407,16 @@ export default class BaseFormManager {
       });
 
       await this.formHandler.initialize();
-
+      // setTimeout(() => {
+      //   this.checkDeletionModal();
+      // }, 500);
       this.logger.success(`${this.constructor.name} initialized`);
     } catch (error) {
       this.logger.error(`Failed to initialize ${this.constructor.name}`, error);
     }
   }
+
+  // ─── Component Initializers ─────────────────────────────────
 
   initToggleSwitches() {
     const toggleContainers = document.querySelectorAll(".toggle-switch");
@@ -270,10 +431,6 @@ export default class BaseFormManager {
     if (toggleContainers.length) {
       this.logger.debug(`Initialized ${this.toggleSwitches.length} toggle switches`);
     }
-  }
-
-  onToggleChange(event) {
-    // Hook for child classes
   }
 
   initRadioOptions() {
@@ -380,7 +537,7 @@ export default class BaseFormManager {
             }
           },
           onReset: () => {
-            this.logger.debug(`Custom select reset`);
+            this.logger.debug("Custom select reset");
             if (config.onReset) {
               config.onReset();
             }
@@ -391,11 +548,11 @@ export default class BaseFormManager {
         });
 
         customSelect.init();
-        customSelect.selector = selector; // Store selector on instance
+        customSelect.selector = selector;
         this.customSelects.push(customSelect);
         this.logger.debug(`Custom select initialized for ${selector}`);
       } catch (error) {
-        this.logger.error(`Failed to initialize custom select`, error);
+        this.logger.error("Failed to initialize custom select", error);
       }
     });
   }
@@ -408,13 +565,22 @@ export default class BaseFormManager {
     this.logger.debug("All custom selects reset");
   }
 
-  // Public API methods
+  // ─── Public API ─────────────────────────────────────────────
+
   getDropzones() {
     return this.dropzoneInstances;
   }
 
   getFormHandler() {
     return this.formHandler;
+  }
+
+  getActionBar() {
+    return this.actionBar;
+  }
+
+  getDeletionModal() {
+    return this.deletionModal;
   }
 
   getCustomSelects() {
@@ -438,21 +604,34 @@ export default class BaseFormManager {
     await this.formHandler?.submit();
   }
 
+  // ─── Destroy ────────────────────────────────────────────────
+
   destroy() {
+    // Action bar & deletion modal
+    this.actionBar?.destroy();
+    this.deletionModal?.destroy();
+    this.actionBar = null;
+    this.deletionModal = null;
+
+    // Radio options
     if (this.radioOptions) {
       this.radioOptions.destroy();
       this.radioOptions = null;
     }
 
+    // Toggle switches
     this.toggleSwitches.forEach((toggle) => toggle.destroy());
     this.toggleSwitches = [];
 
+    // Custom selects
     this.resetAllCustomSelects();
 
+    // Form handler
     this.formHandler?.destroy();
-    this.dropzoneInstances.forEach((d) => d.destroy?.());
-
     this.formHandler = null;
+
+    // Dropzones
+    this.dropzoneInstances.forEach((d) => d.destroy?.());
     this.dropzoneInstances = [];
 
     this.logger.debug(`${this.constructor.name} destroyed`);

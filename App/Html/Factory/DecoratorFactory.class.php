@@ -21,7 +21,7 @@ class DecoratorFactory
     public function create(
         string $decoratorClass,
         AbstractHtmlDecorator|Controller $target,
-        array $params = [],
+        array|object $params = [],
     ): AbstractHtmlDecorator {
         $decorator = $this->container->get($decoratorClass);
 

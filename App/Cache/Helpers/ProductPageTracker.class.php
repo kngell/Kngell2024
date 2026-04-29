@@ -90,33 +90,6 @@ final class ProductPageTracker
         $this->trackerCache->delete($trackerKey);
         return $clearedPages;
     }
-    // public function clearProductPages(string $productIdentifier, PaginationCacheManager $paginationCache): array
-    // {
-    //     $productId = $this->normalizeProductId($productIdentifier);
-    //     $trackerKey = self::TRACKER_PREFIX . $productId;
-
-    //     $trackedPages = $this->trackerCache->get($trackerKey) ?? [];
-    //     $clearedPages = [];
-
-    //     foreach ($trackedPages as $pageKey) {
-    //         [$page, $perPage] = explode('_', $pageKey);
-
-    //         if ($paginationCache->clearPage((int) $page, (int) $perPage)) {
-    //             $clearedPages[] = $pageKey;
-    //         }
-    //     }
-
-    //     // Remove the tracker
-    //     $this->trackerCache->delete($trackerKey);
-
-    //     $this->logger?->debug('Product pages cleared', [
-    //         'product_id' => $productId,
-    //         'pages_cleared' => count($clearedPages),
-    //         'pages' => $clearedPages,
-    //     ]);
-
-    //     return $clearedPages;
-    // }
 
     public function untrackProductPage(string $productIdentifier, int $page, int $perPage): void
     {

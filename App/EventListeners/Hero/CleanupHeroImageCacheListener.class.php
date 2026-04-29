@@ -13,7 +13,7 @@ class CleanupHeroImageCacheListener extends AbstractImageCacheCleanupListener
 
     protected function getEntityId(array $payload): ?int
     {
-        return $payload['hero_id'] ?? null;
+        return $payload['id']['value'] ?? null;
     }
 
     protected function getOldEntity(array $payload): ?object

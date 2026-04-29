@@ -18,6 +18,13 @@ export default class AjaxHandler {
   async request(customOptions = {}) {
     const options = { ...this.defaults, ...customOptions };
 
+    // ═══════════════════════════════════════════════════
+    // FIX #1: Guard against undefined overriding defaults
+    // ═══════════════════════════════════════════════════
+    if (options.json === undefined) {
+      options.json = this.defaults.json;
+    }
+
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), options.timeout);
 
@@ -29,13 +36,12 @@ export default class AjaxHandler {
         headers: { ...options.headers },
         signal: controller.signal,
         credentials: "same-origin",
-        redirect: "manual" // CRITICAL: Don't follow redirects automatically
+        redirect: "manual"
       };
 
       if (options.method !== "GET" && options.data) {
         if (options.data instanceof FormData) {
           config.body = options.data;
-          // Don't set Content-Type for FormData - browser will set it with boundary
           if (config.headers["Content-Type"]) {
             delete config.headers["Content-Type"];
           }
@@ -63,7 +69,6 @@ export default class AjaxHandler {
       const redirectUrl = response.headers.get("Location");
       this.logger.debug("HTTP Redirect detected:", redirectUrl);
 
-      // Return a structured response for redirects
       return {
         success: true,
         redirected: true,
@@ -88,29 +93,59 @@ export default class AjaxHandler {
       textLength: responseText.length
     });
 
-    // Handle JSON responses (this is what we want!)
-    if (options.json && isJson) {
+    // ═══════════════════════════════════════════════════════════
+    // FIX #2: Parse JSON ONCE upfront if content type is JSON.
+    //         This eliminates the double-parse and ensures the
+    //         full body is ALWAYS available for error responses.
+    // ═══════════════════════════════════════════════════════════
+    if (isJson && responseText) {
+      let jsonData;
+
       try {
-        const jsonData = JSON.parse(responseText);
-
-        this.logger.debug("Parsed JSON response:", jsonData);
-
-        if (jsonData.redirect) {
-          this.logger.debug("JSON response contains redirect:", jsonData.redirect);
-          return {
-            ...jsonData,
-            redirected: true,
-            redirectType: "json",
-            finalUrl: jsonData.redirect
-          };
-        }
-
-        return jsonData;
-      } catch (error) {
-        this.logger.error("JSON parse error:", error);
+        jsonData = JSON.parse(responseText);
+      } catch (parseError) {
+        this.logger.error("JSON parse error:", parseError);
         throw new Error(`Invalid JSON response: ${responseText.substring(0, 100)}`);
       }
+
+      this.logger.debug("Parsed JSON response:", jsonData);
+
+      // Handle JSON redirect
+      if (jsonData.redirect) {
+        this.logger.debug("JSON response contains redirect:", jsonData.redirect);
+        return {
+          ...jsonData,
+          redirected: true,
+          redirectType: "json",
+          finalUrl: jsonData.redirect
+        };
+      }
+
+      // ───────────────────────────────────────────────
+      // For error responses (422, 400, 500, etc.):
+      // Return the FULL parsed body — don't throw.
+      // The caller (processAjaxResult) knows how to
+      // handle { success: false, errors: { ... } }.
+      // ───────────────────────────────────────────────
+      if (!response.ok) {
+        this.logger.warn(
+          `Server returned ${response.status}:`,
+          jsonData.error || jsonData.message || response.statusText
+        );
+
+        // Ensure the envelope always has a consistent shape
+        return {
+          success: false,
+          ...jsonData, // ← The FULL server response, including `errors`
+          status: response.status
+        };
+      }
+
+      // Happy path: 2xx with JSON
+      return jsonData;
     }
+
+    // ── Non-JSON responses below ──
 
     // Handle empty successful responses
     if (response.ok && (!responseText || responseText.trim() === "")) {
@@ -123,24 +158,13 @@ export default class AjaxHandler {
       };
     }
 
-    // Handle error responses
+    // Handle non-JSON error responses
     if (!response.ok) {
-      let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
-      let errorDetails = { status: response.status, statusText: response.statusText };
+      const errorMessage = responseText
+        ? responseText.substring(0, 200)
+        : `HTTP ${response.status}: ${response.statusText}`;
 
-      if (responseText) {
-        try {
-          // Try to parse as JSON error
-          const errorData = JSON.parse(responseText);
-          errorMessage = errorData.error || errorData.message || errorMessage;
-          errorDetails = { ...errorDetails, ...errorData };
-        } catch (e) {
-          // Not JSON, use text
-          errorMessage = responseText.substring(0, 200);
-        }
-      }
-
-      this.logger.error("Request failed:", errorMessage, errorDetails);
+      this.logger.error("Request failed:", errorMessage);
       throw new Error(errorMessage);
     }
 
@@ -163,7 +187,7 @@ export default class AjaxHandler {
       errorDetails = { type: "unknown", originalError: error };
     }
 
-    this.logger.error(`Request to ${options.url} failed:`, errorMessage, errorDetails);
+    this.logger.error(`Request to ${options.url} failed:`, errorMessage);
 
     return {
       success: false,

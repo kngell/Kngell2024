@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-class CustomSelectFieldHandler implements FieldHandlerInterface
+class CustomSelectFieldHandler extends AbstractSelectLikeHandler
 {
     public function supports(string $fieldType): bool
     {
-        return in_array($fieldType, ['custom-select']);
+        return $fieldType === 'custom-select';
     }
 
     public function handle(array $field, FormBuilder $form, AbstractForm $formInstance): AbstractHtmlComponent
     {
         $fieldId = $formInstance->getFieldId($field);
-        $currentValue = $formInstance->getFormValues()[$field['name']] ?? $field['value'] ?? null;
-        $currentLabel = $this->getCurrentLabel($currentValue, $field);
-        $hasValue = !empty($currentValue);
+        $currentValue = $this->getSelectedValue($field, $formInstance);
+        $currentLabel = $this->getCurrentLabel($currentValue, $field, $formInstance);
+        $hasValue = $this->hasValue($currentValue);
 
         $button = $form->button()
             ->type('button')
@@ -23,10 +23,10 @@ class CustomSelectFieldHandler implements FieldHandlerInterface
             ->attribute('data-field-name', $field['name'])
             ->attribute('data-has-value', $hasValue ? 'true' : 'false');
 
-        // Add text span
         $textSpan = $form->tag('span')
-            ->class('text', ($currentLabel ? '' : 'placeholder'))
-            ->content($currentLabel ?: ($field['placeholder'] ?? 'Select option'));
+            ->class('text', $currentLabel !== null ? '' : 'placeholder')
+            ->content($currentLabel ?? ($field['placeholder'] ?? 'Select option'));
+
         $button->add($textSpan);
 
         return $button;
@@ -34,7 +34,7 @@ class CustomSelectFieldHandler implements FieldHandlerInterface
 
     protected function getButtonClasses(array $field, bool $hasValue): array
     {
-        $classes = $field['class'] ?? [];
+        $classes = is_array($field['class'] ?? null) ? $field['class'] : [];
         $classes[] = 'input-field__custom-select';
 
         if ($hasValue) {
@@ -42,15 +42,5 @@ class CustomSelectFieldHandler implements FieldHandlerInterface
         }
 
         return $classes;
-    }
-
-    protected function getCurrentLabel($currentValue, array $field): ?string
-    {
-        if ($currentValue === null || $currentValue === '') {
-            return null;
-        }
-
-        $options = $field['options'] ?? [];
-        return $options[$currentValue] ?? null;
     }
 }

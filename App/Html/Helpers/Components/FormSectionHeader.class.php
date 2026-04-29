@@ -22,7 +22,7 @@ final class FormSectionHeader
         $html = $this->builder;
         return $html->tag('div')->class($wrapperClass . '-left')->add(
             $html->tag('div')->class('icon-container')->add(
-                $this->iconBuilder->createIcon($html, $icon ?? 'icon-edit2', 'Edit', ['edit']),
+                $this->iconBuilder->createIcon($icon ?? 'icon-edit2', 'Edit', ['edit']),
             ),
             $html->tag('h6')->class('title')->add(
                 $html->text($title),

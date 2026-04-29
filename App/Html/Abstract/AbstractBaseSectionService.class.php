@@ -12,7 +12,6 @@ abstract class AbstractBaseSectionService implements CacheableSectionServiceInte
     protected array $widths = [];
 
     public function __construct(
-        protected ImageOptimizerFactory $imageOptimizerFactory,
         protected readonly HtmlSectionCacheManager $cache,
         protected ?LoggerInterface $logger = null,
     ) {
@@ -20,7 +19,7 @@ abstract class AbstractBaseSectionService implements CacheableSectionServiceInte
 
     public function clearAllCaches(): bool
     {
-        return $this->cache->clearSection(static::class);
+        return $this->cache->invalidateAllPages(static::class);
     }
 
     public function getCacheStats(): array

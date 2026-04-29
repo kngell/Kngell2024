@@ -55,7 +55,6 @@ class HomePageCategoriesSection extends AbstractBaseHtmlSection
             ->class('category-empty-state')
             ->add(
                 $this->iconBuilder->createIcon(
-                    $html,
                     'icon-category-empty',
                     'No categories available',
                     ['empty-state-icon'],
@@ -150,7 +149,6 @@ class HomePageCategoriesSection extends AbstractBaseHtmlSection
             ->add(
                 $html->div()->class('category-body__card--icon-wrapper')->add(
                     $this->iconBuilder->createIcon(
-                        $html,
                         $icon,
                         $name,
                         [$response->getCssClass() ?? ''],
@@ -173,7 +171,7 @@ class HomePageCategoriesSection extends AbstractBaseHtmlSection
             ->attribute('aria-label', 'Previous categories')
             ->attribute('data-slider-direction', 'prev')
             ->add(
-                $this->iconBuilder->createIcon($html, 'icon-arrow-left', 'Left Arrow', ['left-arrow']),
+                $this->iconBuilder->createIcon('icon-arrow-left', 'Left Arrow', ['left-arrow']),
             );
 
         $arrows[] = $html->button('button')
@@ -181,7 +179,7 @@ class HomePageCategoriesSection extends AbstractBaseHtmlSection
             ->attribute('aria-label', 'Next categories')
             ->attribute('data-slider-direction', 'next')
             ->add(
-                $this->iconBuilder->createIcon($html, 'icon-arrow-right', 'Right Arrow', ['right-arrow']),
+                $this->iconBuilder->createIcon('icon-arrow-right', 'Right Arrow', ['right-arrow']),
             );
 
         return $arrows;

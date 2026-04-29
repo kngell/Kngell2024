@@ -9,10 +9,10 @@ class SmallBannerService extends AbstractCollectionEntityService
 {
     public function __construct(
         private SmallBannerShowModel $model,
-        ImageOptimizerFactory $imageOptimizerFactory,
+        private ImageOptimizerFactory $imageOptimizerFactory,
         SmallBannerCacheManagerFactory $factory,
     ) {
-        parent::__construct($imageOptimizerFactory, $factory->create());
+        parent::__construct($factory->create());
     }
 
     /**

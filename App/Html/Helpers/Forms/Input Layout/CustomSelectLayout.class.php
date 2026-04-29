@@ -83,7 +83,6 @@ class CustomSelectLayout extends AbstractFieldLayout
 
         $searchIcon = $field['searchIcon'] ?? ['icon' => 'icon-search', 'aria' => 'Search'];
         $icon = $formInstance?->createIcon(
-            $form,
             $searchIcon['icon'] ?? 'icon-search',
             $searchIcon['aria'] ?? 'Search',
             $searchIcon['class'] ?? [],

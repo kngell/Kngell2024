@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 class HtmlTemplatePathManager implements HtmlTemplatePathInterface
 {
-    private string $templatePath = APP . 'Html' . DS . 'Templates' . DS;
+    private string $basePath = APP . 'Html' . DS . 'Components' . DS;
 
-    public function __construct(private FileContentInterface $file)
+    public function __construct(private FileContentManager $file, private FileSearchManager $fileSearch)
     {
     }
 
@@ -28,7 +28,7 @@ class HtmlTemplatePathManager implements HtmlTemplatePathInterface
     private function templates(): array
     {
         return [
-            'confirmProductDeletionModal' => $this->templatePath . 'confirmProductDeletionModal.php',
+            'confirmDeletionModal' => $this->fileSearch->findFile($this->basePath, 'confirmDeletionModal.php')->getPathname(),
         ];
     }
 

@@ -47,7 +47,7 @@ trait TagRendererTrait
         $type = gettype($value);
         return match (true) {
             $this instanceof CheckBoxType && $key === 'value' && $value === 'on' => 'checked',
-            $key === 'action' => ' ' . $key . '="/' . $value . '"',
+            $key === 'action' => ' ' . $key . '="' . $value . '"',
             $type === 'boolean' => $value === true ? ' ' . $key : '',
             is_array($value) && $key === 'style' => $this->buildStyleAttribute($value),
             is_array($value) && in_array($key, ['custom', 'aria']) => $this->customAttr($value),

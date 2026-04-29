@@ -759,4 +759,124 @@ class Product extends Entity implements TimestampableInterface, SoftDeletableInt
 
         return $this;
     }
+
+    /**
+     * @return float
+     */
+    public function getAverageRating(): float
+    {
+        return $this->averageRating;
+    }
+
+    /**
+     * @param float $averageRating
+     *
+     * @return Product
+     */
+    public function setAverageRating(float $averageRating): Product
+    {
+        $this->averageRating = $averageRating;
+
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getPriceIncludesTax(): bool
+    {
+        return $this->priceIncludesTax;
+    }
+
+    /**
+     * @param bool $priceIncludesTax
+     *
+     * @return Product
+     */
+    public function setPriceIncludesTax(bool $priceIncludesTax): Product
+    {
+        $this->priceIncludesTax = $priceIncludesTax;
+
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getLowStockThreshold(): int
+    {
+        return $this->lowStockThreshold;
+    }
+
+    /**
+     * @param int $lowStockThreshold
+     *
+     * @return Product
+     */
+    public function setLowStockThreshold(int $lowStockThreshold): Product
+    {
+        $this->lowStockThreshold = $lowStockThreshold;
+
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getMinOrderQuantity(): int
+    {
+        return $this->minOrderQuantity;
+    }
+
+    /**
+     * @param int $minOrderQuantity
+     *
+     * @return Product
+     */
+    public function setMinOrderQuantity(int $minOrderQuantity): Product
+    {
+        $this->minOrderQuantity = $minOrderQuantity;
+
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getMaxOrderQuantity(): int
+    {
+        return $this->maxOrderQuantity;
+    }
+
+    /**
+     * @param int $maxOrderQuantity
+     *
+     * @return Product
+     */
+    public function setMaxOrderQuantity(int $maxOrderQuantity): Product
+    {
+        $this->maxOrderQuantity = $maxOrderQuantity;
+
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getReviewCount(): int
+    {
+        return $this->reviewCount;
+    }
+
+    /**
+     * @param int $reviewCount
+     *
+     * @return Product
+     */
+    public function setReviewCount(int $reviewCount): Product
+    {
+        $this->reviewCount = $reviewCount;
+
+        return $this;
+    }
 }

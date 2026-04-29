@@ -22,7 +22,7 @@ class AdminNavbar extends AbstractHtml
         return [$navbar->generate()];
     }
 
-    public function buildLayout(HtmlBuilder $html): array
+    public function buildLayout(?HtmlBuilder $html = null): array
     {
         return $this->sectionManager->getSections();
     }

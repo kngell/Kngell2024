@@ -1,0 +1,1 @@
+{"__type__":"json","data":{"entity_keys":["entity.Hero.int.35","entity.Hero.int.61"],"identifiers":[35,61],"timestamp":1777306607,"count":2}}

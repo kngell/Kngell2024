@@ -96,11 +96,13 @@
   align-self: stretch;
   background-color: $gray-25;
 
+  @include input-field((checkbox));
+
   // Specific sections
-  .product-summary,
+  .entity-summary,
   .deletion-options,
   .deletion-impact,
-  .input-box {
+  .checkbox-section {
     display: flex;
     padding: 0.8rem 0.8rem;
     flex-direction: column;
@@ -124,7 +126,7 @@
     }
   }
 
-  .product-summary {
+  .entity-summary {
     .details {
       display: flex;
       padding: 0.8rem 0;
@@ -152,7 +154,7 @@
         align-items: flex-start;
         gap: 0.4rem;
 
-        .product-name {
+        .entity-name {
           align-self: stretch;
           @include text-style(
             $display-s,
@@ -277,7 +279,7 @@
 
   .buttons {
     display: flex;
-    padding: 0rem 2.4rem;
+    padding: 0.8rem 0rem;
     justify-content: space-between;
     align-items: center;
     width: 100%;

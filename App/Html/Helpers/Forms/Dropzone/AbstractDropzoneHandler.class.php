@@ -92,7 +92,7 @@ abstract class AbstractDropzoneHandler implements DropzoneHandlerInterface
             default => 'icon-file',
         };
 
-        return $this->iconBuilder->createIcon($form, $icon, 'File');
+        return $this->iconBuilder->createIcon($icon, 'File');
     }
 
     /**

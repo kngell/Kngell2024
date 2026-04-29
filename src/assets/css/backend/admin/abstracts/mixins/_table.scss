@@ -1,0 +1,443 @@
+@use "sass:map";
+@use "css/backend/admin/abstracts/variables" as *;
+@use "css/backend/admin/abstracts/functions" as *;
+@use "miscellaneous" as *;
+@use "text-style" as *;
+@use "input" as *;
+@use "icon_with_badge" as *;
+// ==========================================================================
+// TABLE DEFAULTS
+// These can be overridden per-instance via the $config parameter
+// ==========================================================================
+
+$table-defaults: (
+  // Layout
+  min-width: 90rem,
+  cell-padding: 1.8rem 2.2rem,
+  checkbox-size: 2rem,
+  checkbox-gap: 0.8rem,
+  image-size: 4.4rem,
+
+  // Column widths per cellType
+  col-widths: (
+      start: 20%,
+      normal: 12%,
+      badge: 12%,
+      action: 11%
+    ),
+
+  // Colors
+  border-color: map-deep-get($color-neutral, gray, gray-50),
+  bg-white: map-deep-get($color-neutral, white),
+  bg-header: map-deep-get($color-neutral, gray, gray-25),
+  bg-hover: map-deep-get($color-neutral, gray, gray-25),
+  bg-selected: map-deep-get($color-primary, primary-50),
+  bg-selected-hover: map-deep-get($color-primary, primary-100),
+  text-color: map-deep-get($color-neutral, black, black-700),
+  text-muted: map-deep-get($color-neutral, gray, gray-600),
+  hint-color: map-deep-get($color-neutral, gray, gray-500),
+  accent-color: map-deep-get($color-primary, primary-500),
+  // Color modifiers for normal cells
+  // key = modifier name, value = color
+  color-modifiers: (
+      sku: map-deep-get($color-primary, primary-500)
+    )
+) !default;
+
+// ==========================================================================
+// HELPER: Deep merge config with defaults
+// ==========================================================================
+
+@function table-config($config: ()) {
+  @return map-merge($table-defaults, $config);
+}
+
+// ==========================================================================
+// TABLE MIXIN
+// ==========================================================================
+
+@mixin table($config: ()) {
+  // Merge user config with defaults
+  $c: table-config($config);
+
+  // Extract values for readability
+  $min-width: map-get($c, min-width);
+  $cell-padding: map-get($c, cell-padding);
+  $checkbox-size: map-get($c, checkbox-size);
+  $checkbox-gap: map-get($c, checkbox-gap);
+  $image-size: map-get($c, image-size);
+  $col-widths: map-get($c, col-widths);
+
+  $border-color: map-get($c, border-color);
+  $bg-white: map-get($c, bg-white);
+  $bg-header: map-get($c, bg-header);
+  $bg-hover: map-get($c, bg-hover);
+  $bg-selected: map-get($c, bg-selected);
+  $bg-selected-hover: map-get($c, bg-selected-hover);
+  $text-color: map-get($c, text-color);
+  $text-muted: map-get($c, text-muted);
+  $hint-color: map-get($c, hint-color);
+  $accent-color: map-get($c, accent-color);
+  $color-modifiers: map-get($c, color-modifiers);
+
+  // ========================================================================
+  // TABLE BASE
+  // ========================================================================
+
+  width: 100%;
+  min-width: $min-width;
+  table-layout: fixed;
+  border-collapse: collapse;
+
+  // ========================================================================
+  // COLUMN WIDTHS
+  // Generated from col-widths map
+  // Used by: <col class="table__col table__col--{cellType}">
+  // ========================================================================
+
+  &__col {
+    @each $type, $width in $col-widths {
+      &--#{$type} {
+        width: $width;
+      }
+    }
+  }
+
+  // ========================================================================
+  // SHARED CELL BASE
+  // ========================================================================
+
+  &__head--row-cell,
+  &__body--row-cell {
+    padding: $cell-padding;
+    border-bottom: 1px solid $border-color;
+    background: $bg-white;
+    text-align: left;
+    vertical-align: middle;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    min-width: 0;
+  }
+
+  // ========================================================================
+  // HEADER BASE
+  // ========================================================================
+
+  &__head--row-cell {
+    background-color: $bg-header;
+    color: $text-color;
+    font-size: map-deep-get($text-m, medium, font-size);
+    font-weight: map-deep-get($text-m, medium, font-weight);
+    line-height: map-deep-get($text-m, medium, line-height);
+    letter-spacing: map-deep-get($text-m, medium, letter-spacing);
+  }
+
+  // ========================================================================
+  // HEADER INNER COMPONENTS
+  // ========================================================================
+
+  .header-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.4rem;
+    width: 100%;
+    min-width: 0;
+
+    &__top-row {
+      display: flex;
+      align-items: center;
+      gap: $checkbox-gap;
+      width: 100%;
+      min-width: 0;
+
+      > span {
+        white-space: normal;
+        word-wrap: break-word;
+        line-height: 1.3;
+      }
+    }
+
+    &__hint-text {
+      width: 100%;
+      padding-left: calc(#{$checkbox-size} + #{$checkbox-gap});
+
+      @include text-style(
+        $text-s,
+        regular,
+        (
+          color: $hint-color
+        )
+      );
+    }
+  }
+
+  .checkbox-box {
+    flex: 1;
+    min-width: 0;
+
+    &__label {
+      white-space: normal;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      line-height: 1.3;
+    }
+
+    @include form-field(
+      $types: "checkbox",
+      $options: (
+        input-box: checkbox-box,
+        box-size: $checkbox-size,
+        border-width: 2px,
+        border-color: map-deep-get($color-neutral, gray, gray-400),
+        background: $bg-white,
+        border-radius: 6px,
+        gap: $checkbox-gap
+      )
+    );
+  }
+
+  .dropdown-container {
+    position: relative;
+    flex-shrink: 0;
+
+    &__btn {
+      @include icon-with-badge($with-badge: false, $icon-size: 2rem, $padding: 0);
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      span {
+        font-size: 1.4rem;
+        font-weight: 500;
+        margin-right: 0.4rem;
+      }
+
+      .icon {
+        transition: transform 0.2s ease;
+      }
+
+      &:hover {
+        color: $accent-color;
+        background-color: map-deep-get($color-primary, primary-50);
+        border-color: map-deep-get($color-primary, primary-300);
+      }
+
+      &[aria-expanded="true"] {
+        background-color: map-deep-get($color-neutral, gray, gray-100);
+
+        .icon {
+          transform: rotate(180deg);
+        }
+      }
+    }
+  }
+
+  // ========================================================================
+  // BODY ROWS
+  // ========================================================================
+
+  &__body--row {
+    @include transition;
+    cursor: pointer;
+
+    &.row--selected {
+      .table__body--row-cell {
+        background-color: $bg-selected;
+      }
+    }
+
+    &:hover {
+      .table__body--row-cell {
+        background-color: $bg-hover;
+      }
+    }
+
+    &.row--selected:hover {
+      .table__body--row-cell {
+        background-color: $bg-selected-hover;
+      }
+    }
+  }
+
+  // ========================================================================
+  // CELL TYPE: START
+  //
+  // Rendered by:  RowHeaderCellRenderer
+  // HTML tag:     <th scope="row">
+  // Content:      checkbox + optional image + text (name + variant)
+  // ========================================================================
+
+  &__cell--start {
+    .body-cell-start {
+      display: flex;
+      align-items: center;
+      gap: $checkbox-gap;
+      width: 100%;
+
+      @include form-field(
+        $types: "checkbox",
+        $options: (
+          input-box: body-cell-start,
+          box-size: $checkbox-size,
+          border-width: 2px,
+          border-color: map-deep-get($color-neutral, gray, gray-400),
+          background: $bg-white,
+          border-radius: 6px,
+          gap: $checkbox-gap
+        )
+      );
+
+      &__label {
+        display: flex;
+        align-items: center;
+        gap: $checkbox-gap;
+        flex: 1;
+        min-width: 0;
+        cursor: pointer;
+      }
+    }
+
+    .img-container {
+      flex-shrink: 0;
+
+      @include icon-with-badge(
+        $with-badge: false,
+        $icon-size: $image-size,
+        $padding: 0,
+        $border-radius: 0.4rem,
+        $icon-container-bg: map-deep-get($color-neutral, gray, gray-100),
+        $content-type: image,
+        $align-self: false
+      );
+    }
+
+    .text-container {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      min-width: 0;
+      overflow: hidden;
+
+      &__name {
+        color: $text-color;
+        font-size: map-deep-get($text-m, medium, font-size);
+        font-weight: map-deep-get($text-m, medium, font-weight);
+        line-height: 1.4;
+
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        word-break: break-word;
+      }
+
+      &__variant {
+        font-size: map-deep-get($text-s, regular, font-size);
+        color: $text-muted;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+    }
+  }
+
+  // ========================================================================
+  // CELL TYPE: NORMAL
+  //
+  // Rendered by:  NormalCellRenderer
+  // HTML tag:     <td>
+  // Content:      single value, single-line with ellipsis
+  // ========================================================================
+
+  &__cell--normal {
+    .body-cell {
+      display: flex;
+      align-items: center;
+      gap: $checkbox-gap;
+
+      > span {
+        display: block;
+        width: 100%;
+        height: $image-size;
+        line-height: $image-size;
+        font-size: map-deep-get($text-m, medium, font-size);
+        font-weight: map-deep-get($text-m, medium, font-weight);
+        letter-spacing: map-deep-get($text-m, medium, letter-spacing);
+
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      // Color modifiers — auto-generated from config map
+      @each $modifier, $color in $color-modifiers {
+        &--#{$modifier} > span {
+          color: $color;
+        }
+      }
+    }
+  }
+
+  // ========================================================================
+  // CELL TYPE: BADGE
+  //
+  // Rendered by:  BadgeCellRenderer
+  // HTML tag:     <td>
+  // Content:      badge/tag component
+  // ========================================================================
+
+  &__cell--badge {
+    .body-cell-badge {
+      display: flex;
+      align-items: center;
+      height: $image-size;
+    }
+
+    .badge {
+      white-space: nowrap;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+
+  // ========================================================================
+  // CELL TYPE: ACTION
+  //
+  // Rendered by:  ActionCellRenderer
+  // HTML tag:     <td>
+  // Content:      icon button forms (view, edit, delete)
+  // ========================================================================
+
+  &__cell--action {
+    .body-cell-action {
+      display: inline-flex;
+      align-items: center;
+      gap: $checkbox-gap;
+
+      &__form {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+    }
+
+    .action-btn {
+      @include icon-with-badge($with-badge: false, $icon-size: 2rem, $padding: 0);
+      cursor: pointer;
+      transition: opacity 0.2s ease;
+
+      &:hover {
+        opacity: 0.7;
+      }
+
+      &:focus-visible {
+        outline: 2px solid $accent-color;
+        outline-offset: 2px;
+        border-radius: 2px;
+      }
+    }
+  }
+}

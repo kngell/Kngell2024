@@ -118,13 +118,13 @@ class CategoryPriceRangeSection extends BaseRegularSection
                     ->class('card-action__add-btn')
                     ->attribute('data-add-bracket', 'true')
                     ->add(
-                        $this->iconBuilder->createIcon($form, 'icon-plus', 'Add Range', ['add-range']),
+                        $this->iconBuilder->createIcon('icon-plus', 'Add Range', ['add-range']),
                     ),
                 $form->button('button')
                     ->class('card-action__remove-btn')
                     ->attribute('data-remove-card', 'true')
                     ->add(
-                        $this->iconBuilder->createIcon($form, 'icon-minus', 'Remove Range', ['remove-range']),
+                        $this->iconBuilder->createIcon('icon-minus', 'Remove Range', ['remove-range']),
                     ),
             ),
         );

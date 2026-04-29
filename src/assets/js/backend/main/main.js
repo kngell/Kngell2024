@@ -1,5 +1,4 @@
 import DashboardManager from "js/backend/shared/DashboardManager";
-import ProductListCheckboxManager from "js/backend/shared/ProducListCheckboxManager";
 import BrowserLogger from "js/core/utils/BrowserLogger";
 
 const logger = new BrowserLogger("Main");
@@ -9,8 +8,7 @@ class Main {
     logger.debug("🔄 Main constructor called");
     this._mainInitialized = false;
     this._components = {
-      dashboardManager: null,
-      productListManager: null,
+      dashboardManager: null
     };
     this._init();
   }
@@ -34,28 +32,13 @@ class Main {
 
   async _initializeCoreComponents() {
     logger.debug("Initializing core components");
+
     try {
       this._components.dashboardManager = await DashboardManager.create({ debug: true });
       logger.debug("DashboardManager initialized");
     } catch (error) {
       logger.error("Failed to initialize DashboardManager", error);
     }
-
-    if (this._isProductListPage()) {
-      try {
-        this._components.productListManager = new ProductListCheckboxManager();
-        logger.debug("ProductListCheckboxManager initialized");
-      } catch (error) {
-        logger.error("Failed to initialize ProductListCheckboxManager", error);
-      }
-    }
-  }
-
-  _isProductListPage() {
-    return (
-      window.location.pathname.includes("/admin/product-list") ||
-      document.querySelector('[data-product-list="true"]')
-    );
   }
 }
 
@@ -80,13 +63,13 @@ if (process.env.NODE_ENV === "development") {
   window.MainApp = {
     getInstance: () => mainInstance,
     getState: () => ({
-      mainInitialized: mainInstance?._mainInitialized,
+      mainInitialized: mainInstance?._mainInitialized
     }),
     refreshDashboard: async () => {
       if (mainInstance?._components?.dashboardManager) {
         return mainInstance._components.dashboardManager.refreshRoutePatterns();
       }
       throw new Error("DashboardManager not available");
-    },
+    }
   };
 }

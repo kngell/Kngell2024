@@ -1,4 +1,3 @@
-// js/core/notifications/NotificationManager.js
 import BrowserLogger from "js/core/utils/BrowserLogger";
 import NotificationHelper from "js/core/helpers/NotificationHelper";
 

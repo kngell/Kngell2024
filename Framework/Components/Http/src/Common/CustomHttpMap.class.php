@@ -4,7 +4,7 @@ declare(strict_types=1);
 class CustomHttpMap extends Map
 {
     #[Override]
-    public function get(string|int|null $key = null): mixed
+    public function get(string|int|null $key = null, mixed $default = null): mixed
     {
         if (null != $key) {
             if (isset($this->getAll()[strtoupper($key)])) {
@@ -13,7 +13,7 @@ class CustomHttpMap extends Map
             if (isset($this->getAll()[strtolower($key)])) {
                 return $this->getAll()[strtolower($key)];
             }
-            return null; // Change this from false to null
+            return $default; // Return the default value, not null
         }
 
         $data = $this->getAll() ?? [];

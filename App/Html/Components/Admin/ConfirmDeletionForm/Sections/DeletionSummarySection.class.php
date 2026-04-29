@@ -11,70 +11,41 @@ final class DeletionSummarySection extends AbstractBaseHtmlSection
 
     public function getConfig(array $formValues = []): AbstractHtmlComponent
     {
-        $form = $this->htmlBuilder;
-        $name = $formValues['product_name'] ?? null;
-        $props = $this->otherProperties($formValues);
-        return $form->tag('div')->class('product-summary')->add(
-            $form->tag('h4')->class('title')->content('Product Summary'),
-            $form->tag('div')->class('details')->add(
-                $this->productThumbnail($formValues),
-                $form->tag('div')->class('details__text')->add(
-                    $form->tag('span')->class('product-name')->content($name),
-                    $props !== null ? $form->tag('span')->class('other-properties')->content(implode(', ', $props)) : null,
+        $html = $this->htmlBuilder;
+        $summary = $formValues['entity_summary'] ?? [];
+
+        $name = $summary['name'] ?? 'Unknown Entity';
+
+        $props = $this->extractOtherProperties($summary);
+
+        return $html->tag('div')->class('entity-summary')->add(
+            $html->tag('h4')->class('title')->content($formValues['label'] . ' Summary'),
+            $html->tag('div')->class('details')->add(
+                $this->imageThumbnail($summary),
+                $html->tag('div')->class('details__text')->add(
+                    $html->tag('span')->class('entity-name')->content($name),
+                    !empty($props) ? $html->tag('span')->class('other-properties')->content(implode(', ', $props)) : null,
                 ),
             ),
         );
     }
 
-    private function otherProperties(array $formValues): array
-    {
-        $sku = '';
-        $stock = '';
-        if (isset($formValues['product_name'])) {
-            unset($formValues['product_name']);
-        }
-        if (isset($formValues['image'])) {
-            unset($formValues['image']);
-        }
-        if (isset($formValues['sku'])) {
-            $sku = $formValues['sku'];
-        }
-        if (isset($formValues['stockQuantity'])) {
-            $stock = $formValues['stockQuantity'] . ' units';
-        }
-        return [$sku, $stock];
-    }
-
-    private function productThumbnail(array $formValues = []): AbstractHtmlComponent
+    private function imageThumbnail(array $summary): AbstractHtmlComponent
     {
         $html = $this->htmlBuilder;
-
-        return $html->tag('div')->class('details__image-container')->add(
-            $this->productImage($formValues),
-        );
+        $image = $summary['image'] ?? null;
+        return parent::thumbnail($image);
     }
 
-    private function productImage(array $formValues = []): AbstractHtmlComponent
+    private function extractOtherProperties(array $summary): array
     {
-        $html = $this->htmlBuilder;
-        $mainImage = $formValues['image'] ?? null;
-        $imageContainer = $html->tag('div')->class('image-container');
-
-        if ($mainImage !== null) {
-            return $imageContainer->add(
-                $html->tag('img')
-                    ->src($mainImage)
-                    ->class('image')
-                    ->alt('Product Image'),
-            );
+        $props = [];
+        foreach ($summary as $key => $value) {
+            if (in_array($key, ['name', 'image'])) {
+                continue;
+            }
+            $props[] = (string) $value;
         }
-        return $imageContainer->add(
-            $this->iconBuilder->createIcon(
-                $html,
-                'icon-media-image',
-                'Product thumbnail',
-                ['image'],
-            ),
-        );
+        return $props;
     }
 }

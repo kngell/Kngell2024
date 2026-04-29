@@ -32,11 +32,15 @@
 
       .input-wrapper,
       .textarea-wrapper {
+        display: flex;
+        flex-direction: column;
         padding: 2.4rem;
-        flex: 1; // Keeps the width at 60rem even if container is tight
+        flex: 1;
+        gap: 2.4rem;
       }
     }
   }
 }
-
-@include input-field((textarea, select, custom-select, radio, checkbox, toggle));
+.input-wrapper {
+  @include input-field((textarea, select, custom-select, radio, checkbox, toggle));
+}

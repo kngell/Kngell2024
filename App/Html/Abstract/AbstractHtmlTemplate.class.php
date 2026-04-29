@@ -60,7 +60,7 @@ abstract readonly class AbstractHtmlTemplate
         return $this->builder->tag('div')
             ->class('icon-text')
             ->add(
-                $this->iconBuilder->createIcon($form, $icon, $label),
+                $this->iconBuilder->createIcon($icon, $label),
                 $this->builder->tag('span')->content($label),
             )
             ->generate();

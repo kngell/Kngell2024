@@ -607,3 +607,16 @@
 
        <input type="hidden" name="product_id" class="input-field__hidden-value" value="1">
    </div>
+
+   <div class="input-field">
+       <label class="input-field__checkbox input-field__checkbox--single">
+           <input type="checkbox" name="newsletter" class="input-field__checkbox-input">
+           <span class="input-field__checkbox-custom"></span>
+           <span class="input-field__checkbox-label">Subscribe to newsletter</span>
+       </label>
+
+       <div class="input-field__footer">
+           <span class="input-field__helper">Receive updates and offers</span>
+           <span class="input-field__error"></span>
+       </div>
+   </div>

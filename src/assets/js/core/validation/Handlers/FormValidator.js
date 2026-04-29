@@ -1,6 +1,7 @@
 import BrowserLogger from "js/core/utils/logger";
 import Validator from "js/core/validation/Validator";
 import RealTimeValidator from "./RealTimeValidator";
+import { EmptyBlock, FileDialogListItemButtonView } from "ckeditor5";
 
 const logger = new BrowserLogger("FormValidator");
 
@@ -71,9 +72,27 @@ export default class FormValidator {
       this.form.removeEventListener("submit", this.boundHandleSubmit);
     }
 
-    this.boundHandleSubmit = (e) => this.handleSubmit(e);
+    this.boundHandleSubmit = (e) => {
+      // MUST be synchronous to prevent page reload
+      e.preventDefault();
+      e.stopPropagation();
 
-    // Store original submit handler
+      // Now handle async safely
+      this.handleSubmit(e).catch((error) => {
+        if (error.message === "Form validation failed") {
+          logger.debug("Validation failed - errors already displayed to user");
+        } else {
+          logger.error("Form submission error:", error);
+          this.form.dispatchEvent(
+            new CustomEvent("form:ajax-error", {
+              detail: { result: null, context: { form: this.form }, error },
+              bubbles: true
+            })
+          );
+        }
+      });
+    };
+
     if (this.form.onsubmit) {
       this.originalFormSubmit = this.form.onsubmit;
     }
@@ -83,9 +102,6 @@ export default class FormValidator {
   }
 
   async handleSubmit(event) {
-    event.preventDefault();
-    event.stopPropagation();
-
     if (this.isSubmitting) {
       logger.warn("Form is already submitting");
       return;
@@ -93,7 +109,6 @@ export default class FormValidator {
 
     try {
       this.isSubmitting = true;
-      this.setSubmitButtonState(true);
       this.errorService.clearAllErrors(this.form);
 
       // Validate
@@ -103,26 +118,20 @@ export default class FormValidator {
       if (!this.validator.validateAll()) {
         const errors = this.validator.getErrors();
         this.displayErrors(errors);
-        return;
+        throw new Error("Form validation failed");
       }
 
       // Custom submit handler
       if (this.customSubmitHandler) {
-        await this.customSubmitHandler(this.form, this);
-        return;
+        return await this.customSubmitHandler(this.form, this);
       }
 
       // Handle submission based on mode
-      await this.handleSubmissionBasedOnMode();
-    } catch (error) {
-      logger.error("Form submission failed:", error);
-      // this.publishNotification(error.message || "Submission failed", "error");
+      return await this.handleSubmissionBasedOnMode();
     } finally {
       this.isSubmitting = false;
-      this.setSubmitButtonState(false);
     }
   }
-
   async handleSubmissionBasedOnMode() {
     switch (this.submissionMode) {
       case "direct":
@@ -214,6 +223,56 @@ export default class FormValidator {
       ...this.ajaxOptions
     });
   }
+  // processAjaxResult(result) {
+  //   if (typeof result === "string") {
+  //     try {
+  //       result = JSON.parse(result);
+  //     } catch (e) {
+  //       result = { success: false, error: "Invalid server response format." };
+  //     }
+  //   }
+
+  //   logger.debug("Processing Ajax result:", result);
+
+  //   const context = {
+  //     form: this.form,
+  //     result,
+  //     validator: this,
+  //     shouldRedirect: !!result.redirect,
+  //     redirectUrl: result.redirect || null,
+  //     redirectDelay: 1500
+  //   };
+
+  //   if (result.success === false) {
+  //     const errorMessage = result.error || result.message || "An unknown error occurred.";
+
+  //     // Dispatch event only - NO NOTIFICATION
+  //     this.form.dispatchEvent(
+  //       new CustomEvent("form:ajax-error", {
+  //         detail: { result, context, error: new Error(errorMessage) },
+  //         bubbles: true
+  //       })
+  //     );
+
+  //     throw new Error(errorMessage);
+  //   }
+
+  //   // Dispatch success event - NO NOTIFICATION
+  //   this.form.dispatchEvent(
+  //     new CustomEvent("form:ajax-success", {
+  //       detail: { result, context },
+  //       bubbles: true
+  //     })
+  //   );
+
+  //   if (context.shouldRedirect && context.redirectUrl) {
+  //     setTimeout(() => {
+  //       window.location.href = context.redirectUrl;
+  //     }, context.redirectDelay);
+  //   }
+
+  //   return result;
+  // }
   processAjaxResult(result) {
     if (typeof result === "string") {
       try {
@@ -237,7 +296,12 @@ export default class FormValidator {
     if (result.success === false) {
       const errorMessage = result.error || result.message || "An unknown error occurred.";
 
-      // Dispatch event only - NO NOTIFICATION
+      // Display field-level server errors on their respective inputs
+      if (result.errors && typeof result.errors === "object") {
+        this.displayServerValidationErrors(result.errors);
+      }
+
+      // Dispatch error event — FormHandler shows top-level notification
       this.form.dispatchEvent(
         new CustomEvent("form:ajax-error", {
           detail: { result, context, error: new Error(errorMessage) },
@@ -248,7 +312,7 @@ export default class FormValidator {
       throw new Error(errorMessage);
     }
 
-    // Dispatch success event - NO NOTIFICATION
+    // Dispatch success event
     this.form.dispatchEvent(
       new CustomEvent("form:ajax-success", {
         detail: { result, context },
@@ -264,71 +328,57 @@ export default class FormValidator {
 
     return result;
   }
-  // processAjaxResult(result) {
-  //   logger.debug("Processing Ajax result:", result);
 
-  //   // Create context object for processors
-  //   const context = {
-  //     form: this.form,
-  //     result,
-  //     validator: this,
-  //     shouldRedirect: true,
-  //     shouldReload: false,
-  //     redirectUrl: null,
-  //     redirectDelay: 1500,
-  //     preventDefault: false,
-  //     metadata: {}
-  //   };
+  /**
+   * Display server-side validation errors on form fields.
+   * Uses the same ErrorDisplayService as client-side validation
+   * for consistent error presentation.
+   *
+   * Server format: { "fieldName": ["<small class='...'>Message</small>"] }
+   */
+  displayServerValidationErrors(errors) {
+    this.errorService.clearAllErrors(this.form);
 
-  //   // Run through all registered processors
-  //   for (const processor of this.responseProcessors) {
-  //     if (typeof processor === "function") {
-  //       processor(context);
-  //     } else if (processor && typeof processor.process === "function") {
-  //       processor.process(context);
-  //     }
+    Object.entries(errors).forEach(([fieldName, errorData]) => {
+      if (!Array.isArray(errorData) || errorData.length === 0) {
+        return;
+      }
 
-  //     // Stop processing if prevented
-  //     if (context.preventDefault) {
-  //       break;
-  //     }
-  //   }
+      const htmlString = errorData[0];
+      if (typeof htmlString !== "string") {
+        return;
+      }
 
-  //   // Handle server validation errors
-  //   if (result.errors) {
-  //     this.displayServerErrors(result.errors);
-  //   }
+      // Extract plain text from server HTML
+      const message = this.extractTextFromHtml(htmlString);
+      if (!message) {
+        return;
+      }
 
-  //   // Dispatch appropriate event
-  //   const eventType = this.getEventType(result, context);
-  //   const event = new CustomEvent(eventType, {
-  //     detail: {
-  //       result,
-  //       context,
-  //       error: result.success === false ? new Error(result.message) : null
-  //     },
-  //     bubbles: true
-  //   });
-  //   this.form.dispatchEvent(event);
+      const field = this.findField(fieldName);
 
-  //   // Handle redirect if not prevented
-  //   if (context.shouldRedirect && context.redirectUrl) {
-  //     setTimeout(() => {
-  //       if (context.redirectUrl === window.location.href || context.shouldReload) {
-  //         window.location.reload();
-  //       } else {
-  //         window.location.href = context.redirectUrl;
-  //       }
-  //     }, context.redirectDelay);
-  //   }
+      if (field) {
+        // Reuse the same errorService that RealTimeValidator uses
+        this.errorService.displayError(field, {
+          message,
+          classes: ["input-box__hint-text", "invalid-feedback"]
+        });
+      } else {
+        logger.warn(`Server error — field not found: "${fieldName}"`, message);
+      }
+    });
 
-  //   // Throw error if needed
-  //   // if (result.success === false && !this.isInfoOrWarning(result)) {
-  //   //   throw new Error(result.message || "Operation failed");
-  //   // }
+    this.errorService.scrollToFirstError(this.form);
+  }
 
-  //   return result;
-  // }
+  /**
+   * Extract plain text from server-rendered HTML error string.
+   */
+  extractTextFromHtml(html) {
+    const template = document.createElement("template");
+    template.innerHTML = html.trim();
+    return template.content.textContent?.trim() || "";
+  }
 
   getEventType(result, context) {
     if (result.success === false) {
@@ -344,21 +394,6 @@ export default class FormValidator {
     const type = result.type || "";
     return type === "info" || type === "warning";
   }
-
-  /**
-   * Publish notification through publisher if available
-   */
-  // publishNotification(message, type = "info", options = {}) {
-  //   if (this.notificationPublisher && typeof this.notificationPublisher.publish === "function") {
-  //     this.notificationPublisher.publish(message, type, options);
-  //   } else {
-  //     // Fallback to event dispatch
-  //     const event = new CustomEvent("app:notification", {
-  //       detail: { message, type, ...options }
-  //     });
-  //     document.dispatchEvent(event);
-  //   }
-  // }
 
   // ============ VALIDATION METHODS ============
 

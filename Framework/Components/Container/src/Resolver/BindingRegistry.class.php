@@ -47,15 +47,40 @@ class BindingRegistry
         return $binding;
     }
 
+    public function isBoundAsValue(string $abstract): bool
+    {
+        $binding = $this->get($abstract);
+        if ($binding === null) {
+            return false;
+        }
+
+        $concrete = $binding->getConcrete();
+
+        // Non-string concrete is always a value (object, array, int, etc.)
+        if (!is_string($concrete)) {
+            return true;
+        }
+
+        // If concrete equals abstract and has parameters, it's a param binding
+        if ($concrete === $abstract && !empty($binding->parameters)) {
+            return true;
+        }
+
+        // String that isn't a class or interface = scalar value binding
+        return !class_exists($concrete) && !interface_exists($concrete)
+            && !empty($binding->parameters);
+    }
+
     /**
-     * Register an existing object instance as a binding.
-     * This is a special case for the instance() method.
+     * Get all registered abstract names (for error message suggestions).
      */
+    public function getAllAbstracts(): array
+    {
+        return array_keys($this->bindings);
+    }
+
     public function registerInstance(string $abstract, object $instance, bool $shared = true): void
     {
-        // For object instances, we store the object directly as concrete
-        // but we don't type-hint it in the BindingDefinition constructor
-        // Instead, we create a binding with the object as concrete value
         $binding = new BindingDefinition(
             abstract: $abstract,
             concrete: $instance,

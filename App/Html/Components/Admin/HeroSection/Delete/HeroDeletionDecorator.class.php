@@ -9,8 +9,10 @@ class HeroDeletionDecorator extends AbstractHtmlDecorator
     public function __construct(
         Controller $controller,
         private string $action,
-        private array|Entity $formValues = [],
-        private ?HtmlTemplatePathManager $templateManager = null,
+        private array|Entity $formValues,
+        private ?HtmlTemplatePathManager $templateManager,
+        private readonly IconBuilder $iconBuilder,
+        private bool $isVisible = false,
     ) {
         parent::__construct($controller);
     }
@@ -18,9 +20,14 @@ class HeroDeletionDecorator extends AbstractHtmlDecorator
     public function page(): array
     {
         $target = $this->getTarget();
+
         $deletionModalHtml = $this->templateManager->getTemplate(self::TEMPLATE_NAME);
+
         $form = $target->form($this->action, $this->formValues);
-        [$iconWarning, $iconCancel, $iconDelete,$iconClose] = $this->icons($target);
+        [$iconWarning, $iconCancel, $iconDelete,$iconClose] = $this->icons();
+
+        $deletionModalHtml = str_replace('{{visible}}', $this->isVisible ? 'active' : '', $deletionModalHtml);
+
         $deletionModalHtml = str_replace('{{icon-warning}}', $iconWarning, $deletionModalHtml);
         $deletionModalHtml = str_replace('{{icon-cancel}}', $iconCancel, $deletionModalHtml);
         $deletionModalHtml = str_replace('{{icon-delete}}', $iconDelete, $deletionModalHtml);
@@ -43,13 +50,13 @@ class HeroDeletionDecorator extends AbstractHtmlDecorator
         )->generate();
     }
 
-    private function icons(Controller $target): array
+    private function icons(): array
     {
-        $iconBuilder = new IconBuilder();
-        $iconWarning = $iconBuilder->createIcon($target->builder, 'icon-warning', 'Warning', ['warning']);
-        $iconCancel = $iconBuilder->createIcon($target->builder, 'icon-cancel', 'Cancel', ['cancel']);
-        $iconDelete = $iconBuilder->createIcon($target->builder, 'icon-trash', 'Delete', ['delete']);
-        $iconClose = $iconBuilder->createIcon($target->builder, 'icon-close', 'Close Modal', ['close']);
+        $iconBuilder = $this->iconBuilder;
+        $iconWarning = $iconBuilder->createIcon('icon-warning', 'Warning', ['warning']);
+        $iconCancel = $iconBuilder->createIcon('icon-cancel', 'Cancel', ['cancel']);
+        $iconDelete = $iconBuilder->createIcon('icon-trash', 'Delete', ['delete']);
+        $iconClose = $iconBuilder->createIcon('icon-close', 'Close Modal', ['close']);
         return [$iconWarning->generate(), $iconCancel->generate(), $iconDelete->generate(), $iconClose->generate()];
     }
 }

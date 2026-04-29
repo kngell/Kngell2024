@@ -44,7 +44,6 @@ class ModernDropzoneHandler extends AbstractDropzoneHandler
         $dropzone->add(
             $form->tag('div')->class($baseClass . '__icon')->add(
                 $this->iconBuilder->createIcon(
-                    $form,
                     $field['icon'] ?? 'icon-upload',
                     $field['icon-aria'] ?? 'Upload',
                 ),

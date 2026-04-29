@@ -7,6 +7,7 @@ class SectionRenderer
     private ?FieldRenderer $fieldRenderer = null;
     private ?FieldGroupRenderer $fieldGroupRenderer = null;
     private ?DropzoneRenderer $dropzoneRenderer = null;
+    private ?TableRenderer $tableRenderer = null;
     private int $globalFieldIndex = 0;
 
     public function fieldRenderer(FieldRenderer $fieldRenderer): self
@@ -27,6 +28,12 @@ class SectionRenderer
         return $this;
     }
 
+    public function tableRenderer(?TableRenderer $tableRenderer = null): self
+    {
+        $this->tableRenderer = $tableRenderer;
+        return $this;
+    }
+
     public function render(
         string $sectionKey,
         HtmlBuilder $form,
@@ -39,13 +46,19 @@ class SectionRenderer
         }
 
         $sectionContent = $sectionsConfig[$sectionKey];
+
         if ($sectionContent instanceof AbstractHtmlComponent) {
             return $sectionContent;
         }
 
-        $fields = $this->renderSectionContent($sectionContent, $form, $formInstance);
-
         $section = $sectionManager?->getSection($sectionKey);
+
+        if ($section instanceof TableSectionInterface) {
+            return $this->renderTableSection($section, $sectionContent);
+        }
+
+        // Regular form section rendering...
+        $fields = $this->renderFormContent($sectionContent, $form, $formInstance);
 
         if ($section instanceof HtmlSectionInterface) {
             $customLayout = $section->getSectionLayout($fields, $sectionKey, $form);
@@ -62,8 +75,33 @@ class SectionRenderer
         $this->globalFieldIndex = 0;
     }
 
-    private function renderSectionContent(array $sectionContent, HtmlBuilder $builder, AbstractForm $formInstance): array
-    {
+    /**
+     * Delegate to the TableRenderer — single line, clean separation.
+     */
+    private function renderTableSection(
+        TableSectionInterface $section,
+        mixed $config,
+    ): AbstractHtmlComponent {
+        if ($this->tableRenderer === null) {
+            throw new LogicException(
+                'TableRenderer not configured. Call tableRenderer() first.',
+            );
+        }
+
+        return $this->tableRenderer->render(
+            $section,
+            $config,
+        );
+    }
+
+    /**
+     * Render regular form fields (unchanged).
+     */
+    private function renderFormContent(
+        array $sectionContent,
+        HtmlBuilder $builder,
+        AbstractHtml $formInstance,
+    ): array {
         $elements = [];
         $groupIndex = 0;
         $form = $builder->form();
@@ -72,17 +110,25 @@ class SectionRenderer
             if (!isset($item['type'])) {
                 continue;
             }
+
             $item['_globalIndex'] = $this->globalFieldIndex++;
 
             if ($item['type'] === 'field-group') {
-                // Process field group with indexing
                 $processedGroup = $this->processFieldGroupWithIndexing($item, $groupIndex);
-                $elements[] = $this->fieldGroupRenderer->renderFieldGroup($processedGroup, $form, $formInstance);
+                $elements[] = $this->fieldGroupRenderer->renderFieldGroup(
+                    $processedGroup,
+                    $form,
+                    $formInstance,
+                );
                 $groupIndex++;
             } elseif ($item['type'] === 'dropzone' && $this->dropzoneRenderer) {
-                $elements[] = $this->dropzoneRenderer->render($item, $form, $formInstance, $item['_globalIndex']);
+                $elements[] = $this->dropzoneRenderer->render(
+                    $item,
+                    $form,
+                    $formInstance,
+                    $item['_globalIndex'],
+                );
             } else {
-                // Regular field - go through FieldRenderer
                 $elements[] = $this->fieldRenderer->render($item, $form, $formInstance);
             }
         }

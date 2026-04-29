@@ -70,10 +70,13 @@ final class ProductForm extends AbstractForm
         $completion = $this->progressCalculator->calculateCompletion($this->formValues);
         $footer = new FooterProvider(
             builder:$this->builder,
-            iconBuilder:$this->iconBuilder,
-            formId:$this->getFormId(),
-            renderProgressBar:true,
-            completionPercentage: $completion,
+            buttonBuilder:$this->buttonBuilder,
+            dto:FooterDTO::forInlineForm(
+                formId:$this->getFormId(),
+                renderProgressBar:true,
+                completionPercentage: $completion,
+                footerClass:['product__footer'],
+            ),
         );
         $footerHtml = $footer->renderFooter();
 
@@ -98,12 +101,7 @@ final class ProductForm extends AbstractForm
             );
     }
 
-    /**
-     * @param HtmlBuilder $form
-     *
-     * @return AbstractHtmlComponent[]
-     */
-    public function buildLayout(HtmlBuilder $form): array
+    public function buildLayout(?HtmlBuilder $form = null): array
     {
         $sectionsConfig = $this->getFormSections();
         $leftSections = [];
@@ -128,8 +126,8 @@ final class ProductForm extends AbstractForm
     {
         return [
             new InputBoxHandler(),
-            new TextareaFieldHandler(),
-            new SelectHandler(),
+            new TextareaBoxHandler(),
+            new NativeSelectBoxHandler(),
             new DropzoneFieldHandler($this->metadataService, $this->iconBuilder),
             new CurrencyFieldHandler(),
             new FieldGroupFieldHandler($this->fieldGroupRenderer),
@@ -200,7 +198,7 @@ final class ProductForm extends AbstractForm
                 $form->tag('span')
                     ->class('btn__icon')
                     ->add(
-                        $this->createIcon($form, 'icon-cancel', "Remove $tagName"),
+                        $this->createIcon('icon-cancel', "Remove $tagName"),
                     ),
                 $form->tag('span')
                     ->class('btn__label')

@@ -30,9 +30,6 @@ class FileSearchManager implements FileSearchInterface
         return $matches[0];
     }
 
-    /**
-     * Find view file - specialized version for view resolution.
-     */
     public function findViewFile(string $viewsDirectory, string $viewPath): FileInformation
     {
         if (!is_dir($viewsDirectory)) {
@@ -52,9 +49,6 @@ class FileSearchManager implements FileSearchInterface
         return $file;
     }
 
-    /**
-     * Find files by pattern (original functionality).
-     */
     public function findFilesByPattern(string $directory, string $pattern): array
     {
         if (!is_dir($directory)) {
@@ -105,9 +99,6 @@ class FileSearchManager implements FileSearchInterface
         return $files;
     }
 
-    /**
-     * Get all available files (for debugging/listing).
-     */
     public function getAllFiles(string $directory, ?string $extension = null): array
     {
         if (!is_dir($directory)) {
@@ -132,9 +123,6 @@ class FileSearchManager implements FileSearchInterface
         return $files;
     }
 
-    /**
-     * Get all available views (specialized version).
-     */
     public function getAllAvailableViews(string $viewsDirectory): array
     {
         $allFiles = $this->getAllFiles($viewsDirectory, 'php');
@@ -150,9 +138,6 @@ class FileSearchManager implements FileSearchInterface
         return $views;
     }
 
-    /**
-     * Find multiple files with filtering options.
-     */
     private function findFiles(
         string $directory,
         string $filename,
@@ -193,9 +178,6 @@ class FileSearchManager implements FileSearchInterface
         return $matches;
     }
 
-    /**
-     * Parse view path for view resolution.
-     */
     private function parseViewPath(string $viewPath): array
     {
         // Remove any null bytes (security)

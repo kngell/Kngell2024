@@ -8,7 +8,7 @@ class HeroSectionFormDecorator extends AbstractFormDecorator
         [
             'type' => 'submit',
             'label' => 'Delete',
-            'action' => 'hero-section-delete/confirm',
+            'action' => '/hero-section-delete/confirm',
             'formName' => 'hero_delete_form',
             'requiresEditMode' => true,
             'requiresEntityId' => true,
@@ -23,7 +23,7 @@ class HeroSectionFormDecorator extends AbstractFormDecorator
         [
             'type' => 'submit',
             'label' => 'Add New',
-            'action' => 'hero-page/add',
+            'action' => '/hero-page/add',
             'formName' => 'hero_add_form',
             'requiresEditMode' => false,
             'requiresEntityId' => false,

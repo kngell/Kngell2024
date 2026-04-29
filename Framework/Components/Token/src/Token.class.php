@@ -12,16 +12,16 @@ class Token implements TokenInterface
     private const int DEFAULT_CSRF_LENGTH = 32;
     private const int DEFAULT_AUTH_EXPIRY = 3600; // 1 hour
 
-    private string $token;
-    private string $tokenHash;
+    private ?string $token;
 
     public function __construct(string|null $token = null)
     {
-        if ($token === null) {
-            $this->token = $this->generate(self::DEFAULT_CSRF_LENGTH);
-        } else {
-            $this->token = $token;
-        }
+        $this->token = $token;
+        // if ($token === null) {
+        //     $this->token = $this->generate(self::DEFAULT_CSRF_LENGTH);
+        // } else {
+        //     $this->token = $token;
+        // }
     }
 
     public function getCsrfHash(
@@ -32,10 +32,11 @@ class Token implements TokenInterface
         $time = time();
         $separator = !empty($frm) ? $frm : self::SEPARATOR;
 
+        $this->token = $this->generate($length, $alphabet);
         // Re-generate token if length doesn't match
-        if (strlen($this->token) !== $length) {
-            $this->token = $this->generate($length, $alphabet);
-        }
+        // if (is_null($this->token) || strlen($this->token) !== $length) {
+        //     $this->token = $this->generate($length, $alphabet);
+        // }
 
         $hash = hash_hmac('sha256', session_id() . $this->token . $time . $frm, CSRF_TOKEN_SECRET, true);
         return $this->urlSafeEncode($hash . $separator . $this->token . $separator . $time);

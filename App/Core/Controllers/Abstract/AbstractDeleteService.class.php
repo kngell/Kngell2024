@@ -5,7 +5,7 @@ declare(strict_types=1);
 abstract class AbstractDeleteService
 {
     public function delete(
-        string $id,
+        array $id,
         string $deleteOption = 'archive',
         ?EventManagerInterface $eventManager = null,
     ): DeleteResult {
@@ -48,7 +48,7 @@ abstract class AbstractDeleteService
 
     // --- Abstract contracts ---
 
-    abstract protected function findRecord(string $id): ?object;
+    abstract protected function findRecord(array $id): ?object;
 
     abstract protected function getLabel(): string;
 
@@ -59,9 +59,9 @@ abstract class AbstractDeleteService
     abstract protected function resolveDisplayName(object $record): string;
 
     abstract protected function performDelete(
-        string $id,
+        array $id,
         string $deleteOption,
-    ): mixed;
+    ): QueryResult;
 
     abstract protected function getEntityManager(): mixed;
 
@@ -74,7 +74,7 @@ abstract class AbstractDeleteService
     // --- Private execution ---
 
     private function executeDelete(
-        string $id,
+        array $id,
         string $deleteOption,
         object $record,
         array $eventData,
@@ -126,6 +126,7 @@ abstract class AbstractDeleteService
                     $record,
                     $eventManager,
                     $deleteOption,
+                    $modelResult->getSqlOperation()->value,
                 );
             }
 
@@ -159,11 +160,12 @@ abstract class AbstractDeleteService
     }
 
     private function dispatchDeletionEvent(
-        string $id,
+        array $id,
         array $eventData,
         object $record,
         EventManagerInterface $eventManager,
         string $deleteOption,
+        string $operationType,
     ): void {
         $deletionType = ($deleteOption === 'permanent')
             ? 'permanent'
@@ -179,6 +181,7 @@ abstract class AbstractDeleteService
                 'record' => $record,
                 'deletion_type' => $deletionType,
                 'deletion_option' => $deleteOption,
+                'operation' => $operationType,
                 'timestamp' => time(),
             ]),
             null,

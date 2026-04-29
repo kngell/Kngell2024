@@ -16,6 +16,15 @@ class HeroModel extends AbstractSaveModel
         return $this->one(['hero_id' => $heroId])?->asClass();
     }
 
+    public function deleteHeroWithOptions(array $id, string $deleteOption)
+    {
+        $params = [
+            'conditions' => [$id['key'] => $id['value']],
+            'deleteOption' => $deleteOption,
+        ];
+        return parent::delete($params);
+    }
+
     public function getImagesPath(): array
     {
         $params['columns'] = ['image_url'];

@@ -2,33 +2,26 @@
 
 declare(strict_types=1);
 
+use Psr\Log\LoggerInterface;
+
 abstract class AbstractImageCacheCleanupListener implements EventListenerInterface
 {
     public function __construct(
         protected ImageCacheFactory $imageCacheFactory,
+        protected ?LoggerInterface $logger = null,
     ) {
     }
 
     public function handle(EventInterface $event): ?object
     {
         $payload = $event->getParams();
-        $operation = $payload['operation'] ?? null;
+        $operation = $this->resolveOperation($payload);
 
-        // Handle different operations
-        switch ($operation) {
-            case 'insert':
-                $this->handleInsert($payload);
-                break;
-            case 'update':
-                $this->handleUpdate($payload);
-                break;
-            case 'delete':
-                $this->handleDelete($payload);
-                break;
-            default:
-                // Fallback to update logic for backward compatibility
-                $this->handleUpdate($payload);
-        }
+        match ($operation) {
+            'INSERT' => $this->handleInsert($payload),
+            'UPDATE' => $this->handleUpdate($payload),
+            'DELETE' => $this->handleDelete($payload),
+        };
 
         return null;
     }
@@ -42,8 +35,9 @@ abstract class AbstractImageCacheCleanupListener implements EventListenerInterfa
             return;
         }
 
-        // On insert, invalidate page cache to show the new entity
-        $this->cleanupPageCache($pageTarget);
+        $cacheManager = $this->getCacheManager();
+        $serviceClass = $this->getServiceClass();
+        $cacheManager->invalidateAllPages($serviceClass);
 
         $this->logInsertCleanup($entityId, $pageTarget);
     }
@@ -72,7 +66,7 @@ abstract class AbstractImageCacheCleanupListener implements EventListenerInterfa
 
     protected function handleDelete(array $payload): void
     {
-        $oldEntity = $this->getOldEntity($payload);
+        $oldEntity = $payload['record'];
         $pageTarget = $this->getPageTarget($payload);
 
         if (!$oldEntity) {
@@ -89,7 +83,7 @@ abstract class AbstractImageCacheCleanupListener implements EventListenerInterfa
         }
 
         // Clean up entity and page cache
-        $this->cleanupEntityAndPageCache($oldEntity, $pageTarget);
+        $this->cleanupAllCache($oldEntity);
 
         $this->logDeleteCleanup($entityId, $pageTarget);
     }
@@ -99,14 +93,17 @@ abstract class AbstractImageCacheCleanupListener implements EventListenerInterfa
         $cacheManager = $this->getCacheManager();
         $serviceClass = $this->getServiceClass();
 
-        // Invalidate specific entity
-        $cacheManager->invalidateEntity($entity, $serviceClass);
-
-        // Invalidate the page where this entity appears
+        $cacheManager->invalidateEntity($entity);
         $cacheManager->invalidatePage($pageTarget, $serviceClass);
+    }
 
-        // Clear the entire section cache for this entity type
-        $cacheManager->clearSection($serviceClass);
+    protected function cleanupAllCache(object $entity): void
+    {
+        $cacheManager = $this->getCacheManager();
+        $serviceClass = $this->getServiceClass();
+
+        $cacheManager->invalidateEntity($entity);
+        $cacheManager->invalidateAllPages($serviceClass);
     }
 
     protected function cleanupPageCache(string $pageTarget): void
@@ -116,46 +113,42 @@ abstract class AbstractImageCacheCleanupListener implements EventListenerInterfa
 
         // Just invalidate the page without entity-specific cleanup
         $cacheManager->invalidatePage($pageTarget, $serviceClass);
-        $cacheManager->clearSection($serviceClass);
+        $cacheManager->invalidateAllPages($serviceClass);
     }
 
     protected function cleanupImageCache(string $oldImageUrl, int $entityId, string $pageTarget): void
     {
         $imageCache = $this->imageCacheFactory->create('images');
-
-        // This deletes all cached variants of the image
         $deletedCount = $imageCache->deleteImageCache($oldImageUrl);
+        // $imageCache->cleanupOrphanedTags(); // will go to Maintenance event
 
-        // Also cleanup orphaned tags to keep cache clean
-        $imageCache->cleanupOrphanedTags();
-
-        error_log(sprintf(
-            'Deleted %d cached variants for image: %s',
-            $deletedCount,
-            basename($oldImageUrl),
-        ));
+        $this->logger?->info('Image cache cleaned', [
+            'entity_type' => $this->getEntityType(),
+            'entity_id' => $entityId,
+            'image' => basename($oldImageUrl),
+            'page' => $pageTarget,
+            'variants_deleted' => $deletedCount,
+        ]);
 
         $this->logImageCleanup($entityId, basename($oldImageUrl), $pageTarget, $deletedCount);
     }
 
     protected function logInsertCleanup(int $entityId, string $pageTarget): void
     {
-        error_log(sprintf(
-            '%s created: ID %d, Page: %s, Cache cleaned: [page, section]',
-            $this->getEntityType(),
-            $entityId,
-            $pageTarget,
-        ));
+        $this->logger?->info('Entity created, cache cleaned', [
+            'entity_type' => $this->getEntityType(),
+            'entity_id' => $entityId,
+            'page' => $pageTarget,
+        ]);
     }
 
     protected function logDeleteCleanup(int $entityId, string $pageTarget): void
     {
-        error_log(sprintf(
-            '%s deleted: ID %d, Page: %s, Cache cleaned: [images, entity, page, section]',
-            $this->getEntityType(),
-            $entityId,
-            $pageTarget,
-        ));
+        $this->logger?->info('Entity deleted, cache cleaned', [
+            'entity_type' => $this->getEntityType(),
+            'entity_id' => $entityId,
+            'page' => $pageTarget,
+        ]);
     }
 
     protected function logImageCleanup(int $entityId, string $filename, string $pageTarget, int $deletedCount): void
@@ -181,9 +174,22 @@ abstract class AbstractImageCacheCleanupListener implements EventListenerInterfa
 
     abstract protected function getPageTarget(array $payload): string;
 
-    abstract protected function getCacheManager();
+    abstract protected function getCacheManager(): HtmlSectionCacheManager;
 
     abstract protected function getServiceClass(): string;
 
     abstract protected function getEntityType(): string;
+
+    private function resolveOperation(array $payload): string
+    {
+        $operation = $payload['operation'] ?? null;
+
+        if (!in_array($operation, ['INSERT', 'UPDATE', 'DELETE'], true)) {
+            throw new EventRuntimeException(
+                sprintf('Unsupported or missing operation: "%s"', (string) $operation),
+            );
+        }
+
+        return $operation;
+    }
 }

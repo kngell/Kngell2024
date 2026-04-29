@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 class AdminMainHeaderFactory
 {
-    public function __construct(private readonly IconBuilder $iconBuilder)
+    public function __construct(private readonly ButtonBuilder $buttonBuilder, private readonly IconBuilder $iconBuilder)
     {
     }
 
@@ -12,8 +12,16 @@ class AdminMainHeaderFactory
     {
         return new AdminMainHeader(
             $builder,
-            new ButtonBuilder($builder, $this->iconBuilder),
+            $this->buttonBuilder,
             new Breadcrumbs($builder),
+        );
+    }
+
+    public function createSubHeader(HtmlBuilder $builder): AdminSearchAndFilter
+    {
+        return new AdminSearchAndFilter(
+            $builder,
+            $this->iconBuilder,
         );
     }
 }

@@ -24,7 +24,7 @@ class IndexPage extends AbstractHtml
      *
      * @return AbstractHtmlComponent[]
      */
-    public function buildLayout(HtmlBuilder $html): array
+    public function buildLayout(?HtmlBuilder $html = null): array
     {
         $sections = $this->sectionManager->getSections();
         $allSections = [];

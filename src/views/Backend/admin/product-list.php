@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 $this->start('head'); ?>
 <!-------Costum-------->
-<?= $this->css('css/backend/admin/pages/product-list') ?>
+<?= $this->css('css/backend/admin/pages/list') ?>
 <?= $this->css('css/backend/admin/pages/confirm-deletion') ?>
 <?php $this->end(); ?>
 <?php $this->start('body'); ?>
@@ -9,72 +9,10 @@ $this->start('head'); ?>
     <!-- Content -->
 
     <div class="product-list__title">
-        <div class="title span-all">
-            <div class="title-left">
-                <h4 class="title-left__text">Product</h4>
-                <nav class="title-left__breadcrumbs">
-                    <ul class="breadcrumbs-list">
-                        <li class="breadcrumbs-list__item">
-                            <a href="#" class="breadcrumbs-list__item--link">Dashboard</a>
-                        </li>
-                        <li class="breadcrumbs-list__item">
-                            <a href="#" class="breadcrumbs-list__item--link active">Product List</a>
-                        </li>
-                    </ul>
-                </nav>
-            </div>
-            <div class="title-right">
-                <button class="btn btn--secondary btn--md-compact btn--icon-left">
-                    <span class="btn__icon">
-                        <svg class="icon export" aria-label="Export" role="img">
-                            <use href="<?= $this->asset('img/icons-sprite.svg') ?>#icon-export"></use>
-                        </svg>
-                    </span>
-                    <span class="btn__label">Export</span>
-                </button>
-                <button class="btn btn--primary btn--md-compact btn--icon-left">
-                    <span class="btn__icon">
-                        <svg class="icon plus" aria-label="Plus" role="img">
-                            <use href="<?= $this->asset('img/icons-sprite.svg') ?>#icon-plus"></use>
-                        </svg>
-                    </span>
-                    <span class="btn__label">Add Product</span>
-                </button>
-            </div>
-        </div>
+        <?= $adminMainHeader ?? '' ?>
     </div>
-    <div class="product-list__search-and-filter">
-        <form class="search-form">
-            <button type="submit" class="search-form__btn">
-                <svg class="icon search" aria-label="Search" role="img">
-                    <use href="<?= $this->asset('img/icons-sprite.svg') ?>#icon-search">
-                    </use>
-                </svg>
-            </button>
-            <input type="text" name="search" id="search-form--input-id" class="search-form__input"
-                placeholder="Search product. . .">
-        </form>
-        <div class="right">
-            <button class="right__date-picker">
-                <span class="icon-container">
-                    <svg class="icon calendar" aria-label="Calendar" role="img">
-                        <use href="<?= $this->asset('img/icons-sprite.svg') ?>#icon-calendar">
-                        </use>
-                    </svg>
-                </span>
-                <span class="icon-text">Select Dates</span>
-            </button>
-            <button class="right__filter">
-                <span class="icon-container">
-                    <svg class="icon slider" aria-label="Slider" role="img">
-                        <use href="<?= $this->asset('img/icons-sprite.svg') ?>#icon-slider">
-                        </use>
-                    </svg>
-                </span>
-                <span class="icon-text">Filters</span>
-            </button>
-        </div>
-    </div>
+    <?= $headerSearchAndFilter ?? '' ?>
+
     <div class="product-list__table-wrapper">
         <?= $productTable ?? '' ?>
         <?= $productTablePagination ?? '' ?>

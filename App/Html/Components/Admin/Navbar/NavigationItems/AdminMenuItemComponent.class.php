@@ -7,6 +7,7 @@ class AdminMenuItemComponent implements MenuItemComponentInterface
     public function __construct(
         private HtmlBuilder $builder,
         private IconBuilder $iconBuilder,
+        private NavigationConfigParser $configParser,
         private string $currentPath,
     ) {
         $this->currentPath = $this->normalizePath($currentPath);
@@ -24,7 +25,6 @@ class AdminMenuItemComponent implements MenuItemComponentInterface
             ->aria('current', $isActive ? 'page' : 'false')
             ->add(
                 $this->iconBuilder->createIcon(
-                    $this->builder,
                     $item->icon->name,
                     $item->icon->aria,
                     $item->icon->classes,
@@ -38,7 +38,7 @@ class AdminMenuItemComponent implements MenuItemComponentInterface
             ->add($link);
     }
 
-    public function getDropdownItem(NavigationItem $item): AbstractHtmlComponent
+    public function getDropdownItem(NavigationItem $item): array|AbstractHtmlComponent
     {
         $hasActiveChild = false;
         $activeDropdownItems = [];
@@ -50,14 +50,12 @@ class AdminMenuItemComponent implements MenuItemComponentInterface
             ->aria('controls', $this->generateDropdownId($item))
             ->add(
                 $this->iconBuilder->createIcon(
-                    $this->builder,
                     $item->iconLeft->name,
                     $item->iconLeft->aria,
                     $item->iconLeft->classes,
                 ),
                 $this->builder->tag('span')->content($item->name),
                 $this->iconBuilder->createIcon(
-                    $this->builder,
                     $item->iconRight->name,
                     $item->iconRight->aria,
                     $item->iconRight->classes,
@@ -67,6 +65,24 @@ class AdminMenuItemComponent implements MenuItemComponentInterface
 
         $dropdownItems = [];
         foreach ($item->dropdownItems as $dropdownName => $dropdownLink) {
+            if (is_array($dropdownLink)) {
+                $nestedConfig = [$dropdownName => $dropdownLink];
+                $nestedItems = $this->configParser->parse($nestedConfig);
+
+                foreach ($nestedItems as $nestedItem) {
+                    if ($nestedItem->type === 'dropdown') {
+                        $dropdownItems[] = $this->getDropdownItem($nestedItem);
+                    } else {
+                        $dropdownItems[] = $this->getRegularItem(
+                            $nestedItem,
+                            ['dropdown-list__item'],
+                            ['dropdown-list__item--link'],
+                        );
+                    }
+                }
+                continue;
+            }
+
             $isActive = $this->isActivePath($dropdownLink);
 
             if ($isActive) {
@@ -116,6 +132,41 @@ class AdminMenuItemComponent implements MenuItemComponentInterface
             ->class(...$liClasses)
             ->role('none')
             ->add($button, $dropdownMenu);
+    }
+
+    public function buildMenuItems(array $navigationItems): array
+    {
+        $menuItems = [];
+
+        foreach ($navigationItems as $item) {
+            try {
+                if ($item->type === 'regular') {
+                    $menuItems[] = $this->getRegularItem(
+                        $item,
+                        ['menu-list__item'],
+                        ['menu-list__item--link'],
+                    );
+                } elseif ($item->type === 'dropdown') {
+                    $menuItems[] = $this->getDropdownItem($item);
+                }
+            } catch (Exception $e) {
+                // Skip invalid items but log the error
+                error_log("Failed to create menu item '{$item->name}': " . $e->getMessage());
+                continue;
+            }
+        }
+
+        return $menuItems;
+    }
+
+    public function loadNavigationItems(string $menuPath): array
+    {
+        try {
+            $config = (new JsonFile($menuPath))->getContentAsArray();
+            return $this->configParser->parse($config);
+        } catch (Exception $e) {
+            throw new InvalidArgumentException('Failed to load navigation config: ' . $e->getMessage(), $e->getCode());
+        }
     }
 
     private function generateDropdownId(NavigationItem $item): string

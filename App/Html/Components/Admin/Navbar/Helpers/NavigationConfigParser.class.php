@@ -62,12 +62,6 @@ class NavigationConfigParser
                 );
             }
         }
-
-        // if (!is_array($config['dropdown-items']) || empty($config['dropdown-items'])) {
-        //     throw new InvalidArgumentException(
-        //         "Dropdown navigation item '{$name}' must have non-empty dropdown-items array",
-        //     );
-        // }
     }
 
     private function createNavigationItem(string $name, array $config): NavigationItem

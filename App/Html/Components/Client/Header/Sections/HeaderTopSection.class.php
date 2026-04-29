@@ -50,7 +50,7 @@ class HeaderTopSection extends AbstractBaseHtmlSection
         return $html->button('button')
             ->class('menu__mobile-toggle', 'js-mobile-menu-toggle')
             ->add(
-                $this->iconBuilder->createIcon($html, 'icon-hamburger-menu', 'Mobile menu', ['logo']),
+                $this->iconBuilder->createIcon('icon-hamburger-menu', 'Mobile menu', ['logo']),
             );
     }
 
@@ -59,7 +59,7 @@ class HeaderTopSection extends AbstractBaseHtmlSection
         $html = $this->htmlBuilder;
         return $html->tag('div')->class('menu__logo')->add(
             $html->tag('a')->href('/ecommerce')->class('logo-container')->add(
-                $this->iconBuilder->createIcon($html, 'icon-logo', 'Logo', ['logo']),
+                $this->iconBuilder->createIcon('icon-logo', 'Logo', ['logo']),
             ),
         );
     }
@@ -69,7 +69,7 @@ class HeaderTopSection extends AbstractBaseHtmlSection
         $html = $this->htmlBuilder;
         return $html->form()->class('menu__search')->add(
             $html->button()->class('menu__search--btn')->add(
-                $this->iconBuilder->createIcon($html, 'icon-search', 'Search', ['search']),
+                $this->iconBuilder->createIcon('icon-search', 'Search', ['search']),
             ),
             $html->input('text')
                 ->name('search')
@@ -119,7 +119,6 @@ class HeaderTopSection extends AbstractBaseHtmlSection
             // Add icon if it exists
             if (isset($menuConfig['icon'])) {
                 $linkContent[] = $this->iconBuilder->createIcon(
-                    $html,
                     $menuConfig['icon'],
                     $title,
                     ['nav-icon'],
@@ -147,7 +146,7 @@ class HeaderTopSection extends AbstractBaseHtmlSection
             ->href('#')
             ->class('menu__actions-link', 'menu__actions--wishlist')
             ->add(
-                $this->iconBuilder->createIcon($html, 'icon-wishlist', 'Wishlist', ['wishlist-icon']),
+                $this->iconBuilder->createIcon('icon-wishlist', 'Wishlist', ['wishlist-icon']),
             );
 
         // Cart link
@@ -156,7 +155,7 @@ class HeaderTopSection extends AbstractBaseHtmlSection
             ->class('menu__actions-link', 'menu__actions--cart')
             ->custom(['data-count' => 0])
             ->add(
-                $this->iconBuilder->createIcon($html, 'icon-cart', 'Shopping Cart', ['cart-icon']),
+                $this->iconBuilder->createIcon('icon-cart', 'Shopping Cart', ['cart-icon']),
             );
 
         // User section
@@ -166,7 +165,7 @@ class HeaderTopSection extends AbstractBaseHtmlSection
                 ->href('/login')
                 ->class('menu__actions-link', 'menu__actions--user')
                 ->add(
-                    $this->iconBuilder->createIcon($html, 'icon-user', 'Login', ['user-icon']),
+                    $this->iconBuilder->createIcon('icon-user', 'Login', ['user-icon']),
                 );
         } else {
             // Build full dropdown
@@ -194,7 +193,7 @@ class HeaderTopSection extends AbstractBaseHtmlSection
                 ->href('/login')
                 ->class('menu__actions-link', 'menu__actions--user')
                 ->add(
-                    $this->iconBuilder->createIcon($html, 'icon-user', 'Login', ['user-icon']),
+                    $this->iconBuilder->createIcon('icon-user', 'Login', ['user-icon']),
                 );
         }
 
@@ -206,14 +205,12 @@ class HeaderTopSection extends AbstractBaseHtmlSection
 
         if ($dropdownIcon) {
             $triggerContent[] = $this->iconBuilder->createIcon(
-                $html,
                 $dropdownIcon,
                 $dropdownTitle,
                 ['user-icon'],
             );
         } else {
             $triggerContent[] = $this->iconBuilder->createIcon(
-                $html,
                 'icon-user',
                 $dropdownTitle,
                 ['user-icon'],
@@ -252,7 +249,6 @@ class HeaderTopSection extends AbstractBaseHtmlSection
 
                 if (isset($item['icon'])) {
                     $linkContent[] = $this->iconBuilder->createIcon(
-                        $html,
                         $item['icon'],
                         $title,
                         ['user-menu__icon'],

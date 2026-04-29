@@ -48,7 +48,8 @@
     "link": "",
     "dropdown-items": {
       "Category": "/category-page/add",
-      "Hero": "/hero-page/add",
+      "Hero new": "/hero-page/add",
+      "Hero list": "/hero-list/index",
       "Small Banner": "/small-banner-page/add"
     }
   },
