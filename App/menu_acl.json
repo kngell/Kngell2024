@@ -1,67 +1,29 @@
 {
-  "Home": {
-    "path": "/"
-  },
-  "Shop": {
-    "path": "/products/index",
-    "title": "Shop"
-  },
-  "Blog": {
-    "path": "/post/index"
-  },
+  "Home": "/",
+  "Shop": "/products/index",
+  "Blog": "/post/index",
   "About": "/about",
   "Contact": "/contact",
   "Account": {
     "type": "dropdown",
     "icon": "icon-user",
+    "title": "Account",
     "items": [
-      {
-        "key": "Dashboard",
-        "path": "/account/dashboard"
-      },
-      {
-        "key": "Profile",
-        "path": "/profile/show",
-        "icon": "icon-profile"
-      },
-      {
-        "separator": true
-      },
-      {
-        "key": "Orders",
-        "path": "/account/orders",
-        "title": "My Orders",
-        "icon": "icon-orders"
-      },
-      {
-        "key": "Wishlist",
-        "path": "/account/wishlist",
-        "icon": "icon-wishlist"
-      },
-      {
-        "separator": true
-      },
-      {
-        "key": "Admin",
-        "path": "/admin/dashboard",
-        "title": "Admin Space",
-        "icon": "icon-admin"
-      },
+      { "key": "Dashboard", "path": "/account/dashboard" },
+      { "key": "Profile", "path": "/profile/show", "icon": "icon-profile" },
+      { "separator": true },
+      { "key": "Orders", "path": "/account/orders", "title": "My Orders", "icon": "icon-orders" },
+      { "key": "Wishlist", "path": "/account/wishlist", "icon": "icon-wishlist" },
+      { "separator": true },
+      { "key": "Admin", "path": "/admin/dashboard", "title": "Admin Space", "icon": "icon-admin" },
       {
         "key": "Settings",
         "path": "/account/settings",
         "title": "Account Settings",
         "icon": "icon-settings"
       },
-      {
-        "separator": true
-      },
-      {
-        "key": "Logout",
-        "path": "/logout",
-        "title": "Sign Out",
-        "icon": "icon-logout"
-      }
+      { "separator": true },
+      { "key": "Logout", "path": "/logout", "title": "Sign Out", "icon": "icon-logout" }
     ]
   }
 }

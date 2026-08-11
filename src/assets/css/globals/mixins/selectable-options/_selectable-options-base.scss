@@ -1,0 +1,129 @@
+@use "sass:color";
+@use "css/globals/variables" as *;
+@use "css/globals/mixins/responsive" as *;
+
+// ===============================================
+// SELECTABLE OPTIONS BASE
+// ===============================================
+
+@mixin selectable-options($columns: 2, $gap: 2rem, $mobile-columns: 1) {
+  display: flex;
+  flex-direction: column;
+  gap: 2.4rem;
+
+  // ----------------------------------------------------------
+  // Header
+  // ----------------------------------------------------------
+
+  &__header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+
+  &__title {
+    margin: 0;
+  }
+
+  &__subtitle {
+    margin: 0;
+    color: $text-neutral-secondary;
+  }
+
+  // ----------------------------------------------------------
+  // Fieldset
+  // ----------------------------------------------------------
+
+  &__fieldset {
+    display: grid;
+    grid-template-columns: repeat($columns, minmax(0, 1fr));
+    gap: $gap;
+
+    margin: 0;
+    padding: 0;
+    border: 0;
+
+    @include respond-below(md) {
+      grid-template-columns: repeat($mobile-columns, minmax(0, 1fr));
+    }
+  }
+
+  // ----------------------------------------------------------
+  // Accessible legend
+  // ----------------------------------------------------------
+
+  &__legend {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+
+    white-space: nowrap;
+    border: 0;
+  }
+
+  // ----------------------------------------------------------
+  // Option
+  // ----------------------------------------------------------
+
+  &__option {
+    position: relative;
+    min-width: 0;
+  }
+
+  // ----------------------------------------------------------
+  // Option header / label
+  // ----------------------------------------------------------
+
+  &__option-header {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    cursor: pointer;
+  }
+
+  // ----------------------------------------------------------
+  // Radio
+  // ----------------------------------------------------------
+
+  input[type="radio"] {
+    position: absolute;
+
+    width: 1px;
+    height: 1px;
+
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  // ----------------------------------------------------------
+  // Generic option information
+  // ----------------------------------------------------------
+
+  &__option-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__info-title {
+    display: block;
+  }
+
+  &__info-description {
+    display: block;
+  }
+
+  &__info-icons {
+    display: inline-flex;
+    width: 3.2rem;
+    height: 3.2rem;
+    .icon {
+      width: 100%;
+      height: 100%;
+    }
+  }
+}

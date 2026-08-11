@@ -1,1 +1,0 @@
-{"__type__":"json","data":["optimized_d5c25dd9af7e70b2d014675db7f2abba_card2_69c997565785e_3","optimized_46e8e697932ad6496d173c813f88d76c_card2_69c997565785e_1","optimized_650c9bf228d62f4fc342e9e002c5cc2f_card2_69c997565785e_2"]}

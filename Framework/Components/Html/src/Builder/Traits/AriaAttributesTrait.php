@@ -15,7 +15,7 @@ trait AriaAttributesTrait
     public function aria(string ...$props): static
     {
         $aria = [];
-        if (ArrayUtils::isKeyValueList($props)) {
+        if (ArrayUtils::isSequentialKeyValueList($props)) {
             $props = ArrayUtils::fromSequentialToAssoc($props);
         }
         foreach ($props as $name => $prop) {

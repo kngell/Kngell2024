@@ -77,10 +77,11 @@ class PriceRangeBracket implements JsonSerializable
         return ($this->min ?? $this->max)?->getCurrency()->getCurrencyCode() ?? 'USD';
     }
 
-    public static function create(?Money $min, ?Money $max, string $label, ?int $productCount = null): self
+    public static function create(?Money $min, ?Money $max, ?string $label = null, ?int $productCount = null): self
     {
         if ($min === null && $max === null) {
-            throw new InvalidArgumentException('Either min or max price must be set');
+            return new self($min, $max, $label, $productCount);
+            // throw new InvalidArgumentException('Either min or max price must be set');
         }
 
         if ($min !== null && $max !== null && $min->isGreaterThan($max)) {

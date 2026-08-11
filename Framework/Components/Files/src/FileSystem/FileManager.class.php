@@ -12,16 +12,25 @@ class FileManager implements FileSystemInterface, FileContentInterface, FileOper
     ) {
     }
 
+    #[Override]
+    public function executePhpFile(string $filePath, string $icon = ''): mixed
+    {
+        return $this->contentManager->executePhpFile($filePath, $icon);
+    }
+
     public function findViewFile(string $viewsDirectory, string $viewPath): FileInformation
     {
+        return new FileInformation($viewsDirectory . $viewPath);
     }
 
     public function getAllFiles(string $directory, ?string $extension = null): array
     {
+        return [];
     }
 
     public function getAllAvailableViews(string $viewsDirectory): array
     {
+        return [];
     }
 
     // FileSystemInterface

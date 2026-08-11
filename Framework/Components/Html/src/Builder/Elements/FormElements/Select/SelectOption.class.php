@@ -18,7 +18,7 @@ class SelectOption extends AbstractHtmlComponent
 
     public function generate(): string
     {
-        if ($this->hasDefaultValue() && $this->getDefaultValue() === $this->getContent()) {
+        if ($this->hasDefaultValue() && strtolower($this->getDefaultValue()) === strtolower($this->getContent())) {
             $this->selected = true;
         }
 

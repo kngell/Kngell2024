@@ -1,0 +1,41 @@
+@use "sass:list";
+@use "css/globals/variables" as *;
+
+// =====================================================
+// TABS BASE
+// =====================================================
+
+@mixin tabs-base {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  .radio-tab {
+    display: none;
+  }
+
+  .tabs__label {
+    display: flex;
+    gap: 0.6rem;
+  }
+
+  .tab {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: 0.25s;
+    user-select: none;
+    &__text {
+      margin: 0;
+      color: inherit;
+    }
+  }
+
+  .tabs__content {
+    position: relative;
+  }
+
+  .tab-content {
+    display: none;
+  }
+}

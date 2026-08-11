@@ -31,6 +31,24 @@ class QueryBuilder extends AbstractQueryBuilder implements SqlCompositeQueryBuil
         return $query;
     }
 
+    public function selectDistinct(string|array|Closure ...$columns): SqlSelectQueryBuilderInterface
+    {
+        $query = new SqlSelectQuery($this->em, $this->isBulkQuery);
+        $query->distinct()->select($columns);
+        $this->registerComponent($query, __FUNCTION__);
+        $this->em->setQueryBuilder($this);
+        return $query;
+    }
+
+    public function selectDistinctCount(string|array|Closure ...$columns): SqlSelectQueryBuilderInterface
+    {
+        $query = new SqlSelectQuery($this->em, $this->isBulkQuery);
+        $query->distinctCount()->select($columns);
+        $this->registerComponent($query, __FUNCTION__);
+        $this->em->setQueryBuilder($this);
+        return $query;
+    }
+
     public function selectDistinctWithAliases(string|array|Closure ...$columns): SqlSelectQueryBuilderInterface
     {
         $query = new SqlSelectQuery($this->em, $this->isBulkQuery);
@@ -43,6 +61,40 @@ class QueryBuilder extends AbstractQueryBuilder implements SqlCompositeQueryBuil
     public function with(string $cteTableName): SqlCteSelectQueryBuilderInterface
     {
         return $this->cteQuery($cteTableName, __FUNCTION__);
+    }
+
+    public function case(mixed ...$conditions): CaseExpressionBuilderInterface
+    {
+        $lastComponent = end($this->executedComponents);
+        $currentStatement = $lastComponent?->getStatement() ?? $this->statementContext;
+        $query = (new CaseExpressionCollector($this->em, $currentStatement))->case($conditions);
+
+        if ($lastComponent) {
+            $query->setQueryMap($lastComponent->getQueryMap());
+        }
+
+        $this->registerComponent($query, __FUNCTION__);
+        $this->em->setQueryBuilder($this);
+        return $query;
+    }
+
+    public function when(mixed ...$conditions): CaseExpressionBuilderInterface
+    {
+        $currentStatement = $this->statementContext;
+        $lastComponent = end($this->executedComponents);
+        if ($lastComponent) {
+            $currentStatement = $lastComponent?->getStatement() ?? $this->statementContext;
+        }
+
+        $query = (new CaseExpressionCollector($this->em, $currentStatement))->when($conditions);
+
+        if ($lastComponent) {
+            $query->setQueryMap($lastComponent->getQueryMap());
+        }
+
+        $this->registerComponent($query, __FUNCTION__);
+        $this->em->setQueryBuilder($this);
+        return $query;
     }
 
     public function withRecursive(string $cteTableName): SqlCteSelectQueryBuilderInterface
@@ -89,6 +141,18 @@ class QueryBuilder extends AbstractQueryBuilder implements SqlCompositeQueryBuil
         $query->setMethod(SqlStatement::CREATE->value);
         $this->registerComponent($query, __FUNCTION__);
         return $query;
+    }
+
+    /**
+     * @param null|SqlStatement $statementContext
+     *
+     * @return QueryBuilder
+     */
+    public function setStatementContext(?SqlStatement $statementContext): QueryBuilder
+    {
+        $this->statementContext = $statementContext;
+
+        return $this;
     }
 
     private function cteQuery(string $cteTableName, string $method): SqlCteSelectQueryBuilderInterface

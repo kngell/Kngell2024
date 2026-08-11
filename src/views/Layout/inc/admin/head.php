@@ -19,64 +19,7 @@
     <!-- CkEditor -->
     <?= $this->css('css/ckeditor/ckeditor', 'css') ?? '' ?>
     <?= $this->content('head'); ?>
-    <?php if ($this->isDevEnv()) :?>
-    <script async>
-    (function() {
-        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const wsHost = window.location.host;
-        const wsUrl = `${protocol}//${wsHost}/ws`;
 
-        let ws;
-
-        // In your WebSocket script in the HTML head, add debugging:
-        function connectWebSocket() {
-            ws = new WebSocket(wsUrl);
-
-            ws.onopen = function() {
-                console.log("🔌 WebSocket: Connection opened...", {
-                    timestamp: Date.now(),
-                    connectionCount: (window._wsConnectionCount = (window._wsConnectionCount || 0) + 1)
-                });
-            };
-
-            ws.onmessage = function(event) {
-                const data = JSON.parse(event.data);
-                if (data.type === 'full-reload') {
-                    console.log("🔌 WebSocket: FULL RELOAD TRIGGERED", data.reason);
-                    window.location.reload(true);
-                } else if (data.type === 'css-update') {
-                    console.log("🔌 WebSocket: CSS UPDATE TRIGGERED", data.reason);
-                    const links = document.querySelectorAll("link[rel='stylesheet']");
-                    links.forEach((link) => {
-                        const url = new URL(link.href);
-                        url.searchParams.set("reload", Date.now());
-                        link.href = url.href;
-                    });
-                }
-            };
-
-            ws.onclose = function(event) {
-                console.log("🔌 WebSocket: Connection closed...", {
-                    code: event.code,
-                    reason: event.reason,
-                    wasClean: event.wasClean
-                });
-
-                if (!event.wasClean && event.code !== 1000) {
-                    console.log("🔌 WebSocket: Attempting to reconnect...");
-                    setTimeout(connectWebSocket, 3000);
-                }
-            };
-
-            ws.onerror = function(error) {
-                console.error("🔌 WebSocket: Error", error);
-            };
-        }
-
-        connectWebSocket(); // Initial connection
-    })();
-    </script>
-    <?php endif; ?>
 </head>
 
 <body id="body">

@@ -17,7 +17,6 @@ final class RouteMatchingService
             if (!$route instanceof Route) {
                 continue;
             }
-
             $pattern = $this->patternRegistry->getPhpPattern($routePath);
 
             if (preg_match($pattern, $normalizedPath, $matches)) {

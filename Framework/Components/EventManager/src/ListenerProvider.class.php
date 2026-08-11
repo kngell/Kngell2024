@@ -1,101 +1,109 @@
 <?php
 
 declare(strict_types=1);
-class ListenerProvider extends AbstractListenerProvider
+
+final class ListenerProvider implements ListenerProviderInterface
 {
-    public function __construct(private array $listeners = [], private array $log = [])
+    public function __construct(private array $listeners = [])
     {
     }
 
-    public function getListenersForEvent(EventInterface $event): ?iterable
+    public function getListenersForEvent(EventInterface $event): iterable
     {
         $eventName = $event->getName();
 
-        if (array_key_exists($eventName, $this->listeners)) {
-            return $this->listeners[$eventName];
+        if (!array_key_exists($eventName, $this->listeners)) {
+            return [];
         }
-        return [];
-    }
-
-    public function add(string $name, EventListenerInterface $listener, int $priority = 0): void
-    {
-        if (!isset($this->listeners[$name])) {
-            $this->listeners[$name] = [];
-        }
-        $this->listeners[$name][] = ['callback' => $listener::class, 'priority' => $priority];
-    }
-
-    /** @inheritDoc */
-    public function exists(string $name): bool
-    {
-        return array_key_exists($name, $this->listeners);
-    }
-
-    /** @inheritDoc */
-    public function hasListener(string $event, string $listener): bool
-    {
-        return isset($this->listeners[$event]) ? in_array($listener, $this->listeners[$event]) : false;
-    }
-
-    /** @inheritDoc */
-    public function removeAll(string $name): void
-    {
-        $this->checkEvent(name:$name);
-        unset($this->listeners[$name]);
-    }
-
-    public function remove(EventInterface $event, string $listener): void
-    {
-        $eventName = $event::class;
-        $this->checkEvent(name: $eventName);
 
         $listeners = $this->listeners[$eventName];
 
-        foreach ($listeners as $key => $item) {
-            if ($item['callback'] === $listener) {
-                unset($this->listeners[$eventName][$key]);
+        // ✅ Warn on registered but empty event
+        if ($listeners === []) {
+            trigger_error(
+                "Event [$eventName] is registered but has no active listeners.",
+                E_USER_NOTICE,
+            );
+            return [];
+        }
 
+        uasort($listeners, static fn (array $a, array $b) => $b['priority'] - $a['priority']);
+
+        return $listeners;
+    }
+
+    public function add(string $eventName, EventListenerInterface $listener, int $priority = 0): void
+    {
+        if (!isset($this->listeners[$eventName])) {
+            $this->listeners[$eventName] = [];
+        }
+
+        $this->listeners[$eventName][] = [
+            'callback' => $listener::class,
+            'priority' => $priority,
+        ];
+    }
+
+    public function assertEventExists(string $eventName): void
+    {
+        if (!$this->exists($eventName)) {
+            return;
+            // throw new EventNotFoundException(
+            //     "No event has been registered under [$eventName]. Please check your configuration.",
+            // );
+        }
+    }
+
+    public function append(string $eventName, array $listeners): void
+    {
+        $this->assertEventExists($eventName);
+
+        foreach ($listeners as $listener) {
+            $this->listeners[$eventName][] = $listener;
+        }
+    }
+
+    public function removeAll(string $eventName): void
+    {
+        $this->assertEventExists($eventName);
+        unset($this->listeners[$eventName]);
+    }
+
+    public function remove(EventInterface $event, string $listenerClass): void
+    {
+        $eventName = $event->getName();
+        $this->assertEventExists($eventName);
+
+        foreach ($this->listeners[$eventName] as $key => $item) {
+            if ($item['callback'] === $listenerClass) {
+                unset($this->listeners[$eventName][$key]);
                 return;
             }
         }
-        throw new BaseInvalidArgumentException("Listener has not been registered for [{$eventName}]", 1);
+
+        throw new InvalidListenerException(
+            "Listener [$listenerClass] has not been registered for event [$eventName].",
+        );
     }
 
-    public function detach(EventInterface $event, callable $callback): void
+    public function exists(string $eventName): bool
     {
-        $this->listeners[$event->getName()] = array_filter($this->listeners[$event->getName()], function ($listener) use ($callback) {
-            return $listener['callback'] !== $callback;
-        });
+        return array_key_exists($eventName, $this->listeners);
     }
 
-    /**
-     * @param string $eventType
-     */
-    public function clearListeners(string $eventType): void
+    public function hasListener(string $eventName, string $listenerClass): bool
     {
-        if (array_key_exists($eventType, $this->listeners)) {
-            unset($this->listeners[$eventType]);
+        if (!isset($this->listeners[$eventName])) {
+            return false;
         }
-    }
 
-    /** @inheritDoc */
-    public function append(string $name, array $listeners): void
-    {
-        $this->checkEvent(name:$name);
-        foreach ($listeners as $listener) {
-            array_push($this->listeners[$name], $listener);
+        // ✅ Fixed: was comparing string against full array item
+        foreach ($this->listeners[$eventName] as $item) {
+            if ($item['callback'] === $listenerClass) {
+                return true;
+            }
         }
-    }
 
-    /** @inheritDoc */
-    public function listeners(): array
-    {
-        return $this->listeners;
-    }
-
-    /** @inheritDoc */
-    public function log(): array
-    {
-        return $this->log;
+        return false;
     }
 }

@@ -36,6 +36,8 @@ interface EntityFactoryInterface
 
     public function hasRelationships(string $entityClass): bool;
 
+    public function getRelationships(string $entityClass): array;
+
     public function getNormalizer(): TypeNormalizerInterface;
 
     public function getChangeTracker(): ChangeTrackerInterface;

@@ -31,6 +31,7 @@ trait HtmlAttributesTrait
     protected bool $controls;
     protected string $dataBsToggle;
     protected array $custom = [];
+    protected string $loading; //"lazy", "eager","auto"
 
     public function accesskey(string $accesskey): static
     {
@@ -209,17 +210,51 @@ trait HtmlAttributesTrait
 
     public function custom(array $custom): static
     {
+        if (!isset($this->custom)) {
+            $this->custom = [];
+        }
         $this->custom = array_merge($this->custom, $custom);
         return $this;
     }
 
-    public function attribute(string|int ...$customAttr): static
+    public function customAttr(string|int|bool ...$customAttr): static
+    {
+        return $this->attribute(...$customAttr);
+    }
+
+    public function attr(string|int|bool ...$customAttr): static
+    {
+        return $this->attribute(...$customAttr);
+    }
+
+    public function attribute(string|int|bool ...$customAttr): static
     {
         $attrs = [];
-        if (ArrayUtils::isKeyValueList($customAttr)) {
+
+        if (ArrayUtils::isAssoc($customAttr)) {
+            $attrs = $customAttr;
+        }
+        // 👇 Use elseif so only ONE executes
+        elseif (ArrayUtils::isSequentialKeyValueList($customAttr)) {
             $attrs = ArrayUtils::fromSequentialToAssoc($customAttr);
         }
+
+        if (!isset($this->custom)) {
+            $this->custom = [];
+        }
         $this->custom = array_merge($this->custom, $attrs);
+        return $this;
+    }
+
+    /**
+     * @param string $loading
+     *
+     * @return static
+     */
+    public function loading(string $loading): static
+    {
+        $this->loading = $loading;
+
         return $this;
     }
 }

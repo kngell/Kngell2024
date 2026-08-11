@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Psr\Log\LoggerInterface;
+
 class EntityManager implements EntityManagerInterface
 {
     private Entity|array|CollectionInterface $entity;
@@ -16,6 +18,7 @@ class EntityManager implements EntityManagerInterface
         private TablesAliasHelper $tableAliasHelper,
         private EntityFactoryInterface $entityFactory,
         private SqlTypeHandlerFactory $sqlTypeHandler,
+        private LoggerInterface $logger,
     ) {
     }
 
@@ -527,11 +530,11 @@ class EntityManager implements EntityManagerInterface
         $repositoryClass = $entityClass . 'Repository';
 
         if (class_exists($repositoryClass)) {
-            return new $repositoryClass($this);
+            return new $repositoryClass($this, $this->logger);
         }
 
         // Fallback to base repository
-        return new Repository($this);
+        return new Repository($this, $this->logger);
     }
 
     /**
@@ -749,10 +752,11 @@ class EntityManager implements EntityManagerInterface
         // This would need your static dependencies to be available
         // For now, keeping the original signature
         return new self(
-            self::$mapper ?? throw new RuntimeException('Mapper not configured'),
-            self::$tableAliasHelper ?? throw new RuntimeException('Table alias helper not configured'),
-            self::$entityFactory ?? throw new RuntimeException('EntityFactory not configured'),
-            self::$sqlTypeHandler ?? throw new RuntimeException('SqlTypeHandler not configured'),
+            self::$mapper ?? throw new RuntimeException('Mapper is not configured'),
+            self::$tableAliasHelper ?? throw new RuntimeException('Table alias helper is not configured'),
+            self::$entityFactory ?? throw new RuntimeException('EntityFactory is not configured'),
+            self::$sqlTypeHandler ?? throw new RuntimeException('SqlTypeHandler is not configured'),
+            self::$logger ?? throw new RuntimeException('Logger is not configured'),
         );
     }
 }

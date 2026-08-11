@@ -10,5 +10,7 @@ interface FileContentInterface
 
     public function getStream(string $filePath, string $mode = 'r');
 
-    public function putStream(string $filePath, $stream): void;
+    public function putStream(string $filePath, mixed $stream): void;
+
+    public function executePhpFile(string $filePath, string $icon = ''): mixed;
 }

@@ -6,23 +6,23 @@ class ProductDeleteService extends AbstractDeleteService
 {
     public function __construct(
         private ProductModel $model,
-        private ProductDeleteValidator $validator,
+        private readonly EventDispatcherInterface $dispatcher,
     ) {
     }
 
     protected function findRecord(array $id): ?object
     {
-        return $this->model->getProductById($id['value'], $id['key']);
-    }
-
-    protected function getValidator(): AbstractDeleteValidator
-    {
-        return $this->validator;
+        $product = $this->model->getProductById($id['value'], $id['key']);
+        if (!$product->isTracking()) {
+            $product->track();
+        }
+        $this->model->addToIdentityMap($product);
+        return $product;
     }
 
     protected function getLabel(): string
     {
-        return 'Product';
+        return DeletionLabel::PRODUCT->value;
     }
 
     protected function getEventName(): string
@@ -41,11 +41,23 @@ class ProductDeleteService extends AbstractDeleteService
         return $record->getName();
     }
 
+    protected function buildDeletionEvent(
+        EventDataDTO $dto,
+    ): AbstractEvent {
+        return new ProductEvent($dto);
+    }
+
+    /**
+     * @param Product $product
+     * @param string $deleteOption
+     *
+     * @return QueryResult
+     */
     protected function performDelete(
-        array $id,
+        Entity $product,
         string $deleteOption,
     ): QueryResult {
-        return $this->model->deleteProductByUuId($id['value'], $deleteOption);
+        return $this->model->deleteEntity($product, $deleteOption);
     }
 
     protected function getEntityManager(): mixed
@@ -58,37 +70,8 @@ class ProductDeleteService extends AbstractDeleteService
         $this->model->clearState();
     }
 
-    protected function isRecordDeleted(object $record): bool
+    protected function getEventDispatcher(): ?EventDispatcherInterface
     {
-        /* @var Product $record */
-        return $record->isDeleted();
-    }
-
-    /**
-     * @param Product $record
-     *
-     * @return array
-     */
-    protected function buildEventData(Entity $record): array
-    {
-        /* @var Product $record */
-        return [
-            'pdt_id' => $record->getId(),
-            'public_id' => $record->getPublicId(),
-            'name' => $record->getName(),
-            'sku' => $record->getSku(),
-            'slug' => $record->getSlug(),
-            'status_id' => $record->getStatusId(),
-            'category_id' => $record->getCategoryId(),
-            'brand_id' => $record->getBrandId(),
-            'stock_quantity' => $record->getStockQuantity(),
-            'main_image' => $record->getMainImage(),
-            'main_video' => $record->getMainVideo(),
-            'created_at' => $record->getCreatedAt(),
-            'updated_at' => $record->getUpdatedAt(),
-            'is_active' => $record->getIsActive(),
-            'is_featured' => $record->getIsFeatured(),
-            'total_sales' => $record->getTotalSales() ?? 0,
-        ];
+        return $this->dispatcher;
     }
 }

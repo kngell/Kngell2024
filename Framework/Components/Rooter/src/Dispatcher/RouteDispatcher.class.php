@@ -10,6 +10,7 @@ final readonly class RouteDispatcher
         'grantAccess',
         'crsfToken',
         'cacheGarbageCollector',
+        'mergeFlash',
     ];
 
     private const MIDDLEWARE_ORDER = [
@@ -66,14 +67,12 @@ final readonly class RouteDispatcher
                 ])->handle($request);
             });
         } catch (DispatchRouteException $th) {
-            // Optionally log here
             throw new DispatchRouteException($th->getMessage());
         }
     }
 
     private function resolveMiddlewares(RouteInfo $route, App $app): array
     {
-        // Get middleware names in the correct execution order
         $middlewareNames = $this->getOrderedMiddlewares($route);
         $this->ensureAuthMiddlewareFirst($middlewareNames);
 
@@ -84,16 +83,16 @@ final readonly class RouteDispatcher
 
             $middlewareClass = $this->globalMiddlewares[$name];
 
-            if (in_array($name, ['auth', 'grantAccess', 'requireLogin'], true)) {
+            if (in_array($name, ['auth', 'grantAccess', 'requireLogin', 'csrfToken'], true)) {
                 $factoryKey = "middleware.{$name}.{$route->getController()}";
 
                 $app->factory($factoryKey, function ($app) use ($middlewareClass, $route) {
-                    return $app->resolve($middlewareClass, ['route' => $route]);
+                    return $app->make($middlewareClass, ['route' => $route]);
                 });
 
-                return $app->resolve($factoryKey);
+                return $app->make($factoryKey);
             }
-            return $app->resolve($middlewareClass);
+            return $app->make($middlewareClass);
         }, $middlewareNames);
     }
 
@@ -171,28 +170,24 @@ final readonly class RouteDispatcher
 
     private function configureController(Controller $controller, Request $request, App $app): Controller
     {
-        return $controller
+        $start = microtime(true);
+
+        $controller
+            ->setApp($app)
             ->setRequest($request)
-            ->setView($app->get(ViewInterface::class))
-            ->setresponse($app->getResponse())
-            ->setToken($app->get(TokenInterface::class))
-            ->setFlash($app->get(FlashInterface::class))
-            ->setSession($app->getSession())
-            ->setEventManager($app->get(EventManagerInterface::class))
-            ->setBuilder($app->get(HtmlBuilder::class))
-            ->setCache($app->getCache())
-            ->setCookie($app->getCookie())
-            ->setNavigationHistory($app->get(NavigationHistoryService::class))
-            ->setRegion($app->get(RegionContextInterface::class))
-            ->setTranslator($app->get(TranslatorServiceInterface::class))
-            ->setSectionManager($app->get(HtmlSectionManagerInterface::class))
-            ->setProviderFactory($app->get(SectionProviderFactory::class))
-            ->setDecoratorFactory($app->get(DecoratorFactory::class));
+            ->setResponse($app->getResponse())
+            ->initializeHtmlCache($app->make(HtmlPageCacheFactory::class));
+
+        $time = (microtime(true) - $start) * 1000;
+        error_log(sprintf(
+            '[DISPATCHER] Controller %s configured in %.2f ms (lazy loading enabled)',
+            get_class($controller),
+            $time,
+        ));
+
+        return $controller;
     }
 
-    /**
-     * Binds the payment gateway implementation based on the request.
-     */
     private function bindPaymentGateway(App $app): void
     {
         $request = $app->getRequest();

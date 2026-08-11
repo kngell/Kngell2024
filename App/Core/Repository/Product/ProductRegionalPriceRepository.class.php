@@ -20,11 +20,6 @@ class ProductRegionalPriceRepository extends Repository
     private const array REGION_FILABLE = ['region_code', 'region_name', 'currency_id', 'is_active', 'timezone', 'locale', 'created_at', 'updated_at'];
     private const array CURRENCY_FILABLE = ['currency_id', 'currency_code', 'currency_name', 'symbol', 'is_active', 'created_at', 'updated_at'];
 
-    public function __construct(protected EntityManagerInterface $em)
-    {
-        parent::__construct($em);
-    }
-
     /**
      * Find regional price by product ID and region code.
      */

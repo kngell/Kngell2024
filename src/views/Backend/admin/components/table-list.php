@@ -3,6 +3,7 @@ $this->start('head'); ?>
 <!-------Costum-------->
 <?= $this->css('css/backend/admin/pages/table-list') ?>
 <?= $this->css('css/backend/admin/pages/confirm-deletion') ?>
+<?= $this->js('js/backend/pages/table-list') ?>
 <?php $this->end(); ?>
 <?php $this->start('body'); ?>
 <main class="dashboard__main main list" id="main">
@@ -27,7 +28,5 @@ $this->start('head'); ?>
 <?php $this->end(); ?>
 <?php $this->start('footer') ?>
 <!----------custom--------->
-<?= $this->js('js/backend/pages/products-list-main') ?>
-<?= $this->js('js/backend/pages/hero-list-main') ?>
 
 <?php $this->end();

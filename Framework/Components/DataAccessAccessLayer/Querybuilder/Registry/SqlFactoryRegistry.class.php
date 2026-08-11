@@ -23,21 +23,15 @@ class SqlFactoryRegistry
         return $this->findFactory($this->clauseBuilderFactories, $type)?->create();
     }
 
-    public function getFlowValidator(SqlStatement $type): ?FlowValidatorInterface
-    {
-        return $this->findFactory($this->flowValidatorFactories, $type)?->create();
-    }
-
-    public function getRule(string $method, mixed $data): ?QueryRulesInterface
+    public function getRule(string $method, mixed $data, ?string $customAlias = null): ?QueryRulesInterface
     {
         $statement = SqlBuilderMethodRegistry::getClauseContext($method)->toStatementType();
-
         if (!$statement) {
             return null;
         }
 
         $factory = $this->findFactory($this->ruleFactories, $statement);
-        return $factory?->create($method, $data);
+        return $factory?->create($method, $data, $customAlias);
     }
 
     public function getStandardizer(SqlStatement $type): ?DataStandardizerInterface
@@ -47,21 +41,25 @@ class SqlFactoryRegistry
 
     private function initializeFactories(): void
     {
-        $this->clauseBuilderFactories = [
-            new DataQueryClauseBuilderFactory($this->component),
-            new DataManipulationClauseBuilderFactory($this->component),
-        ];
-
-        $this->flowValidatorFactories = [
-            new DataQueryFlowValidatorFactory($this->component),
-            new DataManipulationFlowValidatorFactory($this->component),
-        ];
+        // $this->clauseBuilderFactories = [
+        //     new DataQueryClauseBuilderFactory($this->component),
+        // ];
 
         // Rule Factories
         $bulkRowFactory = new BulkRowFactory();
         $this->ruleFactories = [
-            new DataQueryRuleFactory($this->em, $this->state, $bulkRowFactory),
-            new DataManipulationRuleFactory($this->em, $this->state, $bulkRowFactory),
+            new DataQueryRuleFactory(
+                $this->em,
+                $this->state,
+                $bulkRowFactory,
+                $this->component,
+            ),
+            new DataManipulationRuleFactory(
+                $this->em,
+                $this->state,
+                $bulkRowFactory,
+                $this->component,
+            ),
         ];
 
         // Standardizer Factories

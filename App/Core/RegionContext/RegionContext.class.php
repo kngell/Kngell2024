@@ -233,14 +233,12 @@ final class RegionContext implements RegionContextInterface
     private function resolveRegion(): string
     {
         $resolved = $this->regionResolver->resolve();
-        $this->isRegionExplicit = $this->regionResolver->hasExplicitRegion();
+        $this->isRegionExplicit = $this->regionResolver->hasExplicitRegion();  // ← Now cached!
 
-        // Validate resolved region
         if ($resolved && $this->regionDataProvider->isValidRegion($resolved)) {
             return strtoupper($resolved);
         }
 
-        // Validate default region
         if ($this->regionDataProvider->isValidRegion($this->defaultRegion)) {
             return $this->defaultRegion;
         }

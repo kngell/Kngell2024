@@ -49,7 +49,6 @@ interface CollectionInterface extends Countable, IteratorAggregate, ArrayAccess
     /**
      * Calculates the sum of values within the specified array.
      *
-     * @param array $array
      *
      * @return static
      */
@@ -117,15 +116,7 @@ interface CollectionInterface extends Countable, IteratorAggregate, ArrayAccess
      */
     public function shift(): mixed;
 
-    /**
-     * Extract a slice of the collection items.
-     *
-     * @param [type] $offset
-     * @param [type] $length
-     *
-     * @return static
-     */
-    public function slice(int $offset, $length = null): static;
+    public function slice(int $offset, ?int $length = null): static;
 
     /**
      * Returns the values of the collection items.

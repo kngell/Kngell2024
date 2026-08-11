@@ -2,14 +2,12 @@
 
 declare(strict_types=1);
 
-class FormBuilder extends AbstractHtmlElement
+class FormBuilder extends HtmlBuilder
 {
-    use ElementFactoryTrait;
-
     // ── Form-Specific Properties ────────────────────────────────────
     protected string $action = '';
     protected string $target = '';
-    protected string $method = '';
+    protected string $method = 'POST';
     protected string $autocomplete = '';
     protected string $enctype = '';
     protected string $rel = '';
@@ -17,30 +15,16 @@ class FormBuilder extends AbstractHtmlElement
     protected string $autocapitalize = '';
     protected bool $novalidate = false;
 
-    public function __construct(TokenInterface $token, bool $includeCsrftoken = true)
-    {
-        parent::__construct($token);
-        $this->tag = 'form';
+    public function __construct(
+        TokenInterface $token,
+        ?TranslatorServiceInterface $translator = null,
+        bool $includeCsrftoken = true,
+    ) {
+        parent::__construct($token, $translator, 'form');
         $this->includeToken = $includeCsrftoken;
     }
 
-    public function form(): static
-    {
-        return new self($this->token, $this->includeToken);
-    }
-
-    public function textArea(): TextAreaElement
-    {
-        return new TextAreaElement();
-    }
-
-    public function tag(string $tag): HtmlBuilder|HtmlaElement|HtmlTagElement|self
-    {
-        return (new HtmlBuilder($this->token))->tag($tag);
-    }
-
     // ── Form-Specific Setters ───────────────────────────────────────
-
     public function action(string $action): static
     {
         $this->action = $action;

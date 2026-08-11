@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use Ramsey\Uuid\Exception\InvalidUuidStringException;
+use Ramsey\Uuid\Uuid;
+
 final readonly class StringUtils
 {
     private function __construct()
@@ -15,6 +18,23 @@ final readonly class StringUtils
             return $string;
         }
         return $string . $trailing;
+    }
+
+    public static function isUuidV4(string $str): bool
+    {
+        $str = trim($str);
+        $str = trim($str, '{}'); // removes { and } cleanly
+
+        try {
+            return Uuid::fromString($str)->getVersion() === 4;
+        } catch (InvalidUuidStringException) {
+            return false;
+        }
+    }
+
+    public static function isUuid(string $str): bool
+    {
+        return Uuid::isValid($str);
     }
 
     public static function isSnakeCase(string $value): bool
@@ -93,7 +113,7 @@ final readonly class StringUtils
         return strtolower($kebab);
     }
 
-    public static function isSerialized($data, bool $strict = true): bool
+    public static function isSerialized(string $data, bool $strict = true): bool
     {
         if (!is_string($data)) {
             return false;

@@ -1,39 +1,66 @@
 import BrowserLogger from "js/core/utils/logger";
+import VariationProcessor from "./VariationProcessor";
 
 const logger = new BrowserLogger("FormDataProcessor");
 
 export default class FormDataProcessor {
+  constructor() {
+    this.variationProcessor = new VariationProcessor();
+  }
+
   /**
    * Process a form into a data object suitable for validation and submission.
    *
    * @param {HTMLFormElement} form
    * @returns {Object} Processed form data
    */
+  // processFormData(form) {
+  //   const result = {};
+
+  //   // Step 1: Process FormData entries (captures all submitted values)
+  //   this._processFormDataEntries(form, result);
+
+  //   // Step 2: Handle fields that FormData omits
+  //   this._processOmittedFields(form, result);
+
+  //   // Step 3: Build nested structures from bracket notation
+  //   const nested = this._buildNestedStructures(result);
+
+  //   // Step 4: Merge — nested overrides flat for structured fields
+  //   let finalData = { ...result, ...nested };
+
+  //   // Step 5: Delegate specific variation processing logic
+  //   finalData = this.variationProcessor.process(finalData);
+
+  //   logger.debug("Form data processed:", {
+  //     fieldCount: Object.keys(result).length,
+  //     nestedKeys: Object.keys(nested)
+  //   });
+
+  //   return finalData;
+  // }
+
+  // ─── Step 1: FormData Entries ─────────────────────────────
   processFormData(form) {
     const result = {};
 
-    // Step 1: Process FormData entries (captures all submitted values)
+    // Step 1: Process FormData entries
     this._processFormDataEntries(form, result);
 
-    // Step 2: Handle fields that FormData omits
+    // Step 2: Handle omitted fields
     this._processOmittedFields(form, result);
 
-    // Step 3: Build nested structures from bracket notation
+    // Step 3: Build nested structures
     const nested = this._buildNestedStructures(result);
 
-    // Step 4: Merge — nested overrides flat for structured fields
-    const finalData = { ...result, ...nested };
+    // Step 4: Merge
+    let finalData = { ...result, ...nested };
 
-    logger.debug("Form data processed:", {
-      fieldCount: Object.keys(result).length,
-      nestedKeys: Object.keys(nested)
-    });
+    // Step 5: Variation processing
+    finalData = this.variationProcessor.process(finalData);
 
     return finalData;
   }
-
-  // ─── Step 1: FormData Entries ─────────────────────────────
-
   /**
    * Extract all entries from FormData.
    * Handles multiple values for the same key (multi-select, checkbox groups).
@@ -67,7 +94,53 @@ export default class FormDataProcessor {
       const field = this._findField(form, key);
       result[key] = this._processValue(field, key, value);
     }
+
+    // 👇 ADD THIS: Capture selects that FormData omitted due to disabled placeholder
+    const selects = form.querySelectorAll("select[name]");
+    selects.forEach((select) => {
+      if (!(select.name in result)) {
+        // Check if the selected option is a disabled placeholder
+        const selectedOption = select.options?.[select.selectedIndex];
+        if (selectedOption && selectedOption.disabled && selectedOption.value === "") {
+          result[select.name] = ""; // Include empty for validation
+          logger.debug(`Captured omitted select for validation: ${select.name} = ""`);
+        } else {
+          result[select.name] = select.value || "";
+          logger.debug(`Captured omitted select: ${select.name} = "${select.value}"`);
+        }
+      }
+    });
   }
+  // _processFormDataEntries(form, result) {
+  //   const formData = new FormData(form);
+
+  //   // Track which keys have multiple entries
+  //   const keyCounts = {};
+  //   for (const [key] of formData.entries()) {
+  //     keyCounts[key] = (keyCounts[key] || 0) + 1;
+  //   }
+
+  //   // Track which keys we've already started collecting
+  //   const collected = new Set();
+
+  //   for (const [key, value] of formData.entries()) {
+  //     // For multi-value keys, collect all at once on first encounter
+  //     if (keyCounts[key] > 1 && !collected.has(key)) {
+  //       collected.add(key);
+  //       const allValues = formData.getAll(key);
+  //       const field = this._findField(form, key);
+  //       result[key] = this._processMultiValue(field, key, allValues, form);
+  //       continue;
+  //     }
+
+  //     // Skip if already collected as multi-value
+  //     if (collected.has(key)) continue;
+
+  //     // Single value
+  //     const field = this._findField(form, key);
+  //     result[key] = this._processValue(field, key, value);
+  //   }
+  // }
 
   // ─── Step 2: Omitted Fields ───────────────────────────────
 
@@ -185,14 +258,6 @@ export default class FormDataProcessor {
     return null;
   }
 
-  // ─── Step 3: Nested Structure Building ────────────────────
-
-  /**
-   * Build nested objects/arrays from bracket-notation keys.
-   * e.g., "variations[0][name]" → { variations: [{ name: "..." }] }
-   *
-   * Only processes keys that contain brackets.
-   */
   _buildNestedStructures(flatData) {
     const nested = {};
     let hasNested = false;
@@ -208,7 +273,6 @@ export default class FormDataProcessor {
 
     return nested;
   }
-
   /**
    * Set a value at a nested path.
    * "items[0][name]" → obj.items[0].name = value
@@ -217,22 +281,33 @@ export default class FormDataProcessor {
     const parts = path
       .replace(/\]/g, "")
       .split("[")
-      .filter((p) => p);
+      .filter((p) => p !== "");
+
+    if (parts.length === 0) {
+      obj[path] = value;
+      return;
+    }
+    const processedParts = parts.map((part) => {
+      return /^\d+$/.test(part) ? parseInt(part, 10) : part;
+    });
 
     let current = obj;
 
-    for (let i = 0; i < parts.length - 1; i++) {
-      const part = parts[i];
-      const nextPart = parts[i + 1];
+    for (let i = 0; i < processedParts.length - 1; i++) {
+      const part = processedParts[i];
+      const nextPart = processedParts[i + 1];
+
+      // Determine if current part should be an array or object
+      const shouldBeArray = typeof nextPart === "number";
 
       if (current[part] === undefined) {
-        current[part] = /^\d+$/.test(nextPart) ? [] : {};
+        current[part] = shouldBeArray ? [] : {};
       }
 
       current = current[part];
     }
 
-    const lastPart = parts[parts.length - 1];
+    const lastPart = processedParts[processedParts.length - 1];
     current[lastPart] = value;
   }
 }

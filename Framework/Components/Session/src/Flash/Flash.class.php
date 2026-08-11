@@ -4,91 +4,196 @@ declare(strict_types=1);
 
 class Flash implements FlashInterface
 {
-    /** Contains the session object */
     use SessionTrait;
 
-    /** @var string */
     protected const FLASH_KEY = 'flash_message';
     protected const INPUT_KEY = 'old_input';
+    protected const string FLAG_KEY = 'flag_key';
+    protected const DEFAULT_DURATION = 5000;
 
-    /** @var string */
     protected string $flashKey;
-
-    /** @var ?SessionInterface */
     protected ?SessionInterface $session;
 
-    /**
-     * Class constructor method which accepts a single default argument
-     * which allows the user to specifies their own flash key as a option
-     * else if not present will use the default set by the framework.
-     *
-     * @param object|null $session
-     * @param null|string $flashKey
-     */
     public function __construct(?SessionInterface $session = null, ?string $flashKey = null)
     {
         $this->session = $session;
-        if ($flashKey != null) {
-            $this->flashKey = $flashKey;
-        } else {
-            $this->flashKey = self::FLASH_KEY;
-        }
+        $this->flashKey = $flashKey ?? self::FLASH_KEY;
     }
 
-    /**
-     * @param object $session
-     *
-     * @return self
-     */
     public function getSessionObject(object $session): self
     {
         $this->session = $session;
         return $this;
     }
 
+    // ───────────────────────────────────────────────────────────
+    // Flash messages
+    // ───────────────────────────────────────────────────────────
+
     /**
-     * @param string $message
-     * @param null|FlashType $type
+     * Add a flash message. Multiple messages are appended (queue).
      *
-     * @throws SessionInvalidArgumentException
+     * @param string         $message
+     * @param FlashType|null $type
+     * @param array          $options {
      *
-     * @return void
+     *     @var string|null $title         Optional bold title.
+     *     @var int|null    $duration      Auto-dismiss in ms. null/0 = sticky.
+     *     @var bool        $dismissible   Show close button. Default true.
+     *     @var bool        $showProgress  Show countdown bar. Default true if duration > 0.
+     *     @var array       $extra         Arbitrary metadata.
+     * }
      */
-    public function add(string $message, ?FlashType $type = null): void
+    public function add(string $message, ?FlashType $type = null, array|FlashOptions $options = []): void
     {
-        /* Apply default constants to flash type */
-        if ($type === null) {
-            $type = FlashType::SUCCESS;
+        if ($options instanceof FlashOptions) {
+            $options = $options->toArray();
         }
-        if ($this->session->exists($this->flashKey)) {
-            $this->session->set($this->flashKey, []);
+        $type = $type ?? FlashType::SUCCESS;
+
+        // Sensible defaults per type
+        $defaultDuration = match ($type) {
+            FlashType::DANGER => null,                    // errors stick by default
+            FlashType::WARNING => self::DEFAULT_DURATION,
+            default => self::DEFAULT_DURATION,
+        };
+
+        $duration = $options['duration'] ?? $defaultDuration;
+        $showProgress = ($options['showProgress'] ?? true) && !empty($duration);
+
+        $payload = [
+            'type' => $type->value,
+            'message' => $message,
+            'title' => $options['title'] ?? null,
+            'duration' => $duration,
+            'dismissible' => $options['dismissible'] ?? true,
+            'showProgress' => $showProgress,
+            'extra' => $options['extra'] ?? [],
+            'created_at' => time(),
+        ];
+
+        // Append to queue (preserves multiple flashes across one request)
+        $current = $this->session->exists($this->flashKey)
+            ? (array) $this->session->get($this->flashKey)
+            : [];
+
+        $current[] = $payload;
+
+        $this->session->set($this->flashKey, $current);
+    }
+
+    public function addFlag(FlashFlagKey $flag): void
+    {
+        $flags = $this->session->exists(self::FLAG_KEY)
+            ? (array) $this->session->get(self::FLAG_KEY)
+            : [];
+
+        $flagValue = $flag->value;
+        if (!in_array($flagValue, $flags, true)) {
+            $flags[] = $flagValue;
+            $this->session->set(self::FLAG_KEY, $flags);
         }
-        $this->session->setArray(
-            $this->flashKey,
-            [
-                'message' => $message,
-                'type' => $type,
-            ],
-        );
+    }
+
+    public function hasFlag(FlashFlagKey $flag): bool
+    {
+        if (!$this->session->exists(self::FLAG_KEY)) {
+            return false;
+        }
+
+        $flags = (array) $this->session->get(self::FLAG_KEY);
+        return in_array($flag->value, $flags, true);
+    }
+
+    public function getAllFlags(): array
+    {
+        if (!$this->session->exists(self::FLAG_KEY)) {
+            return [];
+        }
+        return (array) $this->session->get(self::FLAG_KEY);
+    }
+
+    public function consumeFlag(FlashFlagKey $flag): bool
+    {
+        if (!$this->session->exists(self::FLAG_KEY)) {
+            return false;
+        }
+
+        $flags = (array) $this->session->get(self::FLAG_KEY);
+        $flagValue = $flag->value;
+        $found = in_array($flagValue, $flags, true);
+
+        if ($found) {
+            $flags = array_values(array_filter($flags, function ($f) use ($flagValue) {
+                return $f !== $flagValue;
+            }));
+
+            if (empty($flags)) {
+                $this->session->delete(self::FLAG_KEY);
+            } else {
+                $this->session->set(self::FLAG_KEY, $flags);
+            }
+        }
+
+        return $found;
     }
 
     /**
-     * @inheritdoc
+     * Consume all flash messages (returns and clears them).
      *
-     * @return mixed
+     * @return array<int, array<string, mixed>>
      */
-    public function get()
+    public function get(): array
     {
-        if ($this->session->exists($this->flashKey)) {
-            return $this->formatMessage($this->session->flush($this->flashKey));
+        if (!$this->session->exists($this->flashKey)) {
+            return [];
         }
+
+        $messages = (array) $this->session->flush($this->flashKey);
+
+        // Backward compatibility: support legacy single-message structure
+        // (when only ['message' => ..., 'type' => ...] was stored)
+        if (isset($messages['message']) && isset($messages['type'])) {
+            $messages = [$this->normalizeLegacyMessage($messages)];
+        }
+
+        return array_values($messages);
     }
+
+    /**
+     * Peek at flash messages without consuming.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function peek(): array
+    {
+        if (!$this->session->exists($this->flashKey)) {
+            return [];
+        }
+
+        $messages = (array) $this->session->get($this->flashKey);
+
+        if (isset($messages['message']) && isset($messages['type'])) {
+            $messages = [$this->normalizeLegacyMessage($messages)];
+        }
+
+        return array_values($messages);
+    }
+
+    public function has(): bool
+    {
+        return $this->session->exists($this->flashKey)
+            && !empty($this->session->get($this->flashKey));
+    }
+
+    // ───────────────────────────────────────────────────────────
+    // Generic per-key data (unchanged)
+    // ───────────────────────────────────────────────────────────
 
     public function addData(string $key, array $data = []): void
     {
-        $uniqueKey = 'data_' . md5(trim($key));
         if (!empty($data)) {
-            $this->session->set($uniqueKey . '_flash_data', $data);
+            $this->session->set('data_' . $this->normalizeKey($key) . '_flash_data', $data);
         }
     }
 
@@ -100,8 +205,7 @@ class Flash implements FlashInterface
 
     public function getData(string $key): ?array
     {
-        $uniqueKey = 'data_' . md5(trim($key));
-        return $this->session->flush($uniqueKey . '_flash_data');
+        return $this->flush('data_' . $this->normalizeKey($key) . '_flash_data');
     }
 
     public function removeData(string $key): void
@@ -116,14 +220,9 @@ class Flash implements FlashInterface
         return $this->session->exists($uniqueKey . '_flash_data');
     }
 
-    public function addFormData(
-        string $formAction,
-        array $postData = [],
-        array $formErrors = [],
-        array $fileData = [],
-    ): void {
-        $formAction = $this->normalizeFormAction($formAction);
-        $formKey = 'form_' . md5(ltrim($formAction, DS));
+    public function addFormData(string $formAction, array $postData = [], array $formErrors = [], array $fileData = []): void
+    {
+        $formKey = 'form_' . $this->normalizeKey($formAction);
 
         if (!empty($postData)) {
             $this->session->set($formKey . '_values', $postData);
@@ -136,29 +235,22 @@ class Flash implements FlashInterface
         }
     }
 
-    public function flush(?string $key = null): array
-    {
-        $input = $this->session->flush(self::INPUT_KEY);
-
-        if ($key !== null && is_array($input)) {
-            return $input[$key] ?? null;
-        }
-        return $input;
-    }
-
     public function getFormData(string $formAction): array
     {
-        $formAction = $this->normalizeFormAction($formAction);
-        $formKey = 'form_' . md5($formAction);
+        $formKey = 'form_' . $this->normalizeKey($formAction);
 
-        $values = $this->peekData($formKey . '_values') ?? [];
-        $errors = $this->peekData($formKey . '_errors') ?? [];
-        $files = $this->peekData($formKey . '_files') ?? [];
         return [
-            'values' => $values,
-            'errors' => $errors,
-            'files' => $files,
+            'values' => $this->flush($formKey . '_values') ?? [],
+            'errors' => $this->flush($formKey . '_errors') ?? [],
+            'files' => $this->flush($formKey . '_files') ?? [],
         ];
+    }
+
+    public function flush(?string $key = null): array
+    {
+        $targetKey = $key ?? self::INPUT_KEY;
+        $data = $this->session->flush($targetKey);
+        return is_array($data) ? $data : [];
     }
 
     public function getSession(): SessionInterface
@@ -166,18 +258,37 @@ class Flash implements FlashInterface
         return $this->session;
     }
 
-    private function normalizeFormAction(string $formAction): string
+    // ───────────────────────────────────────────────────────────
+    // Form data (unchanged)
+    // ───────────────────────────────────────────────────────────
+    private function normalizeKey(string $key): string
     {
-        return rtrim($formAction, DS);
+        return md5(trim($key, " \t\n\r\0\x0B/" . DS));
     }
 
-    private function formatMessage(array $flashMsg): string
+    // ───────────────────────────────────────────────────────────
+    // Internal helpers
+    // ───────────────────────────────────────────────────────────
+    private function normalizeLegacyMessage(array $legacy): array
     {
-        $flashMsg = ArrayUtils::first($flashMsg);
-        $msg = "<div id='message' class='alert alert-" . $flashMsg['type']->value . ' alert-dismissible fade show text-center' . "' role='alert'>";
-        $msg .= $flashMsg['message'];
-        $msg .= '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>';
-        $msg .= '</div>';
-        return $msg;
+        $type = $legacy['type'] instanceof FlashType
+            ? $legacy['type']->value
+            : (string) $legacy['type'];
+
+        $duration = match ($type) {
+            FlashType::DANGER->value => null,
+            default => self::DEFAULT_DURATION,
+        };
+
+        return [
+            'type' => $type,
+            'message' => (string) $legacy['message'],
+            'title' => null,
+            'duration' => $duration,
+            'dismissible' => true,
+            'showProgress' => $duration !== null,
+            'extra' => [],
+            'created_at' => time(),
+        ];
     }
 }

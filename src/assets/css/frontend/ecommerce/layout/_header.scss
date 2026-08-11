@@ -1,4 +1,5 @@
 @use "sass:map";
+@use "css/globals" as *;
 @use "css/frontend/ecommerce/abstracts" as *;
 /*----------------- HEADER ---------------*/
 
@@ -13,7 +14,7 @@
   // Top header section
   &-top {
     width: 100%;
-    background: map.get($colors-ecommerce, white);
+    background-color: map.get($colors-ecommerce, white);
 
     .menu {
       display: flex;
@@ -23,9 +24,9 @@
       gap: 3.2rem;
       align-self: stretch;
 
-      @include respond-below("xxl") {
-        padding: 1.6rem 12rem;
-      }
+      // @include respond-below("xxl") {
+      //   padding: 1.6rem 12rem;
+      // }
 
       @include respond-below("xl") {
         padding: 1.6rem 8rem;
@@ -210,12 +211,32 @@
             }
           }
         }
+        &--cart {
+          position: relative;
+          &-item-count {
+            position: absolute;
+            top: 0;
+            right: -6px;
+            width: 2rem;
+            height: 2rem;
+            background-color: $color-red;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            color: $color-white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            visibility: hidden;
+            &.visible {
+              visibility: visible;
+            }
+          }
+        }
       }
 
       // Mobile toggle button
       &__mobile-toggle {
         @include flex-center;
-        @include button-reset;
         width: map.get($sizes, btn-md);
         height: map.get($sizes, btn-md);
         color: map.get($colors-ecommerce, black);
@@ -364,7 +385,8 @@
 // Category navigation
 .category-nav {
   display: flex;
-  padding: 0.8rem 16rem;
+  padding-top: 0.8rem;
+  padding-bottom: 0.8rem;
   justify-content: space-between;
   align-items: center;
   align-content: center;
@@ -372,9 +394,9 @@
   align-self: stretch;
   flex-wrap: wrap;
 
-  @include respond-below("xxl") {
-    padding: 0.8rem 12rem;
-  }
+  // @include respond-below("xxl") {
+  //   padding: 0.8rem 12rem;
+  // }
 
   @include respond-below("xl") {
     padding: 0.8rem 8rem;
@@ -480,9 +502,7 @@
   }
 }
 
-// Enhanced responsive adjustments
 .header {
-  // Better z-index management
   z-index: 100;
   // Sticky header improvements
   &.is-scrolled {
@@ -499,7 +519,6 @@
     }
   }
 
-  // Improved mobile header
   @include respond-below("md") {
     &-top {
       position: relative;
@@ -545,7 +564,6 @@
           }
 
           button {
-            @include button-reset;
             width: 2.4rem;
             height: 2.4rem;
             display: flex;

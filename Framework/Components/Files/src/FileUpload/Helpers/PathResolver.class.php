@@ -9,7 +9,7 @@ class PathResolver
         private string $webBaseUrl = '/uploads/',
     ) {
         // Normalize paths
-        $this->storagePath = rtrim($storagePath, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+        $this->storagePath = rtrim($storagePath, DS) . DS;
         $this->webBaseUrl = rtrim($webBaseUrl, '/') . '/';
     }
 
@@ -17,17 +17,17 @@ class PathResolver
     {
         $webPath = str_replace('\\', '/', $webPath);
         $webBasePath = rtrim($webBasePath, '/') . '/';  // Ensure trailing slash
-        $targetDir = rtrim($targetDir, DIRECTORY_SEPARATOR);
+        $targetDir = rtrim($targetDir, DS);
 
         if (str_starts_with($webPath, $webBasePath)) {
             $relative = substr($webPath, strlen($webBasePath));
-            return $targetDir . DIRECTORY_SEPARATOR . ltrim($relative, '/');
+            return $targetDir . DS . ltrim($relative, '/');
         }
 
         // Legacy paths
         if (str_starts_with($webPath, '/uploads/')) {
             $relative = substr($webPath, strlen('/uploads/'));
-            return $this->storagePath . 'uploads' . DIRECTORY_SEPARATOR . ltrim($relative, '/');
+            return $this->storagePath . 'uploads' . DS . ltrim($relative, '/');
         }
 
         return $webPath;
@@ -36,7 +36,7 @@ class PathResolver
     public function toWeb(string $absolutePath, string $targetDir, string $webBasePath): string
     {
         $absolutePath = str_replace('\\', '/', $absolutePath);
-        $targetDir = rtrim($targetDir, DIRECTORY_SEPARATOR);
+        $targetDir = rtrim($targetDir, DS);
 
         // DON'T rtrim the webBasePath here - keep the trailing slash
         $webBasePath = $webBasePath;  // Keep as is
@@ -54,7 +54,7 @@ class PathResolver
 
         // Legacy SRC to SCRIPT conversion
         if (defined('SRC') && defined('SCRIPT') && str_starts_with($absolutePath, SRC)) {
-            return str_replace(SRC, SCRIPT . DIRECTORY_SEPARATOR, $absolutePath);
+            return str_replace(SRC, SCRIPT . DS, $absolutePath);
         }
 
         return $absolutePath;
@@ -62,7 +62,7 @@ class PathResolver
 
     public function isTempFile(string $path, string $tempDir): bool
     {
-        $tempDir = rtrim($tempDir, DIRECTORY_SEPARATOR);
+        $tempDir = rtrim($tempDir, DS);
         return str_starts_with($path, $tempDir);
     }
 

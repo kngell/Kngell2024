@@ -1,5 +1,7 @@
 import BaseFormManager from "js/components/Managers/BaseFormManager";
 import ProductComponentsManager from "js/backend/pages/products-save/Managers/ProductComponentsManager";
+import VariationHandler from "js/backend/pages/products-save/Handlers/VariationHandler";
+import CardActionHandler from "js/components/cardAction/CardActionHandler ";
 import BrowserLogger from "js/core/utils/BrowserLogger";
 
 class ProductSaveMain extends BaseFormManager {
@@ -12,6 +14,27 @@ class ProductSaveMain extends BaseFormManager {
       enableActionBar: true,
       resetOnSuccess: options.resetOnSuccess || true,
       notificationContainerId: options.notificationContainerId || "product-notifications",
+
+      channelStrategy: "flash", // 'flash', 'notification', or 'auto'
+
+      // Flash channel configuration
+      flashSelector: options.flashSelector || ".product__body",
+      flashConfig: {
+        durations: {
+          success: 3000,
+          error: 0, // Product errors persist
+          warning: 5000,
+          info: 4000
+        },
+        containerClass: "flash-container"
+      },
+
+      redirectConfig: {
+        insert: true, // Redirect after insert
+        update: false, // NO redirect after update
+        delete: true, // Redirect after delete
+        delay: 1500
+      },
 
       notificationConfig: {
         error: {
@@ -38,6 +61,17 @@ class ProductSaveMain extends BaseFormManager {
     this.componentsManager = null;
   }
 
+  // ProductSaveMain.js - Add init logging to verify
+
+  // Optional: Override for dynamic strategy based on form state
+  getChannelStrategy() {
+    // You could add logic here to decide strategy dynamically
+    // For example, check if user prefers flash messages
+    return this.options.channelStrategy;
+  }
+  getFlashSelector() {
+    return this.getFormSelector();
+  }
   getDefaultNotificationContainerId() {
     return "product-notifications";
   }
@@ -61,14 +95,16 @@ class ProductSaveMain extends BaseFormManager {
       this.componentsManager = new ProductComponentsManager();
       await this.componentsManager.initialize();
       this.logger.debug("ProductComponentsManager initialized successfully");
+      new CardActionHandler();
+      this.logger.debug("CardActionHandler initialized successfully");
+
+      new VariationHandler();
+      this.logger.debug("VariationHandler initialized successfully");
     } catch (error) {
       this.logger.error("Failed to initialize ProductComponentsManager:", error);
     }
   }
 
-  /**
-   * Override to include ProductComponentsManager in custom data processing
-   */
   getCustomDataProcessors() {
     return [
       // Add ProductComponentsManager data to form submission
@@ -91,9 +127,6 @@ class ProductSaveMain extends BaseFormManager {
     return {
       onEntityDeleted: (entityId, result) => {
         this.logger.success("Product deleted:", entityId);
-        if (result.redirect) {
-          window.location.href = result.redirect;
-        }
       },
       notificationConfig: {
         error: { permanent: true, duration: 8000 },
@@ -130,31 +163,24 @@ class ProductSaveMain extends BaseFormManager {
 
   // ─── Form Success Handler ──────────────────────────────────
 
+  // ProductSaveMain.js - Clean version
   onSuccess(result, context) {
     this.logger.success("Product form submitted successfully");
 
+    // Only handle resets for new products
     if (this.options.resetOnSuccess && result.operation === "insert") {
       this.formHandler?.form?.reset();
 
-      // Reset ProductComponentsManager
       if (this.componentsManager?.reset) {
         this.componentsManager.reset();
         this.logger.debug("ProductComponentsManager reset");
       }
 
-      // Reset custom selects if enabled
       if (this.options.resetCustomSelectsOnSuccess) {
         this.resetAllCustomSelects();
       }
 
       this.dropzoneInstances.forEach((dz) => dz.reset?.());
-    }
-
-    // Handle redirects
-    if (result.redirect) {
-      setTimeout(() => {
-        window.location.href = result.redirect;
-      }, 1500);
     }
   }
 

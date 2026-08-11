@@ -2,35 +2,28 @@
 
 declare(strict_types=1);
 
-abstract class AbstractFileUploadService implements FileUploadComponentInterface, UploadMediapathsInterface
+abstract class AbstractFileUploadService extends AbstractBaseUpload implements FileUploadComponentInterface, UploadMediapathsInterface
 {
-    private const int TEMP_FILE_MAX_AGE = 3600;
+    use FileTrimTrait;
 
     protected FileUploadMap $files;
-    protected array $errors = [];
-    protected array $mediaPaths = [];
-    protected array $fileInformation = [];
     protected string $fieldName;
-    protected bool $isTemporary = false;
-    protected array $formTemporaryWebPaths = [];
-    private array $keptExistingPaths = [];
-    private int $nbOfoldFilesCleanedUp = 0;
+    protected array $keptExistingPaths = [];
+    protected array $fileInformation = [];
 
     public function __construct(
         protected FileProcessorFactory $processor,
         protected FileMoverInterface $fileMover,
         protected FileMetadataService $metadataService,
         protected PathResolver $pathResolver,
-        protected TempFileCleaner $tempFileCleaner,
+        TempFileCleaner $tempFileCleaner,
         Request $request,
         ?string $fieldName = null,
     ) {
+        parent::__construct($tempFileCleaner);
         $this->files = $request->getFiles();
         $this->fieldName = $fieldName ?? $this->resolveFieldName();
-        // $this->state = FileUploadState::createInitial();
     }
-
-    // ========== REQUIRED INTERFACE METHODS ==========
 
     public function proceed(bool $uploadRequired = false, bool $temporary = false): void
     {
@@ -41,7 +34,7 @@ abstract class AbstractFileUploadService implements FileUploadComponentInterface
 
         if (!$this->files->hasFile($this->fieldName)) {
             if ($uploadRequired) {
-                $this->addError(ErrorFile::UPLOAD_ERR_NO_FILE);
+                $this->addError($this->fieldName, ErrorFile::UPLOAD_ERR_NO_FILE->getErrorMessage());
             }
             return;
         }
@@ -58,55 +51,101 @@ abstract class AbstractFileUploadService implements FileUploadComponentInterface
         }
     }
 
-    public function getMediaPaths(): array
+    public function makePermanent(): bool
     {
-        return array_merge($this->keptExistingPaths, $this->mediaPaths);
-    }
+        $allTempPaths = array_merge($this->mediaPaths, $this->keptExistingPaths);
 
-    public function getExistingMediaPaths(): array
-    {
-        return $this->keptExistingPaths;
-    }
-
-    public function getErrors(): array
-    {
-        return $this->errors;
-    }
-
-    public function cleanupOldTempFiles(): int
-    {
-        // If we have access to a cleaner, use it
-        if (isset($this->tempFileCleaner)) {
-            return $this->tempFileCleaner->cleanupDirectory($this->getTempDirectory());
+        if (empty($allTempPaths)) {
+            $this->mediaPaths = $this->permanentPaths;
+            return true;
         }
 
-        $cleanedCount = 0;
-        $now = time();
-        $tempDir = $this->getTempDirectory();
+        try {
+            $tempAbsolutePaths = [];
 
-        foreach (glob($tempDir . '*') as $file) {
-            if (is_file($file) && ($now - filemtime($file)) > self::TEMP_FILE_MAX_AGE) {
-                if (unlink($file)) {
-                    $cleanedCount++;
+            foreach ($allTempPaths as $webPath) {
+                $absolutePath = $this->webPathToAbsolutePath($webPath);
+
+                if ($this->isTempPath($webPath) && file_exists($absolutePath)) {
+                    $tempAbsolutePaths[] = $absolutePath;
+                    $this->removeProtectionForFile($absolutePath);
                 }
             }
-        }
 
-        $this->nbOfoldFilesCleanedUp = $cleanedCount;
-        return $cleanedCount;
+            if (empty($tempAbsolutePaths)) {
+                $this->mediaPaths = array_merge($this->permanentPaths, $this->keptExistingPaths);
+                $this->keptExistingPaths = [];
+                return true;
+            }
+
+            $permanentAbsolutePaths = $this->fileMover->makeFilesPermanent(
+                $tempAbsolutePaths,
+                $this->getTargetDirectory(),
+            );
+
+            $newPermanentPaths = array_map(
+                fn ($path) => $this->absolutePathToWebPath($path),
+                $permanentAbsolutePaths,
+            );
+
+            $this->mediaPaths = array_merge($newPermanentPaths, $this->permanentPaths);
+            $this->keptExistingPaths = [];
+            $this->formTemporaryWebPaths = [];
+            $this->isTemporary = false;
+
+            $this->cleanupProcessedFiles($tempAbsolutePaths);
+
+            return true;
+        } catch (Throwable $e) {
+            $this->addError($this->fieldName, 'Failed to move files to permanent storage: ' . $e->getMessage());
+            return false;
+        }
     }
 
-    public function cleanup(): void
+    public function setFormTemporaryWebPaths(array $paths, bool $protect = true): self
     {
-        foreach ($this->mediaPaths as $webPath) {
-            $absolutePath = $this->webPathToAbsolutePath($webPath);
-            if (file_exists($absolutePath)) {
-                @unlink($absolutePath);
+        $flatPaths = [];
+        foreach ($paths as $path) {
+            if (is_array($path)) {
+                foreach ($path as $nestedPath) {
+                    if (is_string($nestedPath) && !empty($nestedPath)) {
+                        $flatPaths[] = $nestedPath;
+                    }
+                }
+            } elseif (is_string($path) && !empty($path)) {
+                $flatPaths[] = $path;
             }
         }
-        $this->mediaPaths = [];
-        $this->fileInformation = [];
-        $this->formTemporaryWebPaths = [];
+
+        $this->formTemporaryWebPaths = $flatPaths;
+        $this->keptExistingPaths = [];
+        $this->permanentPaths = [];
+
+        foreach ($flatPaths as $webPath) {
+            if ($this->isTempPath($webPath)) {
+                $this->keptExistingPaths[] = $webPath;
+                $absolutePath = $this->webPathToAbsolutePath($webPath);
+
+                // Only protect if explicitly requested
+                if ($protect) {
+                    $this->markFileAsProtected($absolutePath);
+                }
+            } else {
+                $this->permanentPaths[] = $webPath;
+            }
+        }
+
+        return $this;
+    }
+
+    public function removeProtectionForPaths(array $webPaths): void
+    {
+        foreach ($webPaths as $webPath) {
+            if ($this->isTempPath($webPath)) {
+                $absolutePath = $this->webPathToAbsolutePath($webPath);
+                $this->removeProtectionForFile($absolutePath);
+            }
+        }
     }
 
     public function getUploadedFileInfo(): array
@@ -132,20 +171,40 @@ abstract class AbstractFileUploadService implements FileUploadComponentInterface
         ];
     }
 
+    public function getFileMetadata(): array
+    {
+        $fieldName = $this->getBaseFieldName($this->fieldName);
+        return $this->metadataService->getBatchMetadata($this->fileInformation, $fieldName);
+    }
+
     public function getFileInformationObjects(): array
     {
         return $this->fileInformation;
     }
 
-    public function getFileMetadata(): array
+    public function hasFiles(): bool
     {
-        $fieldName = rtrim($this->fieldName, '[]');
-        return $this->metadataService->getBatchMetadata($this->fileInformation, $fieldName);
+        return !empty($this->mediaPaths) || !empty($this->keptExistingPaths) || !empty($this->fileInformation);
     }
 
-    public function isTemporary(): bool
+    public function getRemovedPermanentPaths(array $originalPaths): array
     {
-        return $this->isTemporary;
+        return array_diff($originalPaths, $this->permanentPaths);
+    }
+
+    public function getFieldName(): string
+    {
+        return $this->fieldName;
+    }
+
+    public function getNewMediaPaths(): array
+    {
+        return $this->mediaPaths;
+    }
+
+    public function getExistingMediaPaths(): array
+    {
+        return $this->keptExistingPaths;
     }
 
     public function getRemovedPaths(): array
@@ -158,58 +217,6 @@ abstract class AbstractFileUploadService implements FileUploadComponentInterface
         return !empty($this->getRemovedPaths());
     }
 
-    public function makePermanent(): bool
-    {
-        if (empty($this->mediaPaths) && empty($this->keptExistingPaths)) {
-            return true;
-        }
-
-        try {
-            // Use keptExistingPaths, not formTemporaryWebPaths!
-            $allWebPaths = array_merge($this->mediaPaths, $this->keptExistingPaths);
-            $tempPaths = [];
-
-            foreach ($allWebPaths as $webPath) {
-                $absolutePath = $this->webPathToAbsolutePath($webPath);
-                if ($this->isTempFile($absolutePath) && file_exists($absolutePath)) {
-                    $tempPaths[] = $absolutePath;
-                }
-            }
-
-            if (empty($tempPaths)) {
-                return true;
-            }
-
-            $permanentPaths = $this->fileMover->makeFilesPermanent(
-                $tempPaths,
-                $this->getTargetDirectory(),
-            );
-
-            $this->mediaPaths = array_map(
-                fn ($path) => $this->absolutePathToWebPath($path),
-                $permanentPaths,
-            );
-            $this->isTemporary = false;
-            return true;
-        } catch (Throwable $e) {
-            $this->addError(ErrorFile::MOVE_OPERATION_FAILED, 'system', $e->getMessage());
-            return false;
-        }
-    }
-
-    public function hasErrors(): bool
-    {
-        return !empty($this->errors);
-    }
-
-    public function setFormTemporaryWebPaths(array $formTemporaryWebPaths): self
-    {
-        $this->formTemporaryWebPaths = $formTemporaryWebPaths;
-        $this->keptExistingPaths = $formTemporaryWebPaths;
-        // $this->state = FileUploadState::createInitial($formTemporaryWebPaths);
-        return $this;
-    }
-
     public function removeWebPath(string $webPath): void
     {
         // Remove from keptExistingPaths
@@ -219,6 +226,7 @@ abstract class AbstractFileUploadService implements FileUploadComponentInterface
             $this->keptExistingPaths = array_values($this->keptExistingPaths);
         }
 
+        // Remove from formTemporaryWebPaths
         $key = array_search($webPath, $this->formTemporaryWebPaths);
         if ($key !== false) {
             unset($this->formTemporaryWebPaths[$key]);
@@ -226,25 +234,13 @@ abstract class AbstractFileUploadService implements FileUploadComponentInterface
         }
     }
 
-    public function getNewMediaPaths(): array
-    {
-        return $this->mediaPaths;
-    }
-
-    public function getFormTemporaryWebPaths(): array
-    {
-        return $this->formTemporaryWebPaths;
-    }
-
-    public function getNbOfoldFilesCleanedUp(): int
-    {
-        return $this->nbOfoldFilesCleanedUp;
-    }
-
     public function cleanupPermanentFiles(): void
     {
         foreach ($this->mediaPaths as $path) {
-            $this->fileMover->deletePermanentFile($path);
+            $absolutePath = $this->webPathToAbsolutePath($path);
+            if (file_exists($absolutePath)) {
+                @unlink($absolutePath);
+            }
         }
         $this->mediaPaths = [];
     }
@@ -254,73 +250,14 @@ abstract class AbstractFileUploadService implements FileUploadComponentInterface
         return !empty($this->mediaPaths) || !empty($this->formTemporaryWebPaths);
     }
 
-    public function getFieldName(): string
-    {
-        return $this->fieldName;
-    }
+    // ========== END OF INTERFACE METHODS ==========
 
-    public function hasFiles(): bool
-    {
-        return !empty($this->getMediaPaths()) || !empty($this->fileInformation);
-    }
-
-    // ========== ABSTRACT METHODS ==========
-
+    // Abstract methods that must be implemented by concrete classes
     abstract public function getHandledUploadFileType(): UploadFileType;
-
-    public function getWebBasePath(): string
-    {
-        $storagePath = realpath(STORAGE) . DIRECTORY_SEPARATOR;
-        // Ensure target directory has a consistent slash for calculation
-        $targetDir = rtrim($this->getTargetDirectory(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
-
-        if (str_starts_with($targetDir, $storagePath)) {
-            $relative = substr($targetDir, strlen($storagePath));
-            // Ensure the return string starts and ends with a slash
-            return '/' . trim(str_replace(DIRECTORY_SEPARATOR, '/', $relative), '/') . '/';
-        }
-
-        return '/uploads/' . basename($targetDir) . '/';
-    }
-
-    // public function getWebBasePath(): string
-    // {
-    //     $storagePath = realpath(STORAGE) . DIRECTORY_SEPARATOR;
-    //     $targetDir = $this->getTargetDirectory();
-
-    //     if (str_starts_with($targetDir, $storagePath)) {
-    //         $relative = substr($targetDir, strlen($storagePath));
-    //         return '/' . str_replace(DIRECTORY_SEPARATOR, '/', $relative);
-    //     }
-
-    //     return '/uploads/' . basename($targetDir) . '/';
-    // }
-
-    abstract protected function getTargetDirectory(): string;
-
-    protected function getProcessor(): FileProcessorInterface
-    {
-        $files = $this->files->all();
-        if (is_array($files[$this->fieldName])) {
-            return $this->processor->getFileProcessor($files[$this->fieldName][0]);
-        }
-        return $this->processor->getFileProcessor($files[$this->fieldName]);
-    }
-
-    // ========== PROTECTED METHODS ==========
 
     protected function getTempDirectory(): string
     {
         return $this->getTargetDirectory() . 'temp/';
-    }
-
-    protected function resolveFieldName(): string
-    {
-        $fieldNames = array_keys($this->files->all());
-        if (empty($fieldNames)) {
-            throw new RuntimeException('No file upload fields found');
-        }
-        return $fieldNames[0];
     }
 
     protected function webPathToAbsolutePath(string $webPath): string
@@ -333,14 +270,14 @@ abstract class AbstractFileUploadService implements FileUploadComponentInterface
             );
         }
 
-        // Fallback to simple logic
+        // Fallback logic
         $webPath = str_replace('\\', '/', $webPath);
         $webBasePath = rtrim($this->getWebBasePath(), '/');
-        $targetDir = rtrim($this->getTargetDirectory(), DIRECTORY_SEPARATOR);
+        $targetDir = rtrim($this->getTargetDirectory(), DS);
 
         if (str_starts_with($webPath, $webBasePath)) {
             $relative = substr($webPath, strlen($webBasePath));
-            return $targetDir . DIRECTORY_SEPARATOR . ltrim($relative, '/');
+            return $targetDir . DS . ltrim($relative, '/');
         }
 
         return file_exists($webPath) ? $webPath : $webPath;
@@ -362,7 +299,6 @@ abstract class AbstractFileUploadService implements FileUploadComponentInterface
 
         if (str_starts_with($absolutePath, $targetDir)) {
             $relative = substr($absolutePath, strlen($targetDir));
-
             return $webBasePath . '/' . ltrim($relative, '/');
         }
 
@@ -375,12 +311,31 @@ abstract class AbstractFileUploadService implements FileUploadComponentInterface
             return $this->pathResolver->isTempFile($path, $this->getTempDirectory());
         }
 
-        $tempDir = rtrim($this->getTempDirectory(), DIRECTORY_SEPARATOR);
+        $tempDir = rtrim($this->getTempDirectory(), DS);
         return str_starts_with($path, $tempDir);
     }
 
-    // ========== PRIVATE METHODS ==========
+    protected function isTempPath(string $webPath): bool
+    {
+        // Ensure we have a string
+        if (!is_string($webPath)) {
+            return false;
+        }
 
+        $tempDir = $this->getTempDirectory();
+        $tempDirWebPath = $this->absolutePathToWebPath($tempDir);
+
+        $webPathNormalized = rtrim(str_replace('\\', '/', $webPath), '/');
+        $tempDirNormalized = rtrim(str_replace('\\', '/', $tempDirWebPath), '/');
+
+        return str_starts_with($webPathNormalized, $tempDirNormalized);
+    }
+
+    abstract protected function getTargetDirectory(): string;
+
+    abstract protected function getWebBasePath(): string;
+
+    // Private helper methods
     private function processSingleFile(FileUpload $file, bool $uploadRequired): void
     {
         if ($file->getError() !== ErrorFile::UPLOAD_ERR_OK) {
@@ -401,17 +356,7 @@ abstract class AbstractFileUploadService implements FileUploadComponentInterface
             if (!$file instanceof FileUpload) {
                 continue;
             }
-
-            if ($file->getError() !== ErrorFile::UPLOAD_ERR_OK) {
-                $this->handleFileError($file, $uploadRequired);
-                continue;
-            }
-
-            $fileInfo = $this->saveFile($file);
-            if ($fileInfo !== null) {
-                $this->mediaPaths[] = $fileInfo->getWebPath();
-                $this->fileInformation[] = $fileInfo;
-            }
+            $this->processSingleFile($file, $uploadRequired);
         }
     }
 
@@ -419,10 +364,10 @@ abstract class AbstractFileUploadService implements FileUploadComponentInterface
     {
         if ($file->getError() === ErrorFile::UPLOAD_ERR_NO_FILE) {
             if ($uploadRequired) {
-                $this->addError(ErrorFile::UPLOAD_ERR_NO_FILE, $file->getOriginalName());
+                $this->addError($this->fieldName, ErrorFile::UPLOAD_ERR_NO_FILE->getErrorMessage($file->getOriginalName()));
             }
         } else {
-            $this->addError($file->getError(), $file->getOriginalName());
+            $this->addError($this->fieldName, $file->getError()->getErrorMessage($file->getOriginalName()));
         }
     }
 
@@ -439,10 +384,10 @@ abstract class AbstractFileUploadService implements FileUploadComponentInterface
                 processor: $this->getProcessor(),
             );
         } catch (FileException $e) {
-            $this->addError(ErrorFile::MOVE_OPERATION_FAILED, $file->getOriginalName());
+            $this->addError($this->fieldName, ErrorFile::MOVE_OPERATION_FAILED->getErrorMessage($file->getOriginalName()));
             return null;
         } catch (Throwable $e) {
-            $this->addError(ErrorFile::CREATE_OPERATION_FAILED, $file->getOriginalName(), $e->getMessage());
+            $this->addError($this->fieldName, ErrorFile::CREATE_OPERATION_FAILED->getErrorMessage($file->getOriginalName(), $e->getMessage()));
             return null;
         }
     }
@@ -455,15 +400,25 @@ abstract class AbstractFileUploadService implements FileUploadComponentInterface
         return $safeName . '_' . uniqid() . '.' . $extension;
     }
 
-    private function addError(ErrorFile $error, ?string $filename = null, string ...$params): void
+    private function resolveFieldName(): string
     {
-        $field = $this->fieldName;
-        $message = $error->getErrorMessage($filename, ...$params);
-
-        if (!isset($this->errors[$field])) {
-            $this->errors[$field] = [];
+        $fieldNames = array_keys($this->files->all());
+        if (empty($fieldNames)) {
+            throw new RuntimeException('No file upload fields found');
         }
+        return $fieldNames[0];
+    }
 
-        $this->errors[$field][] = $message;
+    private function getProcessor(): FileProcessorInterface
+    {
+        $files = $this->files->all();
+        if (isset($files[$this->fieldName])) {
+            $fileData = $files[$this->fieldName];
+            if (is_array($fileData)) {
+                $fileData = $fileData[0] ?? null;
+            }
+            return $this->processor->getFileProcessor($fileData);
+        }
+        return $this->processor->getFileProcessor(null);
     }
 }

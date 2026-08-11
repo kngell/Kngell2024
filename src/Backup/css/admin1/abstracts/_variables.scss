@@ -1,5 +1,5 @@
 @use "sass:map";
-@use "tokens" as *;
+@use "css/globals/design token" as *;
 @use "functions" as *;
 
 //COLORS
@@ -28,8 +28,7 @@ $fills: (
   success: #21c45d,
   pending: #f0d411,
   error: #ef4343,
-  neutral-50: #f3f3f3,
-  //#f9fafb,
+  neutral-50: #f3f3f3 //#f9fafb,
 );
 
 // $texts: (
@@ -87,5 +86,5 @@ $breakpoints: (
   sm: 36rem,
   md: 48rem,
   lg: 62rem,
-  xl: 75rem,
+  xl: 75rem
 );

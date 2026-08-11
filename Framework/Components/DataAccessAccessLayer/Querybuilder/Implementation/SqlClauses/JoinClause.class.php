@@ -13,6 +13,7 @@ class JoinClause extends SqlQuery implements RegularClauseComponentInterface
         private SqlSelectQueryBuilderInterface|Closure|null $selectQuery = null,
         ?EntityManagerInterface $em = null,
         ?string $method = null,
+        private null|BulkUpdateType $type = null,
     ) {
         parent::__construct(self::CLAUSE, null, $em);
         $this->withAlias = $withAlias;
@@ -27,12 +28,21 @@ class JoinClause extends SqlQuery implements RegularClauseComponentInterface
         if (!$this->helper) {
             throw new RuntimeException('TablesAliasHelper not initialized');
         }
+        // if ($this->table === 'product_regional_price') {
+        //     $stop = true;
+        // }
         $parts = [];
-        if ($this->selectQuery !== null) {
-            if ($this->selectQuery instanceof Closure) {
-                $query = new SqlQueryClosure($this->selectQuery, $this->em, $this->method);
-            } elseif ($this->selectQuery instanceof SqlComponent) {
-                $query = $this->selectQuery;
+        $query = $this->selectQuery;
+        $innerSql = '';
+        if ($query !== null) {
+            if ($query instanceof Closure) {
+                $query = new SqlRowClosure(
+                    closure: $query,
+                    em: $this->em,
+                    method: $this->method,
+                    bulkUpdateType: $this->type,
+                    statementContext: $this->context,
+                );
             }
             $this->prepareChild($query);
             $innerSql = '(' . $query->build() . ')';
@@ -55,7 +65,11 @@ class JoinClause extends SqlQuery implements RegularClauseComponentInterface
 
         $this->state->logicalToPhysicalMap[$this->table] = $table;
 
-        if ($this->state->statementContext === StatementType::BULK_UPDATE) {
+        if ($this->context === StatementType::BULK_UPDATE) {
+            if ($this->type === BulkUpdateType::ROW_CONSTRUCTOR) {
+                $columnsList = $query->getColumnList();
+                $alias = $alias . '(' . $columnsList . ')';
+            }
             $table = $innerSql;
         }
 
@@ -89,7 +103,7 @@ class JoinClause extends SqlQuery implements RegularClauseComponentInterface
 
     public function getSqlClause(): ?SqlClause
     {
-        if ($this->state->statementContext === StatementType::BULK_UPDATE) {
+        if ($this->context === StatementType::BULK_UPDATE) {
             return null;
         }
         return SqlClause::tryFrom($this->method);
@@ -104,5 +118,21 @@ class JoinClause extends SqlQuery implements RegularClauseComponentInterface
     {
         $joinType = SqlJoinType::{$this->method};
         return str_replace('_', ' ', $joinType->value);
+    }
+
+    /**
+     * @param null|StatementType $context
+     *
+     * @return JoinClause
+     */
+    public function setContext(?StatementType $context): JoinClause
+    {
+        $this->context = $context;
+        return $this;
+    }
+
+    public function getContext(): null|StatementType
+    {
+        return $this->context;
     }
 }

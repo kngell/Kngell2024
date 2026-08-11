@@ -19,9 +19,9 @@ final class LazyCurrencyCodeProvider implements CurrencyCodeProviderInterface
         return $this->resolve()->getCurrencyCode($currencyId);
     }
 
-    public function getSystemDefaultCurrencyCode(): string
+    public function getSystemDefaultCurrencyCode(?string $regionCode = null): string
     {
-        return $this->resolve()->getSystemDefaultCurrencyCode();
+        return $this->resolve()->getSystemDefaultCurrencyCode($regionCode);
     }
 
     public function isValidCurrency(string $currencyCode): bool

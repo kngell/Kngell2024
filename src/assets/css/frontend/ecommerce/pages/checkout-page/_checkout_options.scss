@@ -1,0 +1,40 @@
+@use "css/globals" as *;
+@use "css/frontend/ecommerce/abstracts" as *;
+
+// ============================================================
+// CHECKOUT OPTIONS
+// ============================================================
+
+.selectable-options {
+  @include selectable-options($columns: 2, $gap: 2rem);
+
+  &__option {
+    @include selectable-option-card();
+  }
+}
+
+// ============================================================
+// CHECKOUT-SPECIFIC OVERRIDES
+// ============================================================
+
+.checkout-options {
+  &__header {
+    text-align: center;
+  }
+
+  &__title {
+    @include apply-text-style(
+      (
+        map: map-deep-get($roboto-map, bold),
+        weight: h4,
+        overrides: (
+          color: inherit
+        )
+      )
+    );
+  }
+
+  &__subtitle {
+    color: $text-neutral-secondary;
+  }
+}

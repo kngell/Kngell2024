@@ -10,15 +10,15 @@ class WhereRule extends AbstractRules
         string $method,
         QueryState $state,
         private ConditionNormalizer $conditionNormalizer,
+        ?string $customAlias = null,
     ) {
-        parent::__construct($em, $method, $state);
+        parent::__construct($em, $method, $customAlias, $state);
     }
 
     public function getRule(array $conditions): string
     {
         $parts = [];
         $normalizedConditions = $this->normalize($conditions);
-
         $keyColumns = $this->extractKeyColumns();
         $tableHelper = $this->createTableHelper($keyColumns);
         foreach ($normalizedConditions as $index => $condition) {
@@ -41,6 +41,9 @@ class WhereRule extends AbstractRules
                 $this->method = 'whereIn';
                 $condition['operator'] = $this->getOperation($condition);
             }
+            if ($this->isOnValueCondition()) {
+                $this->method = 'where';
+            }
 
             $parts[] = $link . $this->buildCondition($condition, $tableHelper);
         }
@@ -51,36 +54,6 @@ class WhereRule extends AbstractRules
 
         return implode('', $parts);
     }
-
-    // public function getRule(array $conditions): string
-    // {
-    //     $parts = [];
-    //     $normalizedConditions = $this->normalize($conditions);
-    //     foreach ($normalizedConditions as $index => $condition) {
-    //         if ($condition instanceof Closure) {
-    //             $closureRule = new ClosureConditionRule(
-    //                 $this->em,
-    //                 $this->tables,
-    //                 $this->method,
-    //                 $this->state,
-    //                 $condition,
-    //             );
-    //             return $closureRule->getRule([$condition]);
-    //         }
-    //         if ($this->isInCondition($condition) && !str_contains(strtolower($this->method), 'in')) {
-    //             $this->method = 'whereIn';
-    //             $condition['operator'] = $this->getOperation($conditions);
-    //         }
-    //         $parts[] = $this->getConditionLink($index);
-    //         $parts[] = $this->buildCondition($condition);
-    //     }
-
-    //     if (!empty($parts) && empty(trim($parts[0]))) {
-    //         array_shift($parts);
-    //     }
-
-    //     return implode('', $parts);
-    // }
 
     /**
      * @return mixed
@@ -130,52 +103,7 @@ class WhereRule extends AbstractRules
         return $newConditions;
     }
 
-    // protected function normalize(array $conditions): array
-    // {
-    //     $newConditions = [];
-
-    //     // Handle mixed conditions (closures + regular)
-    //     foreach ($conditions as $condition) {
-    //         if ($condition instanceof Closure) {
-    //             $newConditions[] = $condition;
-    //             continue;
-    //         }
-    //         if (is_string($condition)) {
-    //         }
-
-    //         if (ArrayUtils::isAssoc($conditions)) {
-    //             return $this->normalizeAssociative($conditions);
-    //         }
-    //         if (!$this->isNormalizedConditions) {
-    //             $conditions = $this->conditionNormalizer->normalize($conditions);
-    //             $this->isNormalizedConditions = true;
-    //         }
-
-    //         $operator = $this->getOperation($conditions);
-    //         if (!empty($operator) && $conditions[1] === $operator) {
-    //             $stop = true;
-    //         }
-
-    //         $newConditions[] = [
-    //             'left' => $conditions[0],
-    //             'right' => isset($conditions[1]) ? $conditions[1] : null,
-    //             'operator' => empty($operator) ? ' = ' : $operator,
-    //         ];
-
-    //         unset($conditions[0], $conditions[1]);
-    //         $remainingConditions = array_values($conditions);
-
-    //         if (!empty($remainingConditions)) {
-    //             $newConditions = array_merge($newConditions, $this->normalize($remainingConditions));
-    //         }
-
-    //         break;
-    //     }
-
-    //     return $newConditions;
-    // }
-
-    protected function buildColumnReference(string $rightCondition, TablesAliasHelper $tableHelper): string
+    protected function buildColumnReference(mixed $rightCondition, TablesAliasHelper $tableHelper): string
     {
         list($table, $column) = $tableHelper->mapTableColumn($rightCondition, 1);
 
@@ -214,16 +142,34 @@ class WhereRule extends AbstractRules
         return is_array($condition['right']) || str_contains(strtolower($condition['operator']), 'in');
     }
 
+    protected function isOnValueCondition(): bool
+    {
+        return in_array($this->method, ['onValue', 'orOnValue']);
+    }
+
     private function buildCondition(array $condition, TablesAliasHelper $tableHelper): string
     {
         $tableAlias = $this->state->tableAlias;
         $aliasCheck = $this->state->aliasCheck;
-
+        $alias = $this->customAlias;
         list($table, $column) = $tableHelper->mapTableColumn($condition['left']);
+        if ($alias === null) {
+            list($table, $alias) = $tableHelper->get($table, $tableAlias, $aliasCheck);
+        }
 
-        list($table, $alias) = $tableHelper->get($table, $tableAlias, $aliasCheck);
+        if (ColumnTypeDetector::isComplexExpression($column)) {
+            $runtimeAliasMap = $tableAlias;
+            if (!empty($table) && !empty($alias)) {
+                $runtimeAliasMap[$table] = $alias;
+            }
+            $fallbackKey = $table ?? array_key_first($tableAlias) ?? '';
 
-        $leftSide = !empty($alias) ? $alias . '.' . $column : $column;
+            $parser = new SqlExpressionParser($column);
+            $leftSide = $parser->parseAndBuild($fallbackKey, false, $runtimeAliasMap);
+        } else {
+            $leftSide = !empty($alias) ? $alias . '.' . $column : $column;
+        }
+
         $rightSide = $this->buildRightSide($condition, $tableHelper);
         if (is_string($rightSide) && SqlOperator::exists($rightSide)) {
             return $leftSide . ' ' . $rightSide;

@@ -1,21 +1,5 @@
 import BrowserLogger from "js/core/utils/BrowserLogger";
 
-/**
- * ModalClose
- *
- * Centralizes ALL modal close/cancel interactions.
- * Owns: ESC key, overlay click, close buttons, cancel buttons.
- *
- * Usage:
- *   const closer = new ModalCloseManager(modalElement, {
- *     onClose: () => { ... },
- *     closeOnEsc: true,
- *     closeOnOverlayClick: true,
- *   });
- *
- *   // When done:
- *   closer.destroy();
- */
 export default class ModalClose {
   constructor(modalElement, options = {}) {
     if (!modalElement) {

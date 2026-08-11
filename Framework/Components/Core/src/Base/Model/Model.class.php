@@ -5,11 +5,15 @@ declare(strict_types=1);
 abstract class Model
 {
     use CommonQueryMethodsTrait;
+    protected const string DELETE_OPTION = 'deleteOption';
+    protected const string DEFAULT_ENTITY = 'defaultEntity';
 
     protected string $entityClassName;
     protected Entity $entity;
     protected array $columns = [];
     private array $eventData = [];
+    private ?string $currentOp = null;
+    private ?DateTimeImmutable $archiveAt = null;
     protected static array $identityMap = [];
 
     public function __construct(
@@ -32,7 +36,7 @@ abstract class Model
         }
     }
 
-    public function all($params = [], bool $withRelations = false): QueryResult
+    public function all(array $params = [], bool $withRelations = false): QueryResult
     {
         $result = $this->context->execute('all', $this->em, $this->entity, $params);
 
@@ -53,7 +57,7 @@ abstract class Model
         return $this;
     }
 
-    public function one($params = [], bool $withRelations = false): QueryResult
+    public function one(array $params = [], bool $withRelations = false): QueryResult
     {
         $result = $this->context->execute('one', $this->em, $this->entity, $params);
 
@@ -64,7 +68,7 @@ abstract class Model
         return $result;
     }
 
-    public function find($id): QueryResult
+    public function find(string|int $id): QueryResult
     {
         if (isset(self::$identityMap[static::class][$id])) {
             return self::$identityMap[static::class][$id];
@@ -138,7 +142,15 @@ abstract class Model
     public function delete(mixed $params = []): QueryResult
     {
         try {
-            return $this->context->execute('delete', $this->em, $this->entity, $params);
+            $entity = $this->entity;
+            if (!empty($params[self::DEFAULT_ENTITY])) {
+                $entity = $params[self::DEFAULT_ENTITY];
+                unset($params[self::DEFAULT_ENTITY]);
+            }
+            if (is_int($params)) {
+                $params = [$this->entity->getEntityKeyField(), $params];
+            }
+            return $this->context->execute('delete', $this->em, $entity, $params);
         } finally {
             if (is_string($params)) {
                 $this->clearIdentityMap($params);
@@ -148,6 +160,15 @@ abstract class Model
         }
     }
 
+    public function createFromArray(array $data): Entity
+    {
+        return $this->entity->assign($data);
+    }
+
+    public function restore(mixed $params = []): QueryResult
+    {
+        return $this->context->execute('restore', $this->em, $this->entity, $params);
+    }
     // ============ UTILITIES ============
 
     public function count(array $conditions = []): int
@@ -183,6 +204,11 @@ abstract class Model
         return $this->factory->createFromClient($this->entityClassName, $attributes);
     }
 
+    public function deobsfuscated(string $field, mixed $value): ?int
+    {
+        return $this->entity->deobsfuscated($field, $value);
+    }
+
     /**
      * @return EntityManagerInterface
      */
@@ -199,17 +225,38 @@ abstract class Model
         return null;
     }
 
-    public function addToIdentityMap(Entity $entity): void
+    public function addToIdentityMap(Entity|array|CollectionInterface $entity): void
     {
-        $id = $entity->getEntityPrimarykeyValue();
-        if ($id) {
-            self::$identityMap[static::class][$id] = $entity;
+        if ($entity instanceof Entity) {
+            $this->store($entity);
+            return;
+        }
+
+        if ($entity instanceof CollectionInterface) {
+            $entity = $entity->all();
+        }
+
+        if (!is_array($entity) || !ArrayUtils::isObjectList($entity)) {
+            throw new InvalidArgumentException(
+                'addToIdentityMap expects an Entity, a list of Entity, or a CollectionInterface',
+            );
+        }
+
+        foreach ($entity as $singleEntity) {
+            $this->store($singleEntity);
         }
     }
 
     public function getFromIdentityMap(mixed $id): ?Entity
     {
         return self::$identityMap[static::class][$id] ?? null;
+    }
+
+    public function currentOperation(): ?string
+    {
+        $currentOp = $this->currentOp;
+        $this->currentOp = null;
+        return $currentOp;
     }
 
     public function clearIdentityMap(mixed $id): void
@@ -235,13 +282,69 @@ abstract class Model
         return $this->eventData;
     }
 
-    protected function saveEventData(string|int $id, string $keyField): void
+    public function getDeleteOptionKey(): string
     {
-        $entity = $this->getById($id, $keyField);
+        return self::DELETE_OPTION;
+    }
 
-        if ($entity) {
-            $this->eventData['old_entity_snapshot'] = clone $entity;
-            $this->addToIdentityMap($entity);
+    public function getDefaultEntityKey(): string
+    {
+        return self::DEFAULT_ENTITY;
+    }
+
+    /**
+     * @param null|string $currentOp
+     *
+     * @return Model
+     */
+    public function setCurrentOperation(?string $currentOp): Model
+    {
+        $this->currentOp = $currentOp;
+
+        return $this;
+    }
+
+    /**
+     * @return null|DateTimeImmutable
+     */
+    public function getArchiveAt(): ?DateTimeImmutable
+    {
+        $archiveAt = $this->archiveAt;
+        $this->archiveAt = null;
+        return $archiveAt;
+    }
+
+    /**
+     * @param null|DateTimeImmutable $archiveAt
+     *
+     * @return Model
+     */
+    public function setArchiveAt(?DateTimeImmutable $archiveAt): Model
+    {
+        $this->archiveAt = $archiveAt;
+
+        return $this;
+    }
+
+    public function getEntity(): Entity
+    {
+        if (!isset($this->entity) || $this->entity->isEmpty()) {
+            $this->entity = $this->factory->create(
+                $this->entityClassName,
+            );
+        }
+        return $this->entity;
+    }
+
+    protected function saveEventData(array $normalizedData): void
+    {
+        $keyField = $this->entity->getEntityKeyField();
+        $keyProperty = $this->entity->getEntityKeyProperty();
+
+        $id = $normalizedData[$keyField] ?? $normalizedData[$keyProperty] ?? null;
+
+        if (!empty($id)) {
+            $this->saveEntitySnapshot($id);
         }
     }
 
@@ -284,6 +387,25 @@ abstract class Model
         return $finalResult;
     }
 
+    private function saveEntitySnapshot(mixed $id): void
+    {
+        $keyField = $this->entity->getEntityKeyField();
+        $entity = $this->getById($id, $keyField)?->asClass();
+
+        if ($entity) {
+            $this->eventData['old_entity_snapshot'] = clone $entity;
+            $this->addToIdentityMap($entity);
+        }
+    }
+
+    private function store(Entity $entity): void
+    {
+        $id = $entity->getEntityPrimarykeyValue();
+        if ($id) {
+            self::$identityMap[static::class][$id] = $entity;
+        }
+    }
+
     private function resolveEntityClassName(): string
     {
         $className = str_replace('Model', '', static::class);
@@ -291,16 +413,5 @@ abstract class Model
             throw new DataAccessLayerException('Could not resolve valid Entity class for model: ' . static::class);
         }
         return $className;
-    }
-
-    private function getEntity(): Entity
-    {
-        if (!isset($this->entity) || $this->entity->isEmpty()) {
-            $this->entity = $this->factory->create(
-                $this->entityClassName,
-            );
-        }
-        // $this->em->setEntity($this->entity);
-        return $this->entity;
     }
 }

@@ -41,7 +41,6 @@ class CartesianDetector
             return false;
         }
 
-        // Check if there are multiple joins (potential cartesian product)
         if ($this->hasMultipleJoins($query)) {
             return true;
         }

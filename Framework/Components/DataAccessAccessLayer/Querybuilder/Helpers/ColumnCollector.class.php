@@ -26,7 +26,12 @@ class ColumnCollector
 
     public function getDistinct(): bool
     {
-        return $this->selectMap['distinct'];
+        return $this->selectMap['distinct'] ?? false;
+    }
+
+    public function getDistinctCount(): bool
+    {
+        return $this->selectMap['distinctCount'] ?? false;
     }
 
     public function getCustomAlias(): ?string
@@ -42,7 +47,6 @@ class ColumnCollector
     public function setSelectMap(array $selectMap): ColumnCollector
     {
         $this->selectMap = $selectMap;
-
         return $this;
     }
 
@@ -68,6 +72,8 @@ class ColumnCollector
                 'columns' => $this->selectMap['columns'],
                 'customAlias' => $this->selectMap['customAlias'],
                 'withAlias' => $this->selectMap['withAlias'],
+                'distinct' => $this->selectMap['distinct'] ?? false,
+                'distinctCount' => $this->selectMap['distinctCount'] ?? false,
             ];
         } else {
             $columnMap['main'] = $this->selectMap;

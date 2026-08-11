@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-class DataManipulationRuleFactory extends AbstractRuleFactory
+class DataManipulationRuleFactory extends AbstractRulesFactory
 {
     private const SUPPORTED_TYPES = [
         SqlStatement::INSERT,
@@ -19,9 +19,7 @@ class DataManipulationRuleFactory extends AbstractRuleFactory
     public function create(string $method, mixed $data): QueryRulesInterface
     {
         $statement = SqlClause::tryFrom(strtoupper($method))->toStatementType();
-
-        $context = $this->state->statementContext;
-
+        $context = $this->component->getContext();
         return match(true) {
             $statement === SqlStatement::INSERT => $this->initialize(new InsertRules(
                 $this->em,

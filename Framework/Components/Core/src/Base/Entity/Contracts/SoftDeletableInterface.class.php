@@ -10,7 +10,11 @@ interface SoftDeletableInterface
 
     public function isDeleted(): bool;
 
-    public function softDelete(): self;
+    public function softDelete(?DateTimeImmutable $at = null): self;
 
-    public function touchDeleted(): void;
+    public function restore(): self;
+
+    public function touchDeleted(?DateTimeImmutable $at = null): void;
+
+    public function getDateFormat(): string;
 }

@@ -1,0 +1,37 @@
+@use "sass:color";
+@use "css/globals/variables" as *;
+@use "css/globals/mixins/responsive" as *;
+
+// =====================================================
+// SELECTABLE OPTIONS THEME
+// =====================================================
+
+@mixin selectable-core-theme {
+  position: relative;
+  border: 0.2rem solid $border-neutral-primary;
+  border-radius: $radius-s;
+  background: $background-neutral-primary;
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+
+  // Universally hide the radio button for custom styling
+  input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  // Hover & Focus State
+  &:hover,
+  &:focus-within {
+    border-color: color.adjust($primary-color, $alpha: -0.6);
+    box-shadow: $shadow-s;
+  }
+
+  // Checked State
+  &:has(input:checked) {
+    border-color: $primary-color;
+    background: color.adjust($primary-color, $alpha: -0.95);
+    box-shadow: $shadow-s;
+  }
+}

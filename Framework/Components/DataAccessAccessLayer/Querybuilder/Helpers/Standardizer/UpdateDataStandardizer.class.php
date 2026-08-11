@@ -32,16 +32,18 @@ final class UpdateDataStandardizer extends AbstractDataStandardizer
 
     private function standardizeSet(array $data): SqlGenericDataPayload
     {
+        $isBulk = false;
         if (ArrayUtils::isLikeKeyValuePair($data)) {
             $data = $this->toAssoc($data);
         }
         if (ArrayUtils::isSequential($data)) {
-            if (!ArrayUtils::isObjectList($data) || !ArrayUtils::isArrayList($data)) {
+            if (!ArrayUtils::isObjectList($data) && !ArrayUtils::isArrayList($data)) {
                 throw new BadQueryArgumentException('UPDATE/SET expects an object or array of column => value pairs');
             }
+            $isBulk = true;
         }
 
-        if (!ArrayUtils::isAssoc($data)) {
+        if (!$isBulk && !ArrayUtils::isAssoc($data)) {
             throw new BadQueryArgumentException(
                 'UPDATE/SET expects an associative array of column => value pairs',
             );

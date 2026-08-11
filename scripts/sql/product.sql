@@ -77,6 +77,12 @@ CREATE TABLE
         CONSTRAINT fk_product_shipping_class_id FOREIGN KEY (shipping_class_id) REFERENCES shipping_class (id) ON DELETE SET NULL
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = 'Core product information with enhanced inventory and dimensions management';
 
+ALTER TABLE product ADD INDEX idx_product_deleted_at (deleted_at);
+
+CREATE INDEX idx_regional_price_lookup ON product_regional_price (product_id, region_code, is_active, base_price);
+
+-- product_variation
+-- variation_attribute
 ALTER TABLE product
 ADD COLUMN requires_shipping BOOLEAN NOT NULL DEFAULT TRUE COMMENT 'Whether product requires shipping';
 

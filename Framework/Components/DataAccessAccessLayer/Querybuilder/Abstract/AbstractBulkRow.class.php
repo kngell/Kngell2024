@@ -14,8 +14,9 @@ abstract class AbstractBulkRow extends AbstractRules implements QueryRulesInterf
         string $method,
         QueryState $state,
         private array|CollectionInterface $rowValueData,
+        ?string $customAlias = null,
     ) {
-        parent::__construct($em, $method, $state);
+        parent::__construct($em, $method, $customAlias, $state);
     }
 
     public function getRule(array $rowValuesData): string

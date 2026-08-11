@@ -98,6 +98,8 @@ interface FileUploadComponentInterface
      */
     public function getFieldName(): string;
 
+    public function getAllFieldsName(): array;
+
     /**
      * Check if component has any files (uploaded or temporary).
      */

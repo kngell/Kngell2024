@@ -27,9 +27,12 @@ class FromClause extends SqlComponent implements RegularClauseComponentInterface
         if (!$this->helper) {
             throw new RuntimeException('TablesAliasHelper not initialized');
         }
+        if ($this->data !== null) {
+            $stop = true;
+        }
 
         if ($this->data instanceof Closure) {
-            $query = new SqlQueryClosure($this->data, $this->em, $this->method, $this->customAlias ?? 'rowTable');
+            $query = $this->type !== null ? new SqlRowClosure($this->data, $this->em, $this->method, $this->customAlias ?? 'rowTable') : new SqlClosure($this->em, $this->data);
             $this->prepareChild($query);
             $innerSql = $query->build();
             $this->mergeChildState($query);
@@ -37,6 +40,9 @@ class FromClause extends SqlComponent implements RegularClauseComponentInterface
             if (method_exists($query, 'getColumnList')) {
                 $this->columnList = $query->getColumnList();
             }
+            // if ($this->type == null) {
+            //     $this->table = $innerSql;
+            // }
         }
 
         list($table, $alias) = $this->helper->get(
@@ -57,7 +63,7 @@ class FromClause extends SqlComponent implements RegularClauseComponentInterface
 
     public function getSqlClause(): ?SqlClause
     {
-        if ($this->state->statementContext === StatementType::BULK_UPDATE) {
+        if ($this->context === StatementType::BULK_UPDATE) {
             return null;
         }
         return self::CLAUSE;
@@ -67,14 +73,15 @@ class FromClause extends SqlComponent implements RegularClauseComponentInterface
     {
         $columnsList = $this->columnList;
 
-        $tbl = $this->getFromstatementContext($table, $alias) . "($columnsList)";
-        return $innerSql . ' AS ' . $alias . "($columnsList)";
+        // $tbl = $this->getFromstatementContext($table, $alias) . "($columnsList)";
+        $columnsList = $columnsList === null ? '' : "($columnsList)";
+        return $innerSql . ' AS ' . $alias . $columnsList;
     }
 
-    private function getFromstatementContext($table, $alias): string
+    private function getFromstatementContext(string $table, string $alias): string
     {
         $query = '';
-        $statementContext = $this->state->statementContext;
+        $statementContext = $this->context;
 
         if ($statementContext instanceof DeleteStatement) {
             if ($statementContext->isMariadbDialect()) {

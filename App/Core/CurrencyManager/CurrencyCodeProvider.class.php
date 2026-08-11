@@ -153,19 +153,6 @@ final class CurrencyCodeProvider implements CurrencyCodeProviderInterface
         }
     }
 
-    private function saveToCache(string $key, Currency $currency, array $tags = []): void
-    {
-        // Save to memory cache
-        $this->memoryCache[$key] = $currency;
-
-        // Save to file cache with tags if supported
-        if (method_exists($this->cache, 'setWithTags')) {
-            $this->cache->setWithTags($key, $currency, self::CACHE_TTL, $tags);
-        } else {
-            $this->cache->set($key, $currency, self::CACHE_TTL);
-        }
-    }
-
     private function createDefaultCache(): CacheInterface
     {
         $envConfig = new CacheEnvironmentConfigurations('defaultCache', [

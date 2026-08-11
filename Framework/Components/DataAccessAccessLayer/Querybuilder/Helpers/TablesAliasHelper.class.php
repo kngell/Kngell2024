@@ -96,16 +96,33 @@ final class TablesAliasHelper
     public function mapTableColumn(string|int $logicalTable, int $position = 0): array
     {
         if (is_string($logicalTable)) {
-            $parts = explode($this->separator($logicalTable), $logicalTable);
+            $trimmed = trim($logicalTable);
+
+            // -----------------------------------------------------------------
+            // CORE INTEGRATION: Intercept Complex Strings / Functions Earliest
+            // -----------------------------------------------------------------
+            if (ColumnTypeDetector::isComplexExpression($trimmed)) {
+                // Determine the default query context table
+                $defaultTable = ($position === 0 && $this->fromTable)
+                    ? $this->fromTable
+                    : ($this->toTable ?? $this->getDefaultTable());
+
+                // Return the entire functional string intact as the column payload
+                return [$defaultTable, $trimmed];
+            }
+
+            // Standard logic for clean paths (e.g., "category.id" or "id")
+            $parts = explode($this->separator($trimmed), $trimmed);
 
             if (count($parts) === 2) {
                 return [$parts[0], $parts[1]];
             }
+
             if (count($parts) === 1) {
                 $column = $parts[0];
                 $default = ($position === 0 && $this->fromTable)
-                           ? $this->fromTable
-                           : ($this->toTable ?? $this->getDefaultTable());
+                    ? $this->fromTable
+                    : ($this->toTable ?? $this->getDefaultTable());
 
                 return [$default, $column];
             }
@@ -113,6 +130,27 @@ final class TablesAliasHelper
 
         return [$this->getDefaultTable(), (string) $logicalTable];
     }
+
+    // public function mapTableColumn(string|int $logicalTable, int $position = 0): array
+    // {
+    //     if (is_string($logicalTable)) {
+    //         $parts = explode($this->separator($logicalTable), $logicalTable);
+
+    //         if (count($parts) === 2) {
+    //             return [$parts[0], $parts[1]];
+    //         }
+    //         if (count($parts) === 1) {
+    //             $column = $parts[0];
+    //             $default = ($position === 0 && $this->fromTable)
+    //                        ? $this->fromTable
+    //                        : ($this->toTable ?? $this->getDefaultTable());
+
+    //             return [$default, $column];
+    //         }
+    //     }
+
+    //     return [$this->getDefaultTable(), (string) $logicalTable];
+    // }
 
     public function resolveColumn(string $columnStr, QueryState $state): string
     {
@@ -182,7 +220,7 @@ final class TablesAliasHelper
         return $this;
     }
 
-    public function setJoinMapping(?string $from, ?string $to): void
+    public function setJoinMapping(?string $from = null, ?string $to = null): void
     {
         $this->fromTable = $from;
         $this->toTable = $to;
@@ -264,6 +302,35 @@ final class TablesAliasHelper
         return $tableName;
     }
 
+    public function getLogicalTable(string $column): array
+    {
+        $parts = explode('.', $column);
+        if (count($parts) > 1) {
+            $trailingColumn = end($parts);
+
+            if (is_numeric($trailingColumn)) {
+                return [null, $column];
+            }
+
+            $column = $trailingColumn;
+            array_pop($parts);
+            $logicalTable = implode('.', $parts);
+            return [$logicalTable, $column];
+        }
+        return [null, $column];
+    }
+    // public function getLogicalTable(string $column): array
+    // {
+    //     $parts = explode('.', $column);
+    //     if (count($parts) > 1) {
+    //         $column = end($parts);
+    //         array_pop($parts);
+    //         $logicalTable = implode('.', $parts);
+    //         return [$logicalTable, $column];
+    //     }
+    //     return [null, $column];
+    // }
+
     public function getPhysicalTable(string $logicalTable): string
     {
         if (str_contains($logicalTable, '.')) {
@@ -281,17 +348,6 @@ final class TablesAliasHelper
 
         return $table;
     }
-    // private function getDefaultTable(): string
-    // {
-    //     if (empty($this->tables)) {
-    //         throw new RuntimeException('No tables available for alias generation. Tables must be set before generating aliases.');
-    //     }
-
-    //     $defaultTable = array_key_first($this->tables);
-
-    //     if (empty($defaultTable)) {
-    //         throw new RuntimeException('Default table cannot be empty. Check table configuration.');
-    //     }
 
     //     return $defaultTable;
     // }

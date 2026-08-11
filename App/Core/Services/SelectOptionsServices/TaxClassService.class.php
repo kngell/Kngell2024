@@ -2,54 +2,39 @@
 
 declare(strict_types=1);
 
-final class TaxClassService
+final class TaxClassService extends AbstractSelectOptionsService
 {
+    protected const string SELECT_LABEL = '-- Select a VAT class --';
+
+    protected ?string $entityClass = TaxClass::class;
+
     public function __construct(
-        private TaxClassModel $taxClassModel, // Inject the model
+        private TaxClassModel $model,
     ) {
     }
 
-    /**
-     * Get all active tax classes formatted for dropdown options.
-     * The array keys are the TaxClass ID, and the values are the formatted labels.
-     */
-    public function getActiveTaxClassOptions(): array
+    protected function fetchOptions(bool $active = true): array
     {
-        try {
-            // Assuming your model has a method to fetch active tax classes
-            $taxClasses = $this->taxClassModel->getActiveTaxClasses();
-
-            $options = ['' => '-- Select a VAT class --'];
-
-            // Loop through entities (assuming they are TaxClass entities)
-            foreach ($taxClasses as $taxClass) {
-                // Ensure the entity is valid and has required methods
-                if ($taxClass instanceof TaxClass) {
-                    $options[$taxClass->getId()] = $this->formatTaxClassLabel($taxClass);
-                }
-            }
-            return $options;
-        } catch (QueryResultException $e) {
-            error_log('TaxClassService: Failed to load tax classes - ' . $e->getMessage());
-            // Return a fallback or throw a more specific application exception
-            return $this->getDefaultTaxClassOptions();
-        }
+        $conditions = $active ? ['active', true] : [];
+        $taxClasses = $this->model->all($conditions)->asClass();
+        return $this->processEntities($taxClasses);
     }
 
-    private function formatTaxClassLabel(TaxClass $taxClass): string
+    protected function formatLabel(object $entity): string
     {
-        // Format the output: e.g., "Standard VAT (STND)"
-        $code = $taxClass->getCode();
-        $label = $taxClass->getLabel();
+        if (!$entity instanceof TaxClass) {
+            return '';
+        }
 
+        $code = $entity->getCode();
+        $label = $entity->getLabel();
         return "{$label} ({$code})";
     }
 
-    // Optional: Hardcoded fallback if the database fails
-    private function getDefaultTaxClassOptions(): array
+    protected function getDefaultOptions(): array
     {
         return [
-            '' => '-- Select a VAT class --',
+            '' => self::SELECT_LABEL,
             '1' => 'Standard',
         ];
     }

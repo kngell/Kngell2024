@@ -47,7 +47,7 @@ class ChangeTracker implements ChangeTrackerInterface
 
         foreach ($current as $key => $currentValue) {
             $originalValue = $original[$key] ?? null;
-            if ($this->hasValueChanged($currentValue, $originalValue, $entity)) {
+            if ($this->hasValueChanged($currentValue, $originalValue, $entity, $key)) {
                 $changes[$key] = $currentValue;
             }
         }
@@ -82,84 +82,92 @@ class ChangeTracker implements ChangeTrackerInterface
         return spl_object_hash($entity);
     }
 
-    // private function getEntityHash(Entity $entity): string
-    // {
-    //     $id = $entity->entityKeyIsInitialzed() ? $entity->getEntityKeyProperty() : null;
-
-    //     if ($id === null) {
-    //         return spl_object_hash($entity);
-    //     }
-
-    //     return get_class($entity) . ':' . $id;
-    // }
-
-    private function hasValueChanged(mixed $currentValue, mixed $originalValue, Entity $entity): bool
+    private function hasValueChanged(mixed $currentValue, mixed $originalValue, Entity $entity, string $key): bool
     {
-        //-----
         if ($currentValue === $originalValue) {
             return false;
         }
+        $isDateField = $this->isDateProperty($entity, $key);
 
-        if ($currentValue === null || $originalValue === null) {
-            return true;
-        }
-
-        if ($currentValue === $originalValue) {
-            return false;
-        }
-
-        if ($currentValue === null || $originalValue === null) {
-            return true;
-        }
-
-        // Handle isEqualTo method when both are objects
-        if (is_object($currentValue) && method_exists($currentValue, 'isEqualTo') && is_object($originalValue)) {
-            try {
-                return !$currentValue->isEqualTo($originalValue);
-            } catch (Throwable $e) {
-                // Fallback if types are incompatible for isEqualTo
+        if ($isDateField) {
+            $currentDate = $this->normalizeToDateTime($currentValue);
+            $originalDate = $this->normalizeToDateTime($originalValue);
+            if ($currentDate !== null && $originalDate !== null) {
+                return $currentDate->getTimestamp() !== $originalDate->getTimestamp();
             }
+            if (in_array($key, ['createdAt', 'updatedAt', 'created_at', 'updated_at'], true)) {
+                return false;
+            }
+            return true;
         }
 
-        // Handle objects (both must be objects for comparison)
+        if ($currentValue === null || $originalValue === null) {
+            return true;
+        }
+
         if (is_object($currentValue) && is_object($originalValue)) {
-            // Try isEqualTo if it exists but wasn't caught above
             if (method_exists($currentValue, 'isEqualTo')) {
                 try {
                     return !$currentValue->isEqualTo($originalValue);
-                } catch (Throwable $e) {
-                    // Fall through to string comparison
+                } catch (Throwable) {
                 }
             }
-            return (string) $currentValue !== (string) $originalValue;
+            if (method_exists($currentValue, '__toString') && method_exists($originalValue, '__toString')) {
+                return (string) $currentValue !== (string) $originalValue;
+            }
+            return spl_object_hash($currentValue) !== spl_object_hash($originalValue);
         }
 
-        // Handle case where one is object and the other isn't
-        if (is_object($currentValue) || is_object($originalValue)) {
-            return true; // Different types (object vs non-object) means changed
+        if (is_numeric($currentValue) && is_numeric($originalValue)) {
+            return (float) $currentValue !== (float) $originalValue;
         }
 
-        // Default strict comparison for primitives
         return $currentValue !== $originalValue;
     }
-    // private function hasValueChanged(mixed $currentValue, mixed $originalValue): bool
-    // {
-    //     if ($currentValue === $originalValue) {
-    //         return false;
-    //     }
 
-    //     if (method_exists($currentValue, 'isEqualTo') && is_object($originalValue)) {
-    //         try {
-    //             return !$currentValue->isEqualTo($originalValue);
-    //         } catch (Throwable $e) {
-    //             // Fallback if types are incompatible for isEqualTo
-    //         }
-    //     }
+    private function isDateProperty(Entity $entity, string $key): bool
+    {
+        try {
+            $property = $entity->getProperty($key);
+            $type = $property->getType();
 
-    //     if (is_object($currentValue) || is_object($originalValue)) {
-    //         return (string) $currentValue !== (string) $originalValue;
-    //     }
+            if ($type instanceof ReflectionNamedType) {
+                $typeName = $type->getName();
+                return $typeName === DateTimeImmutable::class
+                    || $typeName === DateTime::class
+                    || $typeName === DateTimeInterface::class;
+            }
 
-    //     return $currentValue !== $originalValue;
-    // }
+            // Handle union types if applicable (e.g., DateTimeImmutable|null)
+            if ($type instanceof ReflectionUnionType) {
+                foreach ($type->getTypes() as $namedType) {
+                    $typeName = $namedType->getName();
+                    if ($typeName === DateTimeImmutable::class || $typeName === DateTime::class || $typeName === DateTimeInterface::class) {
+                        return true;
+                    }
+                }
+            }
+        } catch (Throwable) {
+            // Fallback safety if reflection encounters issues
+        }
+
+        return false;
+    }
+
+    private function normalizeToDateTime(mixed $value): ?DateTimeInterface
+    {
+        if ($value instanceof DateTimeInterface) {
+            return $value;
+        }
+
+        if (is_string($value) && $value !== '') {
+            try {
+                return new DateTimeImmutable($value);
+            } catch (Throwable) {
+                return null;
+            }
+        }
+
+        return null;
+    }
 }

@@ -52,58 +52,6 @@ class QueryResultHydrator
         return $entity;
     }
 
-    // public function hydrateWithRelationships(array $rows): array|Object|null
-    // {
-    //     if (empty($rows)) {
-    //         return null;
-    //     }
-
-    //     $entities = [];
-
-    //     $pkField = 'p_pdt_id';
-    //     // dd(
-    //     //     $rows,
-    //     //     $this->config->getTableAlias(),
-    //     //     $this->config->getTableMap(),
-    //     // );
-    //     foreach ($rows as $row) {
-    //         $id = $row[$pkField] ?? null;
-    //         if ($id === null) {
-    //             $entity = $this->entityFactory->create(
-    //                 $this->entityClass,
-    //                 $this->config->getTableAlias(),
-    //                 $this->config->getTableMap(),
-    //             );
-    //             $this->feed($entity, $row);
-    //             $entities[] = $entity;
-    //             continue;
-    //         }
-
-    //         // Create the entity only once per unique ID
-    //         if (!isset($entities[$id])) {
-    //             $entities[$id] = $this->entityFactory->create(
-    //                 $this->entityClass,
-    //                 $this->config->getTableAlias(),
-    //                 $this->config->getTableMap(),
-    //             );
-    //         }
-    //         $this->feed($entities[$id], $row);
-    //     }
-
-    //     foreach ($entities as $entity) {
-    //         $entity->completeHydration();
-    //         $entity->track($entity);
-    //     }
-    //     return (count($entities) === 1) ? reset($entities) : array_values($entities);
-    // }
-
-    // private function feed(Object $entity, array $data): void
-    // {
-    //     foreach ($data as $key => $value) {
-    //         $entity->__set($key, $value);
-    //     }
-    // }
-
     public function hydrateWithRelationships(array $rows): Object
     {
         $entity = $this->entityFactory->create($this->entityClass, $this->config->getTableAlias(), $this->config->getTableMap());

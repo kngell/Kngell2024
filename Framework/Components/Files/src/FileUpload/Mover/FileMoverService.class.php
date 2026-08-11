@@ -57,7 +57,7 @@ class FileMoverService implements FileMoverInterface
     public function makeFilesPermanent(array $tempPaths, string $permanentDirectory): array
     {
         // Normalize the permanent directory path
-        $permanentDirectory = rtrim($permanentDirectory, DIRECTORY_SEPARATOR);
+        $permanentDirectory = rtrim($permanentDirectory, DS);
         $this->fileManager->ensureDirectoryExists($permanentDirectory);
 
         $permanentPaths = [];
@@ -102,22 +102,22 @@ class FileMoverService implements FileMoverInterface
     private function generateUniquePath(string $directory, string $filename): string
     {
         // Normalize paths
-        $directory = rtrim($directory, DIRECTORY_SEPARATOR);
-        $filename = ltrim($filename, DIRECTORY_SEPARATOR);
+        $directory = rtrim($directory, DS);
+        $filename = ltrim($filename, DS);
 
         $pathinfo = pathinfo($filename);
         $baseName = $pathinfo['filename'];
         $extension = $pathinfo['extension'] ?? '';
 
         $counter = 1;
-        $targetPath = $directory . DIRECTORY_SEPARATOR . $filename;
+        $targetPath = $directory . DS . $filename;
 
         while ($this->fileManager->exists($targetPath)) {
             $newFilename = $baseName . '_' . $counter;
             if ($extension) {
                 $newFilename .= '.' . $extension;
             }
-            $targetPath = $directory . DIRECTORY_SEPARATOR . $newFilename;
+            $targetPath = $directory . DS . $newFilename;
             $counter++;
 
             // Safety check to prevent infinite loops

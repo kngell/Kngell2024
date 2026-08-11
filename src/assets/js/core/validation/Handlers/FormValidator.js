@@ -1,7 +1,6 @@
-import BrowserLogger from "js/core/utils/logger";
+import BrowserLogger from "js/core/utils/BrowserLogger";
 import Validator from "js/core/validation/Validator";
 import RealTimeValidator from "./RealTimeValidator";
-import { EmptyBlock, FileDialogListItemButtonView } from "ckeditor5";
 
 const logger = new BrowserLogger("FormValidator");
 
@@ -20,7 +19,7 @@ export default class FormValidator {
     this.customSubmitHandler = options.customSubmitHandler || null;
     this.ajaxOptions = options.ajaxOptions || {};
 
-    // NEW: Decouple response handling
+    // Decoupled response handling
     this.responseProcessors = options.responseProcessors || [];
     this.notificationPublisher = options.notificationPublisher || null;
 
@@ -50,7 +49,9 @@ export default class FormValidator {
       this.setupFormSubmission();
       this.form.dataset.validatorInitialized = "true";
 
-      logger.success(`FormValidator initialized for form: ${this.form.id || "anonymous"}`);
+      logger.success(
+        `FormValidator initialized for form: ${this.form.getAttribute("id") || "anonymous"}`
+      );
     } catch (error) {
       logger.error("Failed to initialize FormValidator:", error);
       throw error;
@@ -77,7 +78,6 @@ export default class FormValidator {
       e.preventDefault();
       e.stopPropagation();
 
-      // Now handle async safely
       this.handleSubmit(e).catch((error) => {
         if (error.message === "Form validation failed") {
           logger.debug("Validation failed - errors already displayed to user");
@@ -121,17 +121,16 @@ export default class FormValidator {
         throw new Error("Form validation failed");
       }
 
-      // Custom submit handler
       if (this.customSubmitHandler) {
         return await this.customSubmitHandler(this.form, this);
       }
 
-      // Handle submission based on mode
       return await this.handleSubmissionBasedOnMode();
     } finally {
       this.isSubmitting = false;
     }
   }
+
   async handleSubmissionBasedOnMode() {
     switch (this.submissionMode) {
       case "direct":
@@ -156,18 +155,15 @@ export default class FormValidator {
   async submitDirect() {
     logger.debug("Submitting form directly");
 
-    // Temporarily remove listener
     if (this.boundHandleSubmit) {
       this.form.removeEventListener("submit", this.boundHandleSubmit);
     }
 
-    // Create temporary form
     const tempForm = document.createElement("form");
     tempForm.method = this.form.method || "POST";
     tempForm.action = this.form.action;
     tempForm.style.display = "none";
 
-    // Copy inputs
     const inputs = this.form.querySelectorAll("input, select, textarea");
     inputs.forEach((input) => {
       tempForm.appendChild(input.cloneNode(true));
@@ -176,9 +172,9 @@ export default class FormValidator {
     document.body.appendChild(tempForm);
     tempForm.submit();
 
-    // Re-attach listener
+    // Re-attach listener (only if validator was not destroyed in the meantime)
     setTimeout(() => {
-      if (this.boundHandleSubmit) {
+      if (this.boundHandleSubmit && this.form && this.form.isConnected) {
         this.form.addEventListener("submit", this.boundHandleSubmit);
       }
     }, 100);
@@ -223,56 +219,7 @@ export default class FormValidator {
       ...this.ajaxOptions
     });
   }
-  // processAjaxResult(result) {
-  //   if (typeof result === "string") {
-  //     try {
-  //       result = JSON.parse(result);
-  //     } catch (e) {
-  //       result = { success: false, error: "Invalid server response format." };
-  //     }
-  //   }
 
-  //   logger.debug("Processing Ajax result:", result);
-
-  //   const context = {
-  //     form: this.form,
-  //     result,
-  //     validator: this,
-  //     shouldRedirect: !!result.redirect,
-  //     redirectUrl: result.redirect || null,
-  //     redirectDelay: 1500
-  //   };
-
-  //   if (result.success === false) {
-  //     const errorMessage = result.error || result.message || "An unknown error occurred.";
-
-  //     // Dispatch event only - NO NOTIFICATION
-  //     this.form.dispatchEvent(
-  //       new CustomEvent("form:ajax-error", {
-  //         detail: { result, context, error: new Error(errorMessage) },
-  //         bubbles: true
-  //       })
-  //     );
-
-  //     throw new Error(errorMessage);
-  //   }
-
-  //   // Dispatch success event - NO NOTIFICATION
-  //   this.form.dispatchEvent(
-  //     new CustomEvent("form:ajax-success", {
-  //       detail: { result, context },
-  //       bubbles: true
-  //     })
-  //   );
-
-  //   if (context.shouldRedirect && context.redirectUrl) {
-  //     setTimeout(() => {
-  //       window.location.href = context.redirectUrl;
-  //     }, context.redirectDelay);
-  //   }
-
-  //   return result;
-  // }
   processAjaxResult(result) {
     if (typeof result === "string") {
       try {
@@ -284,35 +231,56 @@ export default class FormValidator {
 
     logger.debug("Processing Ajax result:", result);
 
+    // Build context — processors can mutate this
     const context = {
       form: this.form,
       result,
       validator: this,
       shouldRedirect: !!result.redirect,
       redirectUrl: result.redirect || null,
-      redirectDelay: 1500
+      redirectDelay: 1500,
+      preventDefault: false,
+      metadata: {}
     };
 
+    // Run response processors (each may mutate context)
+    for (const processor of this.responseProcessors) {
+      try {
+        if (typeof processor.canHandle === "function" && !processor.canHandle(context)) {
+          continue;
+        }
+        if (typeof processor.handle === "function") {
+          processor.handle(context);
+        }
+      } catch (err) {
+        logger.error("Response processor threw:", err);
+      }
+    }
+
+    // ─── Error path ───
     if (result.success === false) {
       const errorMessage = result.error || result.message || "An unknown error occurred.";
 
-      // Display field-level server errors on their respective inputs
       if (result.errors && typeof result.errors === "object") {
         this.displayServerValidationErrors(result.errors);
       }
 
-      // Dispatch error event — FormHandler shows top-level notification
+      // Build a richer Error object so consumers can read .status / .result
+      const err = new Error(errorMessage);
+      err.status = result.status ?? null;
+      err.result = result;
+
       this.form.dispatchEvent(
         new CustomEvent("form:ajax-error", {
-          detail: { result, context, error: new Error(errorMessage) },
+          detail: { result, context, error: err },
           bubbles: true
         })
       );
 
-      throw new Error(errorMessage);
+      throw err;
     }
 
-    // Dispatch success event
+    // ─── Success path ───
     this.form.dispatchEvent(
       new CustomEvent("form:ajax-success", {
         detail: { result, context },
@@ -320,45 +288,32 @@ export default class FormValidator {
       })
     );
 
-    if (context.shouldRedirect && context.redirectUrl) {
-      setTimeout(() => {
-        window.location.href = context.redirectUrl;
-      }, context.redirectDelay);
-    }
+    // if (context.shouldRedirect && context.redirectUrl && !context.preventDefault) {
+    //   setTimeout(() => {
+    //     // window.location.href = context.redirectUrl;
+    //   }, context.redirectDelay);
+    // } else if (context.preventDefault) {
+    //   logger.debug("Redirect skipped: preventDefault set by processor");
+    // }
 
     return result;
   }
 
-  /**
-   * Display server-side validation errors on form fields.
-   * Uses the same ErrorDisplayService as client-side validation
-   * for consistent error presentation.
-   *
-   * Server format: { "fieldName": ["<small class='...'>Message</small>"] }
-   */
   displayServerValidationErrors(errors) {
     this.errorService.clearAllErrors(this.form);
 
     Object.entries(errors).forEach(([fieldName, errorData]) => {
-      if (!Array.isArray(errorData) || errorData.length === 0) {
-        return;
-      }
+      if (!Array.isArray(errorData) || errorData.length === 0) return;
 
       const htmlString = errorData[0];
-      if (typeof htmlString !== "string") {
-        return;
-      }
+      if (typeof htmlString !== "string") return;
 
-      // Extract plain text from server HTML
       const message = this.extractTextFromHtml(htmlString);
-      if (!message) {
-        return;
-      }
+      if (!message) return;
 
       const field = this.findField(fieldName);
 
       if (field) {
-        // Reuse the same errorService that RealTimeValidator uses
         this.errorService.displayError(field, {
           message,
           classes: ["input-box__hint-text", "invalid-feedback"]
@@ -368,31 +323,16 @@ export default class FormValidator {
       }
     });
 
-    this.errorService.scrollToFirstError(this.form);
+    // Delay scroll for same reason
+    setTimeout(() => {
+      this.errorService.scrollToFirstError(this.form);
+    }, 50);
   }
 
-  /**
-   * Extract plain text from server-rendered HTML error string.
-   */
   extractTextFromHtml(html) {
     const template = document.createElement("template");
     template.innerHTML = html.trim();
     return template.content.textContent?.trim() || "";
-  }
-
-  getEventType(result, context) {
-    if (result.success === false) {
-      if (this.isInfoOrWarning(result)) {
-        return "form:ajax-warning";
-      }
-      return "form:ajax-error";
-    }
-    return "form:ajax-success";
-  }
-
-  isInfoOrWarning(result) {
-    const type = result.type || "";
-    return type === "info" || type === "warning";
   }
 
   // ============ VALIDATION METHODS ============
@@ -424,24 +364,27 @@ export default class FormValidator {
   }
 
   displayErrors(errors) {
+    // First, display all errors
     Object.entries(errors).forEach(([fieldName, error]) => {
       const field = this.findField(fieldName);
       if (field) {
         this.errorService.displayError(field, error);
       } else {
         logger.warn(`Field not found: ${fieldName}`, error);
-        this.publishNotification(`${fieldName}: ${error.message || error}`, "error");
       }
     });
 
-    this.errorService.scrollToFirstError(this.form);
+    // Then scroll to first error with a slight delay to ensure DOM is updated
+    setTimeout(() => {
+      this.errorService.scrollToFirstError(this.form);
+    }, 50);
   }
 
   findField(fieldName) {
     let field = this.form.querySelector(`[name="${fieldName}"]`);
 
     if (!field) {
-      const escapedName = fieldName.replace(/\[/g, "\\[").replace(/\]/g, "\\]");
+      const escapedName = fieldName.replace(/$$/g, "\\[").replace(/$$/g, "\\]");
       field = this.form.querySelector(`[name="${escapedName}"]`);
     }
 
@@ -450,19 +393,6 @@ export default class FormValidator {
     }
 
     return field;
-  }
-
-  displayServerErrors(errors) {
-    Object.entries(errors).forEach(([fieldName, messages]) => {
-      if (Array.isArray(messages) && messages.length > 0) {
-        const field = this.findField(fieldName);
-        if (field) {
-          this.errorService.displayError(field, { message: messages[0] });
-        }
-      }
-    });
-
-    this.errorService.scrollToFirstError(this.form);
   }
 
   // ============ UI METHODS ============
@@ -488,10 +418,6 @@ export default class FormValidator {
     }
   }
 
-  showError(message) {
-    this.publishNotification(message, "error");
-  }
-
   // ============ PUBLIC API METHODS ============
 
   async validate() {
@@ -512,7 +438,6 @@ export default class FormValidator {
       ...options
     };
 
-    // Validate first
     const formData = this.dataProcessor.processFormData(this.form);
     this.validator.formData = formData;
 
@@ -521,7 +446,6 @@ export default class FormValidator {
       throw new Error("Form validation failed");
     }
 
-    // Handle submission
     if (mergedOptions.mode === "direct") {
       return await this.submitDirect();
     } else if (mergedOptions.mode === "ajax") {
@@ -544,9 +468,6 @@ export default class FormValidator {
     return Array.from(fileInputs).some((input) => input.files.length > 0);
   }
 
-  /**
-   * Add response processor
-   */
   addResponseProcessor(processor) {
     if (processor && !this.responseProcessors.includes(processor)) {
       this.responseProcessors.push(processor);
@@ -554,9 +475,6 @@ export default class FormValidator {
     return this;
   }
 
-  /**
-   * Remove response processor
-   */
   removeResponseProcessor(processor) {
     const index = this.responseProcessors.indexOf(processor);
     if (index !== -1) {

@@ -4,6 +4,9 @@ import QuantityBoxMirror from "./Classes/_QuantityBoxMirror";
 import ProgressBar from "./Classes/checkout/_checkoutProgressBar";
 import UserMenu from "js/frontend/ecommerce/modules/user-menu";
 import CategorySlider from "js/frontend/ecommerce/components/CategorySlider";
+import AddtoCartHandler from "js/frontend/ecommerce/components/UserCart/AddtoCartHandler";
+import CartBadge from "js/frontend/ecommerce/components/UserCart/CartBadge";
+import ShoppingCartManager from "js/frontend/ecommerce/components/UserCart/ShoppingCartManager";
 
 export default class Ecommerce {
   constructor() {
@@ -24,6 +27,10 @@ export default class Ecommerce {
 
     // Initialize category sliders
     this.initCategorySliders();
+
+    new AddtoCartHandler();
+    new CartBadge();
+    new ShoppingCartManager();
   };
 
   initCategorySliders = () => {

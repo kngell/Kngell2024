@@ -1,3 +1,4 @@
+@use "css/globals" as *;
 @use "css/backend/admin/abstracts" as *;
 /*-------------- INPUT BOX ---------------*/
 
@@ -10,7 +11,7 @@
       video,
       checkbox,
       select,
-      currency,
+      currency
     ),
     $options: (
       floating: false,
@@ -22,28 +23,28 @@
       label-text-style: (
         $text-m,
         medium,
-        (color: map-deep-get($color-neutral, black, black-600)),
+        (color: map-deep-get($color-neutral, black, black-600))
       ),
       placeholder-text-style: (
         $text-m,
         regular,
-        (color: map-deep-get($color-neutral, gray, gray-400)),
+        (color: map-deep-get($color-neutral, gray, gray-400))
       ),
       input-text-style: (
         $text-m,
         regular,
-        (color: map-deep-get($color-neutral, black, black-600)),
+        (color: map-deep-get($color-neutral, black, black-600))
       ),
       media-title-style: (
         $text-m,
         medium,
-        (color: map-deep-get($color-neutral, black, black-600)),
+        (color: map-deep-get($color-neutral, black, black-600))
       ),
       media-text-style: (
         $text-m,
         regular,
-        (color: map-deep-get($color-neutral, gray, gray-400)),
-      ),
+        (color: map-deep-get($color-neutral, gray, gray-400))
+      )
     )
   );
 }

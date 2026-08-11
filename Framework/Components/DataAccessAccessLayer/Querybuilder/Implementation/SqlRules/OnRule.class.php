@@ -10,8 +10,9 @@ class OnRule extends WhereRule
         string $method,
         QueryState $state,
         ConditionNormalizer $conditionNormalizer,
+        ?string $customAlias = null,
     ) {
-        parent::__construct($conditions, $em, $method, $state, $conditionNormalizer);
+        parent::__construct($conditions, $em, $method, $state, $conditionNormalizer, $customAlias);
     }
 
     public function getRule(array $conditions): string
@@ -23,7 +24,6 @@ class OnRule extends WhereRule
                 );
             }
         }
-
         return parent::getRule($conditions);
     }
 

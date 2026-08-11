@@ -12,6 +12,7 @@ class BulkUpdateStatementMdb extends AbstractStatement
         private array $onMap = [],
         array $queryFlow = [],
         ?EntityManagerInterface $em = null,
+        private null|BulkUpdateType $bulkType = null,
     ) {
         parent::__construct(self::TYPE, $queryFlow, $em);
         $this->map = $updateMap;
@@ -34,7 +35,6 @@ class BulkUpdateStatementMdb extends AbstractStatement
         $parts = [$table . ' AS ' . $alias];
         $this->state->tables[$table] = $table;
         $this->state->isUpdate = true;
-        $this->state->statementContext = self::TYPE;
 
         $parts[] = parent::build();
 
@@ -91,6 +91,7 @@ class BulkUpdateStatementMdb extends AbstractStatement
             $this->method,
         );
         $join->setMethod($joinType->name)->setJoinContext($tableName);
+        $join->setContext(self::TYPE);
         $this->state->joinContext = $tableName;
 
         if (isset($this->onMap[$tableName])) {
@@ -121,8 +122,9 @@ class BulkUpdateStatementMdb extends AbstractStatement
             true,
             'set',
             $this->em,
-            self::TYPE,
         );
+        $setClause->setBulkUpdateType($this->bulkType)
+        ->setContext(self::TYPE);
         $this->add($setClause);
     }
 }

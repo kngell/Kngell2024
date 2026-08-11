@@ -4,11 +4,6 @@ declare(strict_types=1);
 
 class UserRepository extends Repository
 {
-    public function __construct(EntityManagerInterface $em)
-    {
-        parent::__construct($em);
-    }
-
     public function findByToken(string $authToken): ?User
     {
         try {

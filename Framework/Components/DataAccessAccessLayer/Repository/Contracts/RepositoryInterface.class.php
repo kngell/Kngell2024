@@ -8,6 +8,8 @@ interface RepositoryInterface
 
     public function update(null|string|Closure $table = null, array $conditions = []): void;
 
+    public function conditionalUpdate(null|string|Closure $table = null, array|entity|CollectionInterface $data = [], array $conditions = []): void;
+
     public function bulkUpdate(
         null|string|Closure $table = null,
         mixed $data = null,
@@ -15,7 +17,7 @@ interface RepositoryInterface
         ?BulkUpdateType $type = null,
     ): void;
 
-    public function delete(): void;
+    public function delete(array $conditions = []): void;
 
     public function findByID(int $id): void;
 

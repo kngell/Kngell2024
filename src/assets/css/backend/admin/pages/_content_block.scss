@@ -1,0 +1,198 @@
+@use "css/globals" as *;
+@use "css/backend/admin/abstracts" as *;
+
+.content-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2.4rem;
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+
+  &__header {
+    .title {
+      @include page-title();
+    }
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    position: relative;
+    width: 100%;
+    min-height: 0;
+    overflow-y: auto;
+    @include flash-message($namespace: "flash");
+
+    .content-block-frm {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      gap: 1.6rem;
+
+      @include form-tabs(
+        "content-block-frm",
+        (
+          "tab-basics": ".content-block-frm__content--basics",
+          "tab-media": ".content-block-frm__content--media",
+          "tab-metadata": (
+            class: ".content-block-frm__content--metadata",
+            width: 50%
+          )
+        )
+      );
+
+      &__left,
+      &__right {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        border-radius: $radius-m;
+        background-color: $background-neutral-tertiary;
+
+        .form-section {
+          width: 100%; // Ensure sections fill their parent layouts
+
+          &__body {
+            @include input-field(
+              (select, custom-select, textarea, toggle),
+              (
+                "select-floating-label": true
+              )
+            );
+
+            .form-row {
+              &.vertical {
+                .settings {
+                  display: flex;
+                  justify-content: flex-end;
+                  align-items: flex-start;
+                  gap: 2.4rem;
+                  width: 100%;
+
+                  .toggle-switch {
+                    @include toggle-switch();
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      &__left {
+        width: 67.68rem;
+      }
+
+      &__left,
+      .form-section {
+        border-radius: $radius-m;
+        box-shadow: $shadow-s;
+        &__body {
+          flex-direction: column;
+          border-radius: $radius-m;
+          .product-row {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+            width: 100%;
+          }
+          .product-card {
+            display: none;
+            border-radius: $radius-s;
+            &__left {
+              display: flex;
+              align-items: center;
+              gap: 1.6rem;
+              flex: 1 0 0;
+              .img-container {
+                display: flex;
+                width: 12rem;
+                aspect-ratio: 1 / 1;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                border-radius: $radius-s;
+                background-color: $background-neutral-secondary;
+                svg {
+                  width: 4.2rem;
+                  height: 4.2rem;
+                }
+                .image {
+                  width: 100%;
+                  object-fit: contain;
+                }
+              }
+              .product-info {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.8rem;
+                flex: 1 0 0;
+                &__title {
+                  @include apply-text-style(
+                    (
+                      map: map-deep-get($roboto-map, regular),
+                      weight: h6,
+                      overrides: (
+                        color: $text-neutral-primary
+                      )
+                    )
+                  );
+                }
+                &__sku {
+                  @include apply-text-style(
+                    (
+                      map: map-deep-get($hahmlet-map, body, caption),
+                      weight: caption,
+                      overrides: (
+                        color: $text-neutral-tertiary
+                      )
+                    )
+                  );
+                }
+                &__short-description {
+                  @include apply-text-style(
+                    (
+                      map: map-deep-get($hahmlet-map, body, caption),
+                      weight: caption,
+                      overrides: (
+                        color: $text-neutral-secondary
+                      )
+                    )
+                  );
+                }
+              }
+            }
+            &.is-visible {
+              display: flex;
+              justify-content: space-between;
+              align-items: flex-start;
+              padding: 1.6rem 1.6rem;
+              gap: 1.6rem;
+              align-self: stretch;
+              background-color: $background-neutral-primary;
+              button {
+                @include transition;
+                @include icon-with-badge($with-badge: false, $icon-size: 2.4rem, $padding: 0);
+                &:hover {
+                  background-color: $background-neutral-tertiary;
+                }
+              }
+            }
+          }
+        }
+      }
+
+      &__right {
+        flex: 1;
+        @include dropzone(); // Style rules for your media dropzone
+      }
+    }
+  }
+
+  &__footer {
+    @include page-footer();
+  }
+}

@@ -1,0 +1,118 @@
+@use "css/backend/admin/abstracts/variables" as *;
+@use "css/globals/functions/functions" as *;
+
+$input-field-config: (
+  "component-class": "input-field",
+
+  // Layout values
+  "input-height": 4.8rem,
+  "padding-horizontal": 1.6rem,
+  "padding-vertical": 1.2rem,
+  "icon-size": 2.4rem,
+  "gap-typing-area": 0.4rem,
+  "counter-width": 4.4rem,
+
+  // Border
+  "border-width": $stroke-s,
+  "border-radius": $radius-m,
+  "shadow": $shadow-s,
+
+  // Colors
+  "background-neutral-primary": $background-neutral-primary,
+  "background-neutral-secondary": $background-neutral-secondary,
+  "background-neutral-disabled": $background-neutral-disabled,
+  "background-brand-secondary": $background-brand-secondary,
+  "background-brand-tertiary": $background-brand-tertiary,
+
+  "border-neutral-primary": $border-neutral-primary,
+  "border-neutral-secondary": $border-neutral-secondary,
+  "border-brand-primary": $border-brand-primary,
+  "border-semantic-error": $border-semantic-error,
+  "border-neutral-disabled": $border-neutral-disabled,
+
+  "text-neutral-primary": $text-neutral-primary,
+  "text-neutral-secondary": $text-neutral-secondary,
+  "text-neutral-tertiary": $text-neutral-tertiary,
+  "text-neutral-disabled": $text-neutral-disabled,
+  "text-semantic-error": $text-semantic-error,
+
+  "icon-neutral-primary": $icon-neutral-primary,
+  "icon-neutral-tertiary": $icon-neutral-tertiary,
+  "icon-neutral-disabled": $icon-neutral-disabled,
+  "icon-semantic-error": $icon-semantic-error,
+
+  // Floating label
+  "floating-label-horizontal-padding": 0.4rem,
+  "floating-label-vertical-padding": 0.2rem,
+  "floating-label-border-radius": $radius-s,
+
+  // Animation
+  "transition-duration": 0.2s,
+  "transition-timing": ease,
+
+  // Typography
+  "input-text-style": (
+      map: map-deep-get($roboto-map, regular),
+      weight: normal,
+      overrides: (
+        color: $text-neutral-primary
+      )
+    ),
+  "label-text-style": (
+    map: map-deep-get($roboto-map, regular),
+    weight: normal,
+    overrides: (
+      color: $text-neutral-secondary
+    )
+  ),
+  "label-floating-text-style": (
+    map: map-deep-get($hahmlet-map, body, caption),
+    weight: caption,
+    overrides: (
+      color: $text-neutral-primary
+    )
+  ),
+  "error-text-style": (
+    map: map-deep-get($hahmlet-map, body, caption),
+    weight: caption,
+    overrides: (
+      color: $text-semantic-error
+    )
+  ),
+  "helper-text-style": (
+    map: map-deep-get($hahmlet-map, body, caption),
+    weight: caption,
+    overrides: (
+      color: $text-neutral-tertiary
+    )
+  ),
+  "counter-text-style": (
+    map: map-deep-get($hahmlet-map, body, caption),
+    weight: caption,
+    overrides: (
+      color: $text-neutral-tertiary
+    )
+  ),
+  "select-option-text-style": (
+    map: map-deep-get($roboto-map, regular),
+    weight: normal,
+    overrides: (
+      color: $text-neutral-primary
+    )
+  ),
+  "select-option-placeholder-text-style": (
+    map: map-deep-get($roboto-map, regular),
+    weight: normal,
+    overrides: (
+      color: $text-neutral-secondary
+    )
+  ),
+
+  // Textarea
+  "textarea-min-height": 5lh,
+  "textarea-padding-vertical": 1.2rem,
+
+  // Responsive
+  "responsive": true,
+  "responsive-scale-factor": 0.9
+);

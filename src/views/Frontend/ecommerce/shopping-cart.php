@@ -180,7 +180,6 @@ $this->start('head'); ?>
                             <div class="subtotal__price--total">
                                 <h6 class="title">Total</h6>
                                 <h6 class="value">$2426</h6>
-
                             </div>
                         </div>
                     </div>

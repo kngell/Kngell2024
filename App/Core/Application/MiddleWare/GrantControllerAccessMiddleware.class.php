@@ -1,29 +1,31 @@
 <?php
 
 declare(strict_types=1);
-
 class GrantControllerAccessMiddleware implements MiddlewareInterface
 {
     public function __construct(
         private RouteInfo $route,
         private AclService $aclService,
+        private UserContext $userContext,
         private NavigationHistoryService $navigationHistory,
+        private ?array $options = [],
     ) {
+        $this->options = array_merge([
+            'unauthorized_route' => '/_restrict',
+            'login_route' => '/login',
+        ], $options);
     }
 
     public function process(Request $request, RequestHandlerInterface $next): Response|string
     {
-        $user = App::getInstance()->resolve('current.user');
-
-        $controller = $this->route->getController();
-        $action = $this->route->getMethod()->getName();
-
-        // Special exemptions
+        $user = $this->userContext->currentUser();
         if ($this->isExemptRoute($request, $user)) {
             return $next->handle($request);
         }
 
-        // Check access using central service
+        $controller = $this->getControllerName();
+        $action = $this->getActionName();
+
         if (!$this->aclService->hasAccess($user, $controller, $action)) {
             return $this->handleAccessDenied($request, $user);
         }
@@ -54,17 +56,41 @@ class GrantControllerAccessMiddleware implements MiddlewareInterface
     {
         $uri = $request->getRequestedUri();
 
-        // Special case: Authenticated user on login page
-        // if ($user && $uri === '/login') {
-        //     $previousUrl = $this->session->get('previous_url');
-        //     $this->session->delete('previous_url');
-        //     return new RedirectResponse($previousUrl ?? '/');
-        // }
         if ($user && $uri === '/login') {
             $url = $this->navigationHistory->getRedirectUrl();
-            return new RedirectResponse($url ?? '/');
+            return new RedirectResponse($url);
         }
 
-        return new RedirectResponse('/_restrict');
+        // For AJAX requests, return 403
+        if ($request->isAjax()) {
+            return new JsonResponse([
+                'success' => false,
+                'error' => 'Unauthorized access',
+            ], HttpStatusCode::HTTP_FORBIDDEN);
+        }
+
+        // Mark current URL as invalid to avoid redirect loops
+        $this->navigationHistory->markCurrentUrlAsInvalid();
+
+        // Redirect to unauthorized page
+        return new RedirectResponse($this->options['unauthorized_route']);
+    }
+
+    /**
+     * Get controller name from RouteInfo.
+     */
+    private function getControllerName(): string
+    {
+        $controller = $this->route->getController();
+        return basename(str_replace('\\', '/', $controller));
+    }
+
+    /**
+     * Get action name from RouteInfo.
+     */
+    private function getActionName(): string
+    {
+        $method = $this->route->getMethod();
+        return $method ? $method->getName() : 'index';
     }
 }

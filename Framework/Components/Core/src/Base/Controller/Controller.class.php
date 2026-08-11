@@ -1,64 +1,48 @@
 <?php
 
 declare(strict_types=1);
+
 abstract class Controller
 {
     use ControllerGettersAndSetters;
     use ValidationTrait;
+    use AjaxResponseTrait;
+    use HtmlPageCacheableTrait;
+    use CacheInvalidationTrait;
+    use CacheInvalidationAwareTrait;
 
-    protected Request $request;
-    protected Response $response;
-    protected TokenInterface $token;
-    protected FlashInterface $flash;
-    protected SessionInterface $session;
-    protected CacheInterface $cache;
-    protected CookieInterface $cookie;
-    protected EventManagerInterface $eventManager;
-    protected HtmlBuilder $builder;
-    protected AbstractFormCreator $frm;
-    protected RegionContextInterface $region;
-    protected TranslatorServiceInterface $translator;
-    protected NavigationHistoryService $navigationHistory;
-    protected SectionProviderFactory $providerFactory;
-    protected DecoratorFactory $decoratorFactory;
-    protected HtmlRegularSectionManager $sectionManager;
-    private ViewInterface $view;
-    private string $layout;
-    private Model|null $currentModel;
-
-    public function __call(string $name, mixed $args): void
+    public function __construct()
     {
-        $method = $name;
+    }
 
-        if (method_exists($this, $method)) {
-            if ($this->before() !== false) {
-                call_user_func_array([$this, $method], $args);
-                $this->after();
-            }
-        } else {
-            throw new Exception("Method $method not found in controller " . get_class($this));
+    public function __call(string $name, array $args): mixed
+    {
+        if (!method_exists($this, $name)) {
+            throw new Exception("Method $name not found in controller " . get_class($this));
         }
+
+        if ($this->before() === false) {
+            return null;
+        }
+
+        $result = call_user_func_array([$this, $name], $args);
+        $this->after();
+
+        return $result;
     }
 
     public function render(string $templatePath, array $context = []): string
     {
         try {
+            $this->logTiming('View action started');
             $templatePath = $this->templatePath($templatePath);
-            $this->view->setRequest($this->request);
-            return $this->view->render($templatePath, $this->context($context));
+            $view = $this->getView();
+            $view->setRequest($this->request);
+
+            return $view->render($templatePath, $this->context($context));
         } catch (AmbiguousViewException | ViewNotFoundException $e) {
             return $this->handleViewError($e, $templatePath);
         }
-    }
-
-    public function redirect(string $url, bool $permanent = true): Response
-    {
-        // $this->session->delete(PREVIOUS_PAGE);
-        // $s = $_SESSION;
-        // $statusCode = $permanent ? HttpStatusCode::HTTP_SEE_OTHER : HttpStatusCode::HTTP_MOVED_PERMANENTLY;
-        // $this->response->setStatusCode($statusCode);
-        // $this->response->redirect($url);
-        return Rooter::redirect($url, $permanent);
     }
 
     public function page(): array
@@ -66,16 +50,6 @@ abstract class Controller
         return [];
     }
 
-    /**
-     * @param string $modelName
-     *
-     * @throws BaseInvalidArgumentException
-     * @throws BindingResolutionException
-     * @throws DependencyHasNoDefaultValueException
-     * @throws ReflectionException
-     *
-     * @return Model
-     */
     public function getModel(string $modelName): Model
     {
         if (!class_exists($modelName)) {
@@ -90,15 +64,30 @@ abstract class Controller
         return App::diget($modelName);
     }
 
-    /**
-     * @param EventManagerInterface $eventManager
-     *
-     * @return Controller
-     */
-    public function setEventManager(EventManagerInterface $eventManager): self
+    protected function logTiming(string $label): void
     {
-        $this->eventManager = $eventManager;
-        return $this;
+        static $startTime = null;
+        if ($startTime === null) {
+            $startTime = microtime(true);
+        }
+
+        $time = (microtime(true) - $startTime) * 1000;
+        error_log(sprintf(
+            '[TIMING] %-30s: %8.2f ms | Memory: %5.2f MB',
+            $label,
+            $time,
+            memory_get_usage(true) / 1024 / 1024,
+        ));
+    }
+
+    protected function redirect(string $url, bool $permanent = true): Response
+    {
+        return Rooter::redirect($url, $permanent);
+    }
+
+    protected function getGormConfig(): ?FormConfig
+    {
+        return null;
     }
 
     protected function decorate(
@@ -106,90 +95,79 @@ abstract class Controller
         self|AbstractHtmlDecorator $target,
         array|object $params = [],
     ): AbstractHtmlDecorator {
-        return $this->decoratorFactory->create($decoratorClass, $target, $params);
+        return $this->getDecoratorFactory()->create($decoratorClass, $target, $params);
     }
 
     protected function redirectWithError(string $message, ?string $redirectUrl = null): Response
     {
-        $this->flash->add($message, FlashType::DANGER);
-
-        $this->navigationHistory->markCurrentUrlAsInvalid();
-        $targetUrl = $redirectUrl ?? $this->navigationHistory->getRedirectUrl();
-
+        $this->getFlash()->add($message, FlashType::DANGER);
+        $this->getNavigationHistory()->markCurrentUrlAsInvalid();
+        $targetUrl = $redirectUrl ?? $this->getNavigationHistory()->getRedirectUrl();
         return $this->redirect($targetUrl);
     }
 
     protected function getRedirectUrl(): string|null
     {
-        return $this->navigationHistory->getRedirectUrl();
+        return $this->getNavigationHistory()->getRedirectUrl();
     }
 
     protected function getFlashData(string $action): array
     {
-        $flashedData = $this->flash->getFormData($action);
-        $values = $flashedData['values'];
-        $errors = $flashedData['errors'];
-        $files = $flashedData['files'];
-        return [$values, $errors, $files];
+        $flash = $this->getFlash();
+        $flashedData = $flash->getFormData($action);
+        return [
+            $flashedData['values'] ?? [],
+            $flashedData['errors'] ?? [],
+            $flashedData['files'] ?? [],
+        ];
     }
 
     protected function form(string $action, array|Entity &$formValues = [], array &$formErrors = [], array &$files = []): string
     {
-        $flashedData = $this->flash->getFormData($action);
+        $flash = $this->getFlash();
+        $flashedData = $flash->getFormData($action);
         $values = !empty($flashedData['values']) ? $flashedData['values'] : $formValues;
         $errors = !empty($flashedData['errors']) ? $flashedData['errors'] : $formErrors;
         $files = !empty($flashedData['files']) ? $flashedData['files'] : $files;
-        return $this->frm->make($action, $values, $errors, $files);
+        return $this->getForm()->make($action, $values, $errors, $files);
     }
 
     protected function formatBytes(int $bytes): string
     {
-        return $this->view->formatBytes($bytes);
+        return $this->getView()->formatBytes($bytes);
     }
 
-    /**
-     * Before filter - called before an action method.
-     *
-     * @return void
-     */
-    protected function before()
+    protected function before(): bool
     {
+        return true;
     }
 
-    /**
-     * After filter - called after an action method.
-     *
-     * @return void
-     */
-    protected function after()
+    protected function after(): void
     {
     }
 
     protected function pageTitle(string $title): void
     {
-        $this->view->pageTitle($title);
+        $this->getView()->pageTitle($title);
     }
 
     protected function addProperties(array $props): void
     {
-        $this->view->addProperties($props);
+        $this->getView()->addProperties($props);
     }
 
     protected function response(string $template, array $data = []): Response
     {
         return new Response(
-            $this->render(
-                $template,
-                $data,
-            ),
+            $this->render($template, $data),
             HttpStatusCode::HTTP_OK,
             ['Content-Type' => 'text/html'],
         );
     }
 
-    protected function jsonResponse(string|object|array|bool $data = []): JsonResponse
+    protected function jsonResponse(string|object|array|bool $data = [], HttpStatusCode $statusCode = HttpStatusCode::HTTP_OK): JsonResponse
     {
-        $response = new JsonResponse($data, HttpStatusCode::HTTP_OK, ['Content-Type' => 'application/json']);
+        $response = new JsonResponse($data, $statusCode, ['Content-Type' => 'application/json']);
         $response->setEncodingOptions(JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         return $response;
     }
@@ -215,15 +193,18 @@ abstract class Controller
 
     private function context(array $context): array
     {
-        $this->view->setToken($this->token);
+        $view = $this->getView();
+        $view->setToken($this->getToken());
+
         if (isset($this->layout)) {
-            $this->view->setLayout($this->layout);
+            $view->setLayout($this->layout);
         }
-        $navbar = match (true) {
-            $this->view->getLayout() === 'default' => DefaultNavbarDecorator::class,
-            $this->view->getLayout() === 'admin' => AdminNavbarDecorator::class,
-            default => '',
-        };
-        return array_merge($context, ['message' => $this->flash->get()], !empty($navbar) ? (new $navbar($this))->page() : []);
+
+        $navbar = $this->getNavBarFactory()->create($view->getLayout(), $this);
+        return array_merge(
+            $context,
+            ['message' => $this->getFlash()->get()],
+            !empty($navbar) ? $navbar->page() : [],
+        );
     }
 }

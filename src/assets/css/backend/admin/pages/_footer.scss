@@ -1,0 +1,860 @@
+@use "css/globals" as *;
+@use "css/backend/admin/abstracts" as *;
+@use "css/backend/admin/modals/_footer_modals";
+
+/* ============================================
+   Footer Management Admin Styles
+   ============================================ */
+
+.footer-page {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 2.4rem;
+
+  &__header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1.6rem;
+
+    .title {
+      @include page-title();
+    }
+  }
+
+  &__content {
+    width: 100%;
+  }
+
+  &__content-bis {
+    width: 100%;
+
+    @include form-tabs(
+      "footer-page__content-bis",
+      (
+        "tab-columns": (
+          class: ".footer-page__content--columns",
+          width: 100%
+        ),
+        "tab-links": (
+          class: ".footer-page__content--links",
+          width: 100%
+        ),
+        "tab-about": (
+          class: ".footer-page__content--about",
+          width: 100%
+        ),
+        "tab-socials": (
+          class: ".footer-page__content--socials",
+          width: 100%
+        ),
+        "tab-settings": (
+          class: ".footer-page__content--settings",
+          width: 100%
+        )
+      )
+    );
+  }
+  .footer-content {
+    background-color: $background-neutral-secondary;
+    &__about {
+      width: 100%;
+    }
+  }
+}
+/* Highlight animation for new items */
+.highlight-new {
+  animation: highlightFade 3s ease-out;
+}
+
+@keyframes highlightFade {
+  0% {
+    background-color: rgba(52, 152, 219, 0.3);
+    border-left: 4px solid #3498db;
+    transform: scale(1.02);
+  }
+  30% {
+    background-color: rgba(52, 152, 219, 0.15);
+    transform: scale(1);
+  }
+  100% {
+    background-color: transparent;
+    border-left: 4px solid transparent;
+  }
+}
+
+/* Optional: Add a small badge to indicate new item */
+.highlight-new .item-header h3::after {
+  content: " ✨ NEW";
+  font-size: 0.7em;
+  color: #3498db;
+  font-weight: normal;
+}
+// ============================================
+// Status Badge
+// ============================================
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.6rem 1.2rem;
+  border-radius: $radius-full;
+  font-size: 1.2rem;
+  font-weight: 500;
+  background: $background-brand-tertiary;
+  color: $text-brand-primary;
+
+  &.active {
+    background: $success-color;
+    color: $white;
+  }
+
+  &.inactive {
+    background: $background-semantic-error-subtle;
+    color: $danger-color;
+  }
+}
+
+// ============================================
+// Buttons
+// ============================================
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 1rem 1.6rem;
+  border-radius: $radius-s;
+  @include apply-text-style(
+    (
+      map: map-deep-get($poppins-map, regular),
+      weight: caption,
+      overrides: (
+        color: inherit
+      )
+    )
+  );
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+
+  .icon {
+    width: 1.8rem;
+    height: 1.8rem;
+  }
+}
+
+.btn-primary {
+  background: $background-brand-primary;
+  color: $text-brand-inverse;
+
+  &:hover {
+    background: $primary-600;
+    transform: translateY(-1px);
+    box-shadow: $shadow-s;
+  }
+}
+
+.btn-secondary {
+  background: $background-neutral-secondary;
+  color: $text-neutral-secondary;
+  border: 1px solid $border-neutral-primary;
+
+  &:hover {
+    background: $background-neutral-tertiary;
+    border-color: $border-brand-primary;
+    color: $text-brand-primary;
+  }
+}
+
+.icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.4rem;
+  color: $icon-neutral-tertiary;
+  transition: all 0.2s;
+  border-radius: $radius-xs;
+
+  &:hover {
+    color: $icon-brand-primary;
+    background: $background-neutral-secondary;
+  }
+
+  &.delete:hover {
+    color: $icon-semantic-error;
+  }
+}
+
+.icon {
+  width: 1.8rem;
+  height: 1.8rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: $stroke-xs;
+}
+
+// ============================================
+// Footer Tabs
+// ============================================
+.footer-tabs {
+  display: flex;
+  gap: 0.8rem;
+  margin-bottom: 3.2rem;
+  border-bottom: 1px solid $border-neutral-primary;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 1.2rem 2rem;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  @include apply-text-style(
+    (
+      map: map-deep-get($poppins-map, regular),
+      weight: caption,
+      overrides: (
+        color: $text-neutral-secondary
+      )
+    )
+  );
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+
+  &:hover {
+    color: $text-brand-primary;
+  }
+
+  &.active {
+    color: $text-brand-primary;
+    border-bottom-color: $border-brand-primary;
+  }
+
+  .icon {
+    width: 1.8rem;
+    height: 1.8rem;
+  }
+}
+
+// ============================================
+// Tab Content
+// ============================================
+.tab-content {
+  display: none;
+  animation: fadeIn 0.3s ease;
+
+  &.active {
+    display: block;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(1rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// ============================================
+// Section Header
+// ============================================
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2.4rem;
+  flex-wrap: wrap;
+  gap: 1.6rem;
+
+  h2 {
+    @include apply-text-style(
+      (
+        map: map-deep-get($hahmlet-map, headings, semibold),
+        weight: h6,
+        overrides: (
+          color: $text-neutral-primary
+        )
+      )
+    );
+    margin: 0;
+  }
+}
+
+.filter-group {
+  display: flex;
+  gap: 1.6rem;
+  align-items: center;
+}
+
+.filter-select {
+  padding: 0.8rem 2.4rem 0.8rem 1.2rem;
+  border: 1px solid $border-neutral-primary;
+  border-radius: $radius-s;
+  @include apply-text-style(
+    (
+      map: map-deep-get($roboto-map, regular),
+      weight: caption,
+      overrides: (
+        color: $text-neutral-primary
+      )
+    )
+  );
+  background: $white;
+  cursor: pointer;
+
+  &:focus {
+    outline: none;
+    border-color: $border-brand-primary;
+    box-shadow: 0 0 0 2px rgba($primary-500, 0.1);
+  }
+}
+
+// ============================================
+// Sortable Grid (Columns)
+// ============================================
+.sortable-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(34rem, 1fr));
+  gap: 1.6rem;
+}
+
+.grid-item {
+  background-color: $primary-50;
+  border: 1px solid $border-neutral-primary;
+  border-radius: $radius-m;
+  padding: 1.6rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 1.2rem;
+  transition: all 0.2s;
+  cursor: grab;
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  &:hover {
+    box-shadow: $shadow-s;
+    border-color: $border-brand-primary;
+  }
+
+  &.dragging {
+    opacity: 0.5;
+    cursor: grabbing;
+  }
+}
+
+.drag-handle {
+  cursor: grab;
+  color: $icon-neutral-tertiary;
+  padding: 0.4rem;
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  .icon {
+    width: 2rem;
+    height: 2rem;
+  }
+}
+
+.item-content {
+  flex: 1;
+}
+
+.item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.8rem;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+
+  h3 {
+    margin: 0;
+    @include apply-text-style(
+      (
+        map: map-deep-get($poppins-map, bold),
+        weight: body-normal,
+        overrides: (
+          color: $text-neutral-primary
+        )
+      )
+    );
+  }
+}
+
+.item-details {
+  display: flex;
+  gap: 1.2rem;
+  font-size: 1.2rem;
+  color: $text-neutral-tertiary;
+  margin-bottom: 0.8rem;
+
+  code {
+    background: $background-neutral-tertiary;
+    padding: 0.2rem 0.6rem;
+    border-radius: $radius-xs;
+    font-family: monospace;
+    font-size: 1.1rem;
+    color: $text-neutral-secondary;
+  }
+}
+
+.date-range {
+  font-size: 1.1rem;
+  color: $warning-color;
+  background: $warning-light;
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: $radius-xs;
+}
+
+.item-actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+// ============================================
+// Links Container
+// ============================================
+.links-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2.4rem;
+}
+
+.column-group {
+  background: $background-neutral-secondary;
+  border: 1px solid $border-neutral-primary;
+  border-radius: $radius-m;
+  overflow: hidden;
+}
+
+.column-group-header {
+  background: $background-neutral-tertiary;
+  padding: 1.6rem;
+  border-bottom: 1px solid $border-neutral-primary;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  h3 {
+    margin: 0;
+    @include apply-text-style(
+      (
+        map: map-deep-get($poppins-map, bold),
+        weight: body-normal,
+        overrides: (
+          color: $text-neutral-primary
+        )
+      )
+    );
+  }
+}
+
+.link-count {
+  font-size: 1.2rem;
+  color: $text-neutral-tertiary;
+  background: $background-neutral-secondary;
+  padding: 0.4rem 0.8rem;
+  border-radius: $radius-full;
+}
+
+.sortable-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.list-item {
+  padding: 1.2rem 1.6rem;
+  border-bottom: 1px solid $border-neutral-primary;
+  display: flex;
+  align-items: center;
+  gap: 1.6rem;
+  transition: all 0.2s;
+  cursor: grab;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background: $background-neutral-tertiary;
+  }
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.item-info {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  flex-wrap: wrap;
+
+  strong {
+    @include apply-text-style(
+      (
+        map: map-deep-get($roboto-map, regular),
+        weight: caption,
+        overrides: (
+          color: $text-neutral-primary
+        )
+      )
+    );
+  }
+
+  code {
+    font-size: 1.2rem;
+    color: $text-neutral-tertiary;
+    background: $background-neutral-primary;
+    padding: 0.2rem 0.6rem;
+    border-radius: $radius-xs;
+    font-family: monospace;
+  }
+}
+
+.target-badge {
+  background: $background-brand-tertiary;
+  color: $text-brand-primary;
+  padding: 0.2rem 0.6rem;
+  border-radius: $radius-xs;
+  text-transform: uppercase;
+  @include apply-text-style(
+    (
+      map: map-deep-get($roboto-map, bold),
+      weight: body-extrasmall,
+      overrides: (
+        color: $text-brand-primary
+      )
+    )
+  );
+}
+
+.item-status {
+  min-width: 8rem;
+}
+
+// ============================================
+// Social Grid
+// ============================================
+.social-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(34rem, 1fr));
+  gap: 1.6rem;
+}
+
+.social-card {
+  background: $background-neutral-secondary;
+  border: 1px solid $border-neutral-primary;
+  border-radius: $radius-m;
+  padding: 1.6rem;
+  display: flex;
+  align-items: center;
+  gap: 1.6rem;
+  transition: all 0.2s;
+
+  &:hover {
+    box-shadow: $shadow-s;
+  }
+}
+
+.social-icon {
+  width: 4.8rem;
+  height: 4.8rem;
+  background: $background-neutral-tertiary;
+  border-radius: $radius-m;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  img {
+    width: 3.2rem;
+    height: 3.2rem;
+    object-fit: contain;
+  }
+}
+
+.social-info {
+  flex: 1;
+
+  h3 {
+    margin: 0 0 0.4rem;
+    @include apply-text-style(
+      (
+        map: map-deep-get($poppins-map, bold),
+        weight: body-caption,
+        overrides: (
+          color: $text-neutral-primary
+        )
+      )
+    );
+  }
+
+  code {
+    display: block;
+    font-size: 1.1rem;
+    color: $text-neutral-tertiary;
+    margin-bottom: 0.4rem;
+    word-break: break-all;
+    font-family: monospace;
+  }
+}
+
+.platform-badge {
+  font-size: 1rem;
+  background: $background-brand-primary;
+  color: $text-brand-inverse;
+  padding: 0.2rem 0.6rem;
+  border-radius: $radius-xs;
+  text-transform: uppercase;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.social-status {
+  min-width: 8rem;
+}
+
+.social-actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+// ============================================
+// Form Card
+// ============================================
+.form-card {
+  background: $background-neutral-secondary;
+  border: 1px solid $border-neutral-primary;
+  border-radius: $radius-m;
+  padding: 2.4rem;
+
+  h2 {
+    @include apply-text-style(
+      (
+        map: map-deep-get($hahmlet-map, headings, semibold),
+        weight: h6,
+        overrides: (
+          color: $text-neutral-primary
+        )
+      )
+    );
+    margin: 0 0 2rem 0;
+    padding-bottom: 1.2rem;
+    border-bottom: 1px solid $border-neutral-primary;
+  }
+}
+
+.form-group {
+  margin-bottom: 2rem;
+
+  label {
+    display: block;
+    @include apply-text-style(
+      (
+        map: map-deep-get($roboto-map, regular),
+        weight: caption,
+        overrides: (
+          color: $text-neutral-primary
+        )
+      )
+    );
+    font-weight: 500;
+    margin-bottom: 0.8rem;
+  }
+
+  small {
+    display: block;
+    font-size: 1.1rem;
+    color: $text-neutral-tertiary;
+    margin-top: 0.4rem;
+  }
+}
+
+.form-control {
+  width: 100%;
+  padding: 1rem 1.2rem;
+  border: 1px solid $border-neutral-primary;
+  border-radius: $radius-s;
+  @include apply-text-style(
+    (
+      map: map-deep-get($roboto-map, regular),
+      weight: caption,
+      overrides: (
+        color: inherit
+      )
+    )
+  );
+  transition: all 0.2s;
+  background: $white;
+
+  &:focus {
+    outline: none;
+    border-color: $border-brand-primary;
+    box-shadow: 0 0 0 3px rgba($primary-500, 0.1);
+  }
+}
+
+textarea.form-control {
+  resize: vertical;
+  min-height: 10rem;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.6rem;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  cursor: pointer;
+
+  input {
+    width: 1.6rem;
+    height: 1.6rem;
+    cursor: pointer;
+    accent-color: $primary-500;
+  }
+
+  span {
+    @include apply-text-style(
+      (
+        map: map-deep-get($roboto-map, regular),
+        weight: caption,
+        overrides: (
+          color: $text-neutral-primary
+        )
+      )
+    );
+  }
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1.6rem;
+  margin-top: 2.4rem;
+  padding-top: 1.6rem;
+  border-top: 1px solid $border-neutral-primary;
+}
+
+// ============================================
+// Settings Group
+// ============================================
+.settings-group {
+  margin-bottom: 3.2rem;
+
+  h3 {
+    @include apply-text-style(
+      (
+        map: map-deep-get($poppins-map, bold),
+        weight: body-normal,
+        overrides: (
+          color: $text-neutral-primary
+        )
+      )
+    );
+    margin: 0 0 1.6rem 0;
+  }
+
+  .form-group {
+    display: flex;
+    align-items: center;
+    gap: 1.6rem;
+    flex-wrap: wrap;
+
+    small {
+      margin-top: 0;
+    }
+  }
+}
+
+// ============================================
+// Responsive Design
+// ============================================
+@include respond-below(sm) {
+  .footer-page {
+    gap: 1.6rem;
+  }
+
+  .sortable-grid,
+  .social-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .item-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.4rem;
+  }
+
+  .list-item {
+    flex-wrap: wrap;
+  }
+
+  .item-status {
+    margin-left: auto;
+  }
+
+  .footer-tabs {
+    gap: 0.4rem;
+  }
+
+  .tab-btn {
+    padding: 0.8rem 1.2rem;
+    font-size: 1.2rem;
+  }
+
+  .modal-content {
+    width: 95%;
+    max-height: 85vh;
+  }
+}
+
+// ============================================
+// Scrollbar Styling
+// ============================================
+::-webkit-scrollbar {
+  width: 0.8rem;
+  height: 0.8rem;
+}
+
+::-webkit-scrollbar-track {
+  background: $background-neutral-tertiary;
+  border-radius: 0.4rem;
+}
+
+::-webkit-scrollbar-thumb {
+  background: $border-neutral-primary;
+  border-radius: 0.4rem;
+
+  &:hover {
+    background: $border-neutral-secondary;
+  }
+}

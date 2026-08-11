@@ -1,0 +1,94 @@
+@use "sass:color";
+@use "css/globals/variables" as *;
+@use "css/globals/mixins/responsive" as *;
+
+// =====================================================
+// SELECTABLE OPTIONS CARD
+// =====================================================
+
+@mixin selectable-option-card(
+  $padding: 2rem,
+  $radius: $radius-m,
+  $min-height: null,
+  $selected-shadow: $shadow-s,
+  $show-check: true,
+  $hover-lift: 0.2rem
+) {
+  position: relative;
+
+  width: 100%;
+  min-width: 0;
+
+  @if $min-height {
+    min-height: $min-height;
+  }
+
+  padding: $padding;
+
+  border: 0.2rem solid $border-neutral-secondary;
+  border-radius: $radius;
+
+  background: $background-neutral-primary;
+
+  cursor: pointer;
+
+  transition:
+    border-color 0.25s ease,
+    background-color 0.25s ease,
+    box-shadow 0.25s ease,
+    transform 0.2s ease;
+
+  &:hover {
+    border-color: $border-brand-primary;
+
+    @if $hover-lift != 0 {
+      transform: translateY(-$hover-lift);
+    }
+
+    box-shadow: $shadow-s;
+  }
+
+  @if $show-check {
+    &::after {
+      content: "✓";
+
+      position: absolute;
+      top: 1.6rem;
+      right: 1.6rem;
+
+      display: grid;
+      place-items: center;
+
+      width: 2.4rem;
+      height: 2.4rem;
+
+      border-radius: 50%;
+
+      background: $background-brand-primary;
+      color: $text-brand-inverse;
+
+      font-size: 1.2rem;
+      font-weight: 700;
+
+      opacity: 0;
+      transform: scale(0.7);
+
+      transition:
+        opacity 0.2s ease,
+        transform 0.2s ease;
+    }
+  }
+
+  &:has(input[type="radio"]:checked) {
+    border-color: $border-brand-primary;
+    background: $background-brand-tertiary;
+    box-shadow: $selected-shadow;
+
+    @if $show-check {
+      &::after {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+  }
+}

@@ -4,21 +4,13 @@ declare(strict_types=1);
 
 trait SqlKeywordHandlerTrait
 {
-    /**
-     * EXACT COPY OF YOUR WORKING CTE METHOD - DO NOT CHANGE.
-     */
     protected function applySqlKeywords(
         array $conditions,
         SqlSelectQueryBuilderInterface $anchor,
-        SqlSelectQueryBuilderInterface $recursive,
-        SqlSelectQueryBuilderInterface $mainQuery,
     ): array {
-        $recursiveKeywords = [
+        $Keywords = [
             'GROUP BY' => 'groupBy',
             'HAVING' => 'having',
-        ];
-
-        $mainQueryKeywords = [
             'ORDER BY' => 'orderBy',
             'LIMIT' => 'limit',
             'OFFSET' => 'offset',
@@ -26,27 +18,15 @@ trait SqlKeywordHandlerTrait
 
         $whereConditions = $conditions;
 
-        foreach ($recursiveKeywords as $keyword => $method) {
+        foreach ($Keywords as $keyword => $method) {
             if (isset($conditions[$keyword])) {
                 $this->applyKeywordToBuilder($anchor, $method, $conditions[$keyword]);
-                $this->applyKeywordToBuilder($recursive, $method, $conditions[$keyword]);
                 unset($whereConditions[$keyword]);
             }
         }
-
-        foreach ($mainQueryKeywords as $keyword => $method) {
-            if (isset($conditions[$keyword])) {
-                $this->applyKeywordToBuilder($mainQuery, $method, $conditions[$keyword]);
-                unset($whereConditions[$keyword]);
-            }
-        }
-
         return $whereConditions;
     }
 
-    /**
-     * NEW METHOD FOR REGULAR SELECT QUERIES ONLY.
-     */
     protected function applySqlKeywordsForSelect(
         array $conditions,
         SqlSelectQueryBuilderInterface $queryBuilder,
@@ -71,28 +51,16 @@ trait SqlKeywordHandlerTrait
         return $whereConditions;
     }
 
-    /**
-     * UNIFIED METHOD THAT DETECTS CTE VS REGULAR SELECT
-     * If anchor and recursive are provided, it's CTE. Otherwise, it's regular SELECT.
-     */
     protected function applySqlKeywordsFlexible(
         array $conditions,
-        SqlSelectQueryBuilderInterface $primary,
         ?SqlSelectQueryBuilderInterface $anchor = null,
-        ?SqlSelectQueryBuilderInterface $recursive = null,
     ): array {
-        if ($anchor !== null && $recursive !== null) {
-            // CTE mode - use original method
-            return $this->applySqlKeywords($conditions, $anchor, $recursive, $primary);
+        if ($anchor !== null) {
+            return $this->applySqlKeywords($conditions, $anchor);
         }
-
-        // Regular SELECT mode
-        return $this->applySqlKeywordsForSelect($conditions, $primary);
+        return $conditions;
     }
 
-    /**
-     * SIMPLE PAGINATION HELPER FOR REGULAR SELECTS (OPTIONAL).
-     */
     protected function applyPagination(
         SqlSelectQueryBuilderInterface $qb,
         array $conditions,
@@ -113,13 +81,10 @@ trait SqlKeywordHandlerTrait
         return $remaining;
     }
 
-    /**
-     * KEEP THE EXACT SAME HELPER METHODS.
-     */
     private function applyKeywordToBuilder(
         SqlSelectQueryBuilderInterface $qb,
         string $method,
-        $value,
+        mixed $value,
     ): void {
         switch ($method) {
             case 'orderBy':
@@ -140,7 +105,7 @@ trait SqlKeywordHandlerTrait
         }
     }
 
-    private function applyOrderBy(SqlSelectQueryBuilderInterface $qb, $value): void
+    private function applyOrderBy(SqlSelectQueryBuilderInterface $qb, mixed $value): void
     {
         if (is_array($value)) {
             $orderByParams = [];
@@ -169,7 +134,7 @@ trait SqlKeywordHandlerTrait
         }
     }
 
-    private function applyGroupBy(SqlSelectQueryBuilderInterface $qb, $value): void
+    private function applyGroupBy(SqlSelectQueryBuilderInterface $qb, mixed $value): void
     {
         if (is_array($value)) {
             foreach ($value as $column) {

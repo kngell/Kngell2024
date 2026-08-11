@@ -9,6 +9,7 @@ class SqlInsertQuery extends SqlQuery implements SqlInsertQueryBuilderInterface
     private const SqlStatement TYPE = SqlStatement::INSERT;
 
     private array $insertMap = [];
+    private ProcessedInsertData $processedData;
 
     public function __construct(EntityManagerInterface $em, private bool $isBulkQuery = false)
     {
@@ -20,9 +21,9 @@ class SqlInsertQuery extends SqlQuery implements SqlInsertQueryBuilderInterface
 
     public function build(): string
     {
-        $this->flowValidator->validate($this->queryFlow, $this->insertMap);
-        $this->clauseBuilder->buildAllClauses();
-
+        $this->ValidateInsertMap();
+        $this->initializeProperties();
+        $this->buildStatement();
         return parent::build();
     }
 
@@ -213,6 +214,41 @@ class SqlInsertQuery extends SqlQuery implements SqlInsertQueryBuilderInterface
     public function getInsertMap(): array
     {
         return $this->insertMap;
+    }
+
+    private function ValidateInsertMap(): void
+    {
+        if ($this->hasInsert() && !$this->hasInto()) {
+            $this->assumeInsertIntoCurrentTable();
+        }
+        $insertData = $this->insertMap['insert']->getData() ?? null;
+        if ($this->hasInsert() && !$this->hasValues()) {
+            $this->assumeInsertDataHasInsertValues();
+        } else {
+            throw new InvalidArgumentException('No values are defined for columns :' . implode(', ', $insertData['insert']));
+        }
+
+        // Validate minimal requirements
+        if (!$this->isClosure() && !$this->hasInto()) {
+            throw new QueryFlowException('INSERT query requires INTO clause or entity with table definition.');
+        }
+    }
+
+    private function initializeProperties(): void
+    {
+        $processor = new InsertDataProcessor($this, $this->insertMap);
+        $this->processedData = $processor->process();
+    }
+
+    private function buildStatement(): void
+    {
+        $statement = new InsertStatement(
+            $this->insertMap,
+            $this->queryFlow,
+            $this->em,
+            $this->processedData,
+        );
+        $this->add($statement);
     }
 
     // /**

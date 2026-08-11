@@ -5,6 +5,11 @@ declare(strict_types=1);
 
 final class ObfuscatorConfig
 {
+    // Global obfuscation prefix constants
+    public const PREFIX = '#';
+    public const ALTERNATIVE_PREFIXES = ['enc:', 'obf:', 'hash:'];
+    public const ALL_PREFIXES = [self::PREFIX, ...self::ALTERNATIVE_PREFIXES];
+
     private static ?array $config = null;
 
     public static function getConfig(): array
@@ -41,6 +46,61 @@ final class ObfuscatorConfig
     {
         $config = self::getConfig();
         return $config[$strategy] ?? [];
+    }
+
+    /**
+     * Check if a string has an obfuscation prefix.
+     */
+    public static function hasPrefix(string $value): bool
+    {
+        foreach (self::ALL_PREFIXES as $prefix) {
+            if (str_starts_with($value, $prefix)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Strip obfuscation prefix from a string.
+     */
+    public static function stripPrefix(string $value): string
+    {
+        foreach (self::ALL_PREFIXES as $prefix) {
+            if (str_starts_with($value, $prefix)) {
+                return substr($value, strlen($prefix));
+            }
+        }
+        return $value;
+    }
+
+    public static function getStrategyFromPrefix(string $value): string
+    {
+        if (str_starts_with($value, 'enc:')) {
+            return 'encrypt';
+        }
+        if (str_starts_with($value, 'obf:')) {
+            return 'obfuscation';
+        }
+        if (str_starts_with($value, 'hash:')) {
+            return 'hashid';
+        }
+        return self::getConfig()['default'] ?? 'hashid';
+    }
+
+    public static function addPrefix(string $rawId, ?string $strategy = null): string
+    {
+        if ($strategy === 'encrypt') {
+            return 'enc:' . $rawId;
+        }
+        if ($strategy === 'obfuscation') {
+            return 'obf:' . $rawId;
+        }
+        if ($strategy === 'hashid') {
+            return 'hash:' . $rawId;
+        }
+
+        return self::PREFIX . $rawId;
     }
 
     private static function loadFromEnv(): array

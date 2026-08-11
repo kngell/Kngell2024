@@ -9,7 +9,6 @@ export default class ModalBase {
     this.closeManager = null;
     this.isAnimating = false;
     this.modalName = modalName;
-    this._pendingClose = false;
 
     this.options = {
       closeOnEsc: true,
@@ -43,7 +42,6 @@ export default class ModalBase {
   // ─── Show ───────────────────────────────────────────────────
 
   showModal(htmlContent) {
-    // If a modal is open, force-close it synchronously first
     if (this.currentModal) {
       this._forceCleanup();
     }
@@ -55,7 +53,6 @@ export default class ModalBase {
       throw new Error("Modal HTML structure not found in response");
     }
 
-    // Create the close manager — single owner of all close interactions
     this.closeManager = new ModalCloseManager(this.currentModal, {
       closeOnEsc: this.options.closeOnEsc,
       closeOnOverlayClick: this.options.closeOnOverlayClick,
@@ -88,12 +85,10 @@ export default class ModalBase {
 
     this.currentModal = existing;
 
-    // Move into container if needed
     if (this.modalContainer && existing.parentNode !== this.modalContainer) {
       this.modalContainer.appendChild(existing);
     }
 
-    // Create close manager
     this.closeManager = new ModalCloseManager(this.currentModal, {
       closeOnEsc: this.options.closeOnEsc,
       closeOnOverlayClick: this.options.closeOnOverlayClick,
@@ -135,7 +130,7 @@ export default class ModalBase {
 
   /**
    * Wait for CSS transition, with fallback timeout.
-   * Returns a promise that resolves exactly once.
+   * Resolves exactly once.
    */
   _awaitTransition(modal) {
     return new Promise((resolve) => {
@@ -150,10 +145,7 @@ export default class ModalBase {
       };
 
       const onEnd = (e) => {
-        // Only respond to transitions on the modal itself, not children
-        if (e.target === modal) {
-          done();
-        }
+        if (e.target === modal) done();
       };
 
       modal.addEventListener("transitionend", onEnd);

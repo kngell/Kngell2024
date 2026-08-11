@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 class FileMetadataService
 {
+    use FileTrimTrait;
     private const int PRECISION = 2;
 
     public function __construct(
@@ -119,7 +120,7 @@ class FileMetadataService
         $results = [];
 
         foreach ($webPathsByField as $fieldName => $paths) {
-            $cleanFieldName = rtrim($fieldName, '[]');
+            $cleanFieldName = $this->getBaseFieldName($fieldName); //rtrim($fieldName, '[]');
 
             if (is_array($paths)) {
                 foreach ($paths as $path) {
@@ -189,6 +190,25 @@ class FileMetadataService
         $value = $bytes / pow(1024, $pow);
 
         return round($value, self::PRECISION) . ' ' . $units[$pow];
+    }
+
+    public function getUploadMetadataWithTempUnprotect(FileInformation $fileInfo, string $fieldName, AbstractBaseUpload $uploadService): array
+    {
+        $absolutePath = $fileInfo->getPathname();
+
+        $wasProtected = false;
+        if (file_exists($absolutePath . '.protected')) {
+            $wasProtected = true;
+            rename($absolutePath . '.protected', $absolutePath);
+        }
+
+        $metadata = $this->getUploadMetadata($fileInfo, $fieldName);
+
+        if ($wasProtected && file_exists($absolutePath)) {
+            rename($absolutePath, $absolutePath . '.protected');
+        }
+
+        return $metadata;
     }
 
     private function formatTimestamp(?int $timestamp): ?string

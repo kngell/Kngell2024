@@ -10,7 +10,12 @@ enum SqlMethodCategory: string
             self::UPDATE => ['update', 'bulkUpdate'],
             self::DELETE => ['delete'],
             self::INSERT => ['insert'],
-            self::SELECT => ['select', 'unionAll'],
+            self::SELECT => ['select'],
+            self::POST_SELECT => [
+                'union', 'unionAll',
+                'intersect', 'intersectAll',
+                'except', 'exceptAll', 'minus',
+            ],
 
             self::FROM => array_merge(
                 ['from'],
@@ -18,7 +23,7 @@ enum SqlMethodCategory: string
                 array_map(fn (SqlJoinType $type) => 'inner' . strtolower($type->name) . 'Join', SqlJoinType::cases()),
                 array_map(fn (SqlJoinType $type) => strtolower($type->name), SqlJoinType::cases()),
                 // ON conditions
-                ['on', 'andOn', 'orOn', 'onClosure'],
+                ['on', 'andOn', 'orOn', 'onClosure', 'onValue', 'orOnValue'],
                 //delete method
                 ['deleteFrom'],
                 ['bulkData'],
@@ -49,6 +54,23 @@ enum SqlMethodCategory: string
         $this === self::UPDATE ||
         $this === self::INSERT
         || $this === self::DELETE;
+    }
+
+    public function getPosition(): int
+    {
+        return match($this) {
+            self::WITH => 0,
+            self::SELECT => 1,
+            self::FROM => 10,
+            self::WHERE => 20,
+            self::GROUP_BY => 30,
+            self::HAVING => 40,
+            self::ORDER_BY => 50,
+            self::LIMIT => 60,
+            self::OFFSET => 70,
+            self::POST_SELECT => 80,  // After SELECT, before ORDER BY?
+            default => 100,
+        };
     }
 
     /**
@@ -100,6 +122,12 @@ enum SqlMethodCategory: string
         }
         return null;
     }
+
+    public static function isFromMethod(string $method): bool
+    {
+        $category = self::getCategoryForMethod($method);
+        return $category === self::FROM;
+    }
     case UPDATE = 'update';
     case DELETE = 'delete';
     case INSERT = 'insert';
@@ -118,4 +146,5 @@ enum SqlMethodCategory: string
     case INTO = 'into';
     case VALUES = 'values';
     case CYCLE = 'cycle';
+    case POST_SELECT = 'postSelect';
 }

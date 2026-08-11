@@ -68,6 +68,7 @@ enum SqlStatement: string
                 SqlMethodCategory::SELECT, SqlMethodCategory::FROM,
                 SqlMethodCategory::WHERE, SqlMethodCategory::GROUP_BY, SqlMethodCategory::HAVING,
                 SqlMethodCategory::ORDER_BY, SqlMethodCategory::LIMIT, SqlMethodCategory::OFFSET,
+                SqlMethodCategory::POST_SELECT,
             ],
             self::INSERT => [
                 SqlMethodCategory::INSERT,
@@ -98,7 +99,7 @@ enum SqlStatement: string
     public function getBuildOrder(): array
     {
         return array_map(
-            fn (SqlMethodCategory $category) => $category->value,
+            fn (SqlMethodCategory $category) => $category,
             $this->getCategoryBuildOrder(),
         );
     }
@@ -148,41 +149,3 @@ enum SqlStatement: string
     case ROLLBACK = 'ROLLBACK';  // Undo transaction
     case SAVEPOINT = 'SAVEPOINT'; // Create transaction savepoint
 }
-
-// // Query
-// case SELECT = 'SELECT';
-
-// // Data manipulation
-// case INSERT = 'INSERT';
-// case UPDATE = 'UPDATE';
-// case DELETE = 'DELETE';
-// case MERGE = 'MERGE';
-
-// // Schema definition
-// case CREATE_TABLE = 'CREATE TABLE';
-// case CREATE_VIEW = 'CREATE VIEW';
-// case CREATE_INDEX = 'CREATE INDEX';
-
-// case ALTER_TABLE = 'ALTER TABLE';
-
-// case DROP_TABLE = 'DROP TABLE';
-// case DROP_VIEW = 'DROP VIEW';
-// case DROP_INDEX = 'DROP INDEX';
-
-// // Transaction control
-// case START_TRANSACTION = 'START TRANSACTION';
-// case COMMIT = 'COMMIT';
-// case ROLLBACK = 'ROLLBACK';
-// case SAVEPOINT = 'SAVEPOINT';
-// case RELEASE_SAVEPOINT = 'RELEASE SAVEPOINT';
-// case SET_TRANSACTION = 'SET TRANSACTION';
-
-// // Privilege control
-// case GRANT = 'GRANT';
-// case REVOKE = 'REVOKE';
-
-// // Cursor control
-// case DECLARE_CURSOR = 'DECLARE';
-// case OPEN_CURSOR = 'OPEN';
-// case FETCH_CURSOR = 'FETCH';
-// case CLOSE_CURSOR = 'CLOSE';

@@ -2,6 +2,6 @@
 
 declare(strict_types=1);
 
-class CategoryEvent extends Event
+final class CategoryEvent extends AbstractEvent
 {
 }

@@ -15,6 +15,7 @@ final readonly class Request
     protected string $requestedUri;
     protected float $requestStartTime;
     protected string|null $rawContent;
+    private ?RouteInfo $routeInfo;
 
     public function __construct(SuperGlobalsInterface $superGlobals)
     {
@@ -139,7 +140,6 @@ final readonly class Request
     public function getPathFromUri(): string
     {
         $parts = parse_url($this->getRequestedUri());
-
         return $parts['path'] ?? '/';
     }
 
@@ -163,26 +163,40 @@ final readonly class Request
         return $this->getMethod() === HttpMethod::POST;
     }
 
-    public function get(string $key): mixed
+    public function get(string $key, mixed $default = null): mixed
     {
-        if ($this->getServer()->get($key)) {
-            return $this->getServer()->get($key);
+        // 1. Check user input maps as-is (POST, GET, Cookies are usually case-sensitive)
+        if ($this->post->has($key)) {
+            return $this->post->get($key);
         }
-        if ($this->getQuery()->get($key)) {
-            return $this->getQuery()->get($key);
+        if ($this->query->has($key)) {
+            return $this->query->get($key);
         }
-        if ($this->getPost()->get($key)) {
-            return $this->getPost()->get($key);
-        }
-        if ($this->getCookies()->get($key)) {
-            return $this->getCookies()->get($key);
-        }
-        $key = ucfirst(strtolower($key));
-        if ($this->getHeaders()->get($key)) {
-            return $this->getCookies()->get($key);
+        if ($this->cookies->has($key)) {
+            return $this->cookies->get($key);
         }
 
-        return null;
+        // 2. Check Headers with capitalization variations (e.g., "Content-Type", "content-type")
+        $ucfirstKey = ucfirst(strtolower($key));
+        if ($this->headers->has($ucfirstKey)) {
+            return $this->headers->get($ucfirstKey);
+        }
+        if ($this->headers->has($key)) {
+            return $this->headers->get($key);
+        }
+
+        // 3. Check Server Environment variables (Try original, then fall back to UPPERCASE)
+        if ($this->server->has($key)) {
+            return $this->server->get($key);
+        }
+
+        $upperKey = strtoupper($key);
+        if ($this->server->has($upperKey)) {
+            return $this->server->get($upperKey);
+        }
+
+        // 4. Ultimate fallback if it's completely missing
+        return $default;
     }
 
     public function isFromWebpackDevServer(): bool
@@ -269,25 +283,30 @@ final readonly class Request
 
     public function isAjax(): bool
     {
-        // Check for standard AJAX header
         $xRequestedWith = $this->headers->get('X-Requested-With');
         if ($xRequestedWith && strtolower($xRequestedWith) === 'xmlhttprequest') {
             return true;
         }
 
-        // Check Accept header
         $accept = $this->headers->get('Accept');
         if ($accept && str_contains(strtolower($accept), 'application/json')) {
             return true;
         }
 
-        // Check for fetch API (this is what your client uses!)
         $secFetchMode = $this->headers->get('Sec-Fetch-Mode');
-        if ($secFetchMode === 'cors') {
+        if ($secFetchMode === 'cors' || $secFetchMode === 'same-origin') {
             return true;
         }
 
-        // Check for PJAX
+        $contentType = $this->headers->get('Content-Type');
+        if ($contentType && str_contains(strtolower($contentType), 'application/json')) {
+            return true;
+        }
+
+        if ($this->headers->has('X-Requested-With') || $this->headers->has('X-Ajax-Request')) {
+            return true;
+        }
+
         if ($this->headers->get('X-PJAX') || $this->headers->get('X-PJAX-Container')) {
             return true;
         }
@@ -298,6 +317,26 @@ final readonly class Request
     public function isXmlHttpRequest(): bool
     {
         return $this->isAjax();
+    }
+
+    /**
+     * @return null|RouteInfo
+     */
+    public function getRouteInfo(): ?RouteInfo
+    {
+        return $this->routeInfo;
+    }
+
+    /**
+     * @param null|RouteInfo $routeInfo
+     *
+     * @return Request
+     */
+    public function setRouteInfo(?RouteInfo $routeInfo): Request
+    {
+        $this->routeInfo = $routeInfo;
+
+        return $this;
     }
 
     /**

@@ -1,0 +1,8 @@
+column_id:
+  display: Column
+  required: true
+title:
+  display: Title
+  required: true
+  min: 3
+  max: 100

@@ -9,7 +9,7 @@ class WhereDataStandardizer extends AbstractDataStandardizer
         $data = $this->getRealData($data);
 
         if (empty($data)) {
-            throw new BadQueryArgumentException('WHERE condition requires at least one condition');
+            return new SqlGenericDataPayload();
         }
         return new SqlGenericDataPayload($data, $this->method);
     }

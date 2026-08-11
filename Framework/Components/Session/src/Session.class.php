@@ -53,6 +53,13 @@ class Session implements SessionInterface
         }
     }
 
+    public function save(): void
+    {
+        if ($this->storage) {
+            $this->storage->save();
+        }
+    }
+
     /**
      * @param string $key
      * @param mixed $value
@@ -122,11 +129,11 @@ class Session implements SessionInterface
      * ================================================.
      *
      * @param string $key
-     * @param [type] $value
+     * @param mixed $value
      *
      * @return mixed
      */
-    public function flush(string $key, $value = null): mixed
+    public function flush(string $key, mixed $value = null): mixed
     {
         $this->ensureSessionKeyIsValid($key);
         try {

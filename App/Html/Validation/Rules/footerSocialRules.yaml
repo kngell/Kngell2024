@@ -1,0 +1,11 @@
+platform:
+  display: PlatForm
+  required: true
+  unique: ignore_current
+  min: 3
+  max: 50
+name:
+  display: Name
+  required: true
+  min: 3
+  max: 50

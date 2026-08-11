@@ -7,6 +7,7 @@ class DeleteDTO
     public function __construct(
         public readonly bool $confirmed,
         public readonly string $deleteOption,
+        public readonly ?string $blockType = null,
     ) {
     }
 
@@ -15,8 +16,9 @@ class DeleteDTO
         $post = $request->getPost();
 
         return new self(
-            confirmed: (bool) $post->get('confirmed', false),
+            confirmed: (bool) $post->get('confirm_delete', false),
             deleteOption: $post->get('delete_option', 'archive'),
+            blockType: $post->get('block_type', null),
         );
     }
 }

@@ -2,13 +2,16 @@
 
 declare(strict_types=1);
 
-readonly class GalleryDeletionResult
+final class GalleryDeletionResult implements DeletionResultInterface
 {
+    use DeletionResultTrait;
+
     public function __construct(
-        public int $productId,
-        public int $affectedRows,
-        public bool $changed,
-        public string $deletionMode,
+        private int $entityId,        // product id
+        private int $affectedRows,
+        private bool $changed,
+        private string $deletionMode,
+        private string $entityType = 'product',
     ) {
     }
 }

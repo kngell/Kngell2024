@@ -6,191 +6,231 @@ trait SqlWhereConditionTrait
 {
     private const string FLOW = 'where';
 
-    public function where(mixed ...$conditions): self
+    public function where(mixed ...$conditions): static
     {
-        if (!isset($this->queryFlow['from']) && isset($this->queryFlow['select'])) {
-            $this->from();
+        $this->ensureFromExists();
+        $this->ensureSetExists();
+        $innerMethod = $conditions['innerMethod'] ?? __FUNCTION__;
+        $innerData = $conditions['innerData'] ?? $conditions;
+
+        if (is_array($innerData) && count($innerData) === 3 && $this->isOperator($innerData[1])) {
+            $standardized = $innerData;
+        } else {
+            $standardized = $this->standardize($innerMethod, $innerData);
         }
 
-        $conditions = $this->standardize(__FUNCTION__, $conditions);
-
-        if (is_array($conditions) && !ArrayUtils::isDeepEmpty($conditions)) {
-            if (!isset($this->conditionsMap['where'])) {
-                $this->conditionsMap['where'] = [];
-            }
-
-            $this->conditionsMap['where'][] = [
-                'method' => __FUNCTION__,
-                'conditions' => $conditions,
-            ];
-            $this->queryFlow[self::FLOW] = true;
+        if (empty($standardized)) {
+            return $this;
         }
-
-        return $this;
-    }
-
-    public function orWhere(mixed ...$conditions): self
-    {
-        if (!isset($this->conditionsMap['where'])) {
-            $this->conditionsMap['where'] = [];
-        }
-
-        $conditions = $this->standardize(__FUNCTION__, $conditions);
-
-        $this->conditionsMap['where'][] = [
-            'method' => __FUNCTION__,
-            'conditions' => $conditions,
+        $this->conditionsMap[] = [
+            'method' => $innerMethod,
+            'conditions' => $standardized,
         ];
 
+        // Record in query flow
+        $this->queryFlow[] = $innerMethod;
+
         return $this;
     }
 
-    public function or(mixed ...$conditions): self
+    /**
+     * OR WHERE convenience methods.
+     */
+    public function orWhere(mixed ...$conditions): static
+    {
+        return $this->where(...['innerData' => $conditions, 'innerMethod' => __FUNCTION__]);
+    }
+
+    public function or(mixed ...$conditions): static
     {
         return $this->orWhere(...$conditions);
     }
 
-    public function andWhere(mixed ...$conditions): self
+    /**
+     * AND WHERE convenience methods.
+     */
+    public function andWhere(mixed ...$conditions): static
     {
-        if (!isset($this->conditionsMap['where'])) {
-            $this->conditionsMap['where'] = [];
-        }
-
-        $conditions = $this->standardize(__FUNCTION__, $conditions);
-
-        $this->conditionsMap['where'][] = [
-            'method' => __FUNCTION__,
-            'conditions' => $conditions,
-        ];
-        $this->queryFlow['andWhere'] = true;
-
-        return $this;
+        return $this->where(...['innerData' => $conditions, 'innerMethod' => __FUNCTION__]);
     }
 
-    public function and(mixed ...$conditions): self
+    public function and(mixed ...$conditions): static
     {
         return $this->andWhere(...$conditions);
     }
 
-    public function whereIn(mixed ...$conditions): self
+    /**
+     * WHERE IN methods.
+     */
+    public function whereIn(mixed ...$conditions): static
     {
-        if (!isset($this->conditionsMap['where'])) {
-            $this->conditionsMap['where'] = [];
-        }
-
-        $conditions = $this->standardize(__FUNCTION__, $conditions);
-
-        $this->conditionsMap['where'][] = [
-            'method' => __FUNCTION__,
-            'conditions' => $conditions,
-        ];
-        $this->queryFlow['whereIn'] = true;
-
-        return $this;
+        return $this->where(...['innerData' => $conditions, 'innerMethod' => __FUNCTION__]);
     }
 
-    public function whereNotIn(mixed ...$conditions): self
+    public function whereNotIn(mixed ...$conditions): static
     {
-        if (!isset($this->conditionsMap['where'])) {
-            $this->conditionsMap['where'] = [];
-        }
-
-        $conditions = $this->standardize(__FUNCTION__, $conditions);
-
-        $this->conditionsMap['where'][] = [
-            'method' => __FUNCTION__,
-            'conditions' => $conditions,
-        ];
-        $this->queryFlow['whereNotIn'] = true;
-
-        return $this;
+        return $this->where(...['innerData' => $conditions, 'innerMethod' => __FUNCTION__]);
     }
 
-    public function orWhereIn(mixed ...$conditions): self
+    public function orWhereIn(mixed ...$conditions): static
     {
-        if (!isset($this->conditionsMap['where'])) {
-            $this->conditionsMap['where'] = [];
-        }
-
-        $conditions = $this->standardize(__FUNCTION__, $conditions);
-
-        $this->conditionsMap['where'][] = [
-            'method' => __FUNCTION__,
-            'conditions' => $conditions,
-        ];
-
-        return $this;
+        return $this->where(...['innerData' => $conditions, 'innerMethod' => __FUNCTION__]);
     }
 
-    public function orWhereNotIn(mixed ...$conditions): self
+    public function orWhereNotIn(mixed ...$conditions): static
     {
-        if (!isset($this->conditionsMap['where'])) {
-            $this->conditionsMap['where'] = [];
-        }
-
-        $conditions = $this->standardize(__FUNCTION__, $conditions);
-
-        $this->conditionsMap['where'][] = [
-            'method' => __FUNCTION__,
-            'conditions' => $conditions,
-        ];
-
-        return $this;
+        return $this->where(...['innerData' => $conditions, 'innerMethod' => __FUNCTION__]);
     }
 
-    public function whereEqualTo(string $column, mixed $value): self
-    {
-        return $this->where($column, '=', $value);
-    }
-
-    public function whereNotEqualTo(string $column, mixed $value): self
-    {
-        return $this->where($column, '!=', $value);
-    }
-
-    public function whereLessThan(string $column, mixed $value): self
-    {
-        return $this->where($column, '<', $value);
-    }
-
-    public function whereGreaterThan(string $column, mixed $value): self
-    {
-        return $this->where($column, '>', $value);
-    }
-
-    public function whereLike(string $column, string $pattern): self
-    {
-        return $this->where($column, 'LIKE', $pattern);
-    }
-
-    public function whereNotLike(string $column, string $pattern): self
-    {
-        return $this->where($column, 'NOT LIKE', $pattern);
-    }
-
-    public function whereNull(string $column): self
-    {
-        return $this->where($column, 'IS NULL');
-    }
-
-    public function whereNotNull(string $column): self
-    {
-        return $this->where($column, 'IS NOT NULL');
-    }
-
-    public function whereBetween(string $column, mixed $min, mixed $max): self
+    /**
+     * WHERE BETWEEN methods.
+     */
+    public function whereBetween(string $column, mixed $min, mixed $max): static
     {
         return $this->where($column, 'BETWEEN', [$min, $max]);
     }
 
-    public function whereNotBetween(string $column, mixed $min, mixed $max): self
+    public function whereNotBetween(string $column, mixed $min, mixed $max): static
     {
         return $this->where($column, 'NOT BETWEEN', [$min, $max]);
     }
 
+    public function orWhereBetween(string $column, mixed $min, mixed $max): static
+    {
+        return $this->orWhere($column, 'BETWEEN', [$min, $max]);
+    }
+
+    public function whereNull(string $column): static
+    {
+        return $this->where(...['innerData' => [$column . ' is null'], 'innerMethod' => __FUNCTION__]);
+    }
+
+    public function whereNotNull(string $column): static
+    {
+        return $this->where($column, 'IS NOT NULL');
+    }
+
+    public function orWhereNull(string $column): static
+    {
+        return $this->orWhere($column, 'IS NULL');
+    }
+
+    public function orWhereNotNull(string $column): static
+    {
+        return $this->orWhere($column, 'IS NOT NULL');
+    }
+
+    /**
+     * WHERE comparison methods.
+     */
+    public function whereEqualTo(string $column, mixed $value): static
+    {
+        return $this->where($column, '=', $value);
+    }
+
+    public function whereNotEqualTo(string $column, mixed $value): static
+    {
+        return $this->where($column, '!=', $value);
+    }
+
+    public function whereLessThan(string $column, mixed $value): static
+    {
+        return $this->where($column, '<', $value);
+    }
+
+    public function whereGreaterThan(string $column, mixed $value): static
+    {
+        return $this->where($column, '>', $value);
+    }
+
+    public function whereLessThanOrEqualTo(string $column, mixed $value): static
+    {
+        return $this->where($column, '<=', $value);
+    }
+
+    public function whereGreaterThanOrEqualTo(string $column, mixed $value): static
+    {
+        return $this->where($column, '>=', $value);
+    }
+
+    /**
+     * WHERE pattern matching methods.
+     */
+    public function whereLike(string $column, string $pattern): static
+    {
+        return $this->where($column, 'LIKE', $pattern);
+    }
+
+    public function whereNotLike(string $column, string $pattern): static
+    {
+        return $this->where($column, 'NOT LIKE', $pattern);
+    }
+
+    public function whereILike(string $column, string $pattern): static
+    {
+        return $this->where($column, 'ILIKE', $pattern);
+    }
+
+    public function orWhereLike(string $column, string $pattern): static
+    {
+        return $this->orWhere($column, 'LIKE', $pattern);
+    }
+
+    /**
+     * WHERE EXISTS methods.
+     */
+    public function whereExists(Closure|SqlSelectQueryBuilderInterface $subquery): static
+    {
+        return $this->where('EXISTS', $subquery);
+    }
+
+    public function whereNotExists(Closure|SqlSelectQueryBuilderInterface $subquery): static
+    {
+        return $this->where('NOT EXISTS', $subquery);
+    }
+
+    public function getWhereConditions(): array
+    {
+        return $this->conditionsMap ?? [];
+    }
+
+    protected function ensureFromExists(): void
+    {
+        if (!ArrayUtils::hasValue($this->queryFlow, 'from') && ArrayUtils::hasValue($this->queryFlow, 'select')) {
+            if ($this instanceof SqlSelectQueryBuilderInterface) {
+                $this->from();
+            }
+        }
+    }
+
+    protected function ensureSetExists(): void
+    {
+        if (!ArrayUtils::hasValue($this->queryFlow, 'set') && ArrayUtils::hasValue($this->queryFlow, 'update')) {
+            if ($this instanceof SqlUpdateQueryBuilderInterface) {
+                $this->set();
+            }
+        }
+    }
+
+    /**
+     * Helper to check if a string is an SQL operator.
+     */
+    private function isOperator(string $value): bool
+    {
+        $operators = ['=', '!=', '<>', '>', '<', '>=', '<=',
+            'LIKE', 'NOT LIKE', 'ILIKE', 'IN', 'NOT IN',
+            'IS NULL', 'IS NOT NULL', 'BETWEEN', 'NOT BETWEEN',
+            'EXISTS', 'NOT EXISTS'];
+
+        return in_array(strtoupper($value), $operators);
+    }
+
+    /**
+     * Standardize conditions using the appropriate standardizer.
+     */
     private function standardize(string $method, array $conditions): array
     {
-        $standardizer = $this->getClauseStandardizer($method); // Always 'where' for the standardizer class
+        $standardizer = $this->getClauseStandardizer('where'); // Always use 'where' standardizer
 
         if (!$standardizer) {
             throw new RuntimeException('No standardizer found for WHERE clause');
@@ -203,8 +243,8 @@ trait SqlWhereConditionTrait
         // Set the specific method context (where, orWhere, whereIn, etc.)
         $standardizer->setMethod($method);
 
-        $payload = $standardizer->standardize($conditions);
+        $result = $standardizer->standardize($conditions);
 
-        return $payload->getData();
+        return $result->getData();
     }
 }

@@ -8,6 +8,7 @@ abstract class AbstractRulesFactory
         protected EntityManagerInterface $em,
         protected QueryState $state,
         protected BulkRowFactory $bulkRowFactory,
+        protected ?SqlComponent $component = null,
     ) {
     }
 
@@ -16,7 +17,6 @@ abstract class AbstractRulesFactory
         if (method_exists($rule, 'initialize')) {
             $rule->initialize($this->state);
         }
-
         return $rule;
     }
 }

@@ -6,8 +6,8 @@ class ModelQueryCount extends AbstractModelBaseQuery
 {
     public function execute(EntityManagerInterface $em, Entity $entity, mixed $params): QueryResult
     {
-        [$entity, $processedConditions] = $this->utils->processConditions($entity, $params);
-        $em->getRepository($entity)->count($processedConditions);
+        $processed = $this->utils->processConditions($entity, $params);
+        $em->getRepository($processed->entity)->count($processed->conditions);
         return $this->getQueryResult($em, 'count');
     }
 }

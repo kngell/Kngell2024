@@ -84,7 +84,8 @@ export default class RealTimeValidator {
 
     // field.form may be null for fields with form="" attribute
     // pointing elsewhere, or for detached elements
-    const belongsToForm = field.form === this.form || field.getAttribute("form") === this.form.id;
+    const belongsToForm =
+      field.form === this.form || field.getAttribute("form") === this.form.getAttribute("id");
 
     return belongsToForm && field.name && !field.hasAttribute("data-skip-validation");
   }
@@ -96,7 +97,7 @@ export default class RealTimeValidator {
 
   validateField(field, debounceMs = 0) {
     const fieldName = field.name;
-    const timerKey = `${this.form.id || "form"}-${fieldName}`;
+    const timerKey = `${this.form.getAttribute("id") || "form"}-${fieldName}`;
 
     if (this.debounceTimers.has(timerKey)) {
       clearTimeout(this.debounceTimers.get(timerKey));

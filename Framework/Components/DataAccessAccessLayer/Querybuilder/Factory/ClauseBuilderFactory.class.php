@@ -32,9 +32,9 @@ class ClauseBuilderFactory
             new DataQueryClauseBuilderFactory(
                 $this->component,
             ),
-            new DataManipulationClauseBuilderFactory(
-                $this->component,
-            ),
+            // new DataManipulationClauseBuilderFactory(
+            //     $this->component,
+            // ),
         ];
     }
 }

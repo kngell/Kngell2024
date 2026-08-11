@@ -12,3 +12,4 @@ selectPaymentType: SelectPaymentTypeMiddleware
 auth: AuthMiddleware
 admin: AdminGroupMiddleware
 cacheGarbageCollector: CacheGarbageCollectionMiddleware
+mergeFlash: MergeFlashIntoAjaxResponseMiddleware

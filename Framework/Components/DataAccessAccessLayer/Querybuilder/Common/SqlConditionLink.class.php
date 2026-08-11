@@ -4,33 +4,28 @@ declare(strict_types=1);
 
 enum SqlConditionLink: string
 {
-    private const array LINKS_FAMILY = [
-        'and' => [
-            'where', 'andWhere', 'whereIn', 'whereNotIn',
-            'whereEquals', 'whereNotEquals', 'whereLessThan', 'whereGreaterThan',
-            'whereLessThanOrEqualTo', 'whereGreaterThanOrEqualTo',
-        ],
-        'or' => [
-            'orWhere', 'orWhereIn', 'orWhereNotIn',
-            'orWhereEquals', 'orWhereNotEquals', 'orWhereLessThan', 'orWhereGreaterThan',
-            'orWhereLessThanOrEqualTo', 'orWhereGreaterThanOrEqualTo',
-        ],
-        'on' => ['on', 'andOn', 'orOn', 'onEqualTo', 'onNotEqualTo', 'onLessThan', 'onGreaterThan', 'onLike', 'onIn', 'onBetween', 'onNull'],
-    ];
+    public function isLogical(): bool
+    {
+        return in_array($this, [self::AND, self::OR, self::XOR]);
+    }
+
+    public function isJoinConnective(): bool
+    {
+        return $this === self::ON;
+    }
+
+    public function toSql(): string
+    {
+        return $this->value;
+    }
 
     public static function getFrom(string $method): self
     {
-        foreach (self::LINKS_FAMILY as $linkType => $methods) {
-            if (in_array($method, $methods)) {
-                return self::from($linkType);
-            }
-        }
-
-        // Default to AND for unknown methods
-        return self::AND;
+        $mapping = SqlBuilderMethodRegistry::getMapping($method);
+        return $mapping['link'] ?? self::AND;
     }
-
-    case AND = 'and';
-    case OR = 'or';
-    case ON = 'on';
+    case AND = 'AND';
+    case OR = 'OR';
+    case XOR = 'XOR';
+    case ON = 'ON';
 }

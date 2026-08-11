@@ -4,39 +4,45 @@ import BrowserLogger from "js/core/utils/BrowserLogger";
 const logger = new BrowserLogger("MultiplePreviewDropzone");
 
 export default class MultiplePreviewDropzone extends BaseDropzone {
-  constructor(element, files) {
-    super(element);
-    this.files = files || [];
+  constructor(element, options = {}) {
+    super(element, options);
 
-    // CRITICAL: Sync files to the new input
+    this.files = element.__files || options.files || [];
+
+    // Ensure we're not losing existing files
+    if (options.existingFiles) {
+      this.files = [...options.existingFiles, ...this.files];
+    }
+
     this.syncFilesToInput(this.files);
-
-    logger.debug("MultiplePreviewDropzone initialized", { fileCount: this.files.length });
-
     this.setupPreviewListeners();
+
+    logger.debug("MultiplePreviewDropzone initialized", {
+      fileCount: this.files.length,
+      inputName: this.originalInputName
+    });
   }
 
   setupPreviewListeners() {
-    // Remove individual files
-    const removeButtons = this.element.querySelectorAll(".remove");
-    removeButtons.forEach((btn) => {
-      // Remove existing listener to prevent duplicates
+    // Setup remove buttons
+    const removeBtns = this.element.querySelectorAll(".remove");
+    removeBtns.forEach((btn) => {
       if (btn._removeHandler) {
         btn.removeEventListener("click", btn._removeHandler);
       }
 
       btn._removeHandler = (e) => {
         e.stopPropagation();
-        const index = btn.dataset.index;
-        if (index !== undefined) {
-          this.removeFile(parseInt(index));
+        const index = parseInt(btn.dataset.index);
+        if (!isNaN(index)) {
+          this.removeFile(index);
         }
       };
 
       btn.addEventListener("click", btn._removeHandler);
     });
 
-    // Add more button
+    // Setup add more button
     const addMoreBtn = this.element.querySelector(".add-more");
     if (addMoreBtn) {
       if (addMoreBtn._clickHandler) {
@@ -45,13 +51,13 @@ export default class MultiplePreviewDropzone extends BaseDropzone {
 
       addMoreBtn._clickHandler = (e) => {
         e.stopPropagation();
-        this.input.click();
+        this.openFileSelector();
       };
 
       addMoreBtn.addEventListener("click", addMoreBtn._clickHandler);
     }
 
-    // Add more item (plus icon)
+    // Setup add more item (the plus box)
     const addMoreItem = this.element.querySelector(".add-more-item");
     if (addMoreItem) {
       if (addMoreItem._clickHandler) {
@@ -60,38 +66,59 @@ export default class MultiplePreviewDropzone extends BaseDropzone {
 
       addMoreItem._clickHandler = (e) => {
         e.stopPropagation();
-        this.input.click();
+        this.openFileSelector();
       };
 
       addMoreItem.addEventListener("click", addMoreItem._clickHandler);
     }
 
-    // File input for adding more - NO CLONING
+    // Setup file input change listener
     if (this.input) {
       if (this.boundChangeHandler) {
         this.input.removeEventListener("change", this.boundChangeHandler);
       }
 
       this.boundChangeHandler = async (e) => {
+        if (this._syncing) return;
+
         const newFiles = Array.from(e.target.files || []);
         if (newFiles.length > 0) {
+          logger.debug("New files selected via file browser", { count: newFiles.length });
           await this.addFiles(newFiles);
+          e.target.value = ""; // Clear input to allow selecting same files again
         }
-        // Reset input to allow selecting the same files again
-        this.input.value = "";
       };
 
       this.input.addEventListener("change", this.boundChangeHandler);
     }
   }
 
-  // CRITICAL: Override handleFiles to handle drops on preview
+  openFileSelector() {
+    if (this.input) {
+      logger.debug("Opening file selector");
+      this.input.click();
+    } else {
+      logger.warn("No input found to trigger file selection");
+      // Create temporary input if needed
+      const tempInput = document.createElement("input");
+      tempInput.type = "file";
+      tempInput.multiple = true;
+      tempInput.accept = "image/*";
+      tempInput.addEventListener("change", (e) => {
+        const files = Array.from(e.target.files || []);
+        if (files.length > 0) {
+          this.addFiles(files);
+        }
+      });
+      tempInput.click();
+    }
+  }
+
   handleFiles(files) {
-    // Prevent multiple triggers
     if (this._processingFiles) return;
     this._processingFiles = true;
 
-    logger.debug("Files dropped on multiple preview", { count: files.length });
+    logger.debug("Files dropped on preview", { count: files.length });
     this.addFiles(files);
 
     setTimeout(() => {
@@ -100,68 +127,49 @@ export default class MultiplePreviewDropzone extends BaseDropzone {
   }
 
   async addFiles(newFiles) {
-    // Create a Set of existing file identifiers
+    // Filter out duplicates
     const existingFileKeys = new Set(
-      this.files.map((file) => `${file.name}-${file.size}-${file.lastModified}`)
+      this.files.map((f) => `${f.name}-${f.size}-${f.lastModified}`)
     );
 
-    // Filter out duplicates
     const uniqueFiles = [];
-    const duplicates = [];
-
     newFiles.forEach((file) => {
-      const fileKey = `${file.name}-${file.size}-${file.lastModified}`;
-
-      if (existingFileKeys.has(fileKey)) {
-        duplicates.push(file);
-        logger.debug(`Duplicate file detected: ${file.name}`);
-      } else {
+      const key = `${file.name}-${file.size}-${file.lastModified}`;
+      if (!existingFileKeys.has(key)) {
         uniqueFiles.push(file);
-        existingFileKeys.add(fileKey);
+        existingFileKeys.add(key);
       }
     });
 
-    // Show warning if there were duplicates
-    if (duplicates.length > 0) {
-      this.showDuplicateWarning(duplicates.length);
-    }
-
-    // If no unique files, exit early
     if (uniqueFiles.length === 0) {
-      logger.debug("No unique files to upload");
+      logger.debug("No unique files to add");
       return;
     }
 
-    // Store all files (existing + new unique files)
-    this.files = [...this.files, ...uniqueFiles];
+    // If we're adding files while in preview mode, just refresh the preview
+    // instead of going through uploading state
+    if (this.state === "preview") {
+      this.files = [...this.files, ...uniqueFiles];
+      this.refreshPreview();
+    } else {
+      // Go through uploading state
+      const uploadingEl = this.createUploadingElement(uniqueFiles);
+      uploadingEl.__files = this.files;
+      uploadingEl.__existingFiles = this.files;
 
-    // CRITICAL: Sync all files to input
-    this.syncFilesToInput(this.files);
+      this.destroy();
+      this.element.replaceWith(uploadingEl);
 
-    // Go to uploading state for new files
-    const uploadingEl = this.createUploadingElement(uniqueFiles);
-    this.destroy();
-    this.element.replaceWith(uploadingEl);
-
-    import("./MultipleUploadingDropzone").then((module) => {
-      new module.default(uploadingEl, this.files);
-    });
-  }
-
-  showDuplicateWarning(count) {
-    const message =
-      count === 1 ? "1 duplicate file was skipped" : `${count} duplicate files were skipped`;
-
-    const warning = document.createElement("div");
-    warning.className = "upload-duplicate-warning";
-    warning.textContent = message;
-    document.body.appendChild(warning);
-
-    setTimeout(() => warning.remove(), 3000);
+      const { default: DropzoneFactory } = await import("../DropzoneFactory");
+      DropzoneFactory.init(uploadingEl);
+    }
   }
 
   createUploadingElement(newFiles) {
     const rootClass = this.rootBaseClass;
+    const allFiles = [...this.files, ...newFiles];
+    const totalSize = allFiles.reduce((sum, f) => sum + f.size, 0);
+    const totalSizeMB = (totalSize / 1024 / 1024).toFixed(1);
 
     const el = document.createElement("div");
     el.className = `${rootClass} ${rootClass}--uploading`;
@@ -172,14 +180,21 @@ export default class MultiplePreviewDropzone extends BaseDropzone {
         <svg><use href="#icon-upload"></use></svg>
       </div>
       <div class="${rootClass}__text">
-        <span class="${rootClass}__main-text">Adding ${newFiles.length} new files...</span>
-        <span class="${rootClass}__hint-text">0% complete</span>
+        <span class="${rootClass}__main-text">Adding ${newFiles.length} new file(s)...</span>
+        <span class="${rootClass}__hint-text">${allFiles.length} total files • ${totalSizeMB} MB</span>
       </div>
       <div class="${rootClass}__progress">
         <div class="${rootClass}__progress-fill" style="width: 0%"></div>
       </div>
-      <input type="file" name="image_url[]" multiple accept="image/*">
     `;
+
+    const fileInput = this.createFileInput();
+    fileInput.multiple = true;
+    el.appendChild(fileInput);
+
+    // Store all files for the uploading state
+    el.__files = allFiles;
+    el.__existingFiles = this.files;
 
     return el;
   }
@@ -187,49 +202,58 @@ export default class MultiplePreviewDropzone extends BaseDropzone {
   removeFile(index) {
     this.files.splice(index, 1);
 
-    // CRITICAL: Sync updated files to input
-    this.syncFilesToInput(this.files);
-
     if (this.files.length === 0) {
-      this.reset();
+      this.resetToEmpty();
     } else {
       this.refreshPreview();
     }
   }
 
   refreshPreview() {
-    const newEl = this.createPreviewElement();
-    this.destroy();
-    this.element.replaceWith(newEl);
+    const previewEl = this.createPreviewElement();
+    previewEl.__files = this.files;
 
-    import("./MultiplePreviewDropzone").then((module) => {
-      new module.default(newEl, this.files);
+    this.destroy();
+    this.element.replaceWith(previewEl);
+
+    import("../DropzoneFactory").then(({ default: DropzoneFactory }) => {
+      DropzoneFactory.init(previewEl);
     });
   }
 
   createPreviewElement() {
     const rootClass = this.rootBaseClass;
+    const totalSize = this.files.reduce((sum, f) => sum + (f.size || 0), 0);
+    const totalSizeMB = (totalSize / 1024 / 1024).toFixed(1);
 
-    const previewItems = this.files
-      .map((file, index) => {
-        const url = file instanceof File ? URL.createObjectURL(file) : file;
-        return `
-        <div class="${rootClass}__preview-item" data-index="${index}">
+    let previewItems = "";
+    for (let i = 0; i < this.files.length; i++) {
+      const file = this.files[i];
+      const url = URL.createObjectURL(file);
+      const sizeMB = (file.size / 1024 / 1024).toFixed(1);
+      previewItems += `
+        <div class="${rootClass}__preview-item" data-index="${i}">
           <div class="${rootClass}__preview">
-            <img src="${url}" alt="Preview ${index + 1}">
+            <img src="${url}" alt="Preview ${i + 1}">
           </div>
           <div class="${rootClass}__preview-item-actions">
-            <button class="remove" data-index="${index}">×</button>
+            <button class="remove" data-index="${i}">×</button>
+          </div>
+          <div class="${rootClass}__preview-info">
+            <span class="${rootClass}__filename">${this.truncateFilename(file.name)}</span>
+            <span class="${rootClass}__filesize">${sizeMB} MB</span>
           </div>
         </div>
       `;
-      })
-      .join("");
+    }
 
     const addMoreItem = `
       <div class="${rootClass}__preview-item add-more-item">
         <div class="${rootClass}__preview add-more">
           <svg><use href="#icon-plus"></use></svg>
+        </div>
+        <div class="${rootClass}__preview-info">
+          <span class="${rootClass}__filename">Add more</span>
         </div>
       </div>
     `;
@@ -245,15 +269,18 @@ export default class MultiplePreviewDropzone extends BaseDropzone {
       </div>
       <div class="${rootClass}__content">
         <div class="${rootClass}__info">
-          <span class="${rootClass}__main-text">${this.files.length} files uploaded</span>
-          <span class="${rootClass}__hint-text">Click + or drag to add more</span>
+          <span class="${rootClass}__main-text">${this.files.length} file(s) uploaded successfully</span>
+          <span class="${rootClass}__hint-text">Total: ${totalSizeMB} MB</span>
         </div>
         <div class="${rootClass}__actions">
-          <button class="add-more">Add More</button>
+          <button class="add-more">Add More Files</button>
         </div>
       </div>
-      <input type="file" name="image_url[]" multiple accept="image/*" hidden>
     `;
+
+    const hiddenInput = this.createFileInput(true);
+    hiddenInput.multiple = true;
+    el.appendChild(hiddenInput);
 
     return el;
   }
@@ -273,47 +300,57 @@ export default class MultiplePreviewDropzone extends BaseDropzone {
         <span class="${rootClass}__main-text">Drag & drop or click to upload</span>
         <span class="${rootClass}__hint-text">PNG, JPG, GIF • Max 5MB each</span>
       </div>
-      <input type="file" name="image_url[]" multiple accept="image/*">
     `;
+
+    const fileInput = this.createFileInput();
+    fileInput.multiple = true;
+    el.appendChild(fileInput);
 
     return el;
   }
 
-  async reset() {
-    // CRITICAL: Clear the file input
-    this.syncFilesToInput([]);
-
+  resetToEmpty() {
     const emptyEl = this.createEmptyElement();
     this.destroy();
     this.element.replaceWith(emptyEl);
 
-    import("./MultipleEmptyDropzone").then((module) => {
-      new module.default(emptyEl);
+    import("../DropzoneFactory").then(({ default: DropzoneFactory }) => {
+      DropzoneFactory.init(emptyEl);
     });
   }
 
+  truncateFilename(filename, maxLength = 20) {
+    if (!filename) return "unknown";
+    if (filename.length <= maxLength) return filename;
+    const ext = filename.split(".").pop();
+    const name = filename.slice(0, maxLength - ext.length - 3);
+    return `${name}...${ext}`;
+  }
+
   destroy() {
-    // Clean up all listeners
     if (this.input && this.boundChangeHandler) {
       this.input.removeEventListener("change", this.boundChangeHandler);
+      this.boundChangeHandler = null;
     }
 
-    // Clean up button listeners
-    const removeButtons = this.element.querySelectorAll(".remove");
-    removeButtons.forEach((btn) => {
+    const removeBtns = this.element.querySelectorAll(".remove");
+    removeBtns.forEach((btn) => {
       if (btn._removeHandler) {
         btn.removeEventListener("click", btn._removeHandler);
+        btn._removeHandler = null;
       }
     });
 
     const addMoreBtn = this.element.querySelector(".add-more");
     if (addMoreBtn && addMoreBtn._clickHandler) {
       addMoreBtn.removeEventListener("click", addMoreBtn._clickHandler);
+      addMoreBtn._clickHandler = null;
     }
 
     const addMoreItem = this.element.querySelector(".add-more-item");
     if (addMoreItem && addMoreItem._clickHandler) {
       addMoreItem.removeEventListener("click", addMoreItem._clickHandler);
+      addMoreItem._clickHandler = null;
     }
 
     this._processingFiles = false;

@@ -57,6 +57,9 @@
             </use>
             <desc>User Cart</desc>
         </svg>
+        <span class="menu__actions--cart-item-count">
+
+        </span>
     </a>
     <a href="#" class="menu__actions-link menu__actions--user">
         <svg class="icon cart-icon">

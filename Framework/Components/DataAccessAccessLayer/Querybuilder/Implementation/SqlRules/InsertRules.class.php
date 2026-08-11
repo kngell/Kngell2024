@@ -9,8 +9,9 @@ class InsertRules extends AbstractRules implements QueryRulesInterface
         string $method,
         QueryState $state,
         private array $insertdata,
+        ?string $customAlias = null,
     ) {
-        parent::__construct($em, $method, $state);
+        parent::__construct($em, $method, $customAlias, $state);
     }
 
     public function getRule(array $insertdata): string

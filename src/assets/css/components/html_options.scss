@@ -1,0 +1,333 @@
+// ============================================
+// CHECKOUT OPTIONS
+// ============================================
+
+.checkout-options {
+  &__container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: map.get($spacing, xl) 0;
+  }
+
+  // ─── HEADER ─────────────────────────────────────────
+
+  &__header {
+    margin-bottom: map.get($spacing, xl);
+  }
+
+  &__title {
+    font-size: var(--heading-4);
+    font-weight: var(--heading-font-weight-4);
+    color: $form-step-address-title;
+    margin-bottom: map.get($spacing, xs);
+  }
+
+  &__subtitle {
+    font-size: 1.5rem;
+    color: $dark-grey;
+    margin: 0;
+  }
+
+  // ─── OPTIONS GROUP ──────────────────────────────────
+
+  &__group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: map.get($spacing, xl);
+    margin-bottom: map.get($spacing, xl);
+
+    @media (max-width: map-get($breakpoints, sm)) {
+      grid-template-columns: 1fr;
+      gap: map.get($spacing, md);
+    }
+  }
+
+  // ─── BENEFITS ───────────────────────────────────────
+
+  &__benefits {
+    display: none;
+    padding: map.get($spacing, xl);
+    background: rgba($primary-color, 0.04);
+    border-radius: $radius-s;
+    border: 1px solid rgba($primary-color, 0.1);
+    animation: fadeIn 0.3s ease;
+    margin-top: map.get($spacing, xl);
+  }
+
+  &__benefits-title {
+    font-size: var(--heading-5);
+    font-weight: var(--heading-font-weight-5);
+    color: $form-step-address-title;
+    margin-bottom: map.get($spacing, md);
+    text-align: center;
+  }
+
+  &__benefits-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: map.get($spacing, md);
+
+    @media (max-width: map-get($breakpoints, sm)) {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+// ============================================
+// BENEFIT ITEM
+// ============================================
+
+.benefit-item {
+  display: flex;
+  align-items: flex-start;
+  gap: map.get($spacing, md);
+  padding: map.get($spacing, sm) map.get($spacing, md);
+  background: map-get($colors-ecommerce, white);
+  border-radius: $radius-xs;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: map-get($colors-ecommerce, gray-100);
+  }
+
+  &__icon {
+    flex-shrink: 0;
+    width: 2rem;
+    height: 2rem;
+    margin-top: 2px;
+    color: $success-color;
+
+    // SVG icon
+    .icon {
+      width: 100%;
+      height: 100%;
+      fill: currentColor;
+    }
+
+    // Emoji fallback
+    &:not(:has(.icon)) {
+      font-size: 1.4rem;
+      line-height: 1;
+      text-align: center;
+    }
+  }
+
+  &__text {
+    font-size: 1.3rem;
+    color: $text-neutral-inverse-primary;
+    line-height: 1.5;
+  }
+}
+
+// ============================================
+// RADIO CARD
+// ============================================
+
+.radio-card {
+  display: block;
+  padding: map.get($spacing, xl);
+  border: 2px solid $light-grey;
+  border-radius: $radius-s;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  text-align: left;
+  background: map-get($colors-ecommerce, white);
+
+  &:hover {
+    border-color: $dark-grey;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+
+  // ─── CONTENT ──────────────────────────────────────
+
+  &__content {
+    display: flex;
+    flex-direction: column;
+    gap: map.get($spacing, sm);
+  }
+
+  &__icon {
+    display: block;
+    width: 3.2rem;
+    height: 3.2rem;
+    margin-bottom: map.get($spacing, xs);
+    color: $primary-color;
+
+    // SVG icon
+    .icon {
+      width: 100%;
+      height: 100%;
+      fill: currentColor;
+    }
+
+    // Emoji fallback
+    &:not(:has(.icon)) {
+      font-size: 2.8rem;
+      line-height: 1;
+      width: auto;
+      height: auto;
+    }
+  }
+
+  &__title {
+    font-weight: 600;
+    font-size: 1.6rem;
+    color: $text-neutral-inverse-primary;
+    transition: color 0.3s ease;
+  }
+
+  &__description {
+    font-size: 1.3rem;
+    color: $dark-grey;
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  // ─── STATES ───────────────────────────────────────
+
+  &--selected {
+    border-color: $primary-color;
+    background: rgba($primary-color, 0.06);
+    box-shadow: 0 4px 12px rgba($primary-color, 0.12);
+
+    .radio-card__title {
+      color: $primary-color;
+    }
+
+    .radio-card__icon {
+      color: $primary-color;
+    }
+
+    // Checkmark badge
+    &::after {
+      content: "✓";
+      position: absolute;
+      top: -1px;
+      right: -1px;
+      background: $primary-color;
+      color: map-get($colors-ecommerce, white);
+      padding: 0.4rem 0.8rem;
+      border-radius: 0 $radius-s 0 $radius-s;
+      font-size: 1.2rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+  }
+
+  &:focus-within {
+    outline: 2px solid $primary-color;
+    outline-offset: 2px;
+  }
+}
+
+// ============================================
+// CSS-ONLY CONTROL
+// ============================================
+
+input[name="checkoutType"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+// Show benefits when login is selected
+#checkoutType-login:checked ~ .checkout-options__benefits {
+  display: block;
+}
+
+// Card selection via radio
+#checkoutType-guest:checked ~ .checkout-options__group .radio-card--guest,
+#checkoutType-login:checked ~ .checkout-options__group .radio-card--login {
+  @extend .radio-card--selected;
+}
+
+// ============================================
+// ANIMATIONS
+// ============================================
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// ============================================
+// RESPONSIVE
+// ============================================
+
+@media (max-width: map-get($breakpoints, md)) {
+  .checkout-options {
+    &__container {
+      padding: map.get($spacing, md) 0;
+    }
+
+    &__group {
+      gap: map.get($spacing, md);
+    }
+  }
+
+  .radio-card {
+    padding: map.get($spacing, lg);
+
+    &__icon {
+      width: 2.8rem;
+      height: 2.8rem;
+      font-size: 2.4rem;
+    }
+
+    &__title {
+      font-size: 1.4rem;
+    }
+  }
+}
+
+@media (max-width: map-get($breakpoints, sm)) {
+  .checkout-options {
+    &__group {
+      grid-template-columns: 1fr;
+      gap: map.get($spacing, md);
+    }
+
+    &__benefits-list {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .radio-card {
+    padding: map.get($spacing, md);
+
+    &__icon {
+      width: 2.4rem;
+      height: 2.4rem;
+      font-size: 2rem;
+    }
+
+    &__title {
+      font-size: 1.3rem;
+    }
+
+    &__description {
+      font-size: 1.2rem;
+    }
+  }
+
+  .benefit-item {
+    padding: map.get($spacing, xs) map.get($spacing, md);
+
+    &__text {
+      font-size: 1.2rem;
+    }
+  }
+}

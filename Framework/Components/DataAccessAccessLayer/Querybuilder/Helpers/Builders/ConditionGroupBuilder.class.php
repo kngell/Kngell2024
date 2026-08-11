@@ -12,10 +12,10 @@ class ConditionGroupBuilder
         $this->groupedElements = new Collection();
     }
 
-    public function addCondition(string $method, array $conditions): void
+    public function addCondition(string $method, array $conditions, array $onData = []): void
     {
         $logicalLink = $this->getLogicalLinkFromMethod($method);
-        $condition = $this->createConditionElement($method, $conditions);
+        $condition = $this->createConditionElement($method, $conditions, $onData);
 
         if ($condition === null) {
             return;
@@ -34,16 +34,56 @@ class ConditionGroupBuilder
         return 'AND';
     }
 
-    private function createConditionElement(string $method, array $conditions): ?SqlComponent
+    private function createConditionElement(string $method, array $conditions, array $onData = []): ?SqlComponent
     {
-        if ($this->containsClosure($conditions)) {
-            return $this->hasRegularConditions($conditions)
-                ? $this->handleMixedClosureCondition($method, $conditions)
-                : $this->processPureClosure($conditions, $method);
+        // Apply override
+        if (!empty($onData)) {
+            $method = $onData['method'];
+            $conditions = $onData;
         }
 
-        return new ConditionClause($conditions, $method, $this->em);
+        // Handle closures
+        if (!$this->containsClosure($conditions)) {
+            return $this->createStandardCondition($method, $conditions, $onData);
+        }
+
+        return $this->hasRegularConditions($conditions)
+            ? $this->handleMixedClosureCondition($method, $conditions)
+            : $this->processPureClosure($conditions, $method);
     }
+
+    private function createStandardCondition(string $method, array $conditions, array $onData): ConditionClause
+    {
+        $clause = new ConditionClause($conditions, $method, $this->em);
+
+        if (isset($onData['joinContext'])) {
+            $clause->setJoinContext($onData['joinContext']);
+        }
+
+        return $clause;
+    }
+
+    // private function createConditionElement(string $method, array $conditions, array $onData = []): ?SqlComponent
+    // {
+    //     if ($this->containsClosure($conditions)) {
+    //         return $this->hasRegularConditions($conditions)
+    //             ? $this->handleMixedClosureCondition($method, $conditions)
+    //             : $this->processPureClosure($conditions, $method);
+    //     }
+    //     if (!empty($onData)) {
+    //         $method = $onData['method'];
+    //         $conditions = $onData;
+    //     }
+    //     $conditionClause = new ConditionClause(
+    //         $conditions,
+    //         $method,
+    //         $this->em,
+    //     );
+    //     if (!empty($onData) && isset($onData['joinContext'])) {
+    //         $conditionClause->setJoinContext($onData['joinContext']);
+    //     }
+    //     return $conditionClause;
+    // }
 
     private function addConditionToCollection(SqlComponent $condition, string $logicalLink): void
     {
@@ -211,11 +251,15 @@ class ConditionGroupBuilder
                 $condition($nestedQuery);
                 $nestedConditions = $nestedQuery->getWhereConditions();
 
-                foreach ($nestedConditions['where'] ?? [] as $nestedConditionData) {
-                    $nestedBuilder->addCondition(
-                        $nestedConditionData['method'],
-                        $nestedConditionData['conditions'],
-                    );
+                foreach ($nestedConditions ?? [] as $nestedConditionData) {
+                    $data = $nestedConditionData['conditions'];
+                    $method = $nestedConditionData['method'];
+                    if (!empty($data) && !empty($method)) {
+                        $nestedBuilder->addCondition(
+                            $method,
+                            $data,
+                        );
+                    }
                 }
             }
         }

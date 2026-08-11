@@ -2,126 +2,11 @@
 @use "sass:map";
 @use "sass:color";
 @use "css/backend/admin/abstracts/variables" as *;
-@use "css/backend/admin/abstracts/functions" as *;
-@use "miscellaneous" as *;
-@use "text-style" as *;
-@use "icon_with_badge" as *;
-
-$input-field-config: (
-  "component-class": "input-field",
-
-  // Layout values
-  "input-height": 4.8rem,
-  "padding-horizontal": 1.6rem,
-  "padding-vertical": 1.2rem,
-  "icon-size": 2.4rem,
-  "gap-typing-area": 0.4rem,
-  "counter-width": 4.4rem,
-
-  // Border
-  "border-width": $stroke-s,
-  "border-radius": $radius-m,
-  "shadow": $shadow-s,
-
-  // Colors
-  "background-neutral-primary": $background-neutral-primary,
-  "background-neutral-secondary": $background-neutral-secondary,
-  "background-neutral-disabled": $background-neutral-disabled,
-  "background-brand-secondary": $background-brand-secondary,
-  "background-brand-tertiary": $background-brand-tertiary,
-
-  "border-neutral-primary": $border-neutral-primary,
-  "border-neutral-secondary": $border-neutral-secondary,
-  "border-brand-primary": $border-brand-primary,
-  "border-semantic-error": $border-semantic-error,
-  "border-neutral-disabled": $border-neutral-disabled,
-
-  "text-neutral-primary": $text-neutral-primary,
-  "text-neutral-secondary": $text-neutral-secondary,
-  "text-neutral-tertiary": $text-neutral-tertiary,
-  "text-neutral-disabled": $text-neutral-disabled,
-  "text-semantic-error": $text-semantic-error,
-
-  "icon-neutral-primary": $icon-neutral-primary,
-  "icon-neutral-tertiary": $icon-neutral-tertiary,
-  "icon-neutral-disabled": $icon-neutral-disabled,
-  "icon-semantic-error": $icon-semantic-error,
-
-  // Floating label
-  "floating-label-horizontal-padding": 0.4rem,
-  "floating-label-vertical-padding": 0.2rem,
-  "floating-label-border-radius": $radius-s,
-
-  // Animation
-  "transition-duration": 0.2s,
-  "transition-timing": ease,
-
-  // Typography
-  "input-text-style": (
-      map: map-deep-get($roboto-map, regular),
-      weight: normal,
-      overrides: (
-        color: $text-neutral-primary
-      )
-    ),
-  "label-text-style": (
-    map: map-deep-get($roboto-map, regular),
-    weight: normal,
-    overrides: (
-      color: $text-neutral-secondary
-    )
-  ),
-  "label-floating-text-style": (
-    map: map-deep-get($hahmlet-map, body, caption),
-    weight: caption,
-    overrides: (
-      color: $text-neutral-primary
-    )
-  ),
-  "error-text-style": (
-    map: map-deep-get($hahmlet-map, body, caption),
-    weight: caption,
-    overrides: (
-      color: $text-semantic-error
-    )
-  ),
-  "helper-text-style": (
-    map: map-deep-get($hahmlet-map, body, caption),
-    weight: caption,
-    overrides: (
-      color: $text-neutral-tertiary
-    )
-  ),
-  "counter-text-style": (
-    map: map-deep-get($hahmlet-map, body, caption),
-    weight: caption,
-    overrides: (
-      color: $text-neutral-tertiary
-    )
-  ),
-  "select-option-text-style": (
-    map: map-deep-get($roboto-map, regular),
-    weight: normal,
-    overrides: (
-      color: $text-neutral-primary
-    )
-  ),
-  "select-option-placeholder-text-style": (
-    map: map-deep-get($roboto-map, regular),
-    weight: normal,
-    overrides: (
-      color: $text-neutral-secondary
-    )
-  ),
-
-  // Textarea
-  "textarea-min-height": 5lh,
-  "textarea-padding-vertical": 1.2rem,
-
-  // Responsive
-  "responsive": true,
-  "responsive-scale-factor": 0.9
-);
+@use "css/backend/admin/abstracts/_input_form-config" as *;
+@use "css/globals/functions/functions" as *;
+@use "css/globals/mixins/miscellaneous" as *;
+@use "css/globals/mixins/text-style" as *;
+@use "css/globals/mixins/icon_with_badge" as *;
 
 @function config($key) {
   @return map.get($input-field-config, $key);
@@ -668,33 +553,15 @@ $input-field-config: (
 // ============================================
 // RADIO TYPE MIXIN
 // ============================================
-
 @mixin radio-type() {
   $selector: "." + component-class();
 
   #{$selector} {
-    // Radio fieldset
-    &__fieldset {
-      border: none;
-      padding: 0;
-      margin: 0;
-      width: 100%;
-    }
-
-    // Radio legend
-    &__legend {
-      @include apply-text-style(config("label-text-style"));
-      margin-bottom: 1.2rem;
-      padding: 0;
-    }
-
-    // Radio options container
     &__radio-options {
       display: flex;
       flex-direction: column;
       gap: 1.2rem;
 
-      // Horizontal layout
       &.horizontal {
         flex-direction: row;
         flex-wrap: wrap;
@@ -702,16 +569,36 @@ $input-field-config: (
       }
     }
 
-    // Radio item
+    &__fieldset {
+      border: none;
+      padding: 0;
+      margin: 0;
+      width: 100%;
+    }
+
+    &__legend {
+      @include apply-text-style(config("label-text-style"));
+      margin-bottom: 1.2rem;
+      padding: 0;
+      display: block;
+    }
+
     &__radio {
       display: inline-flex;
       align-items: center;
       gap: 0.8rem;
       cursor: pointer;
       position: relative;
+
+      // Hover state - target the custom radio inside the label
+      &:hover {
+        #{ $selector }__radio-custom {
+          border-color: config("border-brand-primary");
+          // background-color: red;
+        }
+      }
     }
 
-    // Radio input (hidden)
     &__radio-input {
       position: absolute;
       opacity: 0;
@@ -721,52 +608,61 @@ $input-field-config: (
       padding: 0;
     }
 
-    // Custom radio circle
     &__radio-custom {
-      width: 1.25em;
-      height: 1.25em;
+      width: 2rem;
+      height: 2rem;
       border: 0.2rem solid config("border-neutral-secondary");
       border-radius: 50%;
-      @include flex-center;
       position: relative;
       flex-shrink: 0;
       background-color: config("background-neutral-primary");
-      @include transition(all, config("transition-duration"), config("transition-timing"));
-      // Inner dot
+      transition: all config("transition-duration") config("transition-timing");
+
       &::after {
         content: "";
+        position: absolute;
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%) scale(0);
-        width: 70%;
-        height: 70%;
+        width: 1rem;
+        height: 1rem;
         background-color: $background-brand-primary;
         border-radius: 50%;
-        @include transition(all, config("transition-duration"), config("transition-timing"));
+        transition: transform config("transition-duration") config("transition-timing");
       }
+    }
 
-      // Hover state
-      #{$selector}__radio:hover & {
-        border-color: config("border-brand-primary");
-      }
-
-      // Checked state
-      #{$selector}__radio-input:checked + & {
+    // Checked state - when input is checked, target the next sibling (custom radio)
+    &__radio-input:checked {
+      + #{ $selector }__radio-custom {
         border-color: config("border-brand-primary");
 
         &::after {
-          transform: scale(1);
+          transform: translate(-50%, -50%) scale(1);
         }
       }
+    }
 
-      // Focus state
-      #{$selector}__radio-input:focus + & {
+    // Focus state
+    &__radio-input:focus {
+      + #{ $selector }__radio-custom {
         border-color: config("border-brand-primary");
-        box-shadow: 0 0 0 0.2rem rgba(config("border-brand-primary"), 0.2);
+        box-shadow: 0 0 0 0.2rem rgba($background-brand-primary, 0.2);
+      }
+    }
+
+    &__radio-label {
+      @include apply-text-style(config("input-text-style"));
+      cursor: pointer;
+    }
+
+    // Error state
+    &.is-error {
+      #{ $selector }__radio-custom {
+        border-color: config("border-semantic-error");
       }
 
-      // Error state
-      #{$selector}.is-error & {
+      #{ $selector }__radio-input:checked + #{ $selector }__radio-custom {
         border-color: config("border-semantic-error");
 
         &::after {
@@ -774,32 +670,37 @@ $input-field-config: (
         }
       }
 
-      // Disabled state
-      #{$selector}.is-disabled & {
+      #{ $selector }__radio-label {
+        color: config("text-semantic-error");
+      }
+
+      #{ $selector }__legend {
+        color: config("text-semantic-error");
+      }
+    }
+
+    // Disabled state
+    &.is-disabled {
+      #{ $selector }__radio {
+        cursor: not-allowed;
+      }
+
+      #{ $selector }__radio-custom {
         border-color: config("border-neutral-disabled");
         background-color: config("background-neutral-disabled");
-        cursor: not-allowed;
 
         &::after {
           background-color: config("border-neutral-disabled");
         }
       }
-    }
 
-    // Radio label
-    &__radio-label {
-      @include apply-text-style(config("input-text-style"));
-      cursor: pointer;
-
-      // Disabled state
-      #{$selector}.is-disabled & {
+      #{ $selector }__radio-label {
         color: config("text-neutral-disabled");
         cursor: not-allowed;
       }
 
-      // Error state
-      #{$selector}.is-error & {
-        color: config("text-semantic-error");
+      #{ $selector }__legend {
+        color: config("text-neutral-disabled");
       }
     }
   }
@@ -860,114 +761,6 @@ $input-field-config: (
       margin: 0;
       padding: 0;
     }
-
-    // Custom checkbox square
-    // &__checkbox-custom {
-    //   width: 2rem;
-    //   height: 2rem;
-    //   border: 0.2rem solid config("border-neutral-secondary");
-    //   border-radius: $radius-xs;
-    //   @include flex-center;
-    //   position: relative;
-    //   flex-shrink: 0;
-    //   background-color: config("background-neutral-primary");
-    //   @include transition(all, config("transition-duration"), config("transition-timing"));
-
-    //   // Checkmark
-    //   &::after {
-    //     content: "";
-    //     width: 0.4rem;
-    //     height: 0.8rem;
-    //     border: solid $background-neutral-primary;
-    //     border-width: 0 0.2rem 0.2rem 0;
-    //     transform: rotate(45deg) scale(0);
-    //     @include transition(all, config("transition-duration"), config("transition-timing"));
-    //   }
-
-    //   // Hover state
-    //   #{$selector}__checkbox:hover & {
-    //     border-color: config("border-brand-primary");
-    //   }
-
-    //   // Checked state
-    //   #{$selector}__checkbox-input:checked + & {
-    //     background-color: config("border-brand-primary");
-    //     border-color: config("border-brand-primary");
-
-    //     &::after {
-    //       transform: rotate(45deg) scale(1);
-    //     }
-    //   }
-
-    //   // Focus state
-    //   #{$selector}__checkbox-input:focus + & {
-    //     border-color: config("border-brand-primary");
-    //     box-shadow: 0 0 0 0.2rem rgba(config("border-brand-primary"), 0.2);
-    //   }
-
-    //   // Error state
-    //   #{$selector}.is-error & {
-    //     border-color: config("border-semantic-error");
-
-    //     #{$selector}__checkbox-input:checked + & {
-    //       background-color: config("border-semantic-error");
-    //       border-color: config("border-semantic-error");
-    //     }
-    //   }
-
-    //   // Disabled state
-    //   #{$selector}.is-disabled & {
-    //     border-color: config("border-neutral-disabled");
-    //     background-color: config("background-neutral-disabled");
-    //     cursor: not-allowed;
-
-    //     &::after {
-    //       border-color: config("text-neutral-disabled");
-    //     }
-
-    //     #{$selector}__checkbox-input:checked + & {
-    //       background-color: config("border-neutral-disabled");
-    //     }
-    //   }
-    // }
-
-    // // Checkbox label
-    // &__checkbox-label {
-    //   @include apply-text-style(config("input-text-style"));
-    //   cursor: pointer;
-
-    //   // Disabled state
-    //   #{$selector}.is-disabled & {
-    //     color: config("text-neutral-disabled");
-    //     cursor: not-allowed;
-    //   }
-
-    //   // Error state
-    //   #{$selector}.is-error & {
-    //     color: config("text-semantic-error");
-    //   }
-    // }
-    // &__checkbox-custom {
-    //   width: 2rem;
-    //   height: 2rem;
-    //   border: 0.2rem solid config("border-neutral-secondary");
-    //   border-radius: $radius-xs;
-    //   @include flex-center;
-    //   position: relative;
-    //   flex-shrink: 0;
-    //   background-color: config("background-neutral-primary");
-    //   @include transition(all, config("transition-duration"), config("transition-timing"));
-
-    //   &::after {
-    //     content: "";
-    //     width: 0.4rem;
-    //     height: 0.8rem;
-    //     border: solid $background-neutral-primary;
-    //     border-width: 0 0.2rem 0.2rem 0;
-    //     transform: rotate(45deg) scale(0);
-    //     @include transition(all, config("transition-duration"), config("transition-timing"));
-    //   }
-    // }
 
     // ── Base custom checkbox ──
     &__checkbox-custom {
@@ -1142,7 +935,6 @@ $input-field-config: (
   $selector: "." + component-class();
 
   #{$selector} {
-    // Toggle container
     &__toggle {
       display: inline-flex;
       align-items: center;
@@ -1150,13 +942,19 @@ $input-field-config: (
       cursor: pointer;
       position: relative;
 
-      // Label on the left modifier
       &--label-left {
         flex-direction: row-reverse;
+        align-self: flex-end;
+      }
+
+      // Hover state - target the slider inside the toggle
+      &:hover {
+        #{ $selector }__toggle-slider {
+          background-color: config("border-neutral-secondary");
+        }
       }
     }
 
-    // Toggle input (hidden)
     &__toggle-input {
       position: absolute;
       opacity: 0;
@@ -1166,7 +964,6 @@ $input-field-config: (
       padding: 0;
     }
 
-    // Toggle slider (the track)
     &__toggle-slider {
       position: relative;
       display: inline-block;
@@ -1177,7 +974,6 @@ $input-field-config: (
       transition: all config("transition-duration") config("transition-timing");
       flex-shrink: 0;
 
-      // Knob (the circle that moves)
       &::before {
         content: "";
         position: absolute;
@@ -1190,64 +986,68 @@ $input-field-config: (
         transition: transform config("transition-duration") config("transition-timing");
         box-shadow: config("shadow");
       }
+    }
 
-      // Hover state
-      #{$selector}__toggle:hover & {
-        background-color: config("border-neutral-secondary");
-      }
-
-      // Checked state
-      #{$selector}__toggle-input:checked + & {
+    // Checked state
+    &__toggle-input:checked {
+      + #{ $selector }__toggle-slider {
         background-color: config("border-brand-primary");
 
         &::before {
           transform: translateX(2rem);
         }
       }
+    }
 
-      // Focus state
-      #{$selector}__toggle-input:focus + & {
-        box-shadow: 0 0 0 0.2rem rgba(config("border-brand-primary"), 0.2);
-      }
-
-      // Error state
-      #{$selector}.is-error & {
-        border: config("border-width") solid config("border-semantic-error");
-
-        #{$selector}__toggle-input:checked + & {
-          background-color: config("border-semantic-error");
-        }
-      }
-
-      // Disabled state
-      #{$selector}.is-disabled & {
-        opacity: 0.5;
-        cursor: not-allowed;
+    // Focus state
+    &__toggle-input:focus {
+      + #{ $selector }__toggle-slider {
+        box-shadow: 0 0 0 0.2rem rgba($background-brand-primary, 0.2);
       }
     }
 
-    // Toggle label
     &__toggle-label {
       @include apply-text-style(config("input-text-style"));
       cursor: pointer;
       user-select: none;
+    }
 
-      // Required asterisk
-      #{$selector}.is-required & {
-        &::after {
-          content: "*";
-          color: config("text-semantic-error");
-          margin-left: 0.4rem;
-        }
+    // Required state
+    &.is-required {
+      #{ $selector }__toggle-label::after {
+        content: "*";
+        color: config("text-semantic-error");
+        margin-left: 0.4rem;
+      }
+    }
+
+    // Error state
+    &.is-error {
+      #{ $selector }__toggle-slider {
+        border: config("border-width") solid config("border-semantic-error");
       }
 
-      // Error state
-      #{$selector}.is-error & {
+      #{ $selector }__toggle-input:checked + #{ $selector }__toggle-slider {
+        background-color: config("border-semantic-error");
+      }
+
+      #{ $selector }__toggle-label {
         color: config("text-semantic-error");
       }
+    }
 
-      // Disabled state
-      #{$selector}.is-disabled & {
+    // Disabled state
+    &.is-disabled {
+      #{ $selector }__toggle {
+        cursor: not-allowed;
+      }
+
+      #{ $selector }__toggle-slider {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      #{ $selector }__toggle-label {
         color: config("text-neutral-disabled");
         cursor: not-allowed;
       }

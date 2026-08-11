@@ -1,0 +1,233 @@
+@use "sass:map";
+@use "sass:color";
+@use "design_token" as *;
+@use "functions" as *;
+
+// ========== COLOR TOKENS ==========
+$color-secondary: map-deep-get($fills, secondary);
+$color-primary: map-deep-get($fills, primary);
+
+$primary-color: #4a6cf7;
+$secondary-color: map-deep-get($color-secondary, green, green-500);
+$light-grey: map-deep-get($color-secondary, gray, gray-100);
+$dark-grey: map-deep-get($color-secondary, gray, gray-800);
+
+$bar-color1: #d9d9d9;
+$btn-border-color: #545454;
+$star-color-full: #ffb547;
+
+// Primary Colors
+$primary-50: map-deep-get($color-primary, primary-50);
+$primary-100: map-deep-get($color-primary, primary-100);
+$primary-200: map-deep-get($color-primary, primary-200);
+$primary-300: map-deep-get($color-primary, primary-300);
+$primary-400: map-deep-get($color-primary, primary-400);
+$primary-500: map-deep-get($color-primary, primary-500);
+$primary-600: map-deep-get($color-primary, primary-600);
+$primary-700: map-deep-get($color-primary, primary-700);
+$primary-800: map-deep-get($color-primary, primary-800);
+$primary-900: map-deep-get($color-primary, primary-900);
+
+// Secondary Colors - Red
+$red-50: map-deep-get($color-secondary, red, red-50);
+$red-100: map-deep-get($color-secondary, red, red-100);
+$red-200: map-deep-get($color-secondary, red, red-200);
+$red-300: map-deep-get($color-secondary, red, red-300);
+$red-400: map-deep-get($color-secondary, red, red-400);
+$red-500: map-deep-get($color-secondary, red, red-500);
+$red-600: map-deep-get($color-secondary, red, red-600);
+$red-700: map-deep-get($color-secondary, red, red-700);
+$red-800: map-deep-get($color-secondary, red, red-800);
+$red-900: map-deep-get($color-secondary, red, red-900);
+
+// Secondary Colors - Yellow
+$yellow-50: map-deep-get($color-secondary, yellow, yellow-50);
+$yellow-100: map-deep-get($color-secondary, yellow, yellow-100);
+$yellow-200: map-deep-get($color-secondary, yellow, yellow-200);
+$yellow-300: map-deep-get($color-secondary, yellow, yellow-300);
+$yellow-500: map-deep-get($color-secondary, yellow, yellow-500);
+$yellow-700: map-deep-get($color-secondary, yellow, yellow-700);
+
+// Secondary Colors - Green/blue
+$green-500: map-deep-get($color-secondary, green, green-500);
+$blue-500: map-deep-get($color-secondary, blue, green-500);
+
+$color-neutral: map-deep-get($fills, neutral);
+
+// Neutral Colors
+$white: map-deep-get($color-neutral, white);
+$black-100: map-deep-get($color-neutral, black, black-100);
+$black-500: map-deep-get($color-neutral, black, black-500);
+$black-600: map-deep-get($color-neutral, black, black-600);
+$black-700: map-deep-get($color-neutral, black, black-700);
+$black-800: map-deep-get($color-neutral, black, black-800);
+$black-900: map-deep-get($color-neutral, black, black-900);
+$gray-25: map-deep-get($color-neutral, gray, gray-25);
+$gray-50: map-deep-get($color-neutral, gray, gray-50);
+$gray-100: map-deep-get($color-neutral, gray, gray-100);
+$gray-200: map-deep-get($color-neutral, gray, gray-200);
+$gray-300: map-deep-get($color-neutral, gray, gray-300);
+$gray-400: map-deep-get($color-neutral, gray, gray-400);
+
+//Semantics
+$danger-color: map-deep-get($color-secondary, red, red-500);
+$danger-light: map-deep-get($color-secondary, red, red-100);
+$danger-dark: map-deep-get($color-secondary, red, red-600);
+$warning-color: map-deep-get($color-secondary, yellow, yellow-500);
+$warning-light: map-deep-get($color-secondary, yellow, yellow-100);
+$info-color: map-deep-get($color-secondary, blue, blue-500);
+$success-color: map-deep-get($color-secondary, green, green-500);
+
+$progress-bg: map-deep-get($color-secondary, green, green-400);
+$progress-fill: map-deep-get($color-secondary, green, gray-400);
+
+//COLOR
+$colors-ecommerce: (
+  white: #ffffff,
+  black: #000000,
+  gray-100: #f5f5f5,
+  gray-300: #919191,
+  gray-400: #989898,
+  gray-500: #656565,
+  gray-600: #666666,
+  gray-800: #2e2e2e,
+  focus: #0066cc
+);
+
+//RADIUS
+$radius: map-deep-get($sizng-tokens, radius);
+
+$radius-xxs: map-deep-get($radius, xxs);
+$radius-xs: map-deep-get($radius, xs);
+$radius-s: map-deep-get($radius, s);
+$radius-m: map-deep-get($radius, m);
+$radius-l: map-deep-get($radius, l);
+$radius-xl: map-deep-get($radius, xl);
+$radius-full: map-deep-get($radius, full);
+$radius-custom: 1.8rem;
+
+// TYPOGRAPHY
+$display-m: map-deep-get($texts, display-m);
+$display-s: map-deep-get($texts, display-s);
+$display-xs: map-deep-get($texts, display-xs);
+$text-l: map-deep-get($texts, text-l);
+$text-m: map-deep-get($texts, text-m);
+$text-s: map-deep-get($texts, text-s);
+
+//TEXTS MAP
+$roboto-map: map-deep-get($texts-design, desktop, roboto);
+$hahmlet-map: map-deep-get($texts-design, desktop, hahmlet);
+$poppins-map: map-deep-get($texts-design, desktop, poppins);
+
+//BORDER COLORS
+$border-neutral-primary: map-deep-get($color-usage, border, neutral, primary);
+$border-neutral-secondary: map-deep-get($color-usage, border, neutral, secondary);
+$border-neutral-tertiary: map-deep-get($color-usage, border, neutral, tertiary);
+$test-color: map-deep-get($color-usage, border, neutral, tertiary);
+@if $border-neutral-tertiary != null {
+  $border-neutral-subtle: color.change($border-neutral-tertiary, $alpha: 0.15);
+} @else {
+  $border-neutral-subtle: rgba($black-500, 0.15); // fallback
+}
+$border-brand-primary: map-deep-get($color-usage, border, brand, primary);
+$border-brand-secondary: map-deep-get($color-usage, border, brand, secondary);
+$border-brand-tertiary: map-deep-get($color-usage, border, brand, tertiary);
+$border-semantic-error: map-deep-get($color-usage, border, semantic, error, primary);
+
+$border-neutral-disabled: map-deep-get($color-usage, border, neutral, disabled);
+//BACKGROUND COLORS
+$background-neutral-primary: map-deep-get($color-usage, "background", neutral, primary);
+$background-neutral-secondary: map-deep-get($color-usage, "background", neutral, secondary);
+$background-neutral-tertiary: map-deep-get($color-usage, "background", neutral, tertiary);
+$background-neutral-disabled: map-deep-get($color-usage, "background", neutral, disabled);
+//Success
+$background-semantic-success: map-deep-get($color-usage, "background", semantic, success, normal);
+$background-semantic-success-dark: map-deep-get(
+  $color-usage,
+  "background",
+  semantic,
+  success,
+  dark
+);
+$background-semantic-success-subtle: map-deep-get(
+  $color-usage,
+  "background",
+  semantic,
+  success,
+  subtle
+);
+$background-semantic-error-subtle: map-deep-get(
+  $color-usage,
+  "background",
+  semantic,
+  error,
+  subtle
+);
+$background-semantic-error-lighter: map-deep-get(
+  $color-usage,
+  "background",
+  semantic,
+  error,
+  lighter
+);
+$background-semantic-error-normal: map-deep-get(
+  $color-usage,
+  "background",
+  semantic,
+  error,
+  normal
+);
+$background-semantic-error-bold: map-deep-get($color-usage, "background", semantic, error, bold);
+$background-brand-primary: map-deep-get($color-usage, "background", brand, primary);
+$background-brand-secondary: map-deep-get($color-usage, "background", brand, secondary);
+$background-brand-tertiary: map-deep-get($color-usage, "background", brand, tertiary);
+
+$background-steps: linear-gradient(
+  135deg,
+  color.change($background-brand-tertiary, $alpha: 0.15),
+  color.change($background-brand-tertiary, $alpha: 0.05)
+);
+$background-card-header: linear-gradient(
+  135deg,
+  color.change($background-brand-primary, $alpha: 0.15),
+  color.change($background-brand-primary, $alpha: 0.05)
+);
+
+// TEXT COLORS
+$text-brand-primary: map-deep-get($color-usage, text, brand, primary);
+$text-brand-inverse: map-deep-get($color-usage, text, brand, inverse);
+$text-neutral-inverse-primary: map-deep-get($color-usage, text, neutral-inverse, primary);
+$text-neutral-primary: map-deep-get($color-usage, text, neutral, primary);
+$text-neutral-secondary: map-deep-get($color-usage, text, neutral, secondary);
+$text-neutral-tertiary: map-deep-get($color-usage, text, neutral, tertiary);
+$text-neutral-disabled: map-deep-get($color-usage, text, neutral, disabled);
+$text-semantic-error: map-deep-get($color-usage, text, semantic, error, primary);
+//ICON COLORS
+$icon-neutral-primary: map-deep-get($color-usage, icon, neutral, primary);
+$icon-neutral-secondary: map-deep-get($color-usage, icon, neutral, secondary);
+$icon-neutral-tertiary: map-deep-get($color-usage, icon, neutral, tertiary);
+$icon-neutral-disabled: map-deep-get($color-usage, icon, neutral, disabled);
+$icon-semantic-error: map-deep-get($color-usage, icon, semantic, error, primary);
+$icon-brand-primary: map-deep-get($color-usage, icon, brand, primary);
+
+// EFFECTS
+$soft-shadow: map-deep-get($effects, soft-shadow);
+$hard-shadow: map-deep-get($effects, hard-shadow);
+$shadow-s: map-deep-get($effects, s);
+$shadow-m: map-deep-get($effects, m);
+$shadow-l: map-deep-get($effects, l);
+$shadow-custom:
+  0 0.8rem 2rem rgba(0, 0, 0, 0.03),
+  0 0.2rem 0.6rem rgba(0, 0, 0, 0.04);
+
+/* ************** BREAKPOINTS ************** */
+$breakpoints: (
+  "xs": 480px,
+  "sm": 576px,
+  "md": 768px,
+  "lg": 992px,
+  "xl": 1200px,
+  "xxl": 1400px
+);
+/* ************** PROGRESS BAR ************** */
+$progress-icon-size: 5.2rem;

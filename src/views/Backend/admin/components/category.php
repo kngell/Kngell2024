@@ -7,8 +7,10 @@ $this->start('head'); ?>
 <?php $this->start('body'); ?>
 <main class="dashboard__main main" id="main">
     <!-- Content -->
-    <section class="category span-all">
-        <?= $categoryHeader ?? '' ?>
+    <section class="<?= $formAsset['sectionClass'] ?? ''?> span-all">
+        <div class="<?= $formAsset['sectionClass'] ?? ''?>__header">
+            <?= $adminMainHeader ?? '' ?>
+        </div>
         <?= $categoryForm ?? '' ?>
     </section>
     <!-- Fin Content -->

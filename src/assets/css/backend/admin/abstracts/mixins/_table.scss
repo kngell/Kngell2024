@@ -1,10 +1,10 @@
 @use "sass:map";
 @use "css/backend/admin/abstracts/variables" as *;
-@use "css/backend/admin/abstracts/functions" as *;
-@use "miscellaneous" as *;
-@use "text-style" as *;
+@use "css/globals/functions/functions" as *;
+@use "css/globals/mixins/miscellaneous" as *;
+@use "css/globals/mixins/text-style" as *;
 @use "input" as *;
-@use "icon_with_badge" as *;
+@use "css/globals/mixins/icon_with_badge" as *;
 // ==========================================================================
 // TABLE DEFAULTS
 // These can be overridden per-instance via the $config parameter
@@ -41,7 +41,8 @@ $table-defaults: (
   // key = modifier name, value = color
   color-modifiers: (
       sku: map-deep-get($color-primary, primary-500)
-    )
+    ),
+  table-bg-color: map-deep-get($color-neutral, gray, gray-100)
 ) !default;
 
 // ==========================================================================
@@ -79,6 +80,7 @@ $table-defaults: (
   $hint-color: map-get($c, hint-color);
   $accent-color: map-get($c, accent-color);
   $color-modifiers: map-get($c, color-modifiers);
+  $table-bg-color: map-get($c, table-bg-color);
 
   // ========================================================================
   // TABLE BASE
@@ -88,6 +90,10 @@ $table-defaults: (
   min-width: $min-width;
   table-layout: fixed;
   border-collapse: collapse;
+  background-color: $table-bg-color;
+  box-shadow: $shadow-s;
+  border-radius: $radius-s;
+  // overflow: hidden;
 
   // ========================================================================
   // COLUMN WIDTHS
@@ -147,6 +153,7 @@ $table-defaults: (
 
     &__top-row {
       display: flex;
+      justify-content: space-between;
       align-items: center;
       gap: $checkbox-gap;
       width: 100%;
@@ -191,7 +198,7 @@ $table-defaults: (
         box-size: $checkbox-size,
         border-width: 2px,
         border-color: map-deep-get($color-neutral, gray, gray-400),
-        background: $bg-white,
+        "background": $bg-white,
         border-radius: 6px,
         gap: $checkbox-gap
       )
@@ -269,24 +276,24 @@ $table-defaults: (
   // ========================================================================
 
   &__cell--start {
+    @include form-field(
+      $types: "checkbox",
+      $options: (
+        input-box: body-cell-start,
+        box-size: $checkbox-size,
+        border-width: 2px,
+        border-color: map-deep-get($color-neutral, gray, gray-400),
+        background: $bg-white,
+        border-radius: 6px,
+        gap: $checkbox-gap,
+        "align-label": center
+      )
+    );
     .body-cell-start {
       display: flex;
       align-items: center;
       gap: $checkbox-gap;
       width: 100%;
-
-      @include form-field(
-        $types: "checkbox",
-        $options: (
-          input-box: body-cell-start,
-          box-size: $checkbox-size,
-          border-width: 2px,
-          border-color: map-deep-get($color-neutral, gray, gray-400),
-          background: $bg-white,
-          border-radius: 6px,
-          gap: $checkbox-gap
-        )
-      );
 
       &__label {
         display: flex;

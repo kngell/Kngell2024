@@ -12,6 +12,7 @@ class ColumnsParameter extends SqlComponent
         ?TablesAliasHelper $helper,
         null|string|Closure $table,
         bool $selectAsAlias,
+        bool $distinct,
         ?EntityManagerInterface $em = null,
         private ?StatementType $clauseContext = null,
         string|array ...$columns,
@@ -21,7 +22,8 @@ class ColumnsParameter extends SqlComponent
         $this->helper = $helper;
         $this->table = $table;
         $this->selectAsAlias = $selectAsAlias;
-        $this->ColumnBuilderForSelect = new ColumnBuilderForSelect($selectAsAlias);
+        $this->distinct = $distinct;
+        $this->ColumnBuilderForSelect = new ColumnBuilderForSelect($selectAsAlias, $distinct);
     }
 
     public function build(): string
@@ -40,7 +42,7 @@ class ColumnsParameter extends SqlComponent
 
     private function buildSubquery(): string
     {
-        $query = new SqlQueryClosure($this->table, $this->em, $this->clauseContext);
+        $query = new SqlRowClosure($this->table, $this->em, $this->clauseContext);
         $innerSql = $query->build();
         $this->mergeChildState($query);
         return $innerSql;
@@ -49,28 +51,47 @@ class ColumnsParameter extends SqlComponent
     private function buildRegularColumns(): string
     {
         $logicalKey = $this->getLogicalTable();
-
-        // Get table alias
-        $tableAlias = $this->state->tableAlias ?? [];
-        $aliasCheck = $this->state->aliasCheck ?? [];
-        $this->helper->setCustomAlias($this->customAlias);
-
-        [$table, $alias] = $this->helper->get($logicalKey, $tableAlias, $aliasCheck);
-
-        // Build column strings
         $columnStrings = [];
         foreach ($this->columns as $column) {
-            $columnStrings[] = $this->ColumnBuilderForSelect->build($column, $alias);
+            $columnStrings[] = $this->ColumnBuilderForSelect->build(
+                $column,
+                $this->helper,
+                $this->state,
+                $logicalKey,
+                $this->customAlias,
+            );
         }
-
-        // Update state
-        $this->state->tables[$logicalKey] = $this->columns;
-        $this->state->tableAlias = $tableAlias;
-        $this->state->aliasCheck = $aliasCheck;
-
         $this->query = implode(', ', $columnStrings);
         return $this->query;
     }
+
+    // private function buildRegularColumns(): string
+    // {
+    //     $logicalKey = $this->getLogicalTable();
+
+    //     // Get table alias
+    //     $tableAlias = $this->state->tableAlias ?? [];
+    //     $aliasCheck = $this->state->aliasCheck ?? [];
+    //     $this->helper->setCustomAlias($this->customAlias);
+
+    //     [$table, $alias] = $this->helper->get($logicalKey, $tableAlias, $aliasCheck);
+    //     if ($logicalKey === 'category_tree') {
+    //         $stop = true;
+    //     }
+    //     // Build column strings
+    //     $columnStrings = [];
+    //     foreach ($this->columns as $column) {
+    //         $columnStrings[] = $this->ColumnBuilderForSelect->build($column, $alias);
+    //     }
+
+    //     // Update state
+    //     $this->state->tables[$logicalKey] = $this->columns;
+    //     $this->state->tableAlias = $tableAlias;
+    //     $this->state->aliasCheck = $aliasCheck;
+
+    //     $this->query = implode(', ', $columnStrings);
+    //     return $this->query;
+    // }
 
     private function getLogicalTable(): string
     {
@@ -81,7 +102,7 @@ class ColumnsParameter extends SqlComponent
             array_merge($this->state->logicalToPhysicalMap, [$logicalKey => $physicalTable]),
         );
 
-        $this->columns = $this->cleanColumnPrefixes($this->columns, $physicalTable, $logicalKey);
+        // $this->columns = $this->cleanColumnPrefixes($this->columns, $physicalTable, $logicalKey);
 
         return $logicalKey;
     }
@@ -95,8 +116,6 @@ class ColumnsParameter extends SqlComponent
 
             $parts = explode('.', $column);
 
-            // If there are multiple dots, the physical table is the second-to-last part
-            // Example: "product_variation.variation_attribute.name" -> physical table is "variation_attribute"
             if (count($parts) >= 3) {
                 $possiblePhysicalTable = $parts[count($parts) - 2];
                 $columnName = end($parts);

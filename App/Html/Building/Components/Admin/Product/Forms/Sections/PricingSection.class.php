@@ -1,0 +1,103 @@
+<?php
+
+declare(strict_types=1);
+
+final class PricingSection extends BaseFieldSection
+{
+    use ProductFormSectionLayoutTrait;
+
+    public function __construct(
+        HtmlBuilder $builder,
+        IconBuilder $iconBuilder,
+        private CurrencyService $currencyService,
+        private TaxClassService $taxClassService,
+        HtmlEscaper $escaper,
+    ) {
+        parent::__construct($builder, $iconBuilder, $escaper);
+    }
+
+    public function getKey(): string
+    {
+        return ProductSection::PRICING->value;
+    }
+
+    public function getConfig(array $formValues = []): array
+    {
+        $currencies = $this->currencyService->getActiveCurrencies();
+        $defaultCurrencyId = $this->currencyService->getDefaultCurrencyId();
+        $taxClassOptions = $this->taxClassService->getActiveOptions();
+        return [
+            [
+                'key' => 'pr_id',
+                'name' => 'price_id',
+                'map' => 'product_regional_price.price_id',
+                'id' => 'public-id',
+                'type' => 'hidden',
+            ],
+            [
+                'key' => 'base-price',
+                'name' => 'base_price',
+                'map' => 'product_regional_price.base_price',
+                'label' => 'Base Price',
+                'type' => 'currency', // Use currency type
+                'placeholder' => '0.00',
+                'step' => '0.01',
+                'class' => 'span-all',
+                'currencyName' => 'base_currency_id',
+                'defaultCurrency' => $defaultCurrencyId ?? '',
+                'options' => $currencies ?? '',
+            ],
+            [
+                'key' => 'compare-price',
+                'name' => 'compare_price',
+                'map' => 'product_regional_price.compare_price',
+                'label' => 'Compare Price',
+                'type' => 'currency', // Use currency type
+                'placeholder' => '0.00',
+                'class' => 'span-all',
+                'step' => '0.01',
+                'defaultCurrency' => $defaultCurrencyId ?? '',
+                'options' => $currencies ?? '',
+            ],
+            [
+                'key' => 'sale-price',
+                'name' => 'sale_price',
+                'map' => 'product_regional_price.sale_price',
+                'label' => 'Sale Price',
+                'type' => 'currency', // Use currency type
+                'placeholder' => '0.00',
+                'class' => 'span-all',
+                'step' => '0.01',
+                'defaultCurrency' => $defaultCurrencyId ?? '',
+                'options' => $currencies ?? '',
+            ],
+            [
+                'key' => 'cost-price',
+                'name' => 'cost_price',
+                'map' => 'product_regional_price.cost_price',
+                'label' => 'Cost Price',
+                'type' => 'currency', // Use currency type
+                'placeholder' => '0.00',
+                'step' => '0.01',
+                'defaultCurrency' => $defaultCurrencyId ?? '',
+                'options' => $currencies ?? '',
+            ],
+            [
+                'key' => 'tax-class',
+                'name' => 'tax_class_id',
+                'label' => 'VAT class',
+                'type' => 'select',
+                'default' => $formValues['tax_class'] ?? '',
+                'options' => $taxClassOptions,
+                'suffixIcon' => 'icon-arrow-down',
+            ],
+            [
+                'key' => 'price-includes-tax',
+                'name' => 'price_includes_tax',
+                'label' => 'Price includes tax',
+                'class' => 'span-all',
+                'type' => 'checkbox',
+            ],
+        ];
+    }
+}

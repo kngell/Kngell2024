@@ -14,7 +14,6 @@ final class RouteCollector
 
     public function addRoute(string $path, mixed $params): void
     {
-        // Handle empty array routes (like /{controller}/{method}: {})
         if (is_array($params) && empty($params)) {
             $this->processEmptyRoute($path);
             return;
@@ -204,10 +203,7 @@ final class RouteCollector
     private function loadRoutes(array $routes): void
     {
         foreach ($routes as $key => $config) {
-            // Skip entirely if config is null — except when the route is dynamic
             if ($config === null) {
-                // If the route path contains dynamic parameters like {controller} or {method},
-                // treat null as an empty array so it can be processed as a dynamic route.
                 if (is_string($key) && $this->isDynamicRoute((string) $key)) {
                     $config = [];
                 } else {
@@ -249,6 +245,7 @@ final class RouteCollector
 
             // Skip if routeConfig is null
             if ($routeConfig === null) {
+                $this->addRoute($routeKey, []);
                 continue;
             }
 

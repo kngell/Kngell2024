@@ -96,9 +96,9 @@ class Token implements TokenInterface
         return $this->token;
     }
 
-    public function getRememberHash(): string
+    public function getRememberHash(string $rememberMetoken): string
     {
-        return hash_hmac('sha256', $this->token, CSRF_TOKEN_SECRET);
+        return hash_hmac('sha256', $rememberMetoken, CSRF_TOKEN_SECRET);
     }
 
     /**

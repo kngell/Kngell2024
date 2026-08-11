@@ -1,0 +1,70 @@
+@use "sass:color";
+@use "css/globals/variables" as *;
+@use "css/globals/mixins/responsive" as *;
+
+// =====================================================
+// SELECTABLE OPTIONS ACCORDION
+// Generic CSS-only accordion behavior
+// =====================================================
+
+@mixin selectable-accordion(
+  $gap: 1.2rem,
+  $content-display: block,
+  $option-selector: ".selectable-options__option",
+  $content-selector: ".selectable-options__option-content"
+) {
+  display: flex;
+  flex-direction: column;
+  gap: $gap;
+
+  // ---------------------------------------------------
+  // Option
+  // ---------------------------------------------------
+
+  #{$option-selector} {
+    position: relative;
+    min-width: 0;
+  }
+
+  // ---------------------------------------------------
+  // Option header
+  // ---------------------------------------------------
+
+  #{$option-selector} > .selectable-options__option-header {
+    display: block;
+    width: 100%;
+    cursor: pointer;
+  }
+
+  // ---------------------------------------------------
+  // Radio
+  // ---------------------------------------------------
+
+  #{$option-selector} input[type="radio"] {
+    position: absolute;
+
+    width: 1px;
+    height: 1px;
+
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  // ---------------------------------------------------
+  // Accordion content
+  // ---------------------------------------------------
+
+  #{$option-selector} > #{$content-selector} {
+    display: none;
+  }
+
+  // ---------------------------------------------------
+  // Selected / expanded option
+  // ---------------------------------------------------
+
+  #{$option-selector}:has(input[type="radio"]:checked) {
+    > #{$content-selector} {
+      display: $content-display;
+    }
+  }
+}

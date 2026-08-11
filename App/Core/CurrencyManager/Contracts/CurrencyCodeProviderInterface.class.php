@@ -5,7 +5,7 @@ interface CurrencyCodeProviderInterface
 {
     public function getCurrencyCode(int $currencyId): string;
 
-    public function getSystemDefaultCurrencyCode(): string;
+    public function getSystemDefaultCurrencyCode(?string $regionCode = null): string;
 
     public function isValidCurrency(string $currencyCode): bool;
 

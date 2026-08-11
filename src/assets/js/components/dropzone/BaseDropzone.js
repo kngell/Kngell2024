@@ -166,35 +166,44 @@ export default class BaseDropzone {
   }
 
   syncFilesToInput(files = this.files) {
+    if (!Array.isArray(files)) {
+      logger.warn("syncFilesToInput: files is not an array");
+      files = [];
+    }
+
     if (!this.input) {
       logger.warn("No file input to sync");
       return;
     }
 
-    // Set syncing flag to prevent change event handlers from reacting
     this._syncing = true;
 
     try {
       const dt = new DataTransfer();
+
+      // ✅ Only add actual File objects (not existing server files)
       files.forEach((file) => {
         if (file instanceof File) {
           dt.items.add(file);
+          logger.debug(`Added file to DataTransfer: ${file.name}`);
         }
       });
 
       this.input.files = dt.files;
-      this.files = Array.from(dt.files);
 
-      logger.debug(`Synced ${this.files.length} files to input`);
+      logger.debug(`Synced ${dt.files.length} files to input`, {
+        totalFiles: files.length,
+        actualFiles: dt.files.length,
+        fileNames: Array.from(dt.files).map((f) => f.name)
+      });
 
-      // Only dispatch change if not in syncing mode
+      // Dispatch change event
       if (!this._skipChangeEvent) {
         this.input.dispatchEvent(new Event("change", { bubbles: true }));
       }
     } catch (error) {
       logger.error("Failed to sync files to input:", error);
     } finally {
-      // Reset syncing flag after a short delay
       setTimeout(() => {
         this._syncing = false;
       }, 100);

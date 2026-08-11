@@ -1,7 +1,7 @@
 @use "sass:map";
 @use "css/backend/admin/abstracts/variables" as *;
-@use "css/backend/admin/abstracts/functions" as *;
-@use "text-style" as *;
+@use "css/globals/functions/functions" as *;
+@use "css/globals/mixins/text-style" as *;
 
 @mixin toggle-switch($options: ()) {
   $defaults: (

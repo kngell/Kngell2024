@@ -5,6 +5,7 @@ declare(strict_types=1);
 class SqlUpdateQuery extends SqlQuery implements SqlUpdateQueryBuilderInterface
 {
     use SqlJoinTrait;
+    use SqlWhereConditionTrait;
 
     private const SqlStatement TYPE = SqlStatement::UPDATE;
 
@@ -19,20 +20,25 @@ class SqlUpdateQuery extends SqlQuery implements SqlUpdateQueryBuilderInterface
         $this->initializeComponents();
     }
 
+    #[Override]
+    public function from(mixed $table = null, ?string $alias = null): static
+    {
+        throw new Exception('Not implemented');
+    }
+
     public function build(): string
     {
-        $this->flowValidator->validate($this->queryFlow, $this->updateMap);
-        $this->clauseBuilder->buildAllClauses(self::TYPE);
-
+        $this->buildStatement();
         return parent::build();
     }
 
-    public function update(null|string|Closure $table = null): self
+    public function update(null|string|Closure $table = null): static
     {
         $method = $this->isBulkQuery ? 'bulkUpdate' : 'update';
 
         list($table, $key) = $this->getUniqueTableName($method, $table ?? $this->getEntityManager()->table(), $this->queryMap);
 
+        $this->table = $table;
         $this->updateMap['table'] = $table;
         $this->updateMap['method'] = $method;
         $this->queryMap[$key] = $method;
@@ -40,7 +46,7 @@ class SqlUpdateQuery extends SqlQuery implements SqlUpdateQueryBuilderInterface
         return $this;
     }
 
-    public function bulkData(mixed $data): self
+    public function bulkData(mixed $data): static
     {
         $this->updateMap[__FUNCTION__] = $data;
         $this->updateMap['method'] = __FUNCTION__;
@@ -49,20 +55,20 @@ class SqlUpdateQuery extends SqlQuery implements SqlUpdateQueryBuilderInterface
         return $this;
     }
 
-    public function bulkUpdate(null|string|Closure $table = null, null|BulkUpdateType $type = null): self
+    public function bulkUpdate(null|string|Closure $table = null, null|BulkUpdateType $type = null): static
     {
         $this->bulkType = $type;
         return $this->update($table);
     }
 
-    public function set(mixed ...$data): self
+    public function set(mixed ...$data): static
     {
         $this->updateMap[__FUNCTION__] = $this->standardizer->setMethod(__FUNCTION__)->standardize($data);
         $this->queryFlow[__FUNCTION__] = true;
         return $this;
     }
 
-    public function setColumn(string $column): self
+    public function setColumn(string $column): static
     {
         $this->updateMap['setColumns'][] = $column;
         if (!isset($this->queryFlow[__FUNCTION__])) {
@@ -71,14 +77,14 @@ class SqlUpdateQuery extends SqlQuery implements SqlUpdateQueryBuilderInterface
         return $this;
     }
 
-    public function setColumns(string ...$columns): self
+    public function setColumns(string ...$columns): static
     {
         $this->updateMap[__FUNCTION__][] = $this->standardizer->setMethod(__FUNCTION__)->standardize($columns);
         $this->queryFlow[__FUNCTION__] = true;
         return $this;
     }
 
-    public function setValue(mixed $value): self
+    public function setValue(mixed $value): static
     {
         $this->updateMap['setValues'][] = $value;
         if (!isset($this->queryFlow[__FUNCTION__])) {
@@ -87,57 +93,32 @@ class SqlUpdateQuery extends SqlQuery implements SqlUpdateQueryBuilderInterface
         return $this;
     }
 
-    public function setValues(mixed ...$values): self
+    public function setValues(mixed ...$values): static
     {
         $this->updateMap[__FUNCTION__][] = $this->standardizer->setMethod(__FUNCTION__)->standardize($values);
         $this->queryFlow[__FUNCTION__] = true;
         return $this;
     }
 
-    public function innerJoin(mixed $query): self
+    public function innerJoin(mixed $query): static
     {
         if (is_object($query) && method_exists($query, 'setParent')) {
             $query->setParent($this);
         } else {
             $query = fn () => $query;
         }
-        return $this->addJoin('innerJoin', '', $query);
+        return $this->addJoin(__FUNCTION__, '', $query);
     }
 
-    public function where(mixed ...$conditions): self
-    {
-        if (!isset($this->queryFlow['set'])) {
-            $this->set();
-        }
-        $this->updateMap[__FUNCTION__][] = $this->standardizer->setMethod('where')->standardize($conditions);
-        $this->queryFlow[__FUNCTION__] = true;
-        return $this;
-    }
-
-    public function whereEqualTo(string $column, mixed $value): self
-    {
-        throw new Exception('Not implemented');
-    }
-
-    public function andWhere(string $column, mixed $value): self
-    {
-        throw new Exception('Not implemented');
-    }
-
-    public function orWhere(string $column, mixed $value): self
-    {
-        throw new Exception('Not implemented');
-    }
-
-    public function join(string $table, ?string $alias = null): self
-    {
-        throw new Exception('Not implemented');
-    }
-
-    public function execute(): array
-    {
-        throw new Exception('Not implemented');
-    }
+    // public function where(mixed ...$conditions): static
+    // {
+    //     if (!isset($this->queryFlow['set'])) {
+    //         $this->set();
+    //     }
+    //     $this->updateMap[__FUNCTION__][] = $this->standardizer->setMethod('where')->standardize($conditions);
+    //     $this->queryFlow[__FUNCTION__] = true;
+    //     return $this;
+    // }
 
     public function getStatement(): SqlStatement
     {
@@ -230,6 +211,30 @@ class SqlUpdateQuery extends SqlQuery implements SqlUpdateQueryBuilderInterface
     public function getBulkType(): ?BulkUpdateType
     {
         return $this->bulkType;
+    }
+
+    private function buildStatement(): void
+    {
+        $updateMap = $this->updateMap;
+
+        if ($this->isBulkUpdate()) {
+            $statement = new BulkUpdateStatement(
+                $updateMap,
+                $this->joinMap,
+                $this->onConditions,
+                $this->queryFlow,
+                $this->em,
+                $this->bulkType,
+            );
+        } else {
+            $updateMap['where'] = $this->conditionsMap;
+            $statement = new UpdateStatement(
+                $updateMap,
+                $this->queryFlow,
+                $this->em,
+            );
+        }
+        $this->add($statement);
     }
 
     private function getTableFromMap(array $updateMap): ?string

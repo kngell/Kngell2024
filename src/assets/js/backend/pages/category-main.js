@@ -14,6 +14,23 @@ class CategoryMain extends BaseFormManager {
       maxNotifications: options.maxNotifications || 3,
       notificationDuration: options.notificationDuration || 5000,
       notificationContainerId: options.notificationContainerId || "category-notifications",
+
+      channelStrategy: "flash",
+      flashSelector: options.flashSelector || ".category__body",
+      flashConfig: {
+        durations: {
+          success: 3000,
+          error: 0, // Product errors persist
+          warning: 5000,
+          info: 4000
+        },
+        containerClass: "flash-container"
+      },
+
+      notificationConfig: {
+        error: { permanent: true, duration: 8000 },
+        success: { permanent: false, duration: 3000 }
+      },
       ...options
     });
 
@@ -25,7 +42,7 @@ class CategoryMain extends BaseFormManager {
   }
 
   getFormSelector() {
-    return 'form[data-validate="true"][data-validation-rules*="categoryRules"], form#category-form';
+    return 'form[data-validate="true"][data-validation-rules*="categoryRules"], form#category-frm';
   }
 
   getValidationRules() {
@@ -88,7 +105,7 @@ class CategoryMain extends BaseFormManager {
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", () => {
     const categoryForm = document.querySelector(
-      'form[data-validation-rules*="categoryRules"], form#category-form'
+      'form[data-validation-rules*="categoryRules"], form#category-frm'
     );
     if (categoryForm) {
       window.CategoryMain = new CategoryMain();
@@ -97,7 +114,7 @@ if (document.readyState === "loading") {
   });
 } else {
   const categoryForm = document.querySelector(
-    'form[data-validation-rules*="categoryRules"], form#category-form'
+    'form[data-validation-rules*="categoryRules"], form#category-frm'
   );
   if (categoryForm) {
     window.CategoryMain = new CategoryMain();

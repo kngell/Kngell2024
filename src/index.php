@@ -12,7 +12,7 @@ defined('DS') or define('DS', DIRECTORY_SEPARATOR);
 // Define LOG_DIR BEFORE App exists
 defined('LOG_DIR') or define(
     'LOG_DIR',
-    ROOT_DIR . DS . 'Temp' . DS . 'Log',
+    ROOT_DIR . DS . 'storage' . DS . 'logs',
 );
 
 // Ensure log directory exists

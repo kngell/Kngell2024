@@ -22,7 +22,9 @@ class ActionButton {
     }
 
     if (!this.button) {
-      this.logger.warn(`No direct submit button found in form: ${this.form.id || "anonymous"}`);
+      this.logger.warn(
+        `No direct submit button found in form: ${this.form.getAttribute("id") || "anonymous"}`
+      );
       return;
     }
 
@@ -32,7 +34,7 @@ class ActionButton {
     this.form.addEventListener("submit", this._boundOnSubmit);
     this.button.addEventListener("click", this._boundOnClick);
 
-    this.logger.debug(`ActionButton bound to form: ${this.form.id || "anonymous"}`);
+    this.logger.debug(`ActionButton bound to form: ${this.form.getAttribute("id") || "anonymous"}`);
   }
 
   getData() {
@@ -51,7 +53,7 @@ class ActionButton {
   }
 
   getFormId() {
-    return this.form.id || this.form.name || null;
+    return this.form.getAttribute("id") || this.form.name || null;
   }
 
   setEnabled(enabled) {

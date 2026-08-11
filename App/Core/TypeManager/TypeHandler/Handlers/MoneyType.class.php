@@ -12,15 +12,12 @@ final class MoneyType implements TypeHandlerInterface
 
     public function supports(mixed $value, ?ReflectionProperty $property = null): bool
     {
-        // If we have property context and it expects Money
         if ($property !== null) {
             $propertyType = $property->getType();
             if ($propertyType instanceof ReflectionNamedType && $propertyType->getName() === Money::class) {
-                return true; // Handle any value for Money properties
+                return true;
             }
         }
-
-        // Otherwise, only support actual Money objects
         return $value instanceof Money;
     }
 

@@ -2,7 +2,11 @@ import DashboardManager from "js/backend/shared/DashboardManager";
 import BrowserLogger from "js/core/utils/BrowserLogger";
 
 const logger = new BrowserLogger("Main");
-
+document.addEventListener("entity:saved", (e) => {
+  console.trace("🔍 entity:saved dispatched!");
+  console.log("🔍 Event detail:", e.detail);
+  console.log("🔍 Event target:", e.target);
+});
 class Main {
   constructor() {
     logger.debug("🔄 Main constructor called");

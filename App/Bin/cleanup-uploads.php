@@ -33,31 +33,31 @@ try {
 
         $productModel = $app->get(ProductModel::class);
         $galleryModel = $app->get(ProductImageGalleryModel::class);
-        $heroModel = $app->get(HeroModel::class);
         $smallBannerModel = $app->get(SmallBannerModel::class);
+        $categoryModel = $app->get(Category::class);
 
-        if (!$productModel || !$galleryModel || !$heroModel || !$smallBannerModel) {
+        if (!$productModel || !$galleryModel || !$smallBannerModel || !$categoryModel) {
             echo "❌ Models not found in container\n";
             exit(1);
         }
 
         // Create the required dependencies
-        $databaseFilePaths = new DatabaseFilePathService($productModel, $galleryModel, $heroModel, $smallBannerModel, null);
+        $databaseFilePaths = new DatabaseFilePathService($productModel, $galleryModel, $smallBannerModel, $categoryModel, null);
         $databaseFilePaths->clearCache();
         $finder = new OrphanFileFinderService($databaseFilePaths, null);
         $fileOperations = $app->get(FileOperationsManager::class);
         $logger = $app->get(LoggerInterface::class) ?? new class () {
-            public function info($msg, $context = [])
+            public function info(string $msg, $context = [])
             {
                 echo "[INFO] $msg\n";
             }
 
-            public function error($msg, $context = [])
+            public function error(string $msg, $context = [])
             {
                 echo "[ERROR] $msg\n";
             }
 
-            public function warning($msg, $context = [])
+            public function warning(string $msg, $context = [])
             {
                 echo "[WARNING] $msg\n";
             }
@@ -163,7 +163,7 @@ function formatBytes(int $bytes): string
     return round($bytes, 2) . ' ' . $units[$i];
 }
 
-function showResults($result, bool $dryRun): void
+function showResults(mixed $result, bool $dryRun): void
 {
     // Get result data - assuming CleanupResult has methods to get data
     $candidateCount = method_exists($result, 'getCandidateCount') ? $result->getCandidateCount() : 0;

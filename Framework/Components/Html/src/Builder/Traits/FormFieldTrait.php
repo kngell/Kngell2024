@@ -11,7 +11,7 @@ trait FormFieldTrait
     protected bool $required;
     protected bool $disabled;
     protected bool $checked;
-    protected string $defaultValue;
+    protected mixed $defaultValue;
     protected string $htmlBlock;
     protected array $formErrors = [];
     protected array $formValues = [];
@@ -65,13 +65,13 @@ trait FormFieldTrait
         return $this;
     }
 
-    public function defaultValue(string $defaultValue): static
+    public function defaultValue(mixed $defaultValue): static
     {
         $this->defaultValue = $defaultValue;
         return $this;
     }
 
-    public function getDefaultValue(): string
+    public function getDefaultValue(): mixed
     {
         return $this->defaultValue;
     }
@@ -114,6 +114,14 @@ trait FormFieldTrait
         $this->novalidate = $novalidate;
 
         return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getName(): string
+    {
+        return $this->name;
     }
 
     // ── Form Helpers (unchanged) ────────────────────────────────────

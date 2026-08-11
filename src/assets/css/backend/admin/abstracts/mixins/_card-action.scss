@@ -1,0 +1,48 @@
+@use "sass:map";
+@use "css/backend/admin/abstracts/variables" as *;
+@use "css/globals/mixins/icon_with_badge" as *;
+@use "css/globals/mixins/miscellaneous" as *;
+
+@mixin card-action() {
+  @include flex-center;
+  gap: 1.6rem;
+  &__add-btn,
+  &__remove-btn {
+    @include icon-with-badge(
+      $with-badge: false,
+      $icon-size: calc(2.4rem + 0.4rem),
+      $padding: 0.4rem,
+      $align-self: false
+    );
+    @include transition;
+    border-radius: $radius-s;
+    box-shadow: $shadow-s;
+    &:hover,
+    &:active {
+      .icon {
+        color: $text-brand-inverse;
+      }
+    }
+    &:hover {
+      transform: scale(1.15);
+    }
+  }
+  &__add-btn {
+    background: $background-neutral-tertiary;
+    &:hover {
+      background-color: $background-brand-secondary;
+    }
+    &:active {
+      background-color: $background-brand-primary;
+    }
+  }
+  &__remove-btn {
+    background-color: $background-semantic-error-subtle;
+    &:hover {
+      background-color: $background-semantic-error-normal;
+    }
+    &:active {
+      background-color: $background-semantic-error-bold;
+    }
+  }
+}

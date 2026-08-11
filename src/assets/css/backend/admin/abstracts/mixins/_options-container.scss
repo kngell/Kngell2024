@@ -1,8 +1,8 @@
 @use "sass:map";
+@use "css/globals" as *;
 @use "css/backend/admin/abstracts/variables" as *;
-@use "text-style" as *;
-@use "responsive" as *;
-@use "miscellaneous" as *;
+@use "css/globals/mixins/text-style" as *;
+@use "css/globals/mixins/miscellaneous" as *;
 
 @mixin options-container(
   $display: flex,

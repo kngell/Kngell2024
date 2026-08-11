@@ -1,0 +1,16 @@
+@use "css/globals" as *;
+@use "css/backend/admin/abstracts" as *;
+
+.footer-column-frm,
+.footer-link-frm {
+  width: 100%;
+  .form-section {
+    background-color: $background-neutral-tertiary;
+    border-radius: $radius-s;
+    box-shadow: $shadow-s;
+    &:not(:last-of-type) {
+      margin-bottom: 1.6rem;
+    }
+  }
+}
+@include input-field((textarea, toggle, custom-select, select));

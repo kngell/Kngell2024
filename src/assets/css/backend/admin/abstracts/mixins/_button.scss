@@ -1,6 +1,6 @@
 @use "css/backend/admin/abstracts/variables" as *;
-@use "css/backend/admin/abstracts/mixins/miscellaneous" as *;
-@use "css/backend/admin/abstracts/functions" as *;
+@use "css/globals/mixins/miscellaneous" as *;
+@use "css/globals/functions/functions" as *;
 
 /// ------------------------------
 /// Base button reset
@@ -12,11 +12,10 @@
   gap: $gap;
 
   border: none;
-  cursor: pointer;
   text-decoration: none;
   line-height: 1.2;
 
-  @include transition;
+  @include transition("all", 0.25s, "ease-in-out");
 }
 
 /// ------------------------------

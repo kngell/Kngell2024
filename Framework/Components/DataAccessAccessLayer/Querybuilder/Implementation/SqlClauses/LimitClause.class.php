@@ -31,7 +31,7 @@ class LimitClause extends SqlComponent implements RegularClauseComponentInterfac
     {
         if (!isset($this->limitRule)) {
             $registry = new SqlFactoryRegistry($this, $this->em, $this->state);
-            $this->limitRule = $registry->getRule('limit', $this->limitConfig);
+            $this->limitRule = $registry->getRule('limit', $this->limitConfig, $this->customAlias);
         }
     }
 }

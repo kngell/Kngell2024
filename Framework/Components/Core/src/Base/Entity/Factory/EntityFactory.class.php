@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 class EntityFactory implements EntityFactoryInterface
 {
+    private array $entityRelationshipsCache = [];
+
     public function __construct(
         private EntityDependenciesFactoryInterface $dependencies,
         private EntityIdentityMap $identityMap,
@@ -123,7 +125,7 @@ class EntityFactory implements EntityFactoryInterface
             return $pkCache[$entityClass];
         }
 
-        $reflection = new ReflectionClass($entityClass);
+        $reflection = CustomReflection::getInstance($entityClass)->getClass();
         foreach ($reflection->getProperties() as $property) {
             $attributes = $property->getAttributes(EntityFieldId::class);
             if (!empty($attributes)) {
@@ -137,7 +139,7 @@ class EntityFactory implements EntityFactoryInterface
     public function hasRelationships(string $entityClass): bool
     {
         try {
-            $reflection = new ReflectionClass($entityClass);
+            $reflection = CustomReflection::getInstance($entityClass)->getClass();
             if (!$reflection->hasConstant('RELATIONSHIPS')) {
                 return false;
             }
@@ -146,6 +148,23 @@ class EntityFactory implements EntityFactoryInterface
             return !empty($relationships);
         } catch (ReflectionException $e) {
             return false;
+        }
+    }
+
+    public function getRelationships(string $entityClass): array
+    {
+        try {
+            $reflection = CustomReflection::getInstance($entityClass)->getClass();
+            if (!$reflection->hasConstant('RELATIONSHIPS')) {
+                return [];
+            }
+            if (isset($this->entityRelationshipsCache[$entityClass])) {
+                return $this->entityRelationshipsCache[$entityClass];
+            }
+            $this->entityRelationshipsCache[$entityClass] = $reflection->getConstant('RELATIONSHIPS');
+            return $this->entityRelationshipsCache[$entityClass];
+        } catch (ReflectionException $e) {
+            return [];
         }
     }
 

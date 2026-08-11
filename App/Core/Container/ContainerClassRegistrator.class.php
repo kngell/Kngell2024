@@ -73,12 +73,80 @@ final readonly class ContainerClassRegistrator
     private static function bindClasses(): array
     {
         return [
+            // ========================================
+            // API & HTTP CLIENTS
+            // ========================================
             ApiClientInterface::class => CurlApiGateway::class,
-            MailerInterface::class => Mailer::class,
-            EventManagerInterface::class => EventManager::class,
+
+            // ========================================
+            // EVENT SYSTEM
+            // ========================================
+            EventDispatcherInterface::class => EventDispatcher::class,
+
+            // ========================================
+            // MENU & NAVIGATION
+            // ========================================
             MenuItemInterface::class => MenuItem::class,
-            RooterInterface::class => Rooter::class,
+
+            // ========================================
+            // COOKIE SERVICES
+            // ========================================
             CookieServiceInterface::class => CookieService::class,
+
+            // ========================================
+            // CONFIGURATION LOADERS (request-scoped)
+            // ========================================
+            DatabaseEnvironmentConfig::class => [
+                function () {
+                    return YamlFile::get('database');
+                }, 'mysql',
+            ],
+            ListenerProviderInterface::class => [
+                ListenerProvider::class,
+                YamlFile::get('eventListener'),
+            ],
+            MailerFacade::class => function () {
+                return YamlFile::get('email_settings');
+            },
+
+            // ========================================
+            // FILE SYSTEM OPERATIONS
+            // ========================================
+            FileSearchInterface::class => FileSearchManager::class,
+            FileUploadComponentInterface::class => UploadService::class,
+            FileContentInterface::class => FileContentManager::class,
+            DirectoryInterface::class => DirectoryManager::class,
+            FileOperationsInterface::class => FileOperationsManager::class,
+            ChangeTrackerInterface::class => ChangeTracker::class,
+
+            // ========================================
+            // CURRENCY & QUERY BUILDERS
+            // ========================================
+            CurrencyLookupInterface::class => CurrencyService::class,
+            SqlCompositeQueryBuilderInterface::class => QueryBuilder::class,
+
+            // ========================================
+            // ENTITY RELATIONS & CACHING (request-scoped)
+            // ========================================
+            EntityRelationManagerInterface::class => EntityRelationManager::class,
+            EntityCachingServiceInterface::class => EntityCachingService::class,
+
+            // ========================================
+            // MODEL UTILITIES
+            // ========================================
+            ModelUtilityInterface::class => ModelUtility::class,
+            ModelFactoryInterface::class => DefaultModelFactory::class,
+            ModelContextInterface::class => ModelContext::class,
+            UserModel::class => UserModel::class,
+        ];
+    }
+
+    private static function singletonClasses(App $app): array
+    {
+        return [
+            // ========================================
+            // 1. CACHE SYSTEMS
+            // ========================================
             'currency.cache' => function (): CacheInterface {
                 return CacheFactory::createCurrencyCache();
             },
@@ -88,96 +156,39 @@ final readonly class ContainerClassRegistrator
             'locale.cache' => function (): CacheInterface {
                 return CacheFactory::createLocaleCache();
             },
-            SmartSerializerInterface::class => SmartSerializer::class,
-            CurrencyCodeProviderInterface::class => CurrencyCodeProvider::class,
-            CurrencyResolverInterface::class => CurrencyResolver::class,
-            LocaleProviderInterface::class => function (App $app): DatabaseLocaleProvider {
-                return new DatabaseLocaleProvider(
-                    localeModel: $app->get(RegionLocaleModel::class),
-                    regionLocaleModel: $app->get(RegionLocaleMappingModel::class),
-                    regionModel: $app->get(RegionModel::class),
-                    defaultLocale:$app->getAppConfig()->getConfig()['default_locale'],
-                    builtinLocaleData:$app->getAppConfig()->getConfig()['builtin_locale_data'],
-                    cache: $app->get('locale.cache'),
-                );
-            },
-            RegionDataProviderInterface::class => RegionDataProvider::class,
-            DataMapperInterface::class => DataMapper::class,
-            DatabaseEnvironmentConfig::class => [
-                function () {
-                    return YamlFile::get('database');
-                }, 'mysql'],
-            ListenerProviderInterface::class => [ListenerProvider::class, YamlFile::get('eventListener')],
-            MailerFacade::class => function () {
-                return YamlFile::get('email_settings');
-            },
-            FileSearchInterface::class => FileSearchManager::class,
-            FileUploadComponentInterface::class => UploadService::class,
-            FileContentInterface::class => FileContentManager::class,
-            DirectoryInterface::class => DirectoryManager::class,
-            FileOperationsInterface::class => FileOperationsManager::class,
-            ChangeTrackerInterface::class => ChangeTracker::class,
-
-            CurrencyLookupInterface::class => CurrencyService::class,
-            RegionContextInterface::class => RegionContext::class,
-            LoggerInterface::class => CustomLogger::class,
-
-            SessionInterface::class => Session::class,
             CacheInterface::class => Cache::class,
-            SqlCompositeQueryBuilderInterface::class => QueryBuilder::class,
-            // Entity
-            EntityMapperInterface::class => EntityMapper::class,
-            EntityRelationManagerInterface::class => EntityRelationManager::class,
-            EntityHydratorInterface::class => EntityHydrator::class,
-            EntityFactoryInterface::class => EntityFactory::class,
-            EntityCachingServiceInterface::class => EntityCachingService::class,
-            EntityDataSerializerInterface::class => EntityCacheDataSerializer::class,
-            EntityCacheKeyGeneratorInterface::class => EntityCacheKeyGenerator::class,
+            CacheStorageInterface::class => NativeCacheStorage::class,
 
-            //Model
-            ModelUtilityInterface::class => ModelUtility::class,
-            ModelFactoryInterface::class => DefaultModelFactory::class,
-            ModelContextInterface::class => ModelContext::class,
-        ];
-    }
-
-    private static function singletonClasses(App $app): array
-    {
-        return [
-            SuperGlobalsInterface::class => SuperGlobals::class,
-            Request::class => Request::class,
-            ValidatorInterface::class => Validator::class,
-            DatabaseConnectionInterface::class => PDOConnection::class,
-            EntityManagerInterface::class => EntityManager::class,
-            UserModel::class => UserModel::class,
-            FlashInterface::class => Flash::class,
-            ViewInterface::class => View::class,
-            CollectionInterface::class => Collection::class,
+            // ========================================
+            // 2. SESSION & COOKIE
+            // ========================================
             SessionEnvironment::class => SessionEnvironment::class,
             SessionStorageInterface::class => NativeSessionStorage::class,
-            CacheStorageInterface::class => NativeCacheStorage::class,
+            SessionInterface::class => Session::class,
             CookieStoreInterface::class => NativeCookieStore::class,
             CookieInterface::class => Cookie::class,
-            HashInterface::class => [Hash::class, function () use ($app) {
-                return $app->getAppConfig()->getConfig()['security'];
-            }],
+
+            // ========================================
+            // 3. HTTP & REQUEST HANDLING
+            // ========================================
+            SuperGlobalsInterface::class => SuperGlobals::class,
+            Request::class => Request::class,
             RouteCollector::class => RouteCollector::class,
             RouteMatcher::class => RouteMatcher::class,
             RouteArgumentGenerator::class => RouteArgumentGenerator::class,
             RouteResponseGenerator::class => RouteResponseGenerator::class,
+            RooterInterface::class => Rooter::class,
 
-            // Form-related singletons
-            HtmlBuilder::class => HtmlBuilder::class,
-            FieldRenderer::class => FieldRenderer::class,
-            FieldGroupRenderer::class => FieldGroupRenderer::class,
-            SectionRenderer::class => SectionRenderer::class,
-            ButtonBuilder::class => ButtonBuilder::class,
-            IconBuilder::class => IconBuilder::class,
-            FieldIdGenerator::class => FieldIdGenerator::class,
-            TokenInterface::class => Token::class,
-            NavigationHistoryService::class => NavigationHistoryService::class,
-            RememberPreviousPageMiddleware::class => RememberPreviousPageMiddleware::class,
-            TypeNormalizerInterface::class => DefaultTypeNormalizer::class,
+            // ========================================
+            // 4. DATABASE & ENTITY MANAGEMENT
+            // ========================================
+            DatabaseConnectionInterface::class => PDOConnection::class,
+            EntityManagerInterface::class => EntityManager::class,
+            EntityMapperInterface::class => EntityMapper::class,
+            EntityHydratorInterface::class => EntityHydrator::class,
+            EntityFactoryInterface::class => EntityFactory::class,
+            EntityDataSerializerInterface::class => EntityCacheDataSerializer::class,
+            EntityCacheKeyGeneratorInterface::class => EntityCacheKeyGenerator::class,
             EntityDependenciesFactoryInterface::class => function () use ($app) {
                 return new EntityDependenciesFactory(
                     $app->get(TypeNormalizerInterface::class),
@@ -185,13 +196,88 @@ final readonly class ContainerClassRegistrator
                     function () use ($app) {
                         return new TypePresenterFactory(
                             $app->get(TranslatorServiceInterface::class),
-                            $app->get(RegionContextInterface::class),
                             $app->get(ObfuscatorManager::class),
+                            $app->get(RegionContextInterface::class),
+                            $app->get(MoneyPresenter::class),
                         );
                     },
                     $app->get(EntityIdentityMap::class),
                 );
             },
+
+            // ========================================
+            // 5. DATA PROVIDERS & RESOLVERS
+            // ========================================
+            RegionDataProviderInterface::class => RegionDataProvider::class,
+            CurrencyResolverInterface::class => CurrencyResolver::class,
+            CurrencyCodeProviderInterface::class => CurrencyCodeProvider::class,
+            LocaleProviderInterface::class => function (App $app): DatabaseLocaleProvider {
+                return new DatabaseLocaleProvider(
+                    localeModel: $app->get(RegionLocaleModel::class),
+                    regionLocaleModel: $app->get(RegionLocaleMappingModel::class),
+                    regionModel: $app->get(RegionModel::class),
+                    defaultLocale: $app->getAppConfig()->getConfig()['default_locale'],
+                    builtinLocaleData: $app->getAppConfig()->getConfig()['builtin_locale_data'],
+                    cache: $app->get('locale.cache'),
+                );
+            },
+
+            // ========================================
+            // 6. REGION CONTEXT
+            // ========================================
+            RegionContextInterface::class => RegionContext::class,
+
+            // ========================================
+            // 7. VALIDATION & SECURITY
+            // ========================================
+            ValidatorInterface::class => Validator::class,
+            HashInterface::class => [Hash::class, function () use ($app) {
+                return $app->getAppConfig()->getConfig()['security'];
+            }],
+            TokenInterface::class => Token::class,
+            ListenerResolverInterface::class => ListenerResolver::class,
+
+            // ========================================
+            // 8. DATA MAPPING & MODELS
+            // ========================================
+            DataMapperInterface::class => DataMapper::class,
+
+            // ========================================
+            // 9. SERIALIZATION
+            // ========================================
+            SmartSerializerInterface::class => SmartSerializer::class,
+            TypeNormalizerInterface::class => DefaultTypeNormalizer::class,
+
+            // ========================================
+            // 10. VIEW & PRESENTATION
+            // ========================================
+            ViewInterface::class => View::class,
+            FlashInterface::class => Flash::class,
+            CollectionInterface::class => Collection::class,
+
+            // ========================================
+            // 11. HTML BUILDERS & FORM RENDERERS
+            // ========================================
+            HtmlBuilder::class => HtmlBuilder::class,
+            FieldRenderer::class => FieldRenderer::class,
+            FieldGroupRenderer::class => FieldGroupRenderer::class,
+            SectionRenderer::class => SectionRenderer::class,
+            ButtonBuilder::class => ButtonBuilder::class,
+            IconBuilder::class => IconBuilder::class,
+            FieldIdGenerator::class => FieldIdGenerator::class,
+            FormDataHandlerInterface::class => FormDataHandlerService::class,
+
+            // ========================================
+            // 12. HTML SECTIONS & TEMPLATES
+            // ========================================
+            HtmlSectionManagerInterface::class => HtmlRegularSectionManager::class,
+            HtmlTemplatePathInterface::class => HtmlTemplatePathManager::class,
+
+            // ========================================
+            // 13. FORMATTERS & PRESENTERS
+            // ========================================
+            FormatterInterface::class => Formatter::class,
+            FallbackSymbolProviderInterface::class => DefaultFallbackSymbolProvider::class,
             MoneyType::class => function () use ($app) {
                 return new MoneyType(
                     new LazyCurrencyCodeProvider(
@@ -206,23 +292,32 @@ final readonly class ContainerClassRegistrator
                     ),
                 );
             },
-            //Forms
-            FormDataHandlerInterface::class => FormDataHandlerService::class,
 
-            //Html sections
-            HtmlSectionManagerInterface::class => HtmlRegularSectionManager::class,
-            //Region Context
-            FormatterInterface::class => Formatter::class,
-            FallbackSymbolProviderInterface::class => DefaultFallbackSymbolProvider::class,
-
-            //Translation
+            // ========================================
+            // 14. TRANSLATION
+            // ========================================
             TranslatorServiceInterface::class => TranslatorService::class,
 
-            //Files|Upload
+            // ========================================
+            // 15. NAVIGATION & MIDDLEWARE
+            // ========================================
+            NavigationHistoryService::class => NavigationHistoryService::class,
+            RememberPreviousPageMiddleware::class => RememberPreviousPageMiddleware::class,
+
+            // ========================================
+            // 16. EMAIL & FILE OPERATIONS
+            // ========================================
+            MailerInterface::class => Mailer::class,
             FileMoverInterface::class => FileMoverService::class,
 
-            //Templates
-            HtmlTemplatePathInterface::class => HtmlTemplatePathManager::class,
+            // ========================================
+            // 17. LOGGING
+            // ========================================
+            LoggerInterface::class => CustomLogger::class,
+            // ========================================
+            // 18. AUTHENTICATION
+            // ========================================
+            AuthService::class => AuthService::class,
         ];
     }
 
@@ -280,18 +375,7 @@ final readonly class ContainerClassRegistrator
             $app->tag($service, 'infrastructure');
         }
 
-        // Form factories - THIS IS THE KEY PART!
-        // $formFactories = [
-        //     MainProductFormFactory::class,
-        //     DeleteProductFormFactory::class,
-        //     HeroFormFactory::class,
-        // ];
-
-        // foreach ($formFactories as $factory) {
-        //     $app->tag($factory, 'form_factories');
-        //     $app->tag($factory, FormFactoryInterface::class);
-        // }
-
+        // Region context resolvers
         $regionContext = [
             AcceptLanguageRegionContext::class,
             GeoIPRegionContext::class,
@@ -305,7 +389,7 @@ final readonly class ContainerClassRegistrator
             $app->tag($context, RegionContextResolutionInterface::class);
         }
 
-        // Other form services
+        // Form services
         $formServices = [
             FormCreatorService::class,
             HtmlRegularSectionManager::class,
@@ -342,7 +426,7 @@ final readonly class ContainerClassRegistrator
 
             // Infrastructure aliases
             MailerInterface::class => 'mailer',
-            EventManagerInterface::class => 'events',
+            EventDispatcherInterface::class => 'events',
 
             // Form aliases
             FormCreatorService::class => 'form.creator',

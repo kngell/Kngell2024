@@ -1,6 +1,9 @@
-@forward "checkout-form";
-@forward "_checkout-form-summary";
-@forward "checkout-progress";
-@forward "checkout-button";
-@forward "checkout-review";
-@forward "address_modal";
+@forward "checkout";
+@forward "checkout_navigation";
+@forward "checkout_progress-bar";
+@forward "checkout_options";
+@forward "checkout_address";
+@forward "checkout_card-summary";
+@forward "checkout_shipping_method";
+@forward "checkout_payment";
+@forward "css/frontend/ecommerce/modlals/addressModal";

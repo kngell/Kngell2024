@@ -11,34 +11,40 @@ class ArrayType implements TypeHandlerInterface
         }
 
         if (is_string($value)) {
-            return $this->isJsonArrayString($value);
+            return $this->isJsonString($value);
         }
 
         return false;
     }
 
-    public function normalizeForDatabase(mixed $value, ?ReflectionProperty $property = null): mixed
+    public function normalizeForDatabase(mixed $value, ?ReflectionProperty $property = null): ?string
     {
-        if ($value === null || $value === [] || $value === '') {
+        if ($value === null || $value === '') {
             return null;
         }
 
-        if (!is_array($value)) {
-            // Check if it's already a JSON array string
-            if (is_string($value) && $this->isJsonArrayString($value)) {
-                return $value; // Already JSON, return as-is
+        if (is_string($value)) {
+            if ($this->isJsonString($value)) {
+                return $value;
             }
 
             throw new InvalidArgumentException(sprintf(
-                'Value must be an array for database normalization. Got: %s',
+                'String value passed to ArrayType is not a valid JSON structure. Got: "%s"',
+                $value,
+            ));
+        }
+
+        if (!is_array($value)) {
+            throw new InvalidArgumentException(sprintf(
+                'Value must be an array or JSON string for database normalization. Got: %s',
                 gettype($value),
             ));
         }
 
-        return json_encode($value, JSON_UNESCAPED_UNICODE);
+        return json_encode($value, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
     }
 
-    public function normalizeForEntity(mixed $value, ReflectionProperty $property, object $contextEntity): mixed
+    public function normalizeForEntity(mixed $value, ReflectionProperty $property, object $contextEntity): array
     {
         if ($value === null || $value === '') {
             return [];
@@ -49,85 +55,45 @@ class ArrayType implements TypeHandlerInterface
         }
 
         if (is_string($value)) {
-            $decoded = json_decode($value, true);
+            try {
+                $decoded = json_decode($value, true, 512, JSON_THROW_ON_ERROR);
 
-            // Only return if it's actually an array after decoding
-            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-                return $decoded;
+                if (is_array($decoded)) {
+                    return $decoded;
+                }
+            } catch (JsonException $e) {
+                // Fail silently and fallback to safe array format on extraction error
+                return [];
             }
-
-            // If it's a non-array JSON value (like "16"), return empty array
-            return [];
         }
 
-        // For any other type (int, bool, object, etc.), return empty array
         return [];
     }
 
-    private function isJsonArrayString(string $value): bool
+    /**
+     * Verifies if a string is a valid JSON Array OR a valid JSON Object.
+     */
+    private function isJsonString(string $value): bool
     {
         $trimmed = trim($value);
 
-        // Quick checks for obviously invalid values
         if ($trimmed === '' || $trimmed === 'null') {
             return false;
         }
 
-        // Must start with [ and end with ] to be a JSON array
-        if (!str_starts_with($trimmed, '[') || !str_ends_with($trimmed, ']')) {
+        // Must start/end with brackets [] OR curly braces {}
+        $isWrapped = (str_starts_with($trimmed, '[') && str_ends_with($trimmed, ']')) ||
+                     (str_starts_with($trimmed, '{') && str_ends_with($trimmed, '}'));
+
+        if (!$isWrapped) {
             return false;
         }
 
-        // Actually decode to verify
-        $decoded = json_decode($trimmed, true);
-
-        return json_last_error() === JSON_ERROR_NONE && is_array($decoded);
-    }
-
-    /**
-     * Alternative: More strict validation for specific use cases.
-     */
-    private function isJsonArrayStringStrict(string $value): bool
-    {
-        $trimmed = trim($value);
-
-        if ($trimmed === '' || $trimmed === 'null' || $trimmed === '[]') {
-            return false; // Or true, depending on your needs
-        }
-
-        // Must be a JSON array
-        if (!str_starts_with($trimmed, '[') || !str_ends_with($trimmed, ']')) {
+        try {
+            $decoded = json_decode($trimmed, true, 512, JSON_THROW_ON_ERROR);
+            return is_array($decoded);
+        } catch (JsonException $e) {
             return false;
         }
-
-        // Decode and validate
-        $decoded = json_decode($trimmed, true);
-
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            return false;
-        }
-
-        // Ensure it's an array (not null from decoding "null")
-        if (!is_array($decoded)) {
-            return false;
-        }
-
-        // Optional: Validate array contents
-        return $this->validateArrayContents($decoded);
-    }
-
-    /**
-     * Optional: Validate that array contains only specific types.
-     */
-    private function validateArrayContents(array $data): bool
-    {
-        // Example: Only allow arrays of strings or integers
-        foreach ($data as $item) {
-            if (!is_string($item) && !is_int($item) && !is_float($item) && !is_array($item)) {
-                return false;
-            }
-        }
-
-        return true;
     }
 }

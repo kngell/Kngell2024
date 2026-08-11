@@ -6,40 +6,75 @@ class ModelOperationDelete extends AbstractModelBaseOperations
 {
     public function execute(EntityManagerInterface $em, Entity $entity, mixed $params): QueryResult
     {
-        [$targetEntity, $conditions,$deleteOption] = $this->utils->processConditions($entity, $params);
+        if (array_key_exists('data', $params)) {
+            $data = $params['data'];
+            unset($params['data']);
+        }
+        $processed = $this->utils->processConditions($entity, $params);
 
-        if ($targetEntity instanceof SoftDeletableInterface && $deleteOption === 'archive') {
-            return $this->softDelete($em, $targetEntity, $conditions);
+        if ($processed->entity instanceof SoftDeletableInterface && $processed->deleteOption === 'archive') {
+            return $this->softDelete($em, $processed, $data ?? []);
         }
 
-        return $this->hardDelete($em, $targetEntity, $conditions);
+        return $this->hardDelete($em, $processed->entity, $processed->conditions);
     }
 
-    private function softDelete(EntityManagerInterface $em, SoftDeletableInterface|Entity $entity, array $conditions = []): QueryResult
-    {
-        if ($entity->isDeleted()) {
+    private function softDelete(
+        EntityManagerInterface $em,
+        ProcessedConditions $processed,
+        array $data = [],
+    ): QueryResult {
+        /** @var Entity|SoftDeletableInterface */
+        $prototype = $processed->entity;
+
+        if ($prototype->isDeleted()) {
             $result = $this->getQueryResult($em);
             $result->setSkipped(true, 'Entity is already soft deleted');
             return $result;
         }
-        if (!$entity->isTracking()) {
-            $entity->track();
+
+        // Store archive timestamp in ModelData for Update operation to use
+        $archivedAt = new DateTimeImmutable();
+        $this->md->setArchiveAt($archivedAt);
+        $this->md->setCurrentOperation('soft_delete');
+
+        // Prepare entity with data (but NOT with timestamps)
+        $entity = null;
+        $collection = null;
+
+        if (is_array($data)) {
+            if (ArrayUtils::isAssoc($data)) {
+                $entity = clone $prototype;
+                $entity->assign($data);
+                $entity->softDelete($archivedAt);
+            } elseif (ArrayUtils::isArrayList($data)) {
+                $collection = new Collection();
+                foreach ($data as $singleDataSet) {
+                    $item = clone $prototype;
+                    $item->assign($singleDataSet);
+                    $item->softDelete($archivedAt);
+                    $collection->add($item);
+                }
+            } elseif ($data === []) {
+                $entity = clone $prototype;
+                $entity->softDelete($archivedAt);
+            }
         }
 
-        $entity->softDelete();
+        $entity = $collection ?? $entity ?? $prototype;
 
-        if ($entity instanceof TimestampableInterface) {
-            $entity->setUpdatedAt(new DateTimeImmutable());
+        if ($entity === null) {
+            $reason = 'No data to archive';
+            return $this->getQueryResult($em, true, $reason);
         }
 
-        $em->setEntity($entity);
-        $repository = $em->getRepository($entity);
-        $repository->update($em->table(), $conditions);
-
-        $result = $this->getQueryResult($em);
+        $result = $this->md->update($entity, $processed->conditions);
 
         if ($result->getAffectedRows() === 0) {
-            $result->setSkipped(true, 'No records found to delete');
+            $reason = $entity instanceof SoftDeletableInterface
+                ? 'No active records to archive'
+                : 'No records found to delete';
+            $result->setSkipped(true, $reason);
         }
 
         return $result;

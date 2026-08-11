@@ -6,7 +6,7 @@ class OrderByClause extends SqlComponent implements RegularClauseComponentInterf
     private const SqlClause CLAUSE = SqlClause::ORDER_BY;
 
     public function __construct(
-        private array $orderByColumns,
+        private mixed $orderByColumns,
         ?string $table,
     ) {
         parent::__construct();
@@ -25,15 +25,12 @@ class OrderByClause extends SqlComponent implements RegularClauseComponentInterf
         $orderBy = $this->getOrderByColumns();
         $newColumns = [];
 
-        foreach ($orderBy as $key => $column) {
-            list($column, $sort) = $this->ascDescColumnparser($column);
-            $logicalTable = $this->table;
-            if (str_contains($column, '.')) {
-                list($logicalTable, $column) = $this->helper->mapTableColumn($column);
+        // Process every sorting rule passed to the builder
+        foreach ($orderBy as $mixedClause) {
+            $compiledItems = $this->processSortItem($mixedClause);
+            foreach ($compiledItems as $item) {
+                $newColumns[] = $item;
             }
-            list($table, $alias) = $this->helper->get($logicalTable, $tableAlias, $aliasCheck);
-            $alias = !empty($alias) ? $alias . '.' : '';
-            $newColumns[] = $alias . $column . ' ' . $sort;
         }
 
         $this->state->tableAlias = $tableAlias;
@@ -51,13 +48,61 @@ class OrderByClause extends SqlComponent implements RegularClauseComponentInterf
         return self::CLAUSE;
     }
 
+    /**
+     * * @return string[]
+     */
+    private function processSortItem(mixed $item, string $inheritedDirection = 'ASC'): array
+    {
+        if ($item instanceof SqlComponent) {
+            $this->prepareChild($item);
+            $compiledSql = $item->build();
+            $this->mergeChildState($item);
+            return [trim($compiledSql) . ' ' . $inheritedDirection];
+        }
+
+        if (is_array($item)) {
+            if (count($item) === 2 && isset($item[0]) && isset($item[1]) && is_string($item[1]) && in_array(strtolower($item[1]), ['asc', 'desc'])) {
+                return $this->processSortItem($item[0], strtoupper($item[1]));
+            }
+
+            $results = [];
+            foreach ($item as $key => $value) {
+                if (is_string($key)) {
+                    // Assoc pair pattern: ["column" => "DESC"]
+                    $combinedString = $key . ' ' . (is_string($value) ? $value : $inheritedDirection);
+                    $results = array_merge($results, $this->processSortItem($combinedString));
+                } else {
+                    // Nested plain element pattern
+                    $results = array_merge($results, $this->processSortItem($value, $inheritedDirection));
+                }
+            }
+            return $results;
+        }
+
+        // 3. Normalized String Handler (e.g., "priority DESC" or "c.sort_order")
+        if (is_string($item)) {
+            list($rawColumn, $sortDirection) = $this->ascDescColumnparser($item);
+            if (empty($sortDirection) || $sortDirection === 'ASC') {
+                $sortDirection = $inheritedDirection;
+            }
+
+            $logicalTable = $this->table;
+            if (str_contains($rawColumn, '.')) {
+                list($logicalTable, $rawColumn) = $this->helper->mapTableColumn($rawColumn);
+            }
+
+            list($table, $alias) = $this->helper->get($logicalTable, $this->state->tableAlias, $this->state->aliasCheck);
+            $aliasPrefix = $this->getAliasPrefix($alias);
+
+            return [$aliasPrefix . $rawColumn . ' ' . $sortDirection];
+        }
+
+        return [];
+    }
+
     private function getOrderByColumns(): array
     {
         $orderBy = $this->orderByColumns;
-        if (ArrayUtils::isMultidimentional($orderBy) && count($orderBy) === 1) {
-            $orderBy = ArrayUtils::first($orderBy);
-        }
-
         $normalized = [];
         foreach ($orderBy as $key => $value) {
             if (is_int($key)) {
@@ -81,21 +126,5 @@ class OrderByClause extends SqlComponent implements RegularClauseComponentInterf
                : 'ASC';
 
         return [$col, $dir];
-    }
-
-    private function normalizeColumn(array $columns): array
-    {
-        $newColumns = [];
-        if (isset($columns[1]) && in_array(strtolower($columns[1]), ['asc', 'desc'])) {
-            $newColumns[] = $columns[0] . ' ' . $columns[1];
-            unset($columns[0]);
-            unset($columns[1]);
-            $columns = array_values($columns);
-            if (!empty($columns)) {
-                $newColumns = array_merge($newColumns, $this->normalizeColumn($columns));
-            }
-            return $newColumns;
-        }
-        return $columns;
     }
 }

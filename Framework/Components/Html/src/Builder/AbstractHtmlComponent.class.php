@@ -9,6 +9,7 @@ abstract class AbstractHtmlComponent
     use EventAttributesTrait;
     use FormFieldTrait;
     use TagRendererTrait;
+    use ConditionMethodsTrait;
 
     protected int $level = 0;
     protected ?self $parent = null;
@@ -17,7 +18,7 @@ abstract class AbstractHtmlComponent
     protected bool $contentUp = true;
     protected CollectionInterface $children;
 
-    public function __construct()
+    public function __construct(protected ?TranslatorServiceInterface $translator = null)
     {
         $this->children = new Collection();
     }
@@ -87,6 +88,11 @@ abstract class AbstractHtmlComponent
                 $this->class[] = $validClass;
             }
         }
+    }
+
+    protected function trans(string $key, array $parameters = []): string
+    {
+        return $this->translator ? $this->translator->translate($key, $parameters) : $key;
     }
 
     protected function populateField(): void

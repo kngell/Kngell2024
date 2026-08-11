@@ -7,18 +7,18 @@ class TextAreaElement extends AbstractHtmlComponent
     private const string TAG = 'textarea';
 
     // ── Textarea-Specific Properties ────────────────────────────────
-    private int $rows = 0;
-    private int $cols = 0;
-    private string $autocapitalize = '';
-    private string $autocomplete = '';
-    private string $autocorrect = '';
-    private string $dirname = '';
-    private string $form = '';
-    private int $maxlength = 0;
-    private int $minlength = 0;
-    private bool $autofocus = false;
-    private bool $readonly = false;
-    private string $wrap = '';
+    private int $rows;
+    private int $cols;
+    private string $autocapitalize;
+    private string $autocomplete;
+    private string $autocorrect;
+    private string $dirname;
+    private string $form;
+    private int $maxlength;
+    private int $minlength;
+    private bool $autofocus;
+    private bool $readonly;
+    private string $wrap;
 
     public function __construct(string $content = '')
     {

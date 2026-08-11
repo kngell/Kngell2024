@@ -2,20 +2,13 @@
 
 declare(strict_types=1);
 
-/**
- * Trait for handling validation in controllers
- * Provides consistent validation patterns across all controllers.
- */
 trait ValidationTrait
 {
-    /**
-     * Validate form data and handle errors consistently.
-     */
     protected function validateFormData(
         array $data,
         string $rules,
         ?Model $model = null,
-        array $additionalErrors = []
+        array $additionalErrors = [],
     ): ValidationResult {
         $validationResult = $this->validator->validate($data, $rules, $model);
 
@@ -26,7 +19,7 @@ trait ValidationTrait
         $this->storeFormWithErrors($rules, $data, $allErrors);
 
         // Handle error messaging
-        if ($validationResult->hasErrors() || ! empty($additionalErrors)) {
+        if ($validationResult->hasErrors() || !empty($additionalErrors)) {
             $this->handleValidationErrors($validationResult, $additionalErrors);
         }
 
@@ -48,7 +41,7 @@ trait ValidationTrait
         array $data,
         string $rules,
         ValidationConfig $config,
-        ?Model $model = null
+        ?Model $model = null,
     ): ValidationResult {
         $validator = new Validator($config);
         return $validator->validate($data, $rules, $model);
@@ -61,7 +54,7 @@ trait ValidationTrait
     {
         $errors = $validationResult->getErrors();
 
-        if (! empty($additionalErrors)) {
+        if (!empty($additionalErrors)) {
             $errors = array_merge($errors, $additionalErrors);
         }
 
@@ -73,7 +66,7 @@ trait ValidationTrait
      */
     protected function storeFormWithErrors(string $formType, array $data, array $errors): void
     {
-        if (! $this->session->exists('form')) {
+        if (!$this->session->exists('form')) {
             $form = $this->frm->make($formType, $data, $errors);
             $this->session->set('form', $form);
         }
@@ -100,7 +93,7 @@ trait ValidationTrait
             // Show summary for multiple errors
             $this->flash->add(
                 "Please correct the {$totalErrors} validation errors below.",
-                FlashType::WARNING
+                FlashType::WARNING,
             );
         }
     }
@@ -112,7 +105,7 @@ trait ValidationTrait
         ValidationResult $validationResult,
         array $additionalErrors = [],
         string $singleErrorPrefix = '',
-        string $multipleErrorMessage = ''
+        string $multipleErrorMessage = '',
     ): void {
         $totalErrors = $validationResult->getErrorCount() + count($additionalErrors);
 
@@ -151,11 +144,11 @@ trait ValidationTrait
         string $rules,
         string $redirectPath,
         ?Model $model = null,
-        array $additionalErrors = []
+        array $additionalErrors = [],
     ): ValidationResult|Response {
         $validationResult = $this->validateFormData($data, $rules, $model, $additionalErrors);
 
-        if ($validationResult->hasErrors() || ! empty($additionalErrors)) {
+        if ($validationResult->hasErrors() || !empty($additionalErrors)) {
             return $this->redirect($redirectPath);
         }
 
@@ -173,7 +166,7 @@ trait ValidationTrait
         $config = new ValidationConfig(
             stopOnFirstError: false,
             validateAllFields: false,
-            skipMissingFields: true
+            skipMissingFields: true,
         );
 
         return $this->validateWithConfig($filteredData, $rules, $config, $model);

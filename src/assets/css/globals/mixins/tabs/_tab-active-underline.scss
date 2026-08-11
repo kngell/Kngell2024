@@ -1,0 +1,26 @@
+@use "sass:list";
+@use "css/globals/variables" as *;
+
+@mixin tab-active-underline {
+  .radio-tab {
+    @at-root {
+      &:checked {
+        ~ .tabs__label {
+          label {
+            background: none;
+            box-shadow: none;
+            &::after {
+              content: "";
+              position: absolute;
+              left: 0;
+              right: 0;
+              bottom: -1px;
+              height: 3px;
+              background: $background-brand-primary;
+            }
+          }
+        }
+      }
+    }
+  }
+}

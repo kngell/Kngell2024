@@ -257,7 +257,7 @@ class DependencyResolver
 
     private function inferTagFromType(string $typeName): string
     {
-        $short = (new ReflectionClass($typeName))->getShortName();
+        $short = (CustomReflection::getInstance($typeName)->getClass())->getShortName();
         $snake = strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $short));
 
         return str_ends_with($snake, 'y')

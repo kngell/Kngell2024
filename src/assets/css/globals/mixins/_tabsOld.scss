@@ -1,0 +1,118 @@
+@use "sass:list";
+@use "css/globals/variables" as *;
+
+// =====================================================
+// Tabs Component
+// Expected HTML:
+//
+// .tabs
+//   input#tab-a
+//   input#tab-b
+//
+//   .tabs__label
+//      label.tab[for="tab-a"]
+//      label.tab[for="tab-b"]
+//
+//   .tabs__content
+//      #tab-a-content.tab-content
+//      #tab-b-content.tab-content
+// =====================================================
+
+@mixin tabs(
+  $ids,
+  $gap: 1.6rem,
+  $tab-padding: 1rem 2rem,
+  $radius: $radius-m,
+  $background: transparent,
+  $hover-background: $background-brand-tertiary,
+  $active-background: $background-brand-primary,
+  $active-color: $text-brand-inverse
+) {
+  display: flex;
+  flex-direction: column;
+  gap: $gap;
+  width: 100%;
+
+  // ---------------------------------
+  // Hidden radios
+  // ---------------------------------
+
+  > .radio-tab {
+    display: none;
+  }
+
+  // ---------------------------------
+  // Tab Labels
+  // ---------------------------------
+
+  > .tabs__label {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    width: 100%;
+  }
+
+  > .tabs__label > .tab {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: $tab-padding;
+    cursor: pointer;
+    user-select: none;
+    border-radius: $radius;
+    background: $background;
+    transition:
+      background 0.2s ease,
+      color 0.2s ease,
+      box-shadow 0.2s ease,
+      transform 0.2s ease;
+    .tab__text {
+      color: inherit;
+      margin: 0;
+    }
+
+    &:hover {
+      background: $hover-background;
+    }
+  }
+
+  // ---------------------------------
+  // Content
+  // ---------------------------------
+
+  > .tabs__content {
+    width: 100%;
+  }
+
+  > .tabs__content > .tab-content {
+    display: none;
+    width: 100%;
+  }
+
+  // ---------------------------------
+  // Active State
+  // ---------------------------------
+
+  @each $id in $ids {
+    > ##{$id}:checked {
+      ~ .tabs__label {
+        label[for="#{$id}"] {
+          background: $active-background;
+          color: $active-color;
+          box-shadow: $shadow-s;
+
+          .tab__text {
+            color: inherit;
+          }
+        }
+      }
+
+      ~ .tabs__content {
+        > ##{$id}-content {
+          display: block;
+          animation: tabFade 0.25s ease;
+        }
+      }
+    }
+  }
+}

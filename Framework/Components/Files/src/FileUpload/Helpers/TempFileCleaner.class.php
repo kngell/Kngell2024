@@ -4,21 +4,43 @@ declare(strict_types=1);
 
 class TempFileCleaner
 {
-    private const int TEMP_FILE_MAX_AGE = 3600;
+    public function __construct(
+        private DirectoryManager $directoryManager,
+        private FileOperationsManager $fileManager,
+        private int $defaultMaxAge = 3600, // 1 hour default
+    ) {
+    }
 
-    public function cleanupDirectory(string $directory): int
+    public function clean(string $directory, ?int $maxAge = null): int
     {
+        $ageLimit = $maxAge ?? $this->defaultMaxAge;
         $cleaned = 0;
         $now = time();
 
-        if (!is_dir($directory)) {
+        if (!$this->directoryManager->exists($directory)) {
             return 0;
         }
 
-        foreach (glob($directory . '*') as $file) {
-            if (is_file($file) && ($now - filemtime($file)) > self::TEMP_FILE_MAX_AGE) {
-                if (unlink($file)) {
+        $files = $this->directoryManager->list($directory, true);
+
+        foreach ($files as $file) {
+            if (!$file->isFile()) {
+                continue;
+            }
+            if (str_ends_with($file->getPathname(), '.lock')) {
+                continue;
+            }
+
+            if (($now - $file->getMTime()) > $ageLimit) {
+                try {
+                    $this->fileManager->delete($file->getPathname());
+                    $lockFile = $file->getPathname() . '.lock';
+                    if (file_exists($lockFile)) {
+                        unlink($lockFile);
+                    }
                     $cleaned++;
+                } catch (FileException $e) {
+                    error_log('TempFileCleaner: ' . $e->getMessage());
                 }
             }
         }
@@ -26,12 +48,24 @@ class TempFileCleaner
         return $cleaned;
     }
 
-    public function cleanupMultipleDirectories(array $directories): array
+    /**
+     * Clean up specific files (used after permanent storage).
+     */
+    public function cleanSpecificFiles(array $filePaths): int
     {
-        $results = [];
-        foreach ($directories as $directory) {
-            $results[$directory] = $this->cleanupDirectory($directory);
+        $cleaned = 0;
+        foreach ($filePaths as $path) {
+            if (file_exists($path)) {
+                if (@unlink($path)) {
+                    $cleaned++;
+                }
+                // Clean up .lock file
+                $lockFile = $path . '.lock';
+                if (file_exists($lockFile)) {
+                    @unlink($lockFile);
+                }
+            }
         }
-        return $results;
+        return $cleaned;
     }
 }

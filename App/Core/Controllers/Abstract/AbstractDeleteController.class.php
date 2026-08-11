@@ -4,24 +4,26 @@ declare(strict_types=1);
 
 abstract class AbstractDeleteController extends Controller
 {
-    use AjaxResponseTrait;
+    use ResolveRedirectTrait;
+    use ResolveBlockTypeTrait;
 
     public function delete(): Response
     {
         $isAjax = $this->request->isAjax();
+        $this->resolveBlockType();
         $dto = DeleteDTO::fromRequest($this->request);
         $redirectUrl = $this->resolveRedirectUrl();
 
         if (!$dto->confirmed) {
             return $this->respondSuccess(
-                $isAjax,
-                $this->getLabel() . ' deletion cancelled.',
-                $redirectUrl,
-                FlashType::INFO,
+                isAjax: $isAjax,
+                message: $this->getLabel() . ' deletion cancelled.',
+                redirect:$redirectUrl,
+                flashType: FlashType::INFO,
             );
         }
 
-        $flashData = $this->flash->getData($this->getFlashKey());
+        $flashData = $this->flash->getData($this->getFlashKey($dto->blockType));
 
         if (!$flashData) {
             return $this->respondError(
@@ -35,21 +37,14 @@ abstract class AbstractDeleteController extends Controller
 
         try {
             $result = $this->getDeleteService()->delete(
-                $flashData['id'],
+                $flashData,
                 $dto->deleteOption,
-                $this->eventManager,
+                $dto->blockType,
             );
 
-            return $this->handleDeleteResult(
-                $result,
-                $dto->deleteOption,
-                $isAjax,
-            );
+            return $this->handleDeleteResult($result, $dto->deleteOption, $isAjax, $dto->blockType);
         } catch (Exception $e) {
-            error_log(
-                $this->getLabel() . ' deletion exception: '
-                . $e->getMessage(),
-            );
+            error_log($this->getLabel() . ' deletion exception: ' . $e->getMessage());
 
             return $this->respondError(
                 $isAjax,
@@ -62,21 +57,20 @@ abstract class AbstractDeleteController extends Controller
         }
     }
 
-    // --- Abstract contracts ---
-
     abstract protected function getDeleteService(): AbstractDeleteService;
 
     abstract protected function getLabel(): string;
 
+    abstract protected function resolveRedirectUrl(): string;
     // --- Private helpers ---
 
-    protected function resolveRedirectUrl(): string
-    {
-        return $this->getRedirectUrl()
-            ?? DeletionFlowConfig::DEFAULT_REDIRECT->value;
-    }
+    // protected function resolveRedirectUrl(?string $blockType = null): string
+    // {
+    //     return $this->getRedirectUrl()
+    //         ?? DeletionFlowConfig::DEFAULT_REDIRECT->value;
+    // }
 
-    private function getFlashKey(): string
+    private function getFlashKey(?string $blockType = null): string
     {
         return DeletionFlowConfig::flashKeyFor($this->getLabel());
     }
@@ -85,6 +79,7 @@ abstract class AbstractDeleteController extends Controller
         DeleteResult $result,
         string $deleteOption,
         bool $isAjax,
+        ?string $blockType = null,
     ): Response {
         $redirectUrl = $this->resolveRedirectUrl();
 
@@ -93,21 +88,21 @@ abstract class AbstractDeleteController extends Controller
                 $this->getLabel() . ' deletion failed: '
                 . json_encode($result->getErrorDetails()),
             );
-
+            $code = (int) $result->getErrorDetails()['code'];
             return $this->respondError(
-                $isAjax,
-                $result->getErrorMessage()
+                isAjax: $isAjax,
+                message: $result->getErrorMessage()
                     ?? $this->getLabel() . ' deletion failed.',
-                $redirectUrl,
-                FlashType::DANGER,
-                HttpStatusCode::HTTP_INTERNAL_SERVER_ERROR,
-                $isAjax
+                redirect: $redirectUrl,
+                flashType: FlashType::DANGER,
+                statusCode: HttpStatusCode::tryFrom($code) ?? HttpStatusCode::HTTP_INTERNAL_SERVER_ERROR,
+                extraData: $isAjax
                     ? ['error_details' => $result->getErrorDetails()]
                     : [],
             );
         }
 
-        $message = $this->buildSuccessMessage($result, $deleteOption);
+        $message = $this->buildSuccessMessage($result, $deleteOption, $blockType);
         $flashType = $result->wasSkipped()
             ? FlashType::INFO
             : FlashType::SUCCESS;
@@ -120,6 +115,7 @@ abstract class AbstractDeleteController extends Controller
                     ? $result->getSkipReason()
                     : null,
                 'deletion_type' => $deleteOption,
+                'operation' => 'DELETE',
             ],
         ] : [];
 
@@ -136,6 +132,7 @@ abstract class AbstractDeleteController extends Controller
     private function buildSuccessMessage(
         DeleteResult $result,
         string $deleteOption,
+        ?string $blockType = null,
     ): string {
         $label = $this->getLabel();
 

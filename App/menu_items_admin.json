@@ -1,6 +1,6 @@
 {
   "Dashboard": {
-    "link": "/admin/index",
+    "link": "/admin/admin/index",
     "icon": {
       "name": "icon-dashboard",
       "aria": "Icon Dashboard",
@@ -29,10 +29,11 @@
 
     "link": "",
     "dropdown-items": {
-      "Product List": "/admin/product-list",
-      "Add Product": "/admin/product-add"
+      "Product List": "/admin/admin/product-list",
+      "Add Product": "/admin/admin/product-add"
     }
   },
+
   "Pages": {
     "type": "dropdown",
     "icon-left": {
@@ -47,19 +48,28 @@
     },
     "link": "",
     "dropdown-items": {
-      "Category": "/category-page/add",
-      "Hero new": "/hero-page/add",
-      "Hero list": "/hero-list/index",
-      "Small Banner": "/small-banner-page/add"
+      "Category New": "/admin/category-page/add",
+      "Category List": "/admin/category-list/index",
+      "Hero New": "/admin/content-block-page/add/hero_section",
+      "Hero List": "/admin/content-block-list/index/hero_section",
+      "Edit Hero": "/admin/content-block-page/*/edit/hero_section",
+      "Banner List": "/admin/content-block-list/index/small_banner",
+      "Small Banner": "/admin/content-block-page/add/small_banner",
+      "Edit Banner": "/admin/content-block-page/*/edit/small_banner",
+      "Big Banner": "/admin/content-block-page/add/big_banner",
+      "Big Banner List": "/admin/content-block-list/index/big_banner",
+      "Summer Banner New": "/admin/content-block-page/add/summer_banner",
+      "Summer Banner List": "/admin/content-block-list/index/summer_banner",
+      "Edit Summer Banner": "/admin/content-block/*/edit/summer_banner"
     }
   },
   "Calendar": {
-    "link": "/admin/calendar",
+    "link": "/admin/admin/calendar",
     "icon": "icon-calendar",
     "type": "regular"
   },
   "Profile": {
-    "link": "/admin/calendar",
+    "link": "/admin/admin/calendar",
     "icon": "icon-person",
     "type": "regular"
   }

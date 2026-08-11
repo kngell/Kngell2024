@@ -10,6 +10,7 @@ class SetClause extends SqlComponent implements RegularClauseComponentInterface,
     private bool $hasSingle;
     private ?QueryRulesInterface $setRule;
     private ?SqlOperator $operator = null;
+    private ?BulkUpdateType $bulkUpdateType = null;
 
     public function __construct(
         private array $setData,
@@ -86,13 +87,29 @@ class SetClause extends SqlComponent implements RegularClauseComponentInterface,
         return $this->hasSingle;
     }
 
+    /**
+     * @param null|BulkUpdateType $bulkUpdateType
+     *
+     * @return SetClause
+     */
+    public function setBulkUpdateType(?BulkUpdateType $bulkUpdateType): SetClause
+    {
+        $this->bulkUpdateType = $bulkUpdateType;
+        return $this;
+    }
+
     private function initializeSetRule(): void
     {
         if (!isset($this->conditionRule)) {
             if ($this->joinContext !== null) {
                 $this->state->joinContext = $this->joinContext;
             }
-            $registry = new SqlFactoryRegistry($this, $this->em, $this->state);
+            $registry = new SqlFactoryRegistry(
+                $this,
+                $this->em,
+                $this->state,
+            );
+
             $this->setRule = $registry->getRule($this->method, $this->setData);
         }
     }

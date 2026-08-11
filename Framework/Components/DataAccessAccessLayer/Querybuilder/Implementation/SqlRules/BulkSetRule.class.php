@@ -11,15 +11,16 @@ class BulkSetRule extends AbstractRules implements QueryRulesInterface
         string $method,
         QueryState $state,
         private array $setData,
+        ?string $customAlias = null,
     ) {
-        parent::__construct($em, $method, $state);
+        parent::__construct($em, $method, $customAlias, $state);
     }
 
     public function getRule(array $data): string
     {
         $setParts = [];
 
-        $setData = $this->getConsolidateDataWithIds($data, $this->em);
+        $setData = $this->getConsolidateDataWithIds($data);
 
         $normalized = $this->normalize($setData);
 

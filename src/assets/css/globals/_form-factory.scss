@@ -1,0 +1,21 @@
+$form-layer: "backend" !default;
+
+// Factory function
+@function get-form-config($layer) {
+  @if $layer == "backend" {
+    @return $backend-field-config;
+  } @else if $layer == "frontend" {
+    @return $frontend-field-config;
+  }
+  @return null;
+}
+
+// Factory function for types
+@function get-form-types($layer) {
+  @if $layer == "backend" {
+    @return (input, select, textarea, custom-select);
+  } @else if $layer == "frontend" {
+    @return (input, select, textarea, checkbox, radio, toggle);
+  }
+  @return ();
+}

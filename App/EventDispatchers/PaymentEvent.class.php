@@ -2,6 +2,6 @@
 
 declare(strict_types=1);
 
-class PaymentEvent extends Event
+class PaymentEvent extends AbstractEvent
 {
 }

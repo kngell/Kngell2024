@@ -7,7 +7,6 @@ class SqlSelectQuery extends SqlQuery implements SqlSelectQueryBuilderInterface
     use SqlWhereConditionTrait;
     use SqlHavingTrait;
     use SqlJoinTrait;
-    // use SqlCteTrait;
     use SqlQueryStructureTrait;
     use SqlSelectQueryGettersAndSettersTrait;
 
@@ -15,7 +14,6 @@ class SqlSelectQuery extends SqlQuery implements SqlSelectQueryBuilderInterface
 
     private ColumnCollector $columnCollector;
     private array $selectMap = [];
-    private array $conditionsMap = [];
     private bool $isTableResolved = false;
     private array $groupByMap = [];
     private array $orderByColumns = [];
@@ -26,27 +24,26 @@ class SqlSelectQuery extends SqlQuery implements SqlSelectQueryBuilderInterface
     private array $cteMap = [];
     private array $unionMap = [];
     private ?bool $isRecursive = false;
-    private ?StatementType $context = null;
 
     public function __construct(
         EntityManagerInterface $em,
         private bool $isBulkQuery = false,
     ) {
         $this->method = self::TYPE->value;
-        parent::__construct(null, self::TYPE, $em, $this->columns);
+        parent::__construct(null, self::TYPE, $em);
         $this->initializeWithDependencies($em->getTableAliasHelper(), $this->getState());
         $this->initializeComponents();
     }
 
     public function build(): string
     {
+        $this->validateSelect();
         $this->columnCollector->setSelectMap($this->selectMap)->setJoinMap($this->joinMap);
-        $this->flowValidator->validate($this->queryFlow, $this->joinMap, $this->onConditions);
-        $this->clauseBuilder->buildAllClauses(self::TYPE);
+        $this->buildStatement();
         return parent::build();
     }
 
-    public function select(mixed ...$columns): self
+    public function select(mixed ...$columns): static
     {
         $this->columns = $columns;
 
@@ -55,10 +52,11 @@ class SqlSelectQuery extends SqlQuery implements SqlSelectQueryBuilderInterface
             'columns' => $this->standardizer->setMethod(__FUNCTION__)->standardize($columns)->getColumns(),
             'withAlias' => $this->state->withAlias,
             'distinct' => $this->state->distinct,
+            'distinctCount' => $this->distinctCount,
             'customAlias' => null,
             'method' => __FUNCTION__,
         ];
-        $this->queryFlow['select'] = true;
+        $this->queryFlow[] = 'select';
         $this->currentTable = $this->table;
         $this->method = __FUNCTION__;
         if (!$this->entryMethod === null) {
@@ -67,41 +65,52 @@ class SqlSelectQuery extends SqlQuery implements SqlSelectQueryBuilderInterface
         return $this;
     }
 
-    public function distinct(bool $enable = true): self
+    public function distinct(bool $enable = true): static
     {
         $this->distinct = $enable;
         $this->state = $this->state->distinct($enable);
         return $this;
     }
 
-    public function from(mixed $table = null, ?string $alias = null): self
+    public function distinctCount(bool $enable = true): static
+    {
+        $this->distinctCount = $enable;
+        return $this;
+    }
+
+    public function from(mixed $table = null, ?string $alias = null): static
     {
         $isTable = is_string($table) || is_null($table);
+        $data = null;
         if (!$isTable) {
             $data = $table;
             $table = 'virtualTable';
+            if ($data instanceof SqlSelectQuery) {
+                $data->setParent($this);
+                $safeUniqueAlias = 'vt_' . md5(uniqid((string) rand(), true));
+                $data->addCustomAlias($safeUniqueAlias);
+            }
         }
-        $entity = $this->em->getEntity();
 
-        $resolvedTable = $table ?? $this->resolveMainTable($entity);
+        $resolvedTable = $table ?? $this->resolveMainTable();
 
         list($table, $key) = $this->getUniqueTableName(__FUNCTION__, $resolvedTable, $this->queryMap);
 
         $this->customAlias = $alias;
 
-        if ($this->isBulkQuery && !$isTable) {
+        if (($this->isBulkQuery || $data instanceof SqlSelectQuery) && !$isTable) {
             $data = fn () => $data ?? [];
         }
         $this->table = $table;
 
         $this->selectMap['table'] = $table;
         $this->selectMap['customAlias'] = $alias;
-        if (isset($data)) {
+        if (!empty($data)) {
             $this->selectMap['data'] = $data;
         }
 
         $this->queryMap[] = $table;
-        $this->queryFlow[__FUNCTION__] = true;
+        $this->queryFlow[] = __FUNCTION__;
 
         $this->isTableResolved = true;
         $this->currentTable = $table;
@@ -109,21 +118,21 @@ class SqlSelectQuery extends SqlQuery implements SqlSelectQueryBuilderInterface
         return $this;
     }
 
-    public function withAlias(bool $withAlias = true): self
+    public function withAlias(bool $withAlias = true): static
     {
         $this->withAlias = $withAlias;
         $this->state = $this->state->withAlias($withAlias);
         return $this;
     }
 
-    public function unionAll(SqlSelectQuery|Closure $query): self
+    public function unionAll(SqlSelectQuery|Closure $query): static
     {
         $query->setParent($this);
         $this->unionMap[] = [
             'method' => __FUNCTION__,
             'query' => $query,
         ];
-        $this->queryFlow[__FUNCTION__] = true;
+        $this->queryFlow[] = __FUNCTION__;
         return $this;
     }
 
@@ -151,7 +160,7 @@ class SqlSelectQuery extends SqlQuery implements SqlSelectQueryBuilderInterface
     {
         $entity = $this->em->getEntity();
         if (!$this->hasFrom()) {
-            $this->from($this->resolveMainTable($entity));
+            $this->from($this->resolveMainTable());
             $this->columnCollector->setSelectMap($this->selectMap);
         }
     }
@@ -165,7 +174,7 @@ class SqlSelectQuery extends SqlQuery implements SqlSelectQueryBuilderInterface
 
     public function getFlowDiagnostics(): string
     {
-        $userFlow = array_keys($this->queryFlow);
+        $userFlow = $this->queryFlow;
         $expectedOrder = SqlStatement::SELECT->getBuildOrder();
 
         return sprintf(
@@ -182,9 +191,8 @@ class SqlSelectQuery extends SqlQuery implements SqlSelectQueryBuilderInterface
 
     public function getTable(): string
     {
-        $entity = $this->em->getEntity();
         if (!$this->isTableResolved) {
-            $this->table = $this->resolveMainTable($entity);
+            $this->table = $this->resolveMainTable();
             $this->isTableResolved = true;
         }
 
@@ -206,7 +214,7 @@ class SqlSelectQuery extends SqlQuery implements SqlSelectQueryBuilderInterface
 
     public function getFromData(): ?array
     {
-        if (!isset($this->queryFlow['from'])) {
+        if (!ArrayUtils::hasValue($this->queryFlow, 'from')) {
             return null;
         }
 
@@ -236,12 +244,12 @@ class SqlSelectQuery extends SqlQuery implements SqlSelectQueryBuilderInterface
 
     public function hasSelect(): bool
     {
-        return isset($this->queryFlow['select']);
+        return ArrayUtils::hasValue($this->queryFlow, 'select');
     }
 
     public function hasFrom(): bool
     {
-        return isset($this->queryFlow['from']);
+        return ArrayUtils::hasValue($this->queryFlow, 'from');
     }
 
     public function hasWhere(): bool
@@ -261,27 +269,27 @@ class SqlSelectQuery extends SqlQuery implements SqlSelectQueryBuilderInterface
 
     public function hasGroupBy(): bool
     {
-        return isset($this->queryFlow['groupBy']);
+        return ArrayUtils::hasValue($this->queryFlow, 'groupBy');
     }
 
     public function hasHaving(): bool
     {
-        return isset($this->queryFlow['having']);
+        return ArrayUtils::hasValue($this->queryFlow, 'having');
     }
 
     public function hasOrderBy(): bool
     {
-        return isset($this->queryFlow['orderBy']);
+        return ArrayUtils::hasValue($this->queryFlow, 'orderBy');
     }
 
     public function hasLimit(): bool
     {
-        return isset($this->queryFlow['limit']);
+        return ArrayUtils::hasValue($this->queryFlow, 'limit');
     }
 
     public function hasOffset(): bool
     {
-        return isset($this->queryFlow['offset']);
+        return ArrayUtils::hasValue($this->queryFlow, 'offset');
     }
 
     public function getSelectColumns(): array
@@ -396,7 +404,7 @@ class SqlSelectQuery extends SqlQuery implements SqlSelectQueryBuilderInterface
 
     public function hasUnion(): bool
     {
-        return isset($this->queryFlow['unionAll']) || isset($this->queryFlow['union']);
+        return ArrayUtils::hasValue($this->queryFlow, 'unionAll') || ArrayUtils::hasValue($this->queryFlow, 'union');
     }
 
     /**
@@ -435,9 +443,61 @@ class SqlSelectQuery extends SqlQuery implements SqlSelectQueryBuilderInterface
         return $this->columnCollector;
     }
 
+    public function addCustomAlias(string $customAlias): static
+    {
+        if ($this->selectMap['customAlias'] === null) {
+            $this->selectMap['customAlias'] = $customAlias;
+        }
+        return $this;
+    }
+
     protected function initializeComponents(): void
     {
         $this->columnCollector = new ColumnCollector($this->selectMap, $this->joinMap);
         parent::initializeComponents();
+    }
+
+    private function validateSelect(): void
+    {
+        if ($this->hasSelect() && !$this->hasFrom()) {
+            $this->assumeFromCurrentTable();
+        }
+
+        // If user has from() but no select(), assume all columns
+        if ($this->hasFrom() && !$this->hasSelect()) {
+            $this->assumeAllColumns();
+        }
+
+        // Validate we have at least the minimal required
+        if (!$this->isClosure() && (!$this->hasSelect() || !$this->hasFrom())) {
+            throw new QueryFlowException(
+                'Query must have at least SELECT and FROM clauses. ' .
+                'Called select(): ' . ($this->hasSelect() ? 'yes' : 'no') . ', ' .
+                'Called from(): ' . ($this->hasFrom() ? 'yes' : 'no'),
+            );
+        }
+    }
+
+    private function buildStatement(): void
+    {
+        $statement = new SelectStatement(
+            columnCollector: $this->columnCollector,
+            selectMap:[
+                'select' => $this->selectMap,
+                'join' => $this->joinMap,
+                'on' => $this->onConditions,
+                'where' => $this->conditionsMap,
+                'having' => $this->havingConditions,
+                'group_by' => $this->groupByMap,
+                'order_by' => $this->orderByColumns,
+                'limit' => $this->limitMap,
+                'offset' => $this->offsetMap,
+            ],
+            queryFlow: $this->queryFlow,
+            em: $this->em,
+        );
+
+        // $statement->setHelper($this->helper);
+        $this->add($statement);
     }
 }

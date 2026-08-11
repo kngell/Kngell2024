@@ -2,272 +2,238 @@
 
 declare(strict_types=1);
 
+use Psr\Log\LoggerInterface;
+
 trait ControllerGettersAndSetters
 {
-    /**
-     * @param Request $request
-     *
-     * @return Controller
-     */
+    use LazyControllerTrait;
+
+    protected Request $request;
+    protected Response $response;
+    protected EventDispatcherInterface $eventDispatcher;
+    protected AbstractFormCreator $frm;
+    private ?Model $currentModel = null;
+    private ?NavbarType $layout = null;
+
+    public function setApp(App $app): self
+    {
+        $this->initializeLazyDependencies($app);
+        return $this;
+    }
+
     public function setRequest(Request $request): self
     {
         $this->request = $request;
         return $this;
     }
 
-    /**
-     * @return Request
-     */
     public function getRequest(): Request
     {
         return $this->request;
     }
 
-    /**
-     * @param ViewInterface $view
-     *
-     * @return Controller
-     */
-    public function setView(ViewInterface $view): self
-    {
-        $this->view = $view;
-        return $this;
-    }
-
-    /**
-     * @param Response $response
-     *
-     * @return Controller
-     */
     public function setResponse(Response $response): self
     {
         $this->response = $response;
-
         return $this;
     }
 
-    /**
-     * @param TokenInterface $token
-     *
-     * @return Controller
-     */
+    public function getResponse(): Response
+    {
+        return $this->response;
+    }
+
+    // Keep existing setter methods but mark them as optional
+    // They can still be called but are not required
+
+    public function setView(ViewInterface $view): self
+    {
+        // Store in resolved dependencies if already set
+        $this->resolvedDependencies[ViewInterface::class] = $view;
+        return $this;
+    }
+
     public function setToken(TokenInterface $token): self
     {
-        $this->token = $token;
+        $this->resolvedDependencies[TokenInterface::class] = $token;
         return $this;
     }
 
-    /**
-     * @param FlashInterface $flash
-     *
-     * @return Controller
-     */
     public function setFlash(FlashInterface $flash): self
     {
-        $this->flash = $flash;
+        $this->resolvedDependencies[FlashInterface::class] = $flash;
         return $this;
     }
 
-    /**
-     * @param SessionInterface $session
-     *
-     * @return Controller
-     */
     public function setSession(SessionInterface $session): self
     {
-        $this->session = $session;
+        $this->resolvedDependencies[SessionInterface::class] = $session;
         return $this;
     }
 
-    /**
-     * @return SessionInterface
-     */
-    public function getSession(): SessionInterface
-    {
-        return $this->session;
-    }
-
-    /**
-     * @param EventManagerInterface $eventManager
-     *
-     * @return Controller
-     */
-    public function setEventManager(EventManagerInterface $eventManager): self
-    {
-        $this->eventManager = $eventManager;
-        return $this;
-    }
-
-    /**
-     * @return HtmlBuilder
-     */
-    public function getBuilder(): HtmlBuilder
-    {
-        return $this->builder;
-    }
-
-    /**
-     * @param HtmlBuilder $builder
-     *
-     * @return Controller
-     */
-    public function setBuilder(HtmlBuilder $builder): self
-    {
-        $this->builder = $builder;
-        return $this;
-    }
-
-    /**
-     * @param NavigationHistoryService $navigationHistory
-     *
-     * @return Controller
-     */
-    public function setNavigationHistory(NavigationHistoryService $navigationHistory): Controller
-    {
-        $this->navigationHistory = $navigationHistory;
-
-        return $this;
-    }
-
-    /**
-     * @return TokenInterface
-     */
-    public function getToken(): TokenInterface
-    {
-        return $this->token;
-    }
-
-    /**
-     * @return Model
-     */
-    public function getCurrentModel(): Model
-    {
-        return $this->currentModel;
-    }
-
-    /**
-     * @return CacheInterface
-     */
-    public function getCache(): CacheInterface
-    {
-        return $this->cache;
-    }
-
-    /**
-     * @param CacheInterface $cache
-     *
-     * @return Controller
-     */
     public function setCache(CacheInterface $cache): self
     {
-        $this->cache = $cache;
+        $this->resolvedDependencies[CacheInterface::class] = $cache;
         return $this;
     }
 
-    /**
-     * @return CookieInterface
-     */
-    public function getCookie(): CookieInterface
-    {
-        return $this->cookie;
-    }
-
-    /**
-     * @param CookieInterface $cookie
-     *
-     * @return Controller
-     */
     public function setCookie(CookieInterface $cookie): self
     {
-        $this->cookie = $cookie;
+        $this->resolvedDependencies[CookieInterface::class] = $cookie;
         return $this;
     }
 
-    /**
-     * @param RegionContextInterface $region
-     *
-     * @return Controller
-     */
-    public function setRegion(RegionContextInterface $region): Controller
+    public function setEventDispatcher(EventDispatcherInterface $eventDispatcher): self
     {
-        $this->region = $region;
-
+        $this->resolvedDependencies[EventDispatcherInterface::class] = $eventDispatcher;
         return $this;
     }
 
-    /**
-     * @param TranslatorServiceInterface $translator
-     *
-     * @return Controller
-     */
-    public function setTranslator(TranslatorServiceInterface $translator): Controller
+    public function setBuilder(HtmlBuilder $builder): self
     {
-        $this->translator = $translator;
-
+        $this->resolvedDependencies[HtmlBuilder::class] = $builder;
         return $this;
     }
 
-    /**
-     * @return SectionProviderFactory
-     */
-    public function getProviderFactory(): SectionProviderFactory
+    public function setForm(AbstractFormCreator $frm): self
     {
-        return $this->providerFactory;
-    }
-
-    /**
-     * @param SectionProviderFactory $providerFactory
-     *
-     * @return Controller
-     */
-    public function setProviderFactory(SectionProviderFactory $providerFactory): Controller
-    {
-        $this->providerFactory = $providerFactory;
-
+        $this->resolvedDependencies[AbstractFormCreator::class] = $frm;
         return $this;
     }
 
-    /**
-     * @return HtmlRegularSectionManager
-     */
-    public function getSectionManager(): HtmlRegularSectionManager
+    public function setRegion(RegionContextInterface $region): self
     {
-        return $this->sectionManager;
-    }
-
-    /**
-     * @param HtmlRegularSectionManager $sectionManager
-     *
-     * @return Controller
-     */
-    public function setSectionManager(HtmlRegularSectionManager $sectionManager): Controller
-    {
-        $this->sectionManager = $sectionManager;
-
+        $this->resolvedDependencies[RegionContextInterface::class] = $region;
         return $this;
     }
 
-    /**
-     * @param DecoratorFactory $decoratorFactory
-     *
-     * @return Controller
-     */
+    public function setTranslator(TranslatorServiceInterface $translator): self
+    {
+        $this->resolvedDependencies[TranslatorServiceInterface::class] = $translator;
+        return $this;
+    }
+
+    public function setNavigationHistory(NavigationHistoryService $navigationHistory): self
+    {
+        $this->resolvedDependencies[NavigationHistoryService::class] = $navigationHistory;
+        return $this;
+    }
+
     public function setDecoratorFactory(DecoratorFactory $decoratorFactory): self
     {
-        $this->decoratorFactory = $decoratorFactory;
+        $this->resolvedDependencies[DecoratorFactory::class] = $decoratorFactory;
         return $this;
     }
 
-    protected function layout(string $layout): void
+    public function setSectionManager(HtmlRegularSectionManager $sectionManager): self
     {
-        $this->layout = $layout;
+        $this->resolvedDependencies[HtmlRegularSectionManager::class] = $sectionManager;
+        return $this;
     }
 
-    /**
-     * @param Model $model
-     *
-     * @return void
-     */
+    public function setLogger(LoggerInterface $logger): self
+    {
+        $this->resolvedDependencies[LoggerInterface::class] = $logger;
+        return $this;
+    }
+
+    public function setNavBarFactory(NavbarFactory $navBarFactory): self
+    {
+        $this->resolvedDependencies[NavbarFactory::class] = $navBarFactory;
+        return $this;
+    }
+
+    // Lazy getters for all dependencies
+    protected function getView(): ViewInterface
+    {
+        return $this->getLazy(ViewInterface::class);
+    }
+
+    protected function getToken(): TokenInterface
+    {
+        return $this->getLazy(TokenInterface::class);
+    }
+
+    protected function getFlash(): FlashInterface
+    {
+        return $this->getLazy(FlashInterface::class);
+    }
+
+    protected function getSession(): SessionInterface
+    {
+        return $this->getLazy(SessionInterface::class);
+    }
+
+    protected function getCache(): CacheInterface
+    {
+        return $this->getLazy(CacheInterface::class);
+    }
+
+    protected function getCookie(): CookieInterface
+    {
+        return $this->getLazy(CookieInterface::class);
+    }
+
+    protected function getEventDispatcher(): EventDispatcherInterface
+    {
+        return $this->getLazy(EventDispatcherInterface::class);
+    }
+
+    protected function getBuilder(): HtmlBuilder
+    {
+        return $this->getLazy(HtmlBuilder::class);
+    }
+
+    protected function getForm(): AbstractFormCreator
+    {
+        return $this->frm;
+    }
+
+    protected function getRegion(): RegionContextInterface
+    {
+        return $this->getLazy(RegionContextInterface::class);
+    }
+
+    protected function getTranslator(): TranslatorServiceInterface
+    {
+        return $this->getLazy(TranslatorServiceInterface::class);
+    }
+
+    protected function getNavigationHistory(): NavigationHistoryService
+    {
+        return $this->getLazy(NavigationHistoryService::class);
+    }
+
+    protected function getDecoratorFactory(): DecoratorFactory
+    {
+        return $this->getLazy(DecoratorFactory::class);
+    }
+
+    protected function getSectionManager(): HtmlRegularSectionManager
+    {
+        return $this->getLazy(HtmlRegularSectionManager::class);
+    }
+
+    protected function getLogger(): LoggerInterface
+    {
+        return $this->getLazy(LoggerInterface::class);
+    }
+
+    protected function getNavBarFactory(): NavbarFactory
+    {
+        return $this->getLazy(NavbarFactory::class);
+    }
+
+    protected function layout(NavbarType $layout): void
+    {
+        $this->layout = $layout;
+
+        // $logger = $this->getLogger();
+        // if ($logger instanceof CustomLogger) {
+        //     $logger->flushBrowserLogs();
+        // }
+    }
+
     protected function currentModel(Model $model): void
     {
         $this->currentModel = $model;

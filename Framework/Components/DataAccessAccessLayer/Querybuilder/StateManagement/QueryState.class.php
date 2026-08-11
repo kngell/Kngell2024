@@ -17,7 +17,6 @@ class QueryState
         public ?string $subqueryMainTable = null,
         public bool $isUpdate = false,
         public bool $hasSetContent = true,
-        public ?StatementType $statementContext = null,
     ) {
     }
 
@@ -35,7 +34,6 @@ class QueryState
             subqueryMainTable: $other->subqueryMainTable ?? $this->subqueryMainTable,
             isUpdate: $other->isUpdate ?? $this->isUpdate,
             hasSetContent: $other->hasSetContent && $this->hasSetContent,
-            statementContext: $other->statementContext ?? $this->statementContext,
         );
     }
 
@@ -105,28 +103,18 @@ class QueryState
         return $this;
     }
 
-    /**
-     * Generate a unique parameter name.
-     */
-    private function generateUniqueParameterName(string $baseName): string
+    public function addAliasCheck(array $aliascheck): array
     {
-        $counter = 1;
-        $name = $this->normalizeParameterName($baseName);
-
-        while (array_key_exists($name, $this->parameters)) {
-            $name = $this->normalizeParameterName($baseName . '_' . $counter);
-            $counter++;
+        $aliasArr = [];
+        foreach ($aliascheck as $key => $alias) {
+            if (!in_array($alias, $this->aliasCheck)) {
+                $aliasArr[] = $alias;
+            }
         }
-
-        return $name;
+        return $aliasArr;
     }
 
-    private function normalizeParameterName(string $name): string
-    {
-        return 'p_' . preg_replace('/[^a-zA-Z0-9_]/', '_', strtolower($name));
-    }
-
-    private function safeArrayMerge(array $array1, array $array2): array
+    public function safeArrayMerge(array $array1, array $array2): array
     {
         // Ensure both are arrays
         $array1 = is_array($array1) ? $array1 : [];
@@ -158,14 +146,36 @@ class QueryState
         }
     }
 
-    private function addAliasCheck(array $aliascheck): array
+    /**
+     * @param array $aliasCheck
+     *
+     * @return QueryState
+     */
+    public function withAliasCheck(array $aliasCheck): QueryState
     {
-        $aliasArr = [];
-        foreach ($aliascheck as $key => $alias) {
-            if (!in_array($alias, $this->aliasCheck)) {
-                $aliasArr[] = $alias;
-            }
+        $new = clone $this;
+        $new->aliasCheck = $aliasCheck;
+        return $new;
+    }
+
+    /**
+     * Generate a unique parameter name.
+     */
+    private function generateUniqueParameterName(string $baseName): string
+    {
+        $counter = 1;
+        $name = $this->normalizeParameterName($baseName);
+
+        while (array_key_exists($name, $this->parameters)) {
+            $name = $this->normalizeParameterName($baseName . '_' . $counter);
+            $counter++;
         }
-        return $aliasArr;
+
+        return $name;
+    }
+
+    private function normalizeParameterName(string $name): string
+    {
+        return 'p_' . preg_replace('/[^a-zA-Z0-9_]/', '_', strtolower($name));
     }
 }

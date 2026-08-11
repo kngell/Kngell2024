@@ -8,7 +8,12 @@ trait ElementFactoryTrait
     {
         $inputType = ucfirst(strtolower($type)) . 'Type';
         try {
-            return new $inputType();
+            $input = new $inputType();
+            if ($type === 'tel') {
+                $input->withInternationalFormat()
+                ->withPhoneValidation();
+            }
+            return $input;
         } catch (Throwable $th) {
             throw new FormElementNotFound($inputType);
         }

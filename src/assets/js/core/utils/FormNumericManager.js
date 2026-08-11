@@ -40,7 +40,9 @@ export default class FormNumericManager {
   _setupFormSubmission() {
     // Find the parent form element
     const formElement =
-      this.form.closest("form") || document.querySelector(`#${this.form.id}`) || this.form;
+      this.form.closest("form") ||
+      document.querySelector(`#${this.form.getAttribute("id")}`) ||
+      this.form;
 
     if (formElement && formElement.tagName === "FORM") {
       formElement.addEventListener("submit", (e) => {

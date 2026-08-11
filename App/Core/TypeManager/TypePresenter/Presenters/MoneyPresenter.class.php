@@ -17,61 +17,46 @@ final class MoneyPresenter implements TypePresenterInterface
         return $value instanceof Money;
     }
 
-    public function display(mixed $value, ?ReflectionProperty $property = null, ?RegionContextInterface $regionContext = null): mixed
+    public function display(mixed $value, ?ReflectionProperty $property = null, ?RegionContextInterface $regionContext = null): string
     {
         if (!$value instanceof Money) {
-            return $value;
+            return (string) $value;
         }
 
-        $regionContext = $regionContext ?? $this->regionContext;
-        $locale = $regionContext->getLocale();
+        $region = $regionContext ?? $this->regionContext;
+        $style = $this->getStyle($property);
+        $amount = $value->getAmount()->toFloat();
+        $currencyCode = $value->getCurrency()->getCurrencyCode();
 
-        // Check for display format attributes
-        $formatStyle = $this->getFormatStyle($property);
-
-        return $this->formatMoney($value, $locale, $formatStyle, $regionContext);
+        return match($style) {
+            'compact' => $region->formatCurrency($amount, $currencyCode),
+            'symbol-only' => $this->currencyProvider->getCurrencySymbol($currencyCode) ?? $currencyCode,
+            'code-only' => $currencyCode,
+            'accounting' => $this->formatAccounting($amount, $currencyCode, $region),
+            default => $region->formatCurrency($amount, $currencyCode),
+        };
     }
 
-    private function getFormatStyle(?ReflectionProperty $property): string
+    private function getStyle(?ReflectionProperty $property): string
     {
         if ($property === null) {
             return 'standard';
         }
 
         $attributes = $property->getAttributes(DisplayFormat::class);
-        if (!empty($attributes)) {
-            $format = $attributes[0]->newInstance();
+        foreach ($attributes as $attribute) {
+            $format = $attribute->newInstance();
             return $format->style ?? 'standard';
         }
-
         return 'standard';
     }
 
-    private function formatMoney(Money $money, string $locale, string $style, RegionContextInterface $regionContext): string
+    private function formatAccounting(float $amount, string $currencyCode, RegionContextInterface $region): string
     {
-        $currencyCode = $money->getCurrency()->getCurrencyCode();
-        $amount = $money->getAmount()->toFloat();
-
-        // Use currency provider for symbol lookup
-        $symbol = $this->currencyProvider->getCurrencySymbol($currencyCode) ?? $currencyCode;
-
-        switch ($style) {
-            case 'compact':
-                return $regionContext->formatCurrency($amount, $currencyCode);
-            case 'symbol-only':
-                return $symbol;
-            case 'code-only':
-                return $currencyCode;
-            case 'accounting':
-                // Accounting format: (USD 100.00) for negative
-                $formattedAmount = $regionContext->formatNumber(abs($amount));
-                if ($amount < 0) {
-                    return '(' . $currencyCode . ' ' . $formattedAmount . ')';
-                }
-                return $currencyCode . ' ' . $formattedAmount;
-            case 'standard':
-            default:
-                return $regionContext->formatCurrency($amount, $currencyCode);
+        $formattedAmount = $region->formatNumber(abs($amount));
+        if ($amount < 0) {
+            return '(' . $currencyCode . ' ' . $formattedAmount . ')';
         }
+        return $currencyCode . ' ' . $formattedAmount;
     }
 }

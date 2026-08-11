@@ -17,7 +17,8 @@ trait QueryResultStatusTrait
         if ($this->wasSkipped()) {
             return false;
         }
-        return $this->isSuccess() && $this->rowCount > 0;
+        $afftedRow = $this->getAffectedRows();
+        return $this->isSuccess() && $afftedRow > 0;
     }
 
     public function wasSuccessful(): bool

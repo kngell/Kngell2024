@@ -1,0 +1,214 @@
+@use "sass:color";
+@use "sass:map";
+@use "css/globals" as *;
+@use "css/frontend/ecommerce/abstracts" as *;
+
+// ============================================
+// ADDRESS SELECTION & CONTAINER
+// ============================================
+
+.checkout__address-section {
+  margin-top: map.get($spacing, 2xl); // 3.2rem
+
+  .address-selection {
+    &__title {
+      font-size: --heading-2;
+      font-weight: $font-weight-bold;
+      margin-bottom: map.get($spacing, lg);
+      color: $text-neutral-primary;
+    }
+
+    &__grid {
+      display: flex;
+      flex-direction: column;
+      gap: map.get($spacing, 2xl);
+    }
+
+    &__button {
+      margin-top: map.get($spacing, lg);
+      @include flex-center;
+    }
+  }
+}
+
+// =====================================================
+// ADDRESS SECTION CARD
+// =====================================================
+
+.address-section {
+  background: $background-neutral-primary;
+  border: 0.1rem solid $border-neutral-primary;
+  border-radius: $radius-m;
+  overflow: hidden;
+  box-shadow: $shadow-s;
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: map.get($spacing, md);
+    padding: map.get($spacing, md) map.get($spacing, xl);
+    border-bottom: 0.1rem solid $border-neutral-secondary;
+    background: $background-neutral-secondary;
+
+    .title {
+      display: flex;
+      align-items: center;
+      gap: map.get($spacing, sm);
+      font-size: --heading-4;
+      font-weight: $font-weight-bold;
+      color: $text-neutral-primary;
+      white-space: nowrap;
+    }
+
+    .badge {
+      padding: 0.35rem 0.9rem;
+      border-radius: $radius-full;
+      background: $background-semantic-error-subtle;
+      color: $text-semantic-error;
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+
+    .input-field {
+      width: fit-content;
+    }
+  }
+
+  &__list {
+    // 1. Apply the standardized selectable-options mixin
+    @include selectable-options($columns: 1, $gap: map.get($spacing, md));
+
+    // 2. Override the mixin's grid columns to retain your auto-fill layout
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    padding: map.get($spacing, lg);
+
+    // 3. Map your old .address-item HTML to the standardized option class
+    .selectable-options__option {
+      @include selectable-option-card(
+        $padding: map.get($spacing, md),
+        $radius: $radius-s,
+        $hover-lift: 0
+      );
+
+      display: flex;
+      align-items: flex-start;
+      gap: map.get($spacing, sm);
+
+      // (Note: The hover, focus, checked states, and radio hiding are now
+      // automatically handled by the selectable-option-card mixin above.)
+
+      &__content {
+        flex: 1;
+        min-width: 0;
+
+        .address-item-header {
+          margin-bottom: map.get($spacing, xs);
+
+          h4 {
+            font-size: 1.55rem;
+            font-weight: $font-weight-bold;
+            color: $text-neutral-primary;
+            line-height: 1.3;
+          }
+        }
+
+        .address-item-details {
+          display: flex;
+          flex-direction: column;
+          gap: 0.2rem;
+          color: $text-neutral-secondary;
+          font-size: map.get($font, size-sm);
+          line-height: 1.5;
+
+          .address-line {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
+        }
+      }
+
+      // Actions stay mostly the same, but trigger off the standardized parent
+      .address-item__actions {
+        display: flex;
+        align-items: center;
+        gap: map.get($spacing, xs);
+        opacity: 0;
+        visibility: hidden;
+        transform: translateX(0.4rem);
+        transition:
+          opacity 0.2s ease,
+          visibility 0.2s ease,
+          transform 0.2s ease;
+
+        .btn {
+          width: 2.6rem;
+          height: 2.6rem;
+          padding: 0;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: $radius-xs;
+          border: none;
+          background: transparent;
+          color: $icon-neutral-secondary;
+          cursor: pointer;
+          transition:
+            background 0.2s,
+            color 0.2s;
+
+          .icon,
+          svg {
+            width: map.get(map.get($button-sizes, sm), icon-size);
+            height: map.get(map.get($button-sizes, sm), icon-size);
+          }
+
+          &:hover {
+            background: color.adjust($primary-color, $alpha: -0.9);
+            color: $primary-color;
+          }
+
+          &.delete:hover {
+            background: $background-semantic-error-subtle;
+            color: $text-semantic-error;
+          }
+        }
+      }
+
+      // Show actions on hover/focus of the option card
+      &:hover,
+      &:focus-within {
+        .address-item__actions {
+          opacity: 1;
+          visibility: visible;
+          transform: translateX(0);
+        }
+      }
+    }
+  }
+}
+
+// Toggle rule for billing address section
+.address-section--billing {
+  &:has(#billingSameAsShipping:checked) .address-section__list {
+    display: none;
+  }
+}
+
+// =====================================================
+// RESPONSIVE ADJUSTMENTS
+// =====================================================
+
+@include respond-below(md) {
+  .address-section {
+    &__list {
+      grid-template-columns: 1fr;
+      padding: map.get($spacing, sm);
+    }
+
+    &__header {
+      flex-wrap: wrap;
+    }
+  }
+}

@@ -39,7 +39,7 @@ final class InsertDataStandardizer extends AbstractDataStandardizer
         }
 
         // 3️⃣ Flat key/value list
-        if (ArrayUtils::isKeyValueList($data)) {
+        if (ArrayUtils::isSequentialKeyValueList($data)) {
             $assoc = $this->toAssoc($data);
             return new InsertPayload(array_keys($assoc), array_values($assoc));
         }
@@ -116,7 +116,7 @@ final class InsertDataStandardizer extends AbstractDataStandardizer
             return new InsertPayload($columns, $values);
         }
 
-        if (ArrayUtils::isKeyValueList($data)) {
+        if (ArrayUtils::isSequentialKeyValueList($data)) {
             $assoc = $this->toAssoc($data);
             return new InsertPayload(array_keys($assoc), [$assoc]);
         }

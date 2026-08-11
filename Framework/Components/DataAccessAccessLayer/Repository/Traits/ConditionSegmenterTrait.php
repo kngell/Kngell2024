@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 trait ConditionSegmenterTrait
 {
-    protected function applyMixedConditions(SqlSelectQueryBuilderInterface $qb, array $conditions): void
+    protected function applyMixedConditions(SqlQueryBuilderInterface|SqlCommonConditionClauseInterface $qb, array $conditions): void
     {
         $i = 0;
         $keys = array_keys($conditions);
@@ -82,7 +82,9 @@ trait ConditionSegmenterTrait
             return false;
         }
         $v = strtoupper(trim($value));
-        return in_array($v, ['OR', 'XOR', 'AND'], true);
+        $op = SqlOperator::tryFrom($v);
+        return $op && $op->isLogical();
+        // return in_array($v, ['OR', 'XOR', 'AND'], true);
     }
 
     private function extractSubScope(array $conditions, int $startIndex, string $open, string $close): array

@@ -114,7 +114,6 @@ class Collection implements CollectionInterface
     /**
      * Calculates the sum of values within the specified array.
      *
-     * @param array $array
      *
      * @return static
      */
@@ -214,15 +213,7 @@ class Collection implements CollectionInterface
         return array_shift($this->items);
     }
 
-    /**
-     * Extract a slice of the collection items.
-     *
-     * @param [type] $offset
-     * @param [type] $length
-     *
-     * @return static
-     */
-    public function slice(int $offset, $length = null): static
+    public function slice(int $offset, ?int $length = null): static
     {
         return new static(array_slice($this->items, $offset, $length, true));
     }
@@ -498,7 +489,7 @@ class Collection implements CollectionInterface
         return $this->size();
     }
 
-    public function flat($array)
+    public function flat(array $array)
     {
         if (!is_array($array)) {
             return false;

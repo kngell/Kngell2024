@@ -28,16 +28,15 @@ class ModelOperationInsert extends AbstractModelBaseOperations
             $data = $collection;
         } else {
             $data = $payload->getData();
-            if (!$data instanceof Entity) {
-                $entity = clone $prototype;
-                if (is_array($data) && ArrayUtils::isAssoc($data)) {
-                    $entity->assign($data);
-                } else {
-                    throw new DataAccessLayerException('Invalid data type');
-                }
-            } else {
+            if ($data instanceof Entity) {
                 $entity = $data;
+            } elseif (is_array($data) && ArrayUtils::isAssoc($data)) {
+                $entity = clone $prototype;
+                $entity->assign($data);
+            } else {
+                throw new DataAccessLayerException('Invalid data type');
             }
+            // dd($entity);
             $this->utils->updateTimestamps($entity);
             $data = $entity;
         }

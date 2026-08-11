@@ -2,6 +2,6 @@
 
 declare(strict_types=1);
 
-class SmallBannerEvent extends Event
+class SmallBannerEvent extends AbstractEvent
 {
 }

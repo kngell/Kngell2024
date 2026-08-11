@@ -7,6 +7,7 @@ class NavigationHistoryService
     private const string PREVIOUS_URL_KEY = 'previous_url';
     private const string CURRENT_URL_KEY = 'current_url';
     private const string INVALID_URL_KEY = 'invalid_redirect_url';
+    private const string INTENDED_URL_KEY = 'intended_url';
 
     private const array EXCLUDE_METHODS = [
         HttpMethod::POST,
@@ -22,6 +23,9 @@ class NavigationHistoryService
     ) {
     }
 
+    /**
+     * Track the current URL for future redirects.
+     */
     public function trackCurrentUrl(string $uri, HttpMethod $method): void
     {
         if (!$this->shouldTrackUrl($uri, $method)) {
@@ -31,19 +35,88 @@ class NavigationHistoryService
         $this->updateUrlHistory($uri);
     }
 
+    /**
+     * Get the best redirect URL (acts as a smart referer).
+     */
     public function getRedirectUrl(): string
     {
+        // 1. Check for intended URL
+        $intendedUrl = $this->session->get(self::INTENDED_URL_KEY);
+        if ($intendedUrl && $this->isSafeRedirectUrl($intendedUrl)) {
+            $this->session->delete(self::INTENDED_URL_KEY);
+            return $intendedUrl;
+        }
+
+        // 2. Get current and previous URLs
         $currentUrl = $this->session->get(self::CURRENT_URL_KEY);
         $previousUrl = $this->session->get(self::PREVIOUS_URL_KEY);
         $invalidUrl = $this->session->get(self::INVALID_URL_KEY);
 
-        $this->cleanupSessionUrls(); // ✅ IMPORTANT: Clean up before determining redirect
+        // 3. Clean up unsafe URLs
+        $this->cleanupSessionUrls();
 
+        // 4. Determine safest redirect
         return $this->determineSafeRedirectUrl($currentUrl, $previousUrl, $invalidUrl);
     }
 
     /**
-     * Mark the current URL as invalid to avoid redirecting back to it.
+     * Check if a URL is safe to redirect to
+     * Uses safe_redirect_exclude from config.
+     */
+    public function isSafeRedirectUrl(string $url): bool
+    {
+        foreach ($this->safeRedirectExclude as $excludedPath) {
+            if (str_starts_with($url, $excludedPath)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Get the previous URL (the actual referer).
+     */
+    public function getPreviousUrl(): ?string
+    {
+        return $this->session->get(self::PREVIOUS_URL_KEY);
+    }
+
+    /**
+     * Get the current URL.
+     */
+    public function getCurrentUrl(): ?string
+    {
+        return $this->session->get(self::CURRENT_URL_KEY);
+    }
+
+    /**
+     * Set an intended URL (for post-login redirects, etc.).
+     */
+    public function setIntendedUrl(string $url): void
+    {
+        if ($this->isSafeRedirectUrl($url)) {
+            $this->session->set(self::INTENDED_URL_KEY, $url);
+        }
+    }
+
+    /**
+     * Get intended URL without consuming it.
+     */
+    public function getIntendedUrl(): ?string
+    {
+        return $this->session->get(self::INTENDED_URL_KEY);
+    }
+
+    /**
+     * Clear intended URL.
+     */
+    public function clearIntendedUrl(): void
+    {
+        $this->session->delete(self::INTENDED_URL_KEY);
+    }
+
+    /**
+     * Mark current URL as invalid (prevents redirect loops).
      */
     public function markCurrentUrlAsInvalid(): void
     {
@@ -54,19 +127,24 @@ class NavigationHistoryService
     }
 
     /**
-     * Clear any invalid URL markers.
+     * Clear invalid URL marker.
      */
     public function clearInvalidUrl(): void
     {
         $this->session->delete(self::INVALID_URL_KEY);
     }
 
+    /**
+     * Clear all navigation history.
+     */
     public function clearNavigationHistory(): void
     {
         $this->session->delete(self::CURRENT_URL_KEY);
         $this->session->delete(self::PREVIOUS_URL_KEY);
         $this->session->delete(self::INVALID_URL_KEY);
     }
+
+    // ─── Private Methods ─────────────────────────────────────────
 
     private function updateUrlHistory(string $currentUri): void
     {
@@ -79,53 +157,47 @@ class NavigationHistoryService
         $this->session->set(self::CURRENT_URL_KEY, $currentUri);
     }
 
+    /**
+     * Determine if a URL should be tracked
+     * Uses previous_url_ignore from config.
+     */
     private function shouldTrackUrl(string $uri, HttpMethod $method): bool
     {
-        return !$this->isExcludedUri($uri, $this->previousUrlIgnore) &&
-               !$this->isExcludedMethod($method);
-    }
+        // Skip state-changing methods
+        if (in_array($method, self::EXCLUDE_METHODS, true)) {
+            return false;
+        }
 
-    private function isExcludedUri(string $uri, array $excludedPaths): bool
-    {
-        foreach ($excludedPaths as $path) {
-            if (str_starts_with($uri, $path)) {
-                return true;
+        // Skip URLs in previous_url_ignore list
+        foreach ($this->previousUrlIgnore as $ignoredPath) {
+            if (str_starts_with($uri, $ignoredPath)) {
+                return false;
             }
         }
-        return false;
-    }
 
-    private function isExcludedMethod(HttpMethod $method): bool
-    {
-        return in_array($method, self::EXCLUDE_METHODS, true);
+        return true;
     }
 
     private function determineSafeRedirectUrl(?string $currentUrl, ?string $previousUrl, ?string $invalidUrl): string
     {
         $safeUrls = [];
 
-        // Check current URL (skip if it's the invalid one)
+        // Current URL is safe and not invalid
         if ($currentUrl && $currentUrl !== $invalidUrl && $this->isSafeRedirectUrl($currentUrl)) {
             $safeUrls[] = $currentUrl;
         }
 
-        // Check previous URL (skip if it's the invalid one)
+        // Previous URL is safe and not invalid
         if ($previousUrl && $previousUrl !== $invalidUrl && $this->isSafeRedirectUrl($previousUrl)) {
             $safeUrls[] = $previousUrl;
         }
 
-        // Clear invalid URL after use
+        // Clean up invalid URL marker
         if ($invalidUrl) {
             $this->session->delete(self::INVALID_URL_KEY);
         }
 
-        return !empty($safeUrls) ? $safeUrls[0] : '/admin';
-    }
-
-    private function isSafeRedirectUrl(string $url): bool
-    {
-        // Just check against security excluded paths
-        return !$this->isExcludedUri($url, $this->safeRedirectExclude);
+        return !empty($safeUrls) ? $safeUrls[0] : '/';
     }
 
     private function cleanupSessionUrls(): void
@@ -133,7 +205,7 @@ class NavigationHistoryService
         $currentUrl = $this->session->get(self::CURRENT_URL_KEY);
         $previousUrl = $this->session->get(self::PREVIOUS_URL_KEY);
 
-        // Remove unsafe URLs from history
+        // Remove unsafe URLs from session
         if ($currentUrl && !$this->isSafeRedirectUrl($currentUrl)) {
             $this->session->delete(self::CURRENT_URL_KEY);
         }
@@ -142,10 +214,12 @@ class NavigationHistoryService
             $this->session->delete(self::PREVIOUS_URL_KEY);
         }
 
+        // If current and previous are the same, clear previous
         if ($currentUrl === $previousUrl) {
             $this->session->delete(self::PREVIOUS_URL_KEY);
         }
 
+        // Clean up invalid URL
         $invalidUrl = $this->session->get(self::INVALID_URL_KEY);
         if ($invalidUrl && !$this->isSafeRedirectUrl($invalidUrl)) {
             $this->session->delete(self::INVALID_URL_KEY);

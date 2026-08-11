@@ -12,5 +12,5 @@ interface TimestampableInterface
 
     public function getUpdatedAt(): ?DateTimeImmutable;
 
-    public function touchTimestamps(): void;
+    public function touchTimestamps(?DateTimeImmutable $at = null): TimestampableInterface;
 }

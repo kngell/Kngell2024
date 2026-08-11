@@ -1,0 +1,29 @@
+@use "sass:map";
+@use "tabs-base" as *;
+@use "tabs-variant" as *;
+@use "tabs-state" as *;
+
+// =====================================================
+// TABS MAIN
+// =====================================================
+
+@mixin tabs($variant: pills, $ids: (), $display: block, $content-styles: null) {
+  @if $content-styles and map.has-key($content-styles, display) {
+    $display: map.get($content-styles, display);
+    $content-styles: map.remove($content-styles, display);
+  }
+
+  @include tabs-base();
+  @include tabs-variant($variant);
+  @include tabs-state($ids, $display);
+
+  @if $content-styles {
+    .tabs__content {
+      .tab-content {
+        @each $property, $value in $content-styles {
+          #{$property}: $value;
+        }
+      }
+    }
+  }
+}

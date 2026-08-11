@@ -4,33 +4,21 @@ declare(strict_types=1);
 /**
  * UPDATE QUERY BUILDER - Data modification operations.
  */
-interface SqlUpdateQueryBuilderInterface extends SqlQueryBuilderInterface
+interface SqlUpdateQueryBuilderInterface extends SqlQueryBuilderInterface, SqlCommonClauseInterface, SqlCommonConditionClauseInterface
 {
-    public function update(null|string|Closure $table = null): self;
+    public function update(null|string|Closure $table = null): static;
 
-    public function set(mixed ...$data): self;
+    public function set(mixed ...$data): static;
 
-    public function setColumn(string $column): self;
+    public function setColumn(string $column): static;
 
-    public function setColumns(string ...$columns): self;
+    public function setColumns(string ...$columns): static;
 
-    public function setValue(mixed $value): self;
+    public function setValue(mixed $value): static;
 
-    public function setValues(mixed ...$values): self;
+    public function setValues(mixed ...$values): static;
 
-    public function where(mixed ...$conditions): self;
+    public function innerJoin(mixed $query): static;
 
-    public function whereEqualTo(string $column, mixed $value): self;
-
-    public function andWhere(string $column, mixed $value): self;
-
-    public function orWhere(string $column, mixed $value): self;
-
-    public function join(string $table, ?string $alias = null): self;
-
-    public function innerJoin(mixed $query): self;
-
-    public function bulkData(mixed $data): self;
-
-    public function on(string $leftColumn, string $rightColumn): self;
+    public function bulkData(mixed $data): static;
 }

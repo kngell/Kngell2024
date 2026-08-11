@@ -32,7 +32,7 @@ final class DefaultTypeNormalizer implements TypeNormalizerInterface
 
     public function normalizeValuesForDatabase(array $values, object $entity): array
     {
-        $reflection = new ReflectionClass($entity);
+        $reflection = CustomReflection::getInstance($entity)->getClass();
         $normalizedValues = [];
 
         // Use property cache for better performance
@@ -101,31 +101,6 @@ final class DefaultTypeNormalizer implements TypeNormalizerInterface
 
         return $normalized;
     }
-
-    // public function normalizeValuesForDatabase(array $values, object $entity): array
-    // {
-    //     $reflection = new ReflectionClass($entity);
-    //     $normalizedValues = [];
-
-    //     foreach ($values as $dbFieldName => $entityPropertyValue) {
-    //         $propertyName = StringUtils::snakeCaseToCamelCase($dbFieldName);
-
-    //         if ($reflection->hasProperty($propertyName)) {
-    //             try {
-    //                 $property = $reflection->getProperty($propertyName);
-    //                 $normalizedValues[$dbFieldName] = $this->normalizeFromEntityToDatabase(
-    //                     $entityPropertyValue,
-    //                     $property,
-    //                 );
-    //             } catch (ReflectionException $e) {
-    //                 $normalizedValues[$dbFieldName] = $entityPropertyValue;
-    //             }
-    //         } else {
-    //             $normalizedValues[$dbFieldName] = $entityPropertyValue;
-    //         }
-    //     }
-    //     return $normalizedValues;
-    // }
 
     public function normalizeValueForDatabase(string $dbFieldName, mixed $rawValue, ?Entity $entity): mixed
     {

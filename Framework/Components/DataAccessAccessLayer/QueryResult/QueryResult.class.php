@@ -52,7 +52,7 @@ class QueryResult implements Countable, IteratorAggregate
     public function getAffectedRows(): int
     {
         $this->initialize();
-        return $this->pdoStatement ? $this->pdoStatement->rowCount() : 0;
+        return isset($this->pdoStatement) ? $this->pdoStatement->rowCount() : 0;
     }
 
     public function prepare(string $operation = 'all'): self
@@ -366,6 +366,18 @@ class QueryResult implements Countable, IteratorAggregate
     public function setSkipReason(string $skipReason): QueryResult
     {
         $this->skipReason = $skipReason;
+
+        return $this;
+    }
+
+    /**
+     * @param null|SqlStatement $statementType
+     *
+     * @return QueryResult
+     */
+    public function setSqlOperation(?SqlStatement $statementType): QueryResult
+    {
+        $this->statementType = $statementType;
 
         return $this;
     }

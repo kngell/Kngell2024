@@ -87,28 +87,6 @@ class QueryResultFetcher
         return array_slice($allResults, $offset, $perPage);
     }
 
-    // private function configureFetchMode(): void
-    // {
-    //     if ($this->fetchModeConfigured) {
-    //         return;
-    //     }
-
-    //     $pdoFetchMode = $this->config->getPdoFetchMode();
-
-    //     // Check if the user requested a Class hydration
-    //     $isClassFetch = ($pdoFetchMode & PDO::FETCH_CLASS) === PDO::FETCH_CLASS;
-
-    //     if ($isClassFetch) {
-    //         // OVERRIDE: We fetch as ASSOC and hydrate manually later
-    //         $this->pdoStatement->setFetchMode(PDO::FETCH_ASSOC);
-    //         $this->fetchModeAsAssociative = true;
-    //     } else {
-    //         $this->pdoStatement->setFetchMode($pdoFetchMode);
-    //     }
-
-    //     $this->fetchModeConfigured = true;
-    // }
-
     private function configureFetchMode(): void
     {
         if ($this->fetchModeConfigured) {

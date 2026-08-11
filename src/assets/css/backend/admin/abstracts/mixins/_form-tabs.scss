@@ -1,0 +1,154 @@
+@use "css/backend/admin/abstracts/variables" as *;
+@use "css/globals/functions/functions" as *;
+@use "css/globals/mixins/miscellaneous" as *;
+@use "css/globals/mixins/text-style" as *;
+
+@mixin form-tabs($parent-selector, $tab-mapping) {
+  // Hidden state-management radio inputs
+  .radio-tab {
+    position: fixed;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+    top: -100%;
+    left: -100%;
+  }
+
+  // Tabs header container
+  &__tabs {
+    display: flex;
+    width: calc(100% - 3px);
+    align-items: flex-start;
+    gap: 0.8rem;
+    position: sticky;
+    top: 0;
+    background-color: $background-neutral-tertiary;
+    z-index: 10;
+
+    .tab {
+      display: flex;
+      padding: 0.8rem 1.6rem;
+      justify-content: center;
+      align-items: center;
+      flex: 1 0 0;
+      color: $text-neutral-primary;
+      border-radius: $radius-xs;
+      background-color: transparent;
+      cursor: pointer;
+      @include transition();
+      position: relative;
+
+      &:not(:last-child)::before {
+        content: "";
+        position: absolute;
+        right: -0.4rem;
+        top: 50%;
+        transform: translateY(-50%);
+        height: 60%;
+        width: 1px;
+        background-color: $border-neutral-secondary;
+      }
+
+      &::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        height: 1px;
+        width: 100%;
+        background-color: $border-neutral-secondary;
+      }
+
+      &__text {
+        flex: 1 0 0;
+        text-align: center;
+        margin: 0;
+        @include apply-text-style(
+          (
+            map: map-deep-get($roboto-map, regular),
+            weight: normal,
+            overrides: (
+              color: inherit
+            )
+          )
+        );
+      }
+
+      &:hover:not(.tab__disabled) {
+        color: $text-neutral-inverse-primary;
+        background-color: $background-brand-secondary;
+      }
+
+      &:active:not(.tab__disabled) {
+        color: $text-brand-inverse;
+        background-color: $background-brand-primary;
+      }
+
+      &__disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        pointer-events: none;
+        display: none;
+      }
+    }
+  }
+
+  // Wrapper container holding tab blocks
+  &__content {
+    position: relative;
+
+    .tab-content {
+      display: none;
+      animation: fadeIn 0.3s ease;
+      width: 100%;
+      min-height: 100vh;
+    }
+  }
+
+  // DYNAMIC FLAT LOOKUPS WITH OPTIONAL MAP OVERRIDES
+  @each $radio-id, $config in $tab-mapping {
+    // Determine if user passed a nested Map or a raw Class String
+    $content-target: "";
+    $custom-width: 100%;
+    $custom-padding: null;
+
+    @if type-of($config) == "map" {
+      $content-target: map-get($config, class);
+      $custom-width: if(map-has-key($config, width), map-get($config, width), 100%);
+      $custom-padding: map-get($config, padding);
+    } @else {
+      $content-target: $config;
+    }
+
+    // 1. Dynamic active header state
+    @at-root ##{$radio-id}:checked ~ .#{$parent-selector}__tabs label[for="#{$radio-id}"] {
+      color: $text-brand-primary;
+      background-color: $background-brand-tertiary;
+
+      &::after {
+        background-color: $border-brand-primary;
+        height: 2px;
+      }
+
+      &:hover:not(.tab__disabled) {
+        color: $text-neutral-inverse-primary;
+        background-color: $background-brand-secondary;
+      }
+    }
+
+    // 2. Dynamic content reveal block with conditional overrides
+    @at-root ##{$radio-id}:checked ~ .#{$parent-selector}__content #{$content-target} {
+      display: flex;
+      justify-content: flex-start;
+      align-items: flex-start;
+      gap: 1.6rem;
+      width: $custom-width;
+
+      // Only compile padding if explicitly provided in the map
+      @if $custom-padding != null {
+        padding: $custom-padding;
+      }
+    }
+  }
+}

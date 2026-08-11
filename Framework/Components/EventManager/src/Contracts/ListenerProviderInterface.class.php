@@ -1,86 +1,48 @@
 <?php
 
 declare(strict_types=1);
+
 interface ListenerProviderInterface
 {
     /**
-     * Get Listener for event
-     * -------------------------------------------------------.
-     *
-     * @param EventInterface $event
-     * An event for which to return relevant listeners
-     *
-     * @return null|iterable
+     * Return listeners registered for the given event, sorted by priority.
      */
-    public function getListenersForEvent(EventInterface $event): ?iterable;
+    public function getListenersForEvent(EventInterface $event): iterable;
 
     /**
-     * Add an event with its Dispatcher
-     * ---------------------------------------------------------------.
-     *
-     * @param string $name
-     * @param EventListenerInterface $listener
-     *
-     * @return void
+     * Register a listener class for a named event.
      */
-    public function add(string $name, EventListenerInterface $listener, int $priority = 0): void;
+    public function add(string $eventName, EventListenerInterface $listener, int $priority = 0): void;
 
     /**
-     * Append a Series of listeners into the events listeners array.
-     * --------------------------------------------------------------.
+     * Append multiple pre-built listener definitions to an event.
      *
-     * @param string $name
-     * @param array $listenerss
-     *
-     * @return void
+     * Each entry must be: ['callback' => FQCN, 'priority' => int]
      */
-    public function append(string $name, array $listenerss): void;
+    public function append(string $eventName, array $listeners): void;
 
     /**
-     * Check if the passed in event name has been registered.
-     * ------------------------------------------------------------.
-     *
-     * @param string $name
-     *
-     * @return bool
+     * Remove all listeners for the given event name.
      */
-    public function exists(string $name): bool;
+    public function removeAll(string $eventName): void;
 
     /**
-     * Check if the passed in listner has been registered for the passed in Event
-     * ----------------------------------------------------------.
-     *
-     * @param string $event
-     * @param string $listener
-     *
-     * @return bool
+     * Remove a specific listener class from an event.
      */
-    public function hasListener(string $event, string $listener): bool;
+    public function remove(EventInterface $event, string $listenerClass): void;
 
     /**
-     * Remove all listeners and the event for the passed Event.
-     * -------------------------------------------------------------.
-     *
-     * @param string $name
-     *
-     * @return void
+     * Check whether an event name has been registered.
      */
-    public function removeAll(string $name): void;
+    public function exists(string $eventName): bool;
 
     /**
-     * Remove a specific listeners from the events array for an event.
-     * --------------------------------------------------------------.
-     *
-     * @param EventInterface $event
-     * @param string $listener
-     *
-     * @return void
+     * Check whether a specific listener is registered for an event.
      */
-    public function remove(EventInterface $event, string $listener): void;
+    public function hasListener(string $eventName, string $listenerClass): bool;
 
-    public function checkEvent(string $name): void;
-
-    public function listnerCanBeInstantiated(string $class): EventListenerInterface;
-
-    public function log(): array;
+    /**
+     * Assert an event exists, throwing if it does not.
+     */
+    public function assertEventExists(string $eventName): void;
 }

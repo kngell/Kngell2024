@@ -93,7 +93,18 @@ validation:
     decimal: "%s must be a decimal number."
     boolean: "%s must be true or false."
     required_checked: "You must check %s to proceed"
-    required_confirmation: "You must type %s to confirm this action"
+    required_confirmation:
+      "You must type %s to confirm this action"
+
+      # Decimal validator specific messages
+    decimal_invalid: "%s must be a valid decimal number."
+    decimal_max_integer: "%s has %d digits before decimal, maximum is %d. Maximum value: %s"
+    decimal_max_decimal: "%s has %d decimal places, maximum is %d"
+
+    # Database-specific decimal messages
+    decimal_15_4_max: "%s cannot exceed 99,999,999,999.9999"
+    decimal_15_4_integer_limit: "%s can only have 10 digits before decimal"
+    decimal_15_4_decimal_limit: "%s can only have 4 decimal places"
 
     # Number comparisons
     min_value: "%s must be at least %s."
@@ -311,6 +322,8 @@ security:
       - /.well-known/
       - /assets/
       - /form-validation-api/
+      - /cart?_ajax=1
+      - /admin/user-cart/add-item
 
     # Paths that should NEVER be redirected to, even on failure (e.g., error pages, API endpoints).
     # This will be used by CsrfTokenMiddleware::isSafeRedirectUrl

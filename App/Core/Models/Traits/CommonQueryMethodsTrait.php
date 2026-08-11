@@ -3,28 +3,126 @@
 declare(strict_types=1);
 
 use Ramsey\Uuid\Uuid;
+use Ramsey\Uuid\UuidInterface;
 
 trait CommonQueryMethodsTrait
 {
     protected ?string $entiKeyField = null;
 
-    public function getById(int|string $id, ?string $field = null): ?object
+    public function getById(int|string $id, ?string $field = null): ?QueryResult
     {
-        if ($id && ctype_digit($id)) {
-            return $this->find($id)?->asClass();
-        }
-        if ($this->isUuidV4($id)) {
-            return $this->one(['public_id' => $id], true)?->asClass();
-        }
         if ($field !== null) {
-            return $this->one([$field => $id], true)?->asClass();
+            $payload = ModelQueryPayload::create($this->entity, [$field => $id]);
+            return $this->one($payload->getConditions(), true);
         }
-        return null;
+
+        $idStr = (string) $id;
+
+        if (StringUtils::isUuidV4($idStr) || StringUtils::isUuid($idStr)) {
+            $payload = ModelQueryPayload::create($this->entity, ['public_id' => $idStr]);
+            return $this->one($payload->getConditions(), true);
+        }
+
+        $payload = ModelQueryPayload::create($this->entity, [$this->entity->getEntityKeyField() => $idStr]);
+        $conditions = $payload->getConditions();
+
+        if (empty($conditions) || $conditions === [$this->entity->getEntityKeyField() => $idStr]) {
+            // Try as numeric ID
+            if (is_numeric($idStr)) {
+                return $this->find((int) $idStr);
+            }
+        }
+
+        return $this->one($conditions, true);
     }
 
-    public function getAllKeys(int $page, int $perPage): array
+    public function countAdminList(array $conditions = []): int
     {
-        $ids = $this->ids($page, $perPage, ['deleted_at IS NULL']);
+        $conditions = array_merge(
+            $conditions,
+            [ConditionListMode::MODE_ADMIN->value => true],
+        );
+        return $this->count($conditions);
+    }
+
+    public function getAllAdminKeys(int $page, int $perPage, array $extraConditions = []): array
+    {
+        $conditions = array_merge(
+            $extraConditions,
+            [
+                ConditionListMode::MODE_ADMIN->value => true,
+            ],
+        );
+
+        $result = $this->ids($page, $perPage, $conditions);
+
+        if (!$result->isSuccess() || $result->isEmpty()) {
+            return [];
+        }
+
+        // Store entity key field if needed elsewhere
+        $this->entiKeyField = $result->getEntityKeyField();
+
+        return $result->asArray();
+    }
+
+    public function getAllByKeysForAdmin(array $keys): array
+    {
+        if (empty($keys)) {
+            return [];
+        }
+
+        $field = $this->entity->getEntityKeyField() ?? 'public_id';
+
+        // Apply admin mode to ensure non-deleted only
+        $conditions = [
+            ConditionListMode::MODE_ADMIN->value => true,
+            $field => $keys,
+        ];
+
+        $fetchedEntities = $this->all($conditions)->asClass();
+
+        if (!is_array($fetchedEntities)) {
+            return [];
+        }
+
+        // Re-index by ID for ordering
+        $entitiesById = [];
+        foreach ($fetchedEntities as $entity) {
+            $entity->completeHydration();
+            $id = $field === 'public_id' ? $entity->getPublicId() : $entity->getEntityPrimaryKeyValue();
+
+            if ($id instanceof UuidInterface) {
+                $entitiesById[$id->toString()] = $entity;
+            } elseif (is_string($id) || is_int($id)) {
+                $entitiesById[$id] = $entity;
+            }
+        }
+
+        // Return in original key order
+        $orderedEntities = [];
+        foreach ($keys as $key) {
+            $keyValue = $key instanceof UuidInterface ? $key->toString() : $key;
+            if (isset($entitiesById[$keyValue])) {
+                $orderedEntities[] = $entitiesById[$keyValue];
+            }
+        }
+
+        return $orderedEntities;
+    }
+
+    public function deleteWithOptions(array $id, string $deleteOption)
+    {
+        $params = [
+            'conditions' => [$id['key'] => $id['value']],
+            'deleteOption' => $deleteOption,
+        ];
+        return $this->delete($params);
+    }
+
+    public function getAllKeys(null|int|string $page = null, ?int $perPage = null, array $conditions = []): array
+    {
+        $ids = $this->ids($page, $perPage, $conditions);
         if ($ids->isSuccess()) {
             $this->entiKeyField = $ids->getEntityKeyField();
             return $ids->asArray();
@@ -54,7 +152,7 @@ trait CommonQueryMethodsTrait
             return [];
         }
         $field = $this->entity->getEntityKeyField() ?? 'public_id';
-        $conditions = [$field, $keys, 'deleted_at IS NULL'];
+        $conditions = [$field, $keys];
 
         $fetchedEntities = $this->all($conditions)->asClass();
         // dd($keys, $fetchedEntities);
@@ -65,7 +163,7 @@ trait CommonQueryMethodsTrait
         foreach ($fetchedEntities as $entity) {
             $entity->completeHydration();
             $id = $field === 'public_id' ? $entity->getPublicId() : $entity->getEntityPrimaryKeyValue();
-            if ($id instanceof Ramsey\Uuid\UuidInterface) {
+            if ($id instanceof UuidInterface) {
                 $entitiesById[$id->toString()] = $entity;
             } elseif (is_string($id) || is_int($id)) {
                 $entitiesById[$id] = $entity;
@@ -127,13 +225,5 @@ trait CommonQueryMethodsTrait
         $text = strtolower($text);
 
         return empty($text) ? 'n-a-' . substr(Uuid::uuid4()->toString(), 0, 8) : $text;
-    }
-
-    private function isUuidV4(string $str): bool
-    {
-        return preg_match(
-            '/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i',
-            $str,
-        ) === 1;
     }
 }

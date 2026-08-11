@@ -1,0 +1,178 @@
+@use "sass:map";
+@use "sass:meta";
+@use "sass:list";
+
+// ============================================
+// DEEP MAP FUNCTIONS
+// ============================================
+
+/// @param {Map} $map - The map to search
+/// @param {List|String} $keys - The key path (e.g., "primary.500" or (primary, 500))
+/// @return {*} - The value found, or null if not found
+@function map-deep-get($map, $keys...) {
+  $value: $map;
+
+  // If keys is a single string with dots, split it
+  @if list.length($keys) == 1 and meta.type-of(list.nth($keys, 1)) == "string" {
+    $keys: str-split(list.nth($keys, 1), ".");
+  }
+
+  @each $key in $keys {
+    @if meta.type-of($value) != "map" or not map.has-key($value, $key) {
+      @return null;
+    }
+    $value: map.get($value, $key);
+  }
+  @return $value;
+}
+
+/// @param {Map} $map - The map to search
+/// @param {List} $keys - The key path
+/// @param {*} $fallback - Fallback value if not found
+/// @return {*} - The value found, or fallback
+@function map-deep-get-list($map, $keys, $fallback: null) {
+  $value: $map;
+  @each $key in $keys {
+    @if meta.type-of($value) == "map" and map.has-key($value, $key) {
+      $value: map.get($value, $key);
+    } @else {
+      @return $fallback;
+    }
+  }
+  @return $value;
+}
+
+/// @param {Map} $map - The map to modify
+/// @param {List} $keys - The key path
+/// @param {*} $value - The value to set
+/// @return {Map} - The modified map
+@function map-deep-set($map, $keys, $value) {
+  $length: list.length($keys);
+  @if $length == 0 {
+    @return $value;
+  }
+
+  $key: list.nth($keys, 1);
+  $remaining: list.slice($keys, 2);
+
+  @if $length == 1 {
+    @return map.merge(
+      $map,
+      (
+        $key: $value
+      )
+    );
+  }
+
+  $sub-map: map.get($map, $key);
+  @if meta.type-of($sub-map) != "map" {
+    $sub-map: ();
+  }
+
+  @return map.merge(
+    $map,
+    (
+      $key: map-deep-set($sub-map, $remaining, $value)
+    )
+  );
+}
+
+/// @param {Map} $map1 - First map
+/// @param {Map} $map2 - Second map (overrides first)
+/// @return {Map} - The merged map
+@function map-deep-merge($map1, $map2) {
+  $result: $map1;
+
+  @each $key, $value in $map2 {
+    @if meta.type-of($value) == "map" and meta.type-of(map.get($result, $key)) == "map" {
+      $result: map.merge(
+        $result,
+        (
+          $key: map-deep-merge(map.get($result, $key), $value)
+        )
+      );
+    } @else {
+      $result: map.merge(
+        $result,
+        (
+          $key: $value
+        )
+      );
+    }
+  }
+
+  @return $result;
+}
+
+/// @param {String} $string - The string to split
+/// @param {String} $delimiter - The delimiter
+/// @return {List} - The split string as a list
+@function str-split($string, $delimiter: ".") {
+  $result: ();
+  $index: str-index($string, $delimiter);
+
+  @while $index != null {
+    $item: str-slice($string, 1, $index - 1);
+    @if str-length($item) > 0 {
+      $result: list.append($result, $item);
+    }
+    $string: str-slice($string, $index + 1);
+    $index: str-index($string, $delimiter);
+  }
+
+  @if str-length($string) > 0 {
+    $result: list.append($result, $string);
+  }
+
+  @return $result;
+}
+
+/// @param {Map} $map - The map to check
+/// @param {List} $keys - The key path
+/// @return {Bool} - True if the path exists
+@function map-has-deep($map, $keys) {
+  $current: $map;
+  @each $key in $keys {
+    @if meta.type-of($current) != "map" or not map.has-key($current, $key) {
+      @return false;
+    }
+    $current: map.get($current, $key);
+  }
+  @return true;
+}
+
+/// @param {String} $path - The color path (e.g., "primary.500")
+/// @return {Color} - The color value
+@function get-color($path) {
+  @return map-deep-get($fills, str-split($path, "."));
+}
+
+/// @param {String} $path - The typography path
+/// @return {Map} - The typography style map
+@function get-text($path) {
+  @return map-deep-get($texts, str-split($path, "."));
+}
+
+/// @param {String} $size - The radius size (xxs, xs, s, m, l, xl, full)
+/// @return {String} - The radius value
+@function get-radius($size) {
+  @return map-deep-get($sizng-tokens, radius, $size);
+}
+
+/// @param {String} $name - The shadow name (soft-shadow, hard-shadow, s, m, l)
+/// @return {String} - The shadow value
+@function get-shadow($name) {
+  @return map-deep-get($effects, $name);
+}
+
+/// @param {Number} $rem - The rem value
+/// @return {Number} - The pixel value
+@function rem-to-px($rem) {
+  @return $rem * 10;
+}
+
+/// @param {Number} $px - The pixel value
+/// @return {Number} - The rem value
+@function px-to-rem($px) {
+  @return $px / 10;
+}

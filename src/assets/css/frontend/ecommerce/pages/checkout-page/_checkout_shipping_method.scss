@@ -1,0 +1,226 @@
+@use "sass:map";
+@use "sass:color";
+@use "css/globals" as *;
+@use "css/frontend/ecommerce/abstracts" as *;
+
+// ============================================================
+// SHIPPING METHOD
+// ============================================================
+
+.shipping-section {
+  display: flex;
+  flex-direction: column;
+  gap: 2.4rem;
+
+  // ----------------------------------------------------------
+  // Header
+  // ----------------------------------------------------------
+
+  &__title {
+    @include apply-text-style(
+      (
+        map: map-deep-get($roboto-map, bold),
+        weight: h4,
+        overrides: (
+          color: inherit
+        )
+      )
+    );
+  }
+
+  &__subtitle {
+    margin: 0;
+    color: $text-neutral-secondary;
+  }
+}
+
+// ============================================================
+// SHIPPING METHODS
+// ============================================================
+
+.shipping-methods {
+  @include selectable-options($columns: 1, $gap: 1.2rem);
+
+  // ----------------------------------------------------------
+  // Card
+  // ----------------------------------------------------------
+
+  .selectable-options__option {
+    @include selectable-option-card($padding: 1.8rem 2rem, $radius: $radius-m, $hover-lift: 0);
+  }
+
+  // ----------------------------------------------------------
+  // Clickable label
+  // ----------------------------------------------------------
+
+  .shipping-method__label {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "info icon"
+      "content content";
+
+    column-gap: 1.6rem;
+    row-gap: 1.6rem;
+
+    width: 100%;
+    min-width: 0;
+  }
+
+  // ----------------------------------------------------------
+  // Main information
+  // ----------------------------------------------------------
+
+  .shipping-method__info {
+    grid-area: info;
+
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.4rem;
+
+    min-width: 0;
+    padding-right: 3.2rem;
+  }
+
+  .shipping-method__name {
+    font-size: 1.6rem;
+    font-weight: 700;
+    line-height: 1.3;
+    color: $text-neutral-primary;
+  }
+
+  .shipping-method__description {
+    font-size: 1.4rem;
+    line-height: 1.5;
+    color: $text-neutral-secondary;
+  }
+
+  // ----------------------------------------------------------
+  // Carrier / shipping icon
+  // ----------------------------------------------------------
+
+  .shipping-method__icons {
+    grid-area: icon;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 4.4rem;
+    height: 4.4rem;
+
+    flex: 0 0 4.4rem;
+
+    border-radius: $radius-m;
+
+    background: color.change($background-brand-primary, $alpha: 0.08);
+
+    color: $text-brand-primary;
+  }
+
+  .shipping-method__icon-svg {
+    display: block;
+
+    width: 2.4rem;
+    height: 2.4rem;
+  }
+
+  // ----------------------------------------------------------
+  // Additional shipping information
+  // ----------------------------------------------------------
+
+  .shipping-method__content {
+    grid-area: content;
+
+    width: 100%;
+    min-width: 0;
+  }
+
+  .shipping-method__details {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 0.8rem 2rem;
+
+    width: 100%;
+    padding-top: 1.2rem;
+
+    border-top: 1px solid $border-neutral-secondary;
+  }
+
+  // ----------------------------------------------------------
+  // Price
+  // ----------------------------------------------------------
+
+  .shipping-method__cost {
+    grid-column: 1;
+
+    font-size: 1.6rem;
+    font-weight: 700;
+    line-height: 1.3;
+    color: $text-neutral-primary;
+    white-space: nowrap;
+  }
+
+  // ----------------------------------------------------------
+  // Delivery
+  // ----------------------------------------------------------
+
+  .shipping-method__delivery {
+    grid-column: 2;
+
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+
+    min-width: 0;
+
+    font-size: 1.3rem;
+    color: $text-neutral-secondary;
+  }
+
+  .shipping-method__delivery-icon {
+    flex: 0 0 auto;
+  }
+
+  .shipping-method__delivery-text {
+    min-width: 0;
+  }
+
+  // ----------------------------------------------------------
+  // Shipping zone
+  // ----------------------------------------------------------
+
+  .shipping-method__zone {
+    grid-column: 1 / -1;
+
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+
+    font-size: 1.3rem;
+    line-height: 1.4;
+  }
+
+  .shipping-method__zone-label {
+    color: $text-neutral-secondary;
+  }
+
+  .shipping-method__zone-list {
+    color: $text-neutral-primary;
+    font-weight: 500;
+  }
+}
+
+// ============================================================
+// GIFT OPTIONS
+// ============================================================
+
+.gift-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+
+  padding-top: 2rem;
+  border-top: 1px solid $border-neutral-secondary;
+}

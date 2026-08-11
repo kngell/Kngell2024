@@ -1,0 +1,72 @@
+@use "sass:map";
+@use "css/globals" as *;
+@use "css/frontend/ecommerce/abstracts" as *;
+
+//================================================
+// STEP VISIBILITY
+//================================================
+
+.checkout__step {
+  display: none;
+}
+.step-navigation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: map.get($spacing, lg);
+  padding-top: 1.6rem;
+  border-top: 1px solid #e5e7eb;
+}
+@for $i from 1 through 5 {
+  #step#{$i}:checked ~ .checkout__workflow .checkout__step[data-step="#{$i}"] {
+    display: flex;
+    flex-direction: column;
+    gap: 3.2rem;
+  }
+}
+
+//================================================
+// ACTIVE STEP
+//================================================
+
+@for $i from 1 through 5 {
+  #step#{$i}:checked ~ .checkout__workflow .progress-step[data-step="#{$i}"] {
+    .progress-step__content--icon-wrapper {
+      background: $primary-color;
+      border-color: $primary-color;
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 0 0 0.35rem rgba($primary-color, 0.15);
+    }
+
+    .title {
+      color: $primary-color;
+    }
+  }
+}
+
+//================================================
+// COMPLETED STEPS
+//================================================
+
+@for $current from 2 through 5 {
+  @for $completed from 1 through ($current - 1) {
+    #step#{$current}:checked ~ .checkout__workflow .progress-step[data-step="#{$completed}"] {
+      .progress-step__content--icon-wrapper {
+        background: $success-color;
+        border-color: $success-color;
+        color: white;
+        transform: none;
+        box-shadow: none;
+      }
+
+      .title {
+        color: $success-color;
+      }
+
+      &::after {
+        background: $success-color;
+      }
+    }
+  }
+}

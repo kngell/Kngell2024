@@ -1,353 +1,353 @@
+@use "sass:map";
+@use "sass:color";
 @use "css/frontend/ecommerce/abstracts" as *;
+@use "css/globals/variables" as *;
+
 /*------------------- SHOPPING CART SECTION --------------------*/
 
+$gray-100: map.get($colors-ecommerce, gray-100);
+$gray-300: map.get($colors-ecommerce, gray-300);
+$gray-400: map.get($colors-ecommerce, gray-400);
+$gray-500: map.get($colors-ecommerce, gray-500);
+$gray-600: map.get($colors-ecommerce, gray-600);
+$gray-800: map.get($colors-ecommerce, gray-800);
+$white: map.get($colors-ecommerce, white);
+$black: map.get($colors-ecommerce, black);
+
+.shopping-cart-section {
+  padding: map.get($spacing, 3xl) 0;
+  background-color: $sections-bg1;
+  font-family: $body-font-family;
+}
+
 .shopping-cart {
-  display: flex;
-  align-items: flex-start;
-  gap: 4.8rem;
-  padding: 7.2rem 16rem;
-  &__products {
+  &__title {
+    font-family: $heading-font-family;
+    font-size: var(--heading-2, 2.4rem);
+    font-weight: var(--heading-font-weight-1, 700);
+    line-height: $heading-line-height;
+    color: $gray-800;
+    margin-bottom: map.get($spacing, 2xl);
+  }
+
+  &__content {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: map.get($spacing, 2xl);
+    align-items: start;
+
+    @media (min-width: map.get($breakpoints, "lg")) {
+      grid-template-columns: 1.6fr 1fr;
+    }
+  }
+
+  &__items {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
-    gap: 4rem;
-    flex: 1 0 0;
+    gap: map.get($spacing, md);
+  }
+
+  // --- Order Summary Sidebar ---
+  &__summary {
+    background-color: $white;
+    border-radius: 0.8rem;
+    padding: map.get($spacing, xl);
+    border: 1px solid $color-gray-light6;
+
     .title {
-      align-self: stretch;
-      color: $color-black;
-      font-size: 2.4rem;
-      font-weight: 600;
-      line-height: 1; /* 100% */
+      font-family: $heading-font-family;
+      font-size: var(--heading-4, 1.8rem);
+      font-weight: var(--heading-font-weight-2, 600);
+      color: $gray-800;
+      margin-bottom: map.get($spacing, xl);
     }
-    .products {
+
+    &--content {
       display: flex;
       flex-direction: column;
-      align-items: flex-start;
-      gap: 4rem;
-      align-self: stretch;
-      border-radius: 16px;
-      &__cart {
+      gap: map.get($spacing, xl);
+    }
+
+    .subtotal {
+      display: flex;
+      flex-direction: column;
+      gap: map.get($spacing, xl);
+
+      &__coupon {
         display: flex;
         flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        gap: 4rem;
-        &--item {
-          display: flex;
-          padding: 1.6rem 0rem;
-          align-items: center;
-          gap: 1.5rem;
-          align-self: stretch;
-          .img-container {
-            display: flex;
-            width: 9rem;
-            aspect-ratio: 3 / 3;
-            justify-content: center;
-            align-items: center;
-            .image {
-              width: 100%;
-              height: auto;
-              object-fit: contain;
-            }
-          }
-          .content {
-            display: flex;
-            align-items: center;
-            align-content: center;
-            gap: 0.8rem;
-            flex: 1 0 0;
-            flex-wrap: wrap;
-            &__info {
-              display: flex;
-              min-width: 10.6rem;
-              flex-direction: column;
-              align-items: flex-start;
-              gap: 0.8rem;
-              flex: 1 0 0;
-              &--name,
-              &--category {
-                align-self: stretch;
-                color: $color-black;
-              }
-              &__name {
-                font-weight: 500;
-                line-height: 1.5; /* 150% */
-              }
-              &__category {
-                font-size: 1.4rem;
-                line-height: 1.71429; /* 171.429% */
-              }
-            }
-            &__count {
-              display: inline-flex;
-              align-items: center;
-              justify-content: flex-end;
-              gap: 2.4rem;
-              position: relative;
-              &--counter {
-                display: inline-flex;
-                align-items: center;
-                gap: 0.8rem;
-                position: relative;
-                flex: 0 0 auto;
-                .icon-container {
-                  width: 2.4rem;
-                  height: 2.4rem;
-                  cursor: pointer;
-                  background-color: $color-white;
-                  border: none;
-                  position: relative;
-                  .icon {
-                    width: 100%;
-                    height: 100%;
-                    color: $color-black;
-                    stroke-width: 1.2px;
-                    stroke-linecap: round;
-                  }
-                }
-                .quantity-box {
-                  text-align: center;
-                  display: inline-flex;
-                  padding: 0.8rem 1.6rem;
-                  flex-direction: column;
-                  justify-content: center;
-                  gap: 0.8rem;
-                  border-radius: 4px;
-                  border: 0.5px solid $bar-color1;
-                  width: auto;
-                  max-width: fit-content;
-                  &__input {
-                    width: auto;
-                    min-width: 1ch;
-                    max-width: 5ch;
-                    font-weight: 500;
-                    border: none;
-                    text-align: center;
-                    color: $color-black;
-                    background: transparent;
-                    white-space: nowrap;
-                    line-height: 1; /* 100% */
-                    &:focus {
-                      outline: none;
-                    }
-                  }
-                  &__mirror {
-                    position: absolute;
-                    visibility: hidden;
-                    white-space: pre;
-                    font: inherit;
-                    padding: 0;
-                    margin: 0;
-                    pointer-events: none;
-                  }
-                }
-              }
-              &--price {
-                color: $color-black;
-                font-size: 2rem;
-                font-weight: 500;
-                line-height: 1.6; /* 160% */
-                letter-spacing: 0.6px;
-              }
-              &--icon-container {
-                width: 2.4rem;
-                height: 2.4rem;
-                cursor: pointer;
-                .icon {
-                  width: 100%;
-                  height: 100%;
-                  color: $color-black;
-                }
-              }
-            }
+        gap: map.get($spacing, sm);
+
+        &--code {
+          p {
+            font-size: map.get($font, size-sm);
+            font-weight: map.get($font, weight-medium);
+            color: $gray-600;
+            margin-bottom: map.get($spacing, xs);
           }
         }
-        &:not(:last-of-type)::after {
-          content: "";
-          align-self: stretch;
-          height: 0.5px;
-          background: $color-gray-light5;
-          opacity: 0.5;
+
+        &--apply {
+          background-color: transparent;
+          border: 1px solid $gray-400;
+          color: $gray-800;
+          padding: map.get(map.get($button-sizes, sm), padding-y)
+            map.get(map.get($button-sizes, sm), padding-x);
+          border-radius: 0.6rem;
+          cursor: pointer;
+          font-weight: map.get($font, weight-medium);
+          transition:
+            background-color 0.2s,
+            color 0.2s;
+
+          &:hover {
+            background-color: $gray-100;
+            color: $black;
+          }
+        }
+      }
+
+      &__price {
+        border-top: 1px solid $color-gray-light6;
+        padding-top: map.get($spacing, md);
+        display: flex;
+        flex-direction: column;
+        gap: map.get($spacing, sm);
+
+        &--items,
+        .taxes-text {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          font-size: var(--heading-6, 1.6rem);
+        }
+
+        &--items-title,
+        .taxes-text__title {
+          color: $gray-500;
+          font-weight: map.get($font, weight-normal);
+        }
+
+        &--items-value,
+        .taxes-text__value {
+          color: $gray-800;
+          font-weight: map.get($font, weight-medium);
+        }
+
+        &--taxes-group {
+          display: flex;
+          flex-direction: column;
+          gap: map.get($spacing, sm);
+        }
+      }
+    }
+
+    .total-price {
+      border-top: 1px solid $color-gray-light6;
+      padding-top: map.get($spacing, md);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      .title {
+        font-family: $heading-font-family;
+        font-size: var(--heading-3, 2rem);
+        font-weight: var(--heading-font-weight-1, 700);
+        color: $gray-800;
+        margin: 0;
+      }
+
+      .value {
+        font-size: var(--heading-3, 2rem);
+        font-weight: var(--heading-font-weight-1, 700);
+        color: $black;
+      }
+    }
+  }
+}
+
+.cart-item {
+  display: flex;
+  flex-direction: column;
+  gap: map.get($spacing, md);
+  background-color: $white;
+  padding: map.get($spacing, md);
+  border-radius: 0.8rem;
+  border: 1px solid $color-gray-light6;
+
+  @media (min-width: map.get($breakpoints, "sm")) {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .img-container {
+    width: 100%;
+    max-width: 100px;
+    height: 100px;
+    background-color: $product-bg-color;
+    border-radius: 0.6rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+
+    @media (max-width: map.get($breakpoints, "sm")) {
+      max-width: 100%;
+      height: 160px;
+    }
+
+    .image {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+  }
+
+  .content {
+    display: flex;
+    flex-direction: column;
+    gap: map.get($spacing, sm);
+    width: 100%;
+
+    @media (min-width: map.get($breakpoints, "md")) {
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    &__info {
+      flex: 1;
+
+      &--name {
+        font-family: $heading-font-family;
+        font-size: var(--heading-5, 1.6rem);
+        font-weight: var(--heading-font-weight-2, 600);
+        color: $gray-800;
+        margin-bottom: map.get($spacing, xs);
+        line-height: 1.3;
+      }
+
+      &--category {
+        font-size: map.get($font, size-sm);
+        color: $gray-400;
+      }
+    }
+
+    &__count {
+      display: flex;
+      align-items: center;
+      gap: map.get($spacing, md);
+      flex-wrap: wrap;
+
+      @media (min-width: map.get($breakpoints, "md")) {
+        flex-wrap: nowrap;
+      }
+
+      .handle-item {
+        display: inline-block;
+      }
+
+      &--price {
+        font-size: var(--heading-5, 1.6rem);
+        font-weight: var(--heading-font-weight-1, 700);
+        color: $gray-800;
+        min-width: 80px;
+        text-align: right;
+
+        @media (max-width: map.get($breakpoints, "md")) {
+          text-align: left;
+          width: 100%;
+          order: -1;
         }
       }
     }
   }
-  &__summary {
-    max-width: 53.8rem;
-    display: flex;
-    padding: 5.6rem 6.4rem;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4rem;
-    flex: 1 0 0;
-    border-radius: 10px;
-    border: 1px solid $color-gray-light6;
-    &--title {
-      align-self: stretch;
-      color: $color-black2;
-      font-size: 2rem;
-      font-weight: 600;
-      line-height: 0.8; /* 80% */
-    }
-    &--content {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4.8rem;
-      align-self: stretch;
-      .subtotal {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 2.4rem;
-        align-self: stretch;
-        &__coupon {
-          display: flex;
-          flex-direction: column;
-          align-items: flex-start;
-          gap: 2.4rem;
-          align-self: stretch;
-          &--code {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 0.8rem;
-            align-self: stretch;
-            .title {
-              align-self: stretch;
-              color: $btn-border-color;
-              font-size: 1.4rem;
-              font-weight: 500;
-              line-height: 1.14286; /* 114.286% */
-            }
-            .discount-box {
-              display: flex;
-              padding: 1.6rem;
-              justify-content: space-between;
-              align-items: center;
-              align-self: stretch;
-              border-radius: 7px;
-              border: 0.5px solid $color-border-filter;
-              background: $color-white;
-              &__input {
-                flex: 1 0 0;
-                color: $color-gray-light4;
-                font-size: 1.4rem;
-                line-height: 1.71429; /* 171.429% */
-                letter-spacing: -0.07px;
-                border: none;
-              }
-              &__apply {
-                display: flex;
-                width: 7.6455rem;
-                height: 3.2rem;
-                padding: 0.8rem;
-                justify-content: center;
-                align-items: center;
-                gap: 0.8rem;
-                border-radius: 6px;
-                border: 1px solid $color-black;
-                cursor: pointer;
-                span {
-                  width: 6.455rem;
-                  flex-shrink: 0;
-                  color: var(--Main-Black, #000);
-                  text-align: center;
-                  font-size: 1.2rem;
-                  font-weight: 500;
-                  line-height: 1.333333; /* 133.333% */
-                }
-              }
-            }
-          }
-        }
-        &__price {
-          display: flex;
-          flex-direction: column;
-          align-items: flex-start;
-          gap: 1.6rem;
-          align-self: stretch;
-          &--items {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            align-self: stretch;
-            &-title,
-            &-value {
-              color: $color-black;
-              font-weight: 500;
-              letter-spacing: 0.48px;
-            }
-            &-title {
-              flex: 1 0 0;
-              line-height: 1.5; /* 150% */
-            }
-            &-value {
-              line-height: 2; /* 200% */
-            }
-          }
-          &--taxes {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 0.8rem;
-            align-self: stretch;
-            &-group {
-              display: flex;
-              flex-direction: column;
-              align-items: flex-start;
-              gap: 0.4rem;
-              align-self: stretch;
-              font-style: italic;
-              .taxes-text {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                align-self: stretch;
-                &__title {
-                  flex: 1 0 0;
-                  color: $btn-border-color;
-                  line-height: 2; /* 200% */
-                }
-                &__value {
-                  color: $color-black;
-                  font-weight: 500;
-                  line-height: 2; /* 200% */
-                  letter-spacing: 0.48px;
-                }
-              }
-            }
-          }
-          &--total {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            align-self: stretch;
+}
 
-            .title {
-              flex: 1 0 0;
-              font-size: 2rem;
-              color: $color-black;
-              font-weight: 500;
-              line-height: 1.5; /* 150% */
-              letter-spacing: 0.48px;
-            }
-            .value {
-              color: $color-black;
-              font-size: 2rem;
-              font-weight: 500;
-              line-height: 2; /* 200% */
-              letter-spacing: 0.48px;
-            }
-          }
-        }
+.quantity-box {
+  input[type="number"] {
+    width: 4.8rem;
+    height: map.get($sizes, btn-md);
+    text-align: center;
+    border: 1px solid map.get($input-config, border-color);
+    border-radius: map.get($input-config, border-radius);
+    font-size: map.get($input-config, font-size);
+    color: $gray-800;
+
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+  }
+}
+
+.discount-box {
+  &__input {
+    width: 100%;
+    padding: map.get($input-config, padding);
+    border: 1px solid map.get($input-config, border-color);
+    border-radius: map.get($input-config, border-radius);
+    font-size: map.get($input-config, font-size);
+    background-color: $banner-bg-form;
+    color: $gray-800;
+
+    &:focus {
+      outline: none;
+      border-color: map.get($input-config, focus-color);
+    }
+  }
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease-in-out;
+
+  &--icon-only {
+    width: map.get($sizes, btn-md);
+    height: map.get($sizes, btn-md);
+    border-radius: 0.6rem;
+    background-color: $gray-100;
+    color: $gray-600;
+
+    &:hover {
+      background-color: $gray-300;
+      color: $black;
+    }
+
+    .btn__icon {
+      width: map.get($sizes, icon-sm);
+      height: map.get($sizes, icon-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      .icon {
+        width: 100%;
+        height: 100%;
+        fill: currentColor;
       }
-      .btns {
-        align-self: stretch;
-        .btn {
-          width: 100%;
-        }
-      }
+    }
+  }
+
+  &-dark {
+    width: 100%;
+    padding: map.get(map.get($button-sizes, lg), padding-y)
+      map.get(map.get($button-sizes, lg), padding-x);
+    background-color: map.get(map.get($button-variants, dark), background);
+    color: map.get(map.get($button-variants, dark), color);
+    font-size: map.get(map.get(map.get($button-variants, dark), typography), font-size);
+    font-weight: map.get(map.get(map.get($button-variants, dark), typography), font-weight);
+    border-radius: map.get(map.get($button-variants, dark), radius);
+    box-shadow: map.get(map.get($button-variants, dark), shadow);
+
+    &:hover {
+      background-color: map.get(map.get($button-variants, dark), hover-background);
     }
   }
 }

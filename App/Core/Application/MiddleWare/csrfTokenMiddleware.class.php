@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 class CsrfTokenMiddleware implements MiddlewareInterface
 {
-    private const string DEFAULT_REDIRECT_URL = '/';
+    use AjaxResponseTrait;
+    use HtmlPageCacheableTrait;
+    use CacheInvalidationTrait;
 
     private const array STATE_CHANGING_METHODS = [
         HttpMethod::POST,
@@ -12,18 +14,20 @@ class CsrfTokenMiddleware implements MiddlewareInterface
         HttpMethod::PATCH,
         HttpMethod::DELETE,
     ];
-
     private const array CSRF_EXEMPT_PATHS = [
         '/api/webhook',
         '/api/callback',
         '/upload-cleanup/cleanup',
-        // Add other paths that should be exempt from CSRF protection
     ];
 
     public function __construct(
         private readonly TokenInterface $token,
         private readonly FlashInterface $flash,
-        private array $safeRedirectExclude,
+        private FileUploadFactory $uploader,
+        private FormDataHandlerService $formDataHandler,
+        private NavigationHistoryService $navigationHistory,
+        private HtmlPageCacheFactory $pageCacheFactory,
+        private RouteMatchingService $routeMatchingService,
     ) {
     }
 
@@ -34,8 +38,58 @@ class CsrfTokenMiddleware implements MiddlewareInterface
                 return $this->handleCsrfFailure($request);
             }
         }
-    
+
         return $next->handle($request);
+    }
+
+    private function handleCsrfFailure(Request $request): Response
+    {
+        $postData = $request->getPost()->getAll();
+        unset($postData['csrfToken']);
+
+        $formData = $this->formDataHandler->prepareForValidation($postData);
+        $webPaths = $this->formDataHandler->extractWebPathsFromForm($formData);
+
+        $uploadService = $this->uploader->create($request, [], $webPaths);
+        $uploadService->proceed(false, true);
+
+        $allMediaPaths = $uploadService->getMediaPathsByField();
+
+        $this->flash->addFormData(
+            $request->getRequestedUri(),
+            $formData,
+            [],
+            $allMediaPaths,
+        );
+        $referedUrl = $this->navigationHistory->getRedirectUrl();
+        $routes = $this->routeMatchingService->getRoutes();
+        $routeInfos = $this->routeMatchingService->findRouteForPath($referedUrl, $routes);
+
+        if ($routeInfos) {
+            $controller = ucfirst($routeInfos['controller']) . 'Controller';
+            $method = $routeInfos['action'];
+            $this->initializeHtmlCache($this->pageCacheFactory);
+            $this->invalidateCache($controller, $method);
+        }
+
+        $message = 'Security token mismatch. Your uploaded files have been preserved. Please try again.';
+        $this->flash->add($message, FlashType::DANGER);
+
+        $redirectUrl = $this->navigationHistory->getIntendedUrl();
+        if ($request->isAjax()) {
+            return $this->respondError(
+                isAjax: $request->isAjax(),
+                message: $message,
+                redirect: $referedUrl ?? $referedUrl,
+                flashType: FlashType::DANGER,
+                statusCode: HttpStatusCode::HTTP_PAGE_EXPIRED_LARAVEL_FRAMEWORK,
+                extraData: [
+                    'intended_route' => $request->getRequestedUri(),
+                    'reason' => 'token_mismatch',
+                ],
+            );
+        }
+        return new RedirectResponse($redirectUrl ?? $referedUrl, 302);
     }
 
     private function requiresCsrfValidation(Request $request): bool
@@ -67,83 +121,10 @@ class CsrfTokenMiddleware implements MiddlewareInterface
             return false;
         }
 
-        // Check if CSRF token exists in the request
         if (!isset($postData['csrfToken']) || empty($postData['csrfToken'])) {
             return false;
         }
 
         return $this->token->validate($postData);
-    }
-
-    private function handleCsrfFailure(Request $request): RedirectResponse
-    {
-        $postData = $request->getPost()->getAll();
-
-        $this->flash->addFormData(
-            $request->getRequestedUri(),
-            $postData,
-            [],
-            $request->getFiles()->all(),
-        );
-
-        $this->flash->add(
-            'Security token mismatch or expired. Please try submitting the form again.',
-            FlashType::DANGER,
-        );
-
-        $redirectUrl = $this->determineRedirectUrl($request);
-
-        return new RedirectResponse($redirectUrl);
-    }
-
-    private function determineRedirectUrl(Request $request): string
-    {
-        $currentUri = $request->getRequestedUri();
-
-        if ($this->isSafeRedirectUrl($currentUri)) {
-            return $currentUri;
-        }
-        $session = $this->flash->getSession();
-        $previousUrl = $session->get('previous_url');
-
-        if ($previousUrl && $this->isSafeRedirectUrl($previousUrl)) {
-            return $previousUrl;
-        }
-        return self::DEFAULT_REDIRECT_URL;
-    }
-
-    // isSafeRedirectUrl (REFINED)
-    private function isSafeRedirectUrl(string $url): bool
-    {
-        if (str_starts_with($url, '/') && !str_starts_with($url, '//')) {
-            return !$this->isExcludedPath($url);
-        }
-
-        $parsedUrl = parse_url($url);
-        if ($parsedUrl === false || !isset($parsedUrl['host'])) {
-            return false;
-        }
-
-        $currentHost = $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? '';
-
-        // Check if the scheme and host match
-        if ($parsedUrl['host'] !== $currentHost) {
-            return false;
-        }
-
-        $path = $parsedUrl['path'] ?? '/';
-        return !$this->isExcludedPath($path);
-    }
-
-    private function isExcludedPath(string $uri): bool
-    {
-        $excludePaths = $this->safeRedirectExclude;
-
-        foreach ($excludePaths as $path) {
-            if (str_starts_with($uri, $path)) {
-                return true;
-            }
-        }
-        return false;
     }
 }

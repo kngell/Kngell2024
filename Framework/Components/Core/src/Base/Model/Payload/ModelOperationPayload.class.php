@@ -5,22 +5,29 @@ declare(strict_types=1);
 final class ModelOperationPayload
 {
     private array $updatesById = [];
-    private array $inserts = []; // NEW: Bucket for new entities
+    private array $inserts = [];
     private array $ids = [];
     private int|string|null $updateId = null;
+    private mixed $normalizedData = null;
 
     public function __construct(
         private mixed $data,
         private bool $isCollection,
-        private string $entityClass,
+        private Entity $prototype,
         private ?string $keyProperty = null,
         private ?string $keyField = null,
     ) {
+        $this->normalizedData = $this->normalizeDataWithTypeHandler($data);
         $this->validate();
         $isCollection ? $this->getIds() : $this->getUpdateId();
     }
 
     public function getData(): mixed
+    {
+        return $this->normalizedData;
+    }
+
+    public function getRawData(): mixed
     {
         return $this->data;
     }
@@ -32,7 +39,12 @@ final class ModelOperationPayload
 
     public function getEntityClass(): string
     {
-        return $this->entityClass;
+        return $this->prototype::class;
+    }
+
+    public function getPrototype(): Entity
+    {
+        return $this->prototype;
     }
 
     public function getKeyProperty(): ?string
@@ -50,7 +62,7 @@ final class ModelOperationPayload
         }
 
         if ($this->isCollection()) {
-            foreach ($this->data as $item) {
+            foreach ($this->normalizedData as $item) {
                 $id = $this->resolveId($item);
                 if ($id !== null) {
                     $this->ids[] = $id;
@@ -83,9 +95,11 @@ final class ModelOperationPayload
         return !empty($this->updateId) || !empty($this->ids);
     }
 
-    /**
-     * @return array
-     */
+    public function isConditionalOnly(): bool
+    {
+        return !$this->hasId() && !$this->hasIds();
+    }
+
     public function getUpdatesById(): array
     {
         return $this->updatesById;
@@ -96,40 +110,83 @@ final class ModelOperationPayload
         if ($this->updateId !== null) {
             return $this->updateId;
         }
-        $data = $this->data;
+
+        $data = $this->normalizedData;
         $keyField = $this->keyField;
+
         if (is_array($data) && ArrayUtils::isAssoc($data)) {
-            if (!isset($data[$keyField]) || empty($data[$keyField])) {
-                $this->updateId = null;
-            } else {
-                $this->updateId = $data[$keyField] ?? null;
-            }
+            // Data is already normalized, ID is raw
+            $this->updateId = $data[$keyField] ?? $data['id'] ?? null;
         } elseif ($data instanceof Entity) {
             if ($data->entityKeyIsInitialzed()) {
                 $this->updateId = $data->getEntityPrimarykeyValue();
             }
         } else {
-            throw new DataAccessLayerException('Invalid update data type');
+            $this->updateId = null;
         }
-        return  $this->updateId;
+
+        return $this->updateId;
     }
 
-    /**
-     * @return null|string
-     */
     public function getKeyField(): ?string
     {
         return $this->keyField;
     }
 
-    private function resolveId(mixed $item): mixed
+    private function normalizeDataWithTypeHandler(mixed $data): mixed
     {
-        if (is_array($item)) {
-            return (!empty($item[$this->keyField])) ? $item[$this->keyProperty] : null;
+        if ($data === null) {
+            return null;
         }
 
+        // Single entity
+        if (!$this->isCollection) {
+            return $this->normalizeSingleItem($data);
+        }
+
+        // Collection
+        if ($data instanceof CollectionInterface) {
+            $data = $data->all();
+        }
+
+        if (!is_array($data)) {
+            throw new InvalidArgumentException('Collection data must be an array');
+        }
+
+        $normalized = [];
+        foreach ($data as $item) {
+            $normalized[] = $this->normalizeSingleItem($item);
+        }
+        return $normalized;
+    }
+
+    private function normalizeSingleItem(mixed $item): mixed
+    {
+        // Already an entity - return as-is
         if ($item instanceof Entity) {
-            return ($item->entityKeyIsInitialzed()) ? $item->getEntityPrimarykeyValue() : null;
+            return $item;
+        }
+
+        // Must be an array to normalize
+        if (!is_array($item)) {
+            throw new InvalidArgumentException('Data must be an array or Entity');
+        }
+
+        $normalizedEntity = clone $this->prototype;
+
+        $normalizedEntity->assign($item);
+
+        return $normalizedEntity;
+    }
+
+    private function resolveId(mixed $item): mixed
+    {
+        if ($item instanceof Entity) {
+            return $item->entityKeyIsInitialzed() ? $item->getEntityPrimarykeyValue() : null;
+        }
+
+        if (is_array($item) && isset($item[$this->keyField])) {
+            return $item[$this->keyField];
         }
 
         return null;
@@ -137,28 +194,24 @@ final class ModelOperationPayload
 
     private function validate(): void
     {
-        if (!class_exists($this->entityClass)) {
-            throw new InvalidArgumentException("Invalid entity class: {$this->entityClass}");
+        if ($this->isCollection && !is_array($this->normalizedData)) {
+            throw new InvalidArgumentException('Collection data must be an array after normalization');
         }
 
-        if ($this->isCollection && !ArrayUtils::isArrayList($this->data)) {
-            throw new InvalidArgumentException('Collection data must be a sequential array');
-        }
-
-        if (!$this->isCollection && (is_array($this->data) && !ArrayUtils::isAssoc($this->data)) && !$this->data instanceof Entity) {
-            throw new InvalidArgumentException('Single entity data must be an associative array or Entity');
+        if (!$this->isCollection && !$this->normalizedData instanceof Entity && !is_array($this->normalizedData)) {
+            throw new InvalidArgumentException('Single entity data must be an Entity or array after normalization');
         }
     }
 
-    // Simple factory method
+    // Factory method - THE ONLY WAY to create a payload
     public static function create(mixed $data, Entity $prototype): self
     {
         $isCollection = self::determineIfCollection($data);
 
         return new self(
-            data: self::normalizeData($data, $isCollection),
+            data: $data,  // Pass raw data - normalization happens in constructor
             isCollection: $isCollection,
-            entityClass: $prototype::class,
+            prototype: $prototype,
             keyProperty: $prototype->getEntityKeyProperty(),
             keyField: $prototype->getEntityKeyField(),
         );
@@ -167,48 +220,11 @@ final class ModelOperationPayload
     private static function determineIfCollection(mixed $data): bool
     {
         if ($data instanceof CollectionInterface) {
-            $data = $data->all();
+            return true;
         }
         if (is_array($data)) {
             return ArrayUtils::isArrayList($data) || ArrayUtils::isObjectList($data);
         }
-
         return false;
-    }
-
-    private static function normalizeData(mixed $data, bool $isCollection): mixed
-    {
-        if ($data instanceof Entity && !$isCollection) {
-            return $data;
-        }
-
-        if ($data instanceof CollectionInterface) {
-            $items = [];
-            foreach ($data as $item) {
-                if ($item instanceof Entity || (is_array($item) && ArrayUtils::isAssoc($item))) {
-                    $items[] = $item;
-                } else {
-                    throw new InvalidArgumentException('Collection data must be a sequential array or an Entity');
-                }
-            }
-            return $items;
-        }
-
-        if (is_array($data)) {
-            if ($isCollection) {
-                $items = [];
-                foreach ($data as $item) {
-                    if ($item instanceof Entity || (is_array($item) && ArrayUtils::isAssoc($item))) {
-                        $items[] = $item;
-                    } else {
-                        throw new InvalidArgumentException('Collection data must be a sequential array or an Entity');
-                    }
-                }
-                return $items;
-            }
-            return $data;
-        }
-
-        throw new InvalidArgumentException('Invalid data type');
     }
 }

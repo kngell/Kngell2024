@@ -33,7 +33,7 @@ class GroupByClause extends SqlComponent implements RegularClauseComponentInterf
     {
         if (!isset($this->groupByRule)) {
             $registry = new SqlFactoryRegistry($this, $this->em, $this->state);
-            $this->groupByRule = $registry->getRule($this->method, $this->groupByConfig);
+            $this->groupByRule = $registry->getRule($this->method, $this->groupByConfig, $this->customAlias);
         }
     }
 }

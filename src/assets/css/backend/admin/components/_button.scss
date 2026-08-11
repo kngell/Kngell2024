@@ -1,23 +1,26 @@
+@use "sass:color";
+@use "css/globals" as *;
 @use "css/backend/admin/abstracts" as *;
 
-/*---------------- BUTTONS ----------------*/
+/*---------------- FRONTEND BUTTONS ----------------*/
+
 .btn {
   @include button-base(0.4rem);
 
-  // Variant classes
+  // Variant classes - pass the $button-variants map
   @each $variant, $value in $button-variants {
     &--#{$variant} {
-      @include button-variant($variant);
+      @include button-variant($variant, $button-variants);
       .btn__label {
-        @include button-label($variant);
+        @include button-label($variant, $button-variants);
       }
     }
   }
 
-  // Size classes
+  // Size classes - pass the $button-sizes map
   @each $size, $value in $button-sizes {
     &--#{$size} {
-      @include button-size($size);
+      @include button-size($size, $button-sizes);
     }
   }
 
@@ -32,7 +35,52 @@
     flex-direction: row-reverse;
   }
   &--icon-only {
-    @include button-icon-only;
+    @include button-icon-only(md, $button-sizes);
     flex-direction: row;
+  }
+
+  // Modifiers
+  &--full-width {
+    @include button-full-width;
+  }
+
+  &--with-loading {
+    @include button-with-loading;
+  }
+
+  &--with-arrow {
+    @include button-with-arrow;
+  }
+
+  // Responsive
+  @include button-responsive("md");
+}
+
+// ============================================
+// BUTTON GROUPS
+// ============================================
+
+.btn-group {
+  display: inline-flex;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+
+  .btn {
+    flex: 0 1 auto;
+  }
+}
+
+// ============================================
+// RESPONSIVE
+// ============================================
+
+@include respond-below("md") {
+  .btn-group {
+    flex-direction: column;
+
+    .btn {
+      width: 100%;
+      justify-content: center;
+    }
   }
 }

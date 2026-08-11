@@ -4,99 +4,106 @@ declare(strict_types=1);
 
 abstract class AbstractDeleteService
 {
+    // ✅ Clean signature — no dispatcher parameter
     public function delete(
-        array $id,
+        array $flashData,
         string $deleteOption = 'archive',
-        ?EventManagerInterface $eventManager = null,
+        ?string $blockType = null,
     ): DeleteResult {
-        $record = $this->findRecord($id);
+        /** @var Entity */
+        $record = $this->findRecord($flashData['id']);
 
         if (!$record) {
             return DeleteResult::failure(
-                $this->getLabel() . ' not found.',
-                ['id' => $id],
+                errorMessage: $this->getLabel() . ' not found.',
+                errorDetails: [
+                    'id' => $flashData['id'],
+                ],
             );
         }
 
         if ($this->isRecordDeleted($record) && $deleteOption === 'archive') {
             return DeleteResult::success(
-                id: $id,
-                name: $this->resolveDisplayName($record),
-                affectedRows: 0,
-                wasSkipped: true,
-                skipReason: $this->getLabel() . ' was already archived',
+                id:            $flashData['id'],
+                name:          $this->resolveDisplayName($record),
+                affectedRows:  0,
+                wasSkipped:    true,
+                skipReason:    $this->getLabel() . ' was already archived',
                 isSoftDeleted: true,
-                deletionType: 'archive',
+                deleteOption:  'archive',
             );
         }
 
-        $eventData = $this->buildEventData($record);
-
         return $this->executeDelete(
-            $id,
+            $flashData,
             $deleteOption,
             $record,
-            $eventData,
-            $eventManager,
+            $blockType,
         );
     }
 
-    public function getEntityKeyfield(): ?string
+    protected function getEventDispatcher(): ?EventDispatcherInterface
     {
         return null;
     }
 
     // --- Abstract contracts ---
-
     abstract protected function findRecord(array $id): ?object;
 
     abstract protected function getLabel(): string;
 
     abstract protected function getEventName(): string;
 
-    abstract protected function getEventClassName(): ?string;
+    abstract protected function resolveDisplayName(Entity $record): ?string;
 
-    abstract protected function resolveDisplayName(object $record): string;
-
-    abstract protected function performDelete(
-        array $id,
-        string $deleteOption,
-    ): QueryResult;
+    abstract protected function performDelete(Entity $entity, string $deleteOption): QueryResult;
 
     abstract protected function getEntityManager(): mixed;
 
     abstract protected function clearModelState(): void;
 
-    abstract protected function isRecordDeleted(object $record): bool;
+    abstract protected function buildDeletionEvent(
+        EventDataDTO $dto,
+    ): AbstractEvent;
 
-    abstract protected function buildEventData(Entity $record): array;
+    protected function getEntityId(Entity $record, array $flashData): mixed
+    {
+        return $record->getEntityPrimarykeyValue();
+    }
 
-    // --- Private execution ---
+    protected function isRecordDeleted(object $record): bool
+    {
+        if ($record instanceof SoftDeletableInterface) {
+            return $record->isDeleted();
+        }
+        return false;
+    }
+
+    // --- Execution ---
 
     private function executeDelete(
-        array $id,
+        array $flashData,
         string $deleteOption,
-        object $record,
-        array $eventData,
-        ?EventManagerInterface $eventManager,
+        Entity $record,
+        ?string $blockType = null,
     ): DeleteResult {
         $em = $this->getEntityManager();
         $em->beginTransaction();
 
         try {
             $this->clearModelState();
-            $modelResult = $this->performDelete($id, $deleteOption);
+            $modelResult = $this->performDelete($record, $deleteOption);
 
             if (!$modelResult->isSuccess()) {
                 $em->rollback();
                 $this->clearModelState();
 
                 return DeleteResult::failure(
-                    $this->getLabel() . ' deletion failed.',
-                    [
-                        'id' => $id,
+                    errorMessage: $this->getLabel() . ' deletion failed.',
+                    errorDetails: [
+                        'id' => $flashData['id'],
                         'skip_reason' => $modelResult->getSkipReason(),
-                        'deletion_type' => $deleteOption,
+                        'deleteOption' => $deleteOption,
                     ],
                 );
             }
@@ -106,85 +113,119 @@ abstract class AbstractDeleteService
                 $this->clearModelState();
 
                 return DeleteResult::success(
-                    id: $id,
+                    id: $flashData['id'],
                     name: $this->resolveDisplayName($record),
                     affectedRows: 0,
                     wasSkipped: true,
                     skipReason: $modelResult->getSkipReason(),
                     isSoftDeleted: $this->isRecordDeleted($record),
-                    deletionType: $deleteOption,
+                    deleteOption: $deleteOption,
                 );
             }
-
-            if (
-                $modelResult->getAffectedRows() > 0
-                && $eventManager !== null
-            ) {
-                $this->dispatchDeletionEvent(
-                    $id,
-                    $eventData,
+            $event = null;
+            if ($modelResult->getAffectedRows() > 0) {
+                $event = $this->dispatchDeletionEvent(
+                    $flashData,
                     $record,
-                    $eventManager,
                     $deleteOption,
-                    $modelResult->getSqlOperation()->value,
+                    $modelResult,
+                    $blockType,
                 );
             }
-
-            $em->commit();
             $this->clearModelState();
+            if ($event === null) {
+                $em->rollback();
+                return DeleteResult::failure(
+                    errorMessage: 'Failed to delete ' . strtolower($this->getLabel()),
+                    errorDetails: [
+                        'id' => $flashData['id'],
+                        'deletionOption' => $deleteOption,
+                        'operation' => $modelResult->getSqlOperation()->value,
+                    ],
+                );
+            }
+            $em->commit();
 
             return DeleteResult::success(
-                id: $id,
-                name: $this->resolveDisplayName($record),
-                affectedRows: $modelResult->getAffectedRows(),
-                wasSkipped: false,
-                skipReason: '',
+                id:            $flashData['id'],
+                name:          $this->resolveDisplayName($record),
+                affectedRows:  $modelResult->getAffectedRows(),
+                wasSkipped:    false,
+                skipReason:    '',
                 isSoftDeleted: ($deleteOption === 'archive'),
-                deletionType: $deleteOption,
+                deleteOption:  $deleteOption,
+                operation: 'DELETE',
             );
         } catch (Exception $e) {
             $em->rollback();
             $this->clearModelState();
+            $code = $e->getCode();
+            if ($e->getCode() === '23000') {
+                $code = 409;
+            }
 
             return DeleteResult::failure(
-                'Failed to delete '
-                    . strtolower($this->getLabel()) . ': '
-                    . $e->getMessage(),
-                [
-                    'id' => $id,
+                errorMessage: 'Failed to delete ' . strtolower($this->getLabel()) . ': ' . $e->getMessage(),
+                errorDetails: [
+                    'id' => $flashData['id'],
                     'exception' => $e->getTraceAsString(),
-                    'deletion_type' => $deleteOption,
+                    'code' => $code,
+                    'deletionOption' => $deleteOption,
                 ],
             );
         }
     }
 
     private function dispatchDeletionEvent(
-        array $id,
-        array $eventData,
+        array $flashData,
         object $record,
-        EventManagerInterface $eventManager,
         string $deleteOption,
-        string $operationType,
-    ): void {
-        $deletionType = ($deleteOption === 'permanent')
-            ? 'permanent'
-            : 'soft';
+        QueryResult $modelResult,
+        ?string $blockType = null,
+    ): ?EventInterface {
+        $dispatcher = $this->getEventDispatcher();
 
-        $eventClass = $this->getEventClassName();
+        if ($dispatcher === null) {
+            return null;
+        }
 
-        $eventManager->notify(
-            new $eventClass($this->getEventName(), null, [
-                'id' => $id,
-                'public_id' => $eventData['public_id'] ?? null,
-                'data' => $eventData,
-                'record' => $record,
-                'deletion_type' => $deletionType,
-                'deletion_option' => $deleteOption,
-                'operation' => $operationType,
-                'timestamp' => time(),
-            ]),
-            null,
+        $idValue = $flashData['id']['value'] ?? '';
+
+        $publicId = StringUtils::isUuid((string) $idValue) ? $idValue : null;
+
+        $keyId = $this->isValidNumericId($idValue) ? (int) $idValue : null;
+        $entityId = $this->getEntityId($record, $flashData);
+
+        $event = $this->buildDeletionEvent(
+            EventDataDTO::from(
+                eventName: $this->getEventName(),
+                entityId: $entityId,
+                record: $record,
+                identifier: $flashData['id'],
+                deleteOption: $deleteOption,
+                publicId: $publicId,
+                operation: $modelResult->getSqlOperation()->value,
+                wasSkipped: $modelResult->wasSkipped(),
+                blockType: $blockType,
+                keyId: $keyId,
+            ),
         );
+
+        return $dispatcher->notify($event);
+    }
+
+    private function isValidNumericId(mixed $value): bool
+    {
+        if ($value === null || $value === '') {
+            return false;
+        }
+
+        $filtered = filter_var($value, FILTER_VALIDATE_INT, [
+            'options' => [
+                'min_range' => 1,
+            ],
+        ]);
+
+        return $filtered !== false;
     }
 }

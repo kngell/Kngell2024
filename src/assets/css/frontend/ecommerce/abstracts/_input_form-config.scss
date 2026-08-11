@@ -1,0 +1,128 @@
+@use "css/frontend/ecommerce/abstracts/variables" as *;
+@use "css/globals/functions/functions" as *;
+
+$input-field-config: (
+  "component-class": "input-field",
+
+  // Layout values
+  "input-height": 4.8rem,
+  "padding-horizontal": 1.6rem,
+  "padding-vertical": 1.2rem,
+  "icon-size": 2rem,
+  "gap-typing-area": 0.4rem,
+  "counter-width": 4.4rem,
+
+  // Border
+  "border-width": 0.2rem,
+  "border-radius": $radius-s,
+  "shadow": 0 0 0 3px rgba($primary-color, 0.1),
+  // Colors - Frontend specific
+  "background-default": map-get($colors-ecommerce, white),
+  "background-hover": map-get($colors-ecommerce, gray-100),
+  "background-disabled": map-get($colors-ecommerce, gray-100),
+  "background-brand-subtle": rgba($primary-color, 0.06),
+  "background-brand-light": rgba($primary-color, 0.08),
+  "background-hover-color": orange,
+  // This seems like a test value
+  "border-default": $gray-100,
+  "border-hover": $primary-300,
+  "border-focus": $primary-color,
+  "border-error": $danger-color,
+  "border-disabled": $black-500,
+  "border-secondary": red,
+
+  // This seems like a test value
+  // Text colors by state
+  "text-default": lightblue,
+  // This seems like a test value
+  "text-placeholder": green,
+  // This seems like a test value
+  "text-label": $dark-grey,
+  "text-disabled": $dark-grey,
+  "text-error": $danger-color,
+
+  // Icon colors by state
+  "icon-default": $dark-grey,
+  "icon-secondary": $dark-grey,
+  "icon-disabled": $dark-grey,
+  "icon-error": $danger-color,
+
+  // Floating label
+  "floating-label-horizontal-padding": 0.4rem,
+  "floating-label-vertical-padding": 0.2rem,
+  "floating-label-border-radius": $radius-xxs,
+
+  // Animation
+  "transition-duration": 0.2s,
+  "transition-timing": ease,
+
+  // ============================================
+  // TYPOGRAPHY - Frontend uses Poppins for brand consistency
+  // Poppins is more friendly and geometric
+  // ============================================
+  "input-text-style": (
+      map: $poppins-map,
+      weight: regular,
+      overrides: (
+        color: $text-brand-primary
+      )
+    ),
+  "label-text-style": (
+    map: $poppins-map,
+    weight: regular,
+    overrides: (
+      color: $text-neutral-primary
+    )
+  ),
+  "label-floating-text-style": (
+    map: $poppins-map,
+    weight: regular,
+    overrides: (
+      color: $primary-color,
+      font-family: "Poppins"
+    )
+  ),
+  "error-text-style": (
+    map: $poppins-map,
+    weight: regular,
+    overrides: (
+      color: $danger-color
+    )
+  ),
+  "helper-text-style": (
+    map: $poppins-map,
+    weight: regular,
+    overrides: (
+      color: $dark-grey
+    )
+  ),
+  "counter-text-style": (
+    map: $poppins-map,
+    weight: regular,
+    overrides: (
+      color: $dark-grey
+    )
+  ),
+  "select-option-text-style": (
+    map: $poppins-map,
+    weight: regular,
+    overrides: (
+      color: $text-neutral-inverse-primary
+    )
+  ),
+  "select-option-placeholder-text-style": (
+    map: $poppins-map,
+    weight: regular,
+    overrides: (
+      color: $dark-grey
+    )
+  ),
+
+  // Textarea
+  "textarea-min-height": 10rem,
+  "textarea-padding-vertical": 1.2rem,
+
+  // Responsive
+  "responsive": true,
+  "responsive-scale-factor": 0.9
+);

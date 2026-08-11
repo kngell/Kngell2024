@@ -5,7 +5,7 @@ declare(strict_types=1);
 class SqlGenericDataPayload implements SqlDataPayloadInterface
 {
     public function __construct(
-        private array $data = [],
+        private array|string $data = [],
         private null|string $method = null,
     ) {
     }
@@ -24,5 +24,10 @@ class SqlGenericDataPayload implements SqlDataPayloadInterface
     public function getMethod(): ?string
     {
         return $this->method;
+    }
+
+    public function isEmpty(): bool
+    {
+        return empty($this->data);
     }
 }

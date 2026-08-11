@@ -1,0 +1,86 @@
+<?php
+
+declare(strict_types=1);
+
+class HeaderBottomSection extends AbstractBaseHtmlSection
+{
+    public function __construct(
+        HtmlBuilder $htmlBuilder,
+        IconBuilder $iconBuilder,
+        private CategoryMenuService $navService,
+    ) {
+        parent::__construct($htmlBuilder, $iconBuilder);
+    }
+
+    public function getKey(): string
+    {
+        return PageWrapperSection::HEADER_BOTTOM->value;
+    }
+
+    public function getConfig(array $formValues = []): array|AbstractHtmlComponent
+    {
+        $categories = $this->navService->getMegaMenu();
+        if (empty($categories)) {
+            return [];
+        }
+
+        return $this->buildCategoryNav($categories);
+    }
+
+    public function getSectionsCustomLayout(array $sections): ?AbstractHtmlComponent
+    {
+        $html = $this->htmlBuilder;
+        return $html->tag('div')->class('container', 'category-nav')->add(...$sections);
+    }
+
+    private function buildCategoryNav(array $categories): array
+    {
+        $categoryLinks = [];
+
+        foreach ($categories as $category) {
+            $categoryLinks[] = $this->buildCategoryLink($category);
+        }
+
+        return $categoryLinks;
+    }
+
+    private function buildCategoryLink(array $category): ?AbstractHtmlComponent
+    {
+        if ($category['icon'] === null) {
+            return null;
+        }
+        $html = $this->htmlBuilder;
+
+        $link = $html->tag('a')
+            ->href($this->generateCategoryUrl($category))
+            ->class('category-nav__link');
+
+        $link->add(
+            $this->iconBuilder->createIcon(
+                $category['icon'],
+                $category['name'],
+                [
+                    'category-nav__link-icon',
+                    StringUtils::kebabCase(strtolower($category['name'])),
+                ],
+                $category['name'],
+            ),
+        );
+
+        // Add text span
+        $link->add(
+            $html->tag('span')
+                ->class('category-nav__link-text')
+                ->content($category['name']),
+        );
+
+        return $link;
+    }
+
+    private function generateCategoryUrl(array $category): string
+    {
+        // Generate URL based on category slug
+        // You might want to inject a Router service for this
+        return '/category/' . ($category['slug'] ?? '#');
+    }
+}

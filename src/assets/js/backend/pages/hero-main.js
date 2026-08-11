@@ -6,9 +6,20 @@ class HeroMain extends BaseFormManager {
       enableDropzone: true,
       enableCustomSelect: false,
       enableRadioOptions: true,
-      enableActionBar: true, // Make sure action bar is enabled
+      enableActionBar: true,
       resetOnSuccess: options.resetOnSuccess || true,
       notificationContainerId: options.notificationContainerId || "hero-notifications",
+
+      // ✅ Flash configuration - HeroMain knows where its flash should go
+      flashSelector: options.flashSelector || ".hero-form",
+      flashContainerClass: "flash-container hero-flash",
+      flashPosition: "prepend",
+      flashDurations: {
+        success: 3000,
+        error: 0,
+        warning: 5000,
+        info: 4000
+      },
 
       notificationConfig: {
         error: { permanent: true, duration: 8000 },
@@ -17,6 +28,10 @@ class HeroMain extends BaseFormManager {
 
       ...options
     });
+  }
+
+  getFlashSelector() {
+    return this.getFormSelector();
   }
 
   getDefaultNotificationContainerId() {
@@ -31,17 +46,14 @@ class HeroMain extends BaseFormManager {
     return "heroRules";
   }
 
-  // IMPORTANT: Override deletion modal config
   getDeletionModalConfig() {
     return {
       onEntityDeleted: (entityId, result) => {
         this.logger.success("Hero deleted:", entityId);
-        // Optionally redirect or remove from DOM
         if (result.redirect) {
           window.location.href = result.redirect;
         }
       },
-      // You can also add custom notification config for deletion
       notificationConfig: {
         error: { permanent: true, duration: 8000 },
         success: { permanent: false, duration: 3000 }
@@ -49,18 +61,15 @@ class HeroMain extends BaseFormManager {
     };
   }
 
-  // Override action bar config if needed
   getActionBarConfig() {
     return {
       addButtonSelector: ".btn-add-hero",
       deleteButtonSelector: ".btn-delete-hero"
-      // Add any custom selectors for your hero page
     };
   }
 
   onEntityDeleted(entityId, result) {
     this.logger.success("Hero deleted:", entityId);
-    // Additional cleanup if needed
   }
 
   onSuccess(result, context) {
@@ -74,7 +83,6 @@ class HeroMain extends BaseFormManager {
 
   onBeforeDelete(context) {
     this.logger.debug("Before deleting hero:", context);
-    // Return false to cancel deletion
     return true;
   }
 }

@@ -6,10 +6,12 @@ $this->start('head'); ?>
 <?php $this->start('body'); ?>
 <main id="main-site" class="main">
     <!-- Content -->
+    <?php foreach ($message ?? [] as $msg) :?>
     <div class="container">
-        <?=$message ?? ''?>
+        <?=$msg ?? ''?>
         Here is home index page
     </div>
+    <?php endforeach; ?>
     <div class="container payments">
         <h3>Amount:</h3>
         <p>$500</p>

@@ -5,6 +5,7 @@ declare(strict_types=1);
 class SqlCteSelectQuery extends SqlQuery implements SqlCteSelectQueryBuilderInterface
 {
     private const SqlStatement TYPE = SqlStatement::SELECT;
+    private const StatementType CONTEXT = StatementType::CTE;
 
     private array $cteMap = [];
     private ?bool $isRecursive = false;
@@ -65,6 +66,11 @@ class SqlCteSelectQuery extends SqlQuery implements SqlCteSelectQueryBuilderInte
         return $this;
     }
 
+    public function getContext(): StatementType
+    {
+        return self::CONTEXT;
+    }
+
     private function withDataCollector(string $cteTableName, string $method): self
     {
         if (!empty($this->cteMap)) {
@@ -76,7 +82,6 @@ class SqlCteSelectQuery extends SqlQuery implements SqlCteSelectQueryBuilderInte
         $this->queryMap[] = $uniqueTableName;
         $this->queryFlow['with'] = true;
         $this->method = $method;
-        $this->state->statementContext = StatementType::CTE;
         return $this;
     }
 
@@ -108,6 +113,7 @@ class SqlCteSelectQuery extends SqlQuery implements SqlCteSelectQueryBuilderInte
                 $this->em,
                 $this->cycleCulumn,
             );
+            $cycleClause->setContext(self::CONTEXT);
             $this->add($cycleClause);
         }
         $this->add($this->mainQuery);

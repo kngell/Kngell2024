@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 use Psr\Log\LoggerInterface;
 
-abstract class AbstractImageCacheCleanupListener implements EventListenerInterface
+abstract class AbstractSectionCacheCleanupListener implements EventListenerInterface
 {
+    use BlockTypeTrait;
+
+    protected ?BlockType $blockType = null;
+
     public function __construct(
         protected ImageCacheFactory $imageCacheFactory,
         protected ?LoggerInterface $logger = null,
@@ -16,20 +20,28 @@ abstract class AbstractImageCacheCleanupListener implements EventListenerInterfa
     {
         $payload = $event->getParams();
         $operation = $this->resolveOperation($payload);
+        $deleteOption = $payload['deletion_option'] ?? null;
+        $this->blockType = $this->resolveBlockType($event);
+
+        if ($operation === SqlStatement::UPDATE->value && $deleteOption === 'archive') {
+            $this->handleDelete($event);
+            return null;
+        }
 
         match ($operation) {
-            'INSERT' => $this->handleInsert($payload),
-            'UPDATE' => $this->handleUpdate($payload),
-            'DELETE' => $this->handleDelete($payload),
+            SqlStatement::INSERT->value => $this->handleInsert($event),
+            SqlStatement::UPDATE->value => $this->handleUpdate($event),
+            SqlStatement::DELETE->value => $this->handleDelete($event),
         };
 
         return null;
     }
 
-    protected function handleInsert(array $payload): void
+    protected function handleInsert(EventInterface $event): void
     {
-        $entityId = $this->getEntityId($payload);
-        $pageTarget = $this->getPageTarget($payload);
+        $entityId = $event->getData()->getEntityId();
+        $formData = $event->getData()->getFormData();
+        $pageTarget = $formData['page_target'] ?? null;
 
         if (!$entityId) {
             return;
@@ -42,11 +54,12 @@ abstract class AbstractImageCacheCleanupListener implements EventListenerInterfa
         $this->logInsertCleanup($entityId, $pageTarget);
     }
 
-    protected function handleUpdate(array $payload): void
+    protected function handleUpdate(EventInterface $event): void
     {
-        $entityId = $this->getEntityId($payload);
+        $payload = $event->getParams();
+        $entityId = $event->getData()->getEntityId();
         $pageTarget = $this->getPageTarget($payload);
-        $oldEntity = $this->getOldEntity($payload);
+        $oldEntity = $event->getData()->getModelData()['old_entity_snapshot'] ?? null;
         $newImageUrl = $this->getNewImageUrl($payload);
 
         if (!$oldEntity || !$entityId) {
@@ -55,19 +68,21 @@ abstract class AbstractImageCacheCleanupListener implements EventListenerInterfa
 
         $oldImageUrl = $this->getOldImageUrl($oldEntity);
 
-        // Clean up image cache if image changed
+        // Clean up image cache if image(s) changed
         if ($oldImageUrl !== null && $oldImageUrl !== $newImageUrl) {
             $this->cleanupImageCache($oldImageUrl, $entityId, $pageTarget);
         }
 
         // Clean up entity and page cache
+        // if (!$event->getData()->wasSkipped()) {
         $this->cleanupEntityAndPageCache($oldEntity, $pageTarget);
+        // }
     }
 
-    protected function handleDelete(array $payload): void
+    protected function handleDelete(EventInterface $event): void
     {
-        $oldEntity = $payload['record'];
-        $pageTarget = $this->getPageTarget($payload);
+        $oldEntity = $event->getObject();
+        $pageTarget = $event->getData()->getPageTarget();
 
         if (!$oldEntity) {
             return;
@@ -88,13 +103,17 @@ abstract class AbstractImageCacheCleanupListener implements EventListenerInterfa
         $this->logDeleteCleanup($entityId, $pageTarget);
     }
 
-    protected function cleanupEntityAndPageCache(object $entity, string $pageTarget): void
+    protected function cleanupEntityAndPageCache(Entity $entity, ?string $pageTarget): void
     {
         $cacheManager = $this->getCacheManager();
         $serviceClass = $this->getServiceClass();
 
         $cacheManager->invalidateEntity($entity);
-        $cacheManager->invalidatePage($pageTarget, $serviceClass);
+        if ($pageTarget !== null) {
+            $cacheManager->invalidatePage($pageTarget, $serviceClass);
+        } else {
+            $cacheManager->invalidateAllPages($serviceClass);
+        }
     }
 
     protected function cleanupAllCache(object $entity): void
@@ -116,24 +135,52 @@ abstract class AbstractImageCacheCleanupListener implements EventListenerInterfa
         $cacheManager->invalidateAllPages($serviceClass);
     }
 
-    protected function cleanupImageCache(string $oldImageUrl, int $entityId, string $pageTarget): void
+    /**
+     * Clean up image cache for single or multiple images.
+     */
+    protected function cleanupImageCache(null|string|array $oldImageUrl, int $entityId, ?string $pageTarget): void
     {
         $imageCache = $this->imageCacheFactory->create('images');
-        $deletedCount = $imageCache->deleteImageCache($oldImageUrl);
-        // $imageCache->cleanupOrphanedTags(); // will go to Maintenance event
+        $totalDeleted = 0;
 
-        $this->logger?->info('Image cache cleaned', [
-            'entity_type' => $this->getEntityType(),
-            'entity_id' => $entityId,
-            'image' => basename($oldImageUrl),
-            'page' => $pageTarget,
-            'variants_deleted' => $deletedCount,
-        ]);
+        // Handle single image (string)
+        if (is_string($oldImageUrl)) {
+            $deletedCount = $imageCache->deleteImageCache($oldImageUrl);
+            $totalDeleted += $deletedCount;
 
-        $this->logImageCleanup($entityId, basename($oldImageUrl), $pageTarget, $deletedCount);
+            $this->logger?->info('Image cache cleaned', [
+                'entity_type' => $this->getEntityType(),
+                'entity_id' => $entityId,
+                'image' => basename($oldImageUrl),
+                'page' => $pageTarget,
+                'variants_deleted' => $deletedCount,
+            ]);
+        }
+        // Handle multiple images (array)
+        elseif (is_array($oldImageUrl)) {
+            foreach ($oldImageUrl as $image) {
+                // Handle both string URLs and array structures
+                $imageUrl = is_array($image) ? ($image['url'] ?? null) : $image;
+
+                if ($imageUrl && is_string($imageUrl)) {
+                    $deletedCount = $imageCache->deleteImageCache($imageUrl);
+                    $totalDeleted += $deletedCount;
+
+                    $this->logger?->info('Image cache cleaned', [
+                        'entity_type' => $this->getEntityType(),
+                        'entity_id' => $entityId,
+                        'image' => basename($imageUrl),
+                        'page' => $pageTarget,
+                        'variants_deleted' => $deletedCount,
+                    ]);
+                }
+            }
+        }
+
+        $this->logImageCleanup($entityId, $oldImageUrl, $pageTarget, $totalDeleted);
     }
 
-    protected function logInsertCleanup(int $entityId, string $pageTarget): void
+    protected function logInsertCleanup(int $entityId, ?string $pageTarget = null): void
     {
         $this->logger?->info('Entity created, cache cleaned', [
             'entity_type' => $this->getEntityType(),
@@ -142,7 +189,7 @@ abstract class AbstractImageCacheCleanupListener implements EventListenerInterfa
         ]);
     }
 
-    protected function logDeleteCleanup(int $entityId, string $pageTarget): void
+    protected function logDeleteCleanup(int $entityId, ?string $pageTarget): void
     {
         $this->logger?->info('Entity deleted, cache cleaned', [
             'entity_type' => $this->getEntityType(),
@@ -151,28 +198,47 @@ abstract class AbstractImageCacheCleanupListener implements EventListenerInterfa
         ]);
     }
 
-    protected function logImageCleanup(int $entityId, string $filename, string $pageTarget, int $deletedCount): void
+    protected function logImageCleanup(int $entityId, null|string|array $image, ?string $pageTarget, int $deletedCount): void
     {
+        $imageSummary = is_array($image)
+            ? sprintf('%d images', count($image))
+            : basename($image);
+
         error_log(sprintf(
-            '%s cache cleaned: ID %d, Image: %s, Page: %s, Variants deleted: %d, Types: [images, entity, page, section]',
+            '%s cache cleaned: ID %d, Image(s): %s, Page: %s, Variants deleted: %d, Types: [images, entity, page, section]',
             $this->getEntityType(),
             $entityId,
-            $filename,
+            $imageSummary,
             $pageTarget,
             $deletedCount,
         ));
     }
 
-    // Abstract methods
-    abstract protected function getEntityId(array $payload): ?int;
+    protected function getPageTarget(array $payload): ?string
+    {
+        return $payload['form_data']['page_target'] ?? null;
+    }
 
-    abstract protected function getOldEntity(array $payload): ?object;
+    /**
+     * Check if two image values are different (handles both string and array).
+     */
+    protected function imagesAreDifferent(null|string|array $old, null|string|array $new): bool
+    {
+        if ($old === $new) {
+            return false;
+        }
 
-    abstract protected function getOldImageUrl(object $entity): ?string;
+        // Compare arrays by serializing
+        if (is_array($old) && is_array($new)) {
+            return serialize($old) !== serialize($new);
+        }
 
-    abstract protected function getNewImageUrl(array $payload): ?string;
+        return true;
+    }
 
-    abstract protected function getPageTarget(array $payload): string;
+    abstract protected function getOldImageUrl(Entity $entity): null|string|array;
+
+    abstract protected function getNewImageUrl(array $payload): null|string|array;
 
     abstract protected function getCacheManager(): HtmlSectionCacheManager;
 
@@ -184,7 +250,9 @@ abstract class AbstractImageCacheCleanupListener implements EventListenerInterfa
     {
         $operation = $payload['operation'] ?? null;
 
-        if (!in_array($operation, ['INSERT', 'UPDATE', 'DELETE'], true)) {
+        if (!in_array($operation, [
+            SqlStatement::INSERT->value, SqlStatement::UPDATE->value, SqlStatement::DELETE->value,
+        ], true)) {
             throw new EventRuntimeException(
                 sprintf('Unsupported or missing operation: "%s"', (string) $operation),
             );

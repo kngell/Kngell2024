@@ -5,6 +5,8 @@ DROP FOREIGN KEY fk_product_category_id;
 -- Drop and recreate category table with all new fields
 DROP TABLE IF EXISTS category;
 
+DESCRIBE category;
+
 CREATE TABLE
     `category` (
         -- Primary & Identifiers

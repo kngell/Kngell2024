@@ -5,6 +5,8 @@ declare(strict_types=1);
 class SqlDeleteQuery extends SqlQuery implements SqlDeleteQueryBuilderInterface
 {
     use MapFragmentTrait;
+    use SqlWhereConditionTrait;
+    use SqlJoinTrait;
 
     private const SqlStatement TYPE = SqlStatement::DELETE;
 
@@ -22,13 +24,11 @@ class SqlDeleteQuery extends SqlQuery implements SqlDeleteQueryBuilderInterface
 
     public function build(): string
     {
-        $this->flowValidator->validate($this->queryFlow, $this->deleteMap);
-        $this->clauseBuilder->buildAllClauses(self::TYPE);
-
+        $this->buildStatement();
         return parent::build();
     }
 
-    public function delete(null|string|Closure $table = null, null|string $alias = null): self
+    public function delete(null|string|Closure $table = null, null|string $alias = null): static
     {
         $this->deleteMap[__FUNCTION__] = [
             'table' => $table,
@@ -44,7 +44,7 @@ class SqlDeleteQuery extends SqlQuery implements SqlDeleteQueryBuilderInterface
         return $this;
     }
 
-    public function from(null|string|Closure $table = null, ?string $alias = null): self
+    public function from(mixed $table = null, ?string $alias = null): static
     {
         list($table, $key) = $this->getUniqueTableName(__FUNCTION__, $table, $this->queryMap);
         $this->deleteMap['delete']['table'] = $table;
@@ -57,7 +57,7 @@ class SqlDeleteQuery extends SqlQuery implements SqlDeleteQueryBuilderInterface
         return $this;
     }
 
-    public function deleteFrom(null|string|Closure $table = null, null|string $alias = null): self
+    public function deleteFrom(null|string|Closure $table = null, null|string $alias = null): static
     {
         if ($table === null) {
             $table = $this->resolveMainTable();
@@ -66,7 +66,7 @@ class SqlDeleteQuery extends SqlQuery implements SqlDeleteQueryBuilderInterface
         return $this->delete()->from($table, $alias);
     }
 
-    public function where(mixed ...$conditions): self
+    public function where(mixed ...$conditions): static
     {
         if (!isset($this->queryFlow['from']) && isset($this->queryFlow['delete'])) {
             $this->from();
@@ -79,27 +79,7 @@ class SqlDeleteQuery extends SqlQuery implements SqlDeleteQueryBuilderInterface
         return $this;
     }
 
-    public function whereEqualTo(string $column, mixed $value): self
-    {
-        throw new Exception('Not implemented');
-    }
-
-    public function andWhere(string $column, mixed $value): self
-    {
-        throw new Exception('Not implemented');
-    }
-
-    public function orWhere(string $column, mixed $value): self
-    {
-        throw new Exception('Not implemented');
-    }
-
-    public function join(string $table, ?string $alias = null): self
-    {
-        throw new Exception('Not implemented');
-    }
-
-    public function on(string $leftColumn, string $rightColumn): self
+    public function join(string $table, ?string $alias = null): static
     {
         throw new Exception('Not implemented');
     }
@@ -151,5 +131,15 @@ class SqlDeleteQuery extends SqlQuery implements SqlDeleteQueryBuilderInterface
     public function getDeleteMap(): array
     {
         return $this->deleteMap;
+    }
+
+    private function buildStatement(): void
+    {
+        $statement = new DeleteStatement(
+            $this->deleteMap,
+            $this->queryFlow,
+            $this->em,
+        );
+        $this->add($statement);
     }
 }

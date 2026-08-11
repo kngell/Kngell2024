@@ -1,0 +1,34 @@
+@use "css/globals/variables" as *;
+
+// =====================================================
+// TABS STATES
+// =====================================================
+
+@mixin tabs-state($ids, $display: block) {
+  @each $id in $ids {
+    ##{$id}:checked {
+      ~ .tabs__label {
+        label[for="#{$id}"] {
+          @include tab-active;
+        }
+      }
+
+      ~ .tabs__content {
+        ##{$id}-content {
+          display: $display;
+          animation: tabFade 0.25s ease;
+        }
+      }
+    }
+  }
+}
+
+@mixin tab-active {
+  background: $background-brand-primary;
+  color: $text-brand-inverse;
+  box-shadow: $shadow-s;
+
+  .tab__text {
+    color: inherit;
+  }
+}

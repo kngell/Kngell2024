@@ -364,15 +364,30 @@ class NativeCacheStorage extends AbstractCacheStorage implements TaggableCacheSt
             return true;
         }
 
-        // Simple glob pattern matching
         $regex = str_replace(
-            ['*', '?', '.'],
-            ['.*', '.', '\.'],
+            ['.', '*', '?'],
+            ['\.', '.*', '.'],
             $pattern,
         );
 
         return preg_match('/^' . $regex . '$/', $key) === 1;
     }
+
+    // private function matchesPattern(string $key, string $pattern): bool
+    // {
+    //     if ($pattern === '*') {
+    //         return true;
+    //     }
+
+    //     // Simple glob pattern matching
+    //     $regex = str_replace(
+    //         ['*', '?', '.'],
+    //         ['.*', '.', '\.'],
+    //         $pattern,
+    //     );
+
+    //     return preg_match('/^' . $regex . '$/', $key) === 1;
+    // }
 
     private function getTtlMetadataPath(string $key): string
     {

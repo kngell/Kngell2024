@@ -1,13 +1,38 @@
 {
-  "svgHash": "efb5cd342a6315b16760317ee5d07a74",
+  "svgHash": "64081c30913fb7d91c6808e5a330f037",
   "cssHashes": {
-    "css/css/frontend/main/main.css": "72d4744761c4c153911bb529f03b6dc3",
-    "css/css/librairies/librairy.css": "2e9411720d2a32d95c0fc1d059d761f0",
-    "css/css/backend/admin/admin.css": "7a58a56bae4cecb6ee3a8d5667ed1e04",
-    "css/css/backend/admin/pages/product-list.css": "9de8ad97f7f81b4d27cad74c13cfc587",
-    "css/css/backend/admin/pages/product.css": "ffab22fc0eda41374ae43546500c10d4",
-    "css/css/backend/admin/modals/confirm-deletion.css": "cf0e001e9b38685a4ca8724ce97b4b7c",
-    "css/css/backend/admin/pages/contact.css": "6bcfd7cf54b010806261538ee55ad87e"
+    "css/frontend/main/main.css": "35d9e086a5629d5a61ebee4fb374d69d",
+    "css/librairies/librairy.css": "2e9411720d2a32d95c0fc1d059d761f0",
+    "css/backend/admin/pages/content-block.css": "b9c753bfb6a352ff4c4d77c4a6e9d75d",
+    "css/backend/admin/pages/category.css": "38c131e6fbb49abc004ad9ef194cca16",
+    "css/backend/admin/pages/small-banner-section.css": "b736520375dd7890973e96be66f1f422",
+    "css/backend/admin/admin.css": "5ae9642e0a5c620eb20f6639207e9811",
+    "css/backend/admin/pages/hero-section.css": "15e0c5a3e21c42cd0fc2a5b551aed19a",
+    "css/backend/admin/pages/product.css": "e3503bceb84816750db1f8ad13b77d70",
+    "css/backend/admin/pages/footer-page.css": "5ae34406173900f0d5b19543888435ff",
+    "css/backend/admin/pages/table-list.css": "54cf5a4d04eea908add93b7c6af53df0",
+    "css/backend/admin/pages/input.css": "6f499f2c4b3992c65a1c84bc48175144",
+    "css/backend/admin/pages/contact.css": "2f19740f2ff33bd9bec7e1de4a03cb5c",
+    "css/frontend/ecommerce/pages/shopping-cart.css": "1a66786b892816c4ea6c3a9703b43340",
+    "css/backend/admin/pages/confirm-deletion.css": "e03987e23e8e0b658216b3dc08be17ad"
   },
-  "timestamp": 1772509489010
+  "jsHashes": {
+    "js/backend/pages/footer-main.js": "b5e483663a6a97f94894602c864c0b51",
+    "js/backend/pages/products-save-main.js": "8b1b9216dbd432c93ba29fc35d3f1f8e",
+    "js/backend/pages/content-block-main.js": "1ad62f3bae799c0cbb7b7c9a49e525ee",
+    "js/backend/pages/category-main.js": "ec8e1a34849682db780a13a64f73e6cf",
+    "js/backend/pages/input.js": "d4637d56719d17eb9947674781a559c7",
+    "js/backend/pages/hero-main.js": "c928131e6cc6ee0cf307ad71599a758b",
+    "js/backend/pages/table-list.js": "cec24ac25a0a8f9c981404485d3a57db",
+    "js/frontend/main/main.js": "ee133f0ac4cbca6436644746afc6e8ca",
+    "js/backend/main/main.js": "974950226e29ff76d90eab9ab1c5fd8a",
+    "lazyload/js/src_assets_js_components_dropzone_multiple_MultiplePreviewDropzone_js.js": "8f225ee13858b941863154b4251f4740",
+    "lazyload/js/src_assets_js_components_dropzone_BaseDropzone_js.js": "528b892052e3a5a37a46070767137710",
+    "lazyload/js/src_assets_js_components_dropzone_single_SingleUploadingDropzone_js.js": "b32d0b18054e08f15bf47a0dd6c6cb88",
+    "lazyload/js/src_assets_js_components_dropzone_single_SinglePreviewDropzone_js.js": "b31220df053fb1e0706095c0629fd6b6",
+    "lazyload/js/src_assets_js_components_dropzone_multiple_MultipleEmptyDropzone_js.js": "2fed9a54fad19d9d2e5a3a9937394593",
+    "lazyload/js/src_assets_js_components_dropzone_single_SingleEmptyDropzone_js.js": "a8bc2a84322fa902c6a004f6293f7d80",
+    "js/librairies/librairy.js": "1a41fd790ff8a12e4a41d79aa57f4850"
+  },
+  "timestamp": 1784243798840
 }

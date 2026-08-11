@@ -7,6 +7,7 @@ abstract class AbstractQueryBuilder
     protected array $executedComponents = [];
     protected ?string $methodEntry = null;
     protected bool $isBulkQuery = false;
+    protected ?SqlStatement $statementContext = null;
     private int $componentCounter = 0;
 
     public function __construct(private EntityManagerInterface $em)
@@ -31,11 +32,6 @@ abstract class AbstractQueryBuilder
     public function getLogicalToPhysicalMap(): array
     {
         return $this->getQueryComponent()->getLogicalToPhysicalMap();
-    }
-
-    public function getBindArray(): array
-    {
-        return $this->getQueryComponent()->getBindArr();
     }
 
     public function debugSql(): SqlDebugInfo
@@ -63,7 +59,6 @@ abstract class AbstractQueryBuilder
         return [
             'parameters' => $this->getParameters(),
             'tableAlias' => $this->getTableAlias(),
-            'bindArray' => $this->getBindArray(),
             'aliasCheck' => $this->getAliasCheck(),
             'logicalToPhysicalMap' => $this->getQueryComponent()->getLogicalToPhysicalMap(),
             'tables' => $this->getQueryComponent()->getTables(),

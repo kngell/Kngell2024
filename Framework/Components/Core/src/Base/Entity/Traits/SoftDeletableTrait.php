@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 trait SoftDeletableTrait
 {
-    protected const string DATE_FORMAT = 'Y-m-d H:i:s';
+    protected const string SOFT_DELETE_DATE_FORMAT = 'Y-m-d H:i:s';
 
     private ?DateTimeImmutable $deletedAt = null;
 
@@ -27,9 +27,9 @@ trait SoftDeletableTrait
     /**
      * Soft delete the entity by setting deleted_at to current time.
      */
-    public function softDelete(): self
+    public function softDelete(?DateTimeImmutable $at = null): self
     {
-        $this->deletedAt = new DateTimeImmutable();
+        $this->deletedAt = $at ?? new DateTimeImmutable();
         return $this;
     }
 
@@ -47,7 +47,7 @@ trait SoftDeletableTrait
      */
     public function getDeletedAtRaw(): ?string
     {
-        return $this->deletedAt?->format(static::DATE_FORMAT);
+        return $this->deletedAt?->format(static::SOFT_DELETE_DATE_FORMAT);
     }
 
     /**
@@ -55,7 +55,12 @@ trait SoftDeletableTrait
      */
     public function getDeletedAtFormatted(?string $format = null): ?string
     {
-        return $this->deletedAt?->format($format ?? static::DATE_FORMAT);
+        return $this->deletedAt?->format($format ?? static::SOFT_DELETE_DATE_FORMAT);
+    }
+
+    public function getDateFormat(): string
+    {
+        return self::SOFT_DELETE_DATE_FORMAT;
     }
 
     /**
@@ -104,11 +109,9 @@ trait SoftDeletableTrait
         return $this;
     }
 
-    public function touchDeleted(): void
+    public function touchDeleted(?DateTimeImmutable $at = null): void
     {
-        if ($this instanceof SoftDeletableInterface && method_exists($this, 'softDelete')) {
-            $this->softDelete();
-        }
+        $this->softDelete($at);
     }
 
     /**
@@ -122,7 +125,7 @@ trait SoftDeletableTrait
 
         try {
             // First try the entity's date format
-            $dateTime = DateTimeImmutable::createFromFormat(static::DATE_FORMAT, $dateString);
+            $dateTime = DateTimeImmutable::createFromFormat(static::SOFT_DELETE_DATE_FORMAT, $dateString);
             if ($dateTime !== false) {
                 $errors = DateTimeImmutable::getLastErrors();
                 if ($errors === false || ($errors['warning_count'] === 0 && $errors['error_count'] === 0)) {
@@ -134,7 +137,7 @@ trait SoftDeletableTrait
             return new DateTimeImmutable($dateString);
         } catch (Throwable $e) {
             throw new InvalidArgumentException(
-                sprintf('Invalid date format: "%s". Expected format: "%s"', $dateString, static::DATE_FORMAT),
+                sprintf('Invalid date format: "%s". Expected format: "%s"', $dateString, static::SOFT_DELETE_DATE_FORMAT),
                 0,
                 $e,
             );

@@ -1,19 +1,21 @@
 <?php
 
 declare(strict_types=1);
-class UploadService implements FileUploadCompositeInterface
+
+class UploadService extends AbstractBaseUpload implements FileUploadCompositeInterface, UploadMediapathsInterface
 {
+    use FileTrimTrait;
+
     private array $components = [];
-    private array $errors = [];
-    private int $nbOfoldFilesCleanedUp = 0;
     private array $fieldsErrors = [];
 
-    public function __construct(array $fieldsErrors = [])
+    public function __construct(TempFileCleaner $tempFileCleaner, array $fieldsErrors = [])
     {
+        parent::__construct($tempFileCleaner);
         $this->fieldsErrors = $fieldsErrors;
     }
 
-    // ========== COMPOSITE-SPECIFIC METHODS ==========
+    // ========== COMPOSITE METHODS ==========
 
     public function add(string $fieldName, FileUploadComponentInterface $component): void
     {
@@ -35,7 +37,44 @@ class UploadService implements FileUploadCompositeInterface
         return $this->components;
     }
 
-    public function getFilePath(string $fieldName): ?string
+    // ========== FILE UPLOAD METHODS ==========
+
+    public function proceed(bool $uploadRequired = false, bool $temporary = false): void
+    {
+        $this->errors = [];
+        $this->mediaPaths = [];
+
+        foreach ($this->components as $fieldName => $component) {
+            if ($this->fieldHasValidationErrors($fieldName)) {
+                continue;
+            }
+
+            $component->proceed($uploadRequired, $temporary);
+            $componentErrors = $component->getErrors();
+
+            if (!empty($componentErrors)) {
+                $this->errors[$fieldName] = $componentErrors;
+            }
+        }
+    }
+
+    public function makePermanent(): bool
+    {
+        $success = true;
+
+        foreach ($this->components as $component) {
+            if ($component->hasFiles()) {
+                $componentSuccess = $component->makePermanent();
+                $success = $componentSuccess && $success;
+            }
+        }
+
+        return $success;
+    }
+
+    // ========== GETTER METHODS ==========
+
+    public function getFilePath(string $fieldName): null|string|array
     {
         $component = $this->get($fieldName);
         if (!$component) {
@@ -43,7 +82,7 @@ class UploadService implements FileUploadCompositeInterface
         }
 
         $paths = $component->getMediaPaths();
-        return !empty($paths) ? $paths[0] : null;
+        return !empty($paths) ? $paths : null;
     }
 
     public function getMultiFilePaths(string $fieldName): array
@@ -59,6 +98,19 @@ class UploadService implements FileUploadCompositeInterface
             $info = $component->getFileInformationObjects();
             if (!empty($info)) {
                 $result[$fieldName] = $info;
+            }
+        }
+        return $result;
+    }
+
+    public function getMediaPathsByField(): array
+    {
+        $result = [];
+        foreach ($this->components as $fieldName => $component) {
+            $paths = $component->getMediaPaths();
+            if (!empty($paths)) {
+                $cleanField = $this->getBaseFieldName($fieldName); //rtrim($fieldName, '[]');
+                $result[$cleanField] = $paths;
             }
         }
         return $result;
@@ -95,6 +147,20 @@ class UploadService implements FileUploadCompositeInterface
         return !empty($paths) ? $paths : null;
     }
 
+    public function getMetadata(): array
+    {
+        $allMetadata = [];
+        foreach ($this->components as $fieldName => $component) {
+            $metadata = $component->getFileMetadata();
+            if (!empty($metadata)) {
+                foreach ($metadata as $fileMetadata) {
+                    $allMetadata[$fieldName][] = $fileMetadata['metadata'] ?? $fileMetadata;
+                }
+            }
+        }
+        return $allMetadata;
+    }
+
     public function getTotalFileCount(): int
     {
         $count = 0;
@@ -113,49 +179,6 @@ class UploadService implements FileUploadCompositeInterface
         return $result;
     }
 
-    // ========== COMPONENT INTERFACE METHODS (DELEGATED) ==========
-
-    public function proceed(bool $uploadRequired = false, bool $temporary = false): void
-    {
-        $this->errors = [];
-
-        foreach ($this->components as $fieldName => $component) {
-            if ($this->fieldHasValidationErrors($fieldName)) {
-                continue;
-            }
-
-            $component->proceed($uploadRequired, $temporary);
-            $componentErrors = $component->getErrors();
-
-            if (!empty($componentErrors)) {
-                $this->errors[$fieldName] = $componentErrors;
-            }
-        }
-    }
-
-    public function getMediaPaths(): array
-    {
-        $allPaths = [];
-        foreach ($this->components as $component) {
-            $allPaths = array_merge($allPaths, $component->getMediaPaths());
-        }
-        return $allPaths;
-    }
-
-    public function getErrors(): array
-    {
-        return $this->errors;
-    }
-
-    public function cleanup(): void
-    {
-        foreach ($this->components as $component) {
-            $component->cleanup();
-        }
-        $this->components = [];
-        $this->errors = [];
-    }
-
     public function getUploadedFileInfo(): array
     {
         $allInfo = [];
@@ -163,6 +186,27 @@ class UploadService implements FileUploadCompositeInterface
             $allInfo = array_merge($allInfo, $component->getUploadedFileInfo());
         }
         return $allInfo;
+    }
+
+    public function getFileInformationObjects(): array
+    {
+        $allInfo = [];
+        foreach ($this->components as $component) {
+            $allInfo = array_merge($allInfo, $component->getFileInformationObjects());
+        }
+        return $allInfo;
+    }
+
+    public function getFileMetadata(): array
+    {
+        $allMetadata = [];
+        foreach ($this->components as $fieldName => $component) {
+            $metadata = $component->getFileMetadata();
+            if (!empty($metadata)) {
+                $allMetadata[$fieldName] = $metadata;
+            }
+        }
+        return $allMetadata;
     }
 
     public function getUploadStats(): array
@@ -191,62 +235,16 @@ class UploadService implements FileUploadCompositeInterface
         return $totalStats;
     }
 
-    public function getFileInformationObjects(): array
-    {
-        $allInfo = [];
-        foreach ($this->components as $component) {
-            $allInfo = array_merge($allInfo, $component->getFileInformationObjects());
-        }
-        return $allInfo;
-    }
-
-    public function getFileMetadata(): array
-    {
-        $allMetadata = [];
-        foreach ($this->components as $fieldName => $component) {
-            $metadata = $component->getFileMetadata();
-            if (!empty($metadata)) {
-                $allMetadata[$fieldName] = $metadata;
-            }
-        }
-        return $allMetadata;
-    }
-
-    public function isTemporary(): bool
-    {
-        foreach ($this->components as $component) {
-            if ($component->isTemporary()) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public function makePermanent(): bool
-    {
-        $success = true;
-        foreach ($this->components as $component) {
-            if ($component->hasFiles()) {
-                $componentSuccess = $component->makePermanent();
-                $success = $componentSuccess && $success;
-            }
-        }
-        return $success;
-    }
-
-    public function hasErrors(): bool
-    {
-        return !empty($this->errors);
-    }
-
     public function setFormTemporaryWebPaths(array $formTemporaryWebPaths): self
     {
         foreach ($this->components as $fieldName => $component) {
-            $cleanField = rtrim($fieldName, '[]');
+            $cleanField = $this->getBaseFieldName($fieldName);
+
             if (isset($formTemporaryWebPaths[$cleanField])) {
                 $paths = is_array($formTemporaryWebPaths[$cleanField])
                     ? $formTemporaryWebPaths[$cleanField]
                     : [$formTemporaryWebPaths[$cleanField]];
+
                 $component->setFormTemporaryWebPaths($paths);
             }
         }
@@ -254,41 +252,22 @@ class UploadService implements FileUploadCompositeInterface
         return $this;
     }
 
-    public function getFormTemporaryWebPaths(): array
+    public function cleanupOrphanedFiles(array $activePaths = []): int
     {
-        return [];
-    }
+        $totalCleaned = 0;
 
-    public function cleanupOldTempFiles(): int
-    {
-        $total = 0;
         foreach ($this->components as $component) {
-            $total += $component->cleanupOldTempFiles();
-        }
-        $this->nbOfoldFilesCleanedUp = $total;
-        return $total;
-    }
-
-    public function getNbOfoldFilesCleanedUp(): int
-    {
-        return $this->nbOfoldFilesCleanedUp;
-    }
-
-    public function cleanupPermanentFiles(): void
-    {
-        foreach ($this->components as $component) {
-            $component->cleanupPermanentFiles();
-        }
-    }
-
-    public function hasWebpaths(): bool
-    {
-        foreach ($this->components as $component) {
-            if ($component->hasWebpaths()) {
-                return true;
+            if ($component instanceof FileCleanupInterface) {
+                $totalCleaned += $component->cleanupOrphanedFiles($activePaths);
             }
         }
-        return false;
+
+        return $totalCleaned;
+    }
+
+    public function getAllFieldsName(): array
+    {
+        return array_keys($this->components) ?? [];
     }
 
     public function getFieldName(): string
@@ -307,18 +286,44 @@ class UploadService implements FileUploadCompositeInterface
         return false;
     }
 
+    // ========== ABSTRACT METHODS IMPLEMENTATION ==========
+
+    protected function getTempDirectory(): string
+    {
+        foreach ($this->components as $component) {
+            if (method_exists($component, 'getTempDirectory')) {
+                return $component->getTempDirectory();
+            }
+        }
+        return STORAGE . 'uploads/images/temp';
+    }
+
+    protected function webPathToAbsolutePath(string $webPath): string
+    {
+        foreach ($this->components as $component) {
+            if (method_exists($component, 'webPathToAbsolutePath')) {
+                return $component->webPathToAbsolutePath($webPath);
+            }
+        }
+        return $webPath;
+    }
+
+    protected function absolutePathToWebPath(string $absolutePath): string
+    {
+        foreach ($this->components as $component) {
+            if (method_exists($component, 'absolutePathToWebPath')) {
+                return $component->absolutePathToWebPath($absolutePath);
+            }
+        }
+        return $absolutePath;
+    }
+
     // ========== PRIVATE METHODS ==========
 
     private function fieldHasValidationErrors(string $fieldName): bool
     {
         $cleanFieldName = rtrim($fieldName, '[]');
-
         return isset($this->fieldsErrors[$fieldName]) ||
                isset($this->fieldsErrors[$cleanFieldName]);
-    }
-
-    public static function createEmpty(array $fieldsErrors = []): self
-    {
-        return new self($fieldsErrors);
     }
 }

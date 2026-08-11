@@ -18,10 +18,11 @@ final class RouteMatcher
     {
         try {
             $routePath = $this->normalizeUrl($request, $internalUrl);
+
             $routes = $this->matchingService->getRoutes();
 
             $routeInfo = $this->matchingService->findRouteForPath($routePath, $routes);
-
+            // dd($routeInfo);
             if (!$routeInfo) {
                 return null;
             }
@@ -42,12 +43,25 @@ final class RouteMatcher
 
     private function buildRouteInfo(Route $route, array $matches, Request $request): RouteInfo
     {
+        $routeParams = array_diff_key($matches, array_flip(['controller', 'method', 'action']));
+
         $controller = $this->controller($route->controller, $matches);
         $method = $this->method($controller, $route->method, $matches);
 
+        // First try to get from method attributes
         $responseBody = $this->extractResponseBodyAttribute($method);
         $responseStatus = $this->extractResponseStatusAttribute($method);
 
+        // If not found, try from route object
+        if ($responseBody === null && $route->responseBody !== null) {
+            $responseBody = $route->responseBody;
+        }
+
+        if ($responseStatus === null && $route->responseStatus !== null) {
+            $responseStatus = $route->responseStatus;
+        }
+
+        // Finally, try from matches (backward compatibility)
         if ($responseBody === null) {
             $responseBody = $this->responseBodyFromConfig($matches);
         }
@@ -55,7 +69,7 @@ final class RouteMatcher
             $responseStatus = $this->responseStatusFromConfig($matches);
         }
 
-        return (new RouteInfosBuilder())
+        $routeInfo = (new RouteInfosBuilder())
             ->withController($controller)
             ->withMethod($method)
             ->withArguments($this->getRouteArguments($method->getParameters()))
@@ -64,8 +78,11 @@ final class RouteMatcher
             ->withHttpMethod($request->getMethod())
             ->withResponseBody($responseBody)
             ->withResponseStatus($responseStatus)
-            ->withRouteParams($matches)
+            ->withRouteParams($routeParams)
             ->build();
+
+        $request->setRouteInfo($routeInfo);
+        return $routeInfo;
     }
 
     private function extractResponseBodyAttribute(ReflectionMethod $method): ResponseBody|null
@@ -189,21 +206,56 @@ final class RouteMatcher
     private function stripPath(string $path): array
     {
         $pathElements = [];
-        foreach (explode(DS, $path) as $part) {
-            if ($part !== '' && !str_contains($part, 'controller') && !str_contains($part, 'method')) {
-                $builder = new PathElementBuilder();
-                if (str_starts_with($part, '{') && str_ends_with($part, '}')) {
-                    $part = rtrim(strtok($part, '\\'), ':') . '}';
-                    $builder->withType(PathElementType::VARIABLE)
-                        ->withValue(ltrim(rtrim($part, '}'), '{'));
-                } else {
-                    $builder->withType(PathElementType::NORMAL)
-                        ->withValue($part);
+        $pathSegments = explode(DS, $path);
+
+        foreach ($pathSegments as $part) {
+            if ($part === '' || $part === '/') {
+                continue;
+            }
+
+            // Check if this part is a variable parameter
+            if (preg_match('/^\{([a-zA-Z][a-zA-Z0-9]*)(?::[^}]+)?\}$/', $part, $matches)) {
+                $paramName = $matches[1];
+
+                // Skip ONLY the routing parameters (controller and method)
+                if ($paramName === 'controller' || $paramName === 'method' || $paramName === 'action') {
+                    continue; // Don't add to PathElements
                 }
 
-                $pathElements[] = $builder->build();
+                // Add other parameters as VARIABLE type
+                $pathElements[] = (new PathElementBuilder())
+                    ->withType(PathElementType::VARIABLE)
+                    ->withValue($paramName)
+                    ->build();
+            } else {
+                // Add static segments as NORMAL type
+                $pathElements[] = (new PathElementBuilder())
+                    ->withType(PathElementType::NORMAL)
+                    ->withValue($part)
+                    ->build();
             }
         }
+
         return $pathElements;
     }
+    // private function stripPath(string $path): array
+    // {
+    //     $pathElements = [];
+    //     foreach (explode(DS, $path) as $part) {
+    //         if ($part !== '' && !str_contains($part, 'controller') && !str_contains($part, 'method')) {
+    //             $builder = new PathElementBuilder();
+    //             if (str_starts_with($part, '{') && str_ends_with($part, '}')) {
+    //                 $part = rtrim(strtok($part, '\\'), ':') . '}';
+    //                 $builder->withType(PathElementType::VARIABLE)
+    //                     ->withValue(ltrim(rtrim($part, '}'), '{'));
+    //             } else {
+    //                 $builder->withType(PathElementType::NORMAL)
+    //                     ->withValue($part);
+    //             }
+
+    //             $pathElements[] = $builder->build();
+    //         }
+    //     }
+    //     return $pathElements;
+    // }
 }

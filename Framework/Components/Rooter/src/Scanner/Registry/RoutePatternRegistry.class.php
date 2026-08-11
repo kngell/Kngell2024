@@ -65,7 +65,6 @@ class RoutePatternRegistry
         // Load routes once
         $this->routes = $this->routeCollector->getRouteObjects();
 
-        // Compile patterns
         foreach ($this->routes as $routePath => $routeObject) {
             // Store in the SAME format as before
             $this->compiledPatterns[$routePath] = $this->converter->toPhpRegex($routePath);

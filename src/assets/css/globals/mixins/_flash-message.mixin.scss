@@ -1,0 +1,352 @@
+@use "sass:map";
+@use "css/backend/admin/abstracts/variables" as *;
+@use "css/globals/functions/functions" as *;
+
+@use "css/globals/mixins/text-style" as *;
+@use "css/globals/mixins/animation" as *;
+@use "css/globals/mixins/icon-base" as *;
+
+// ============================================================
+// FLASH MESSAGE — CONFIGURABLE MIXIN
+// ============================================================
+//
+// Usage:
+//   @include flash-message();
+//   @include flash-message($namespace: "toast", $config: (radius: 1.6rem));
+//   @include flash-message($variants: (danger: (...)));
+//
+// ============================================================
+
+// ---------- Default config ----------
+$flash-default-config: (
+  gap: 1.2rem,
+  padding-y: 1.2rem,
+  padding-x: 1.6rem,
+  radius: $radius-s,
+  icon-size: 2rem,
+  close-size: 2.4rem,
+  close-padding: 0.4rem,
+  max-width: 60rem,
+  z-index: 1080,
+  toast-offset: 2rem,
+  enter-duration: 250ms,
+  exit-duration: 200ms,
+  easing: cubic-bezier(0.4, 0, 0.2, 1),
+  progress-height: 3px,
+  progress-default-duration: 5000ms,
+  shadow: $shadow-s,
+  toast-shadow: $shadow-l,
+  text-style: (
+    $text-m,
+    regular
+  ),
+  text-style-mobile: (
+    $text-s,
+    regular
+  )
+);
+
+// ---------- Default semantic variants ----------
+$flash-default-variants: (
+  danger: (
+    bg: $background-semantic-error-subtle,
+    border: $border-semantic-error,
+    text: $text-semantic-error,
+    icon: $icon-semantic-error,
+    progress: $danger-color
+  ),
+  warning: (
+    bg: $yellow-100,
+    border: $yellow-500,
+    text: $yellow-700,
+    icon: $yellow-700,
+    progress: $warning-color
+  ),
+  success: (
+    bg: $primary-100,
+    border: $success-color,
+    text: $primary-700,
+    icon: $success-color,
+    progress: $success-color
+  ),
+  info: (
+    bg: $primary-50,
+    border: $info-color,
+    text: $primary-700,
+    icon: $info-color,
+    progress: $info-color
+  )
+);
+
+// ---------- Helper: shallow-merge config ----------
+@function _flash-merge($defaults, $overrides) {
+  @if $overrides == null {
+    @return $defaults;
+  }
+  @return map.merge($defaults, $overrides);
+}
+
+// ============================================================
+// MAIN MIXIN
+// ============================================================
+@mixin flash-message(
+  $namespace: "flash",
+  $config: (),
+  $variants: null,
+  $include-keyframes: true,
+  $include-toast: true,
+  $include-progress: true
+) {
+  $cfg: _flash-merge($flash-default-config, $config);
+  $vars: if($variants == null, $flash-default-variants, $variants);
+
+  $root: ".#{$namespace}";
+  $container: ".#{$namespace}-container";
+
+  // ----------------------------------------------------------
+  // KEYFRAMES — namespaced to avoid collisions
+  // ----------------------------------------------------------
+  @if $include-keyframes {
+    @include keyframes(#{$namespace}SlideDown) {
+      from {
+        transform: translateY(-1.2rem);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    @include keyframes(#{$namespace}SlideOutUp) {
+      from {
+        transform: translateY(0);
+        opacity: 1;
+        max-height: 20rem;
+      }
+      to {
+        transform: translateY(-1.2rem);
+        opacity: 0;
+        max-height: 0;
+        margin: 0;
+        padding-top: 0;
+        padding-bottom: 0;
+      }
+    }
+
+    @if $include-progress {
+      @include keyframes(#{$namespace}Progress) {
+        from {
+          transform: scaleX(1);
+        }
+        to {
+          transform: scaleX(0);
+        }
+      }
+    }
+  }
+
+  // ----------------------------------------------------------
+  // CONTAINER
+  // ----------------------------------------------------------
+  #{$container} {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    width: 100%;
+    margin-bottom: 1.6rem;
+
+    @if $include-toast {
+      &--toast {
+        position: fixed;
+        top: map.get($cfg, toast-offset);
+        right: map.get($cfg, toast-offset);
+        z-index: map.get($cfg, z-index);
+        width: auto;
+        max-width: map.get($cfg, max-width);
+        margin-bottom: 0;
+        pointer-events: none;
+
+        #{$root} {
+          pointer-events: auto;
+          box-shadow: map.get($cfg, toast-shadow);
+        }
+
+        @media (max-width: map.get($breakpoints, sm)) {
+          top: auto;
+          bottom: map.get($cfg, toast-offset);
+          left: map.get($cfg, toast-offset);
+          right: map.get($cfg, toast-offset);
+          max-width: none;
+        }
+      }
+    }
+  }
+
+  // ----------------------------------------------------------
+  // ROOT
+  // ----------------------------------------------------------
+  #{$root} {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: map.get($cfg, gap);
+    width: 100%;
+    padding: map.get($cfg, padding-y) map.get($cfg, padding-x);
+    overflow: hidden;
+
+    border: $stroke-s solid transparent;
+    border-radius: map.get($cfg, radius);
+    box-shadow: map.get($cfg, shadow);
+
+    @include apply-text-style(map.get($cfg, text-style));
+    @include animation(
+      #{$namespace}SlideDown map.get($cfg, enter-duration) map.get($cfg, easing) both
+    );
+
+    // Exit state — toggled by JS
+    &--dismissing {
+      @include animation(
+        #{$namespace}SlideOutUp map.get($cfg, exit-duration) map.get($cfg, easing) forwards
+      );
+      pointer-events: none;
+    }
+
+    // ------- Status icon container -------
+    &__icon-container {
+      @include icon-base(
+        $size: map.get($cfg, icon-size),
+        $padding: false,
+        $icon-color: currentColor
+      );
+      margin-top: 0.2rem; // optical alignment
+    }
+
+    // ------- Body -------
+    &__body {
+      flex: 1 1 auto;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+
+    &__text {
+      word-wrap: break-word;
+      line-height: 1.5;
+    }
+
+    &__title {
+      font-weight: 600;
+    }
+
+    // ------- Close button -------
+    &__close {
+      @include icon-base(
+        $size: map.get($cfg, close-size),
+        $padding: map.get($cfg, close-padding),
+        $icon-color: currentColor,
+        $radius: $radius-xs
+      );
+      margin: -0.2rem -0.4rem -0.2rem 0;
+      cursor: pointer;
+      opacity: 0.75;
+      transition:
+        opacity map.get($cfg, exit-duration) ease,
+        background-color map.get($cfg, exit-duration) ease;
+
+      &:hover {
+        opacity: 1;
+        background-color: rgba(0, 0, 0, 0.06);
+      }
+
+      &:focus-visible {
+        opacity: 1;
+        outline: $stroke-s solid currentColor;
+        outline-offset: 2px;
+      }
+
+      &:active {
+        background-color: rgba(0, 0, 0, 0.12);
+      }
+    }
+
+    // ------- Progress bar (auto-dismiss countdown) -------
+    @if $include-progress {
+      &__progress {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: map.get($cfg, progress-height);
+        background-color: currentColor;
+        opacity: 0.4;
+        transform-origin: left center;
+        transform: scaleX(1);
+
+        [data-flash-duration] & {
+          @include animation(
+            #{$namespace}Progress var(--flash-duration, #{map.get($cfg, progress-default-duration)})
+              linear forwards
+          );
+        }
+      }
+
+      &:hover #{$root}__progress,
+      &:focus-within #{$root}__progress {
+        animation-play-state: paused;
+      }
+    }
+
+    // ------- Variants -------
+    @each $name, $tokens in $vars {
+      &--#{$name} {
+        background-color: map.get($tokens, bg);
+        border-color: map.get($tokens, border);
+        color: map.get($tokens, text);
+
+        #{$root}__icon-container {
+          color: map.get($tokens, icon);
+        }
+
+        @if $include-progress {
+          #{$root}__progress {
+            background-color: map.get($tokens, progress);
+            opacity: 0.6;
+          }
+        }
+      }
+    }
+  }
+
+  // ----------------------------------------------------------
+  // RESPONSIVE
+  // ----------------------------------------------------------
+  @media (max-width: map.get($breakpoints, sm)) {
+    #{$root} {
+      padding: 1rem 1.2rem;
+      gap: 0.8rem;
+
+      @include apply-text-style(map.get($cfg, text-style-mobile));
+    }
+  }
+
+  // ----------------------------------------------------------
+  // REDUCED MOTION
+  // ----------------------------------------------------------
+  @media (prefers-reduced-motion: reduce) {
+    #{$root},
+    #{$root}--dismissing,
+    #{$root}__close {
+      animation: none !important;
+      transition: none !important;
+    }
+
+    @if $include-progress {
+      #{$root}__progress {
+        animation: none !important;
+        display: none;
+      }
+    }
+  }
+}

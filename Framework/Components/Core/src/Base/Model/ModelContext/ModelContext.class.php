@@ -18,15 +18,14 @@ class ModelContext implements ModelContextInterface
     /**
      * @param string $operation
      * @param EntityManagerInterface $em
-     * @param Entity $entity
+     * @param Entity $entityPrototype
      * @param mixed $params
      *
      * @return QueryResult
      */
     public function execute(string $operation, EntityManagerInterface $em, Entity $entityPrototype, mixed $params): QueryResult
     {
-        $em->reset();
-        $em->setEntity($entityPrototype);
+        $em->reset()->setEntity($entityPrototype);
 
         if (!$this->has($operation)) {
             throw new InvalidArgumentException("Operation '$operation' not supported");

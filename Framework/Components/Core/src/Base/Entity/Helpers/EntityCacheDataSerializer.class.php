@@ -35,7 +35,7 @@ final class EntityCacheDataSerializer implements EntityDataSerializerInterface
 
         try {
             $mainData = $data['__main_data'] ?? [];
-            return $this->entityFactory->createFromClient($entityClass, $mainData);
+            return $this->entityFactory->createFromClient((string) $entityClass, $mainData);
         } catch (Throwable $e) {
             throw new CacheException('Failed to restore entity from cache data: ' . $e->getMessage());
         }

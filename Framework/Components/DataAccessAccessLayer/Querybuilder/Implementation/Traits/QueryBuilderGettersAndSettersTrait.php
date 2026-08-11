@@ -24,86 +24,6 @@ trait QueryBuilderGettersAndSettersTrait
     }
 
     /**
-     * @return array
-     */
-    public function getTableAlias(): array
-    {
-        return $this->tableAlias;
-    }
-
-    /**
-     * @param array $tableAlias
-     *
-     * @return SqlComponent
-     */
-    public function setTableAlias(array $tableAlias): SqlComponent
-    {
-        $this->tableAlias = $tableAlias;
-
-        return $this;
-    }
-
-    /**
-     * @return array
-     */
-    public function getAliasCheck(): array
-    {
-        return $this->aliasCheck;
-    }
-
-    /**
-     * @param array $aliasCheck
-     *
-     * @return SqlComponent
-     */
-    public function setAliasCheck(array $aliasCheck): SqlComponent
-    {
-        $this->aliasCheck = $aliasCheck;
-
-        return $this;
-    }
-
-    /**
-     * @return array
-     */
-    public function getParameters(): array
-    {
-        return $this->parameters;
-    }
-
-    /**
-     * @param array $parameters
-     *
-     * @return SqlComponent
-     */
-    public function setParameters(array $parameters): SqlComponent
-    {
-        $this->parameters = $parameters;
-
-        return $this;
-    }
-
-    /**
-     * @return array
-     */
-    public function getBindArr(): array
-    {
-        return $this->bindArr;
-    }
-
-    /**
-     * @param array $bindArr
-     *
-     * @return SqlComponent
-     */
-    public function setBindArr(array $bindArr): SqlComponent
-    {
-        $this->bindArr = $bindArr;
-
-        return $this;
-    }
-
-    /**
      * @return string
      */
     public function getQuery(): string
@@ -119,23 +39,6 @@ trait QueryBuilderGettersAndSettersTrait
     public function setQuery(string $query): SqlComponent
     {
         $this->query = $query;
-
-        return $this;
-    }
-
-    public function getLogicalToPhysicalMap(): array
-    {
-        return $this->logicalToPhysicalMap;
-    }
-
-    /**
-     * @param array $logicalToPhysicalMap
-     *
-     * @return SqlComponent
-     */
-    public function setLogicalToPhysicalMap(array $logicalToPhysicalMap): SqlComponent
-    {
-        $this->logicalToPhysicalMap = $logicalToPhysicalMap;
 
         return $this;
     }
@@ -156,27 +59,6 @@ trait QueryBuilderGettersAndSettersTrait
     public function setMethod(string $method): SqlComponent
     {
         $this->method = $method;
-
-        return $this;
-    }
-
-    /**
-     * @return array
-     */
-    public function getTables(): array
-    {
-        return $this->tables;
-    }
-
-    /**
-     * @param array $tables
-     *
-     * @return SqlComponent
-     */
-    public function setTables(array $tables): SqlComponent
-    {
-        $this->tables = $tables;
-
         return $this;
     }
 
@@ -201,6 +83,20 @@ trait QueryBuilderGettersAndSettersTrait
         return $this;
     }
 
+    public function setContext(?StatementType $context): ?SqlComponent
+    {
+        $this->context = $context;
+        return $this;
+    }
+
+    /**
+     * @return null|StatementType
+     */
+    public function getContext(): ?StatementType
+    {
+        return $this->context;
+    }
+
     /**
      * @return null|string
      */
@@ -217,7 +113,6 @@ trait QueryBuilderGettersAndSettersTrait
     public function setTable(string $table): SqlComponent
     {
         $this->table = $table;
-
         return $this;
     }
 
@@ -262,18 +157,30 @@ trait QueryBuilderGettersAndSettersTrait
     }
 
     /**
-     * @return array
-     */
-    public function getParameterManagerArray(): array
-    {
-        return $this->parameterManagerArray;
-    }
-
-    /**
      * @return CollectionInterface
      */
     public function getChildren(): CollectionInterface
     {
         return $this->children;
+    }
+
+    /**
+     * @param null|SqlStatement $sqlStatement
+     *
+     * @return SqlComponent
+     */
+    public function setStatement(?SqlStatement $sqlStatement): SqlComponent
+    {
+        $this->sqlStatement = $sqlStatement;
+
+        return $this;
+    }
+
+    /**
+     * @return null|SqlStatement
+     */
+    public function getStatement(): ?SqlStatement
+    {
+        return $this->sqlStatement;
     }
 }

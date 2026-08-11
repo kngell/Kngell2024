@@ -4,33 +4,42 @@ declare(strict_types=1);
 
 trait SqlQueryStructureTrait
 {
-    public function groupBy(string ...$columns): self
+    public function groupBy(string ...$columns): static
     {
-        $this->queryFlow['groupBy'] = true;
+        $this->ensureFromExists();
+        $this->queryFlow[] = 'groupBy';
         $this->groupByMap[__FUNCTION__] = $columns;
         $this->groupByMap['method'] = __FUNCTION__;
         return $this;
     }
 
-    public function orderBy(string ...$columnsDirections): self
+    public function orderBy(mixed ...$columnsDirections): static
     {
-        $this->queryFlow['orderBy'] = true;
-        $this->orderByColumns = $columnsDirections;
+        $this->ensureFromExists();
+        foreach ($columnsDirections as $column) {
+            if ($column instanceof SqlCaseblockBuilderInterface) {
+                $column->setParent($this);
+            }
+        }
+        $this->queryFlow[] = 'orderBy';
+        $this->orderByColumns[] = $columnsDirections;
         $this->method = __FUNCTION__;
         return $this;
     }
 
-    public function limit(int $limit): self
+    public function limit(int $limit): static
     {
-        $this->queryFlow['limit'] = true;
+        $this->ensureFromExists();
+        $this->queryFlow[] = 'limit';
         $this->limitMap[__FUNCTION__] = $limit;
         $this->limitMap['method'] = __FUNCTION__;
         return $this;
     }
 
-    public function offset(int $offset): self
+    public function offset(int $offset): static
     {
-        $this->queryFlow['offset'] = true;
+        $this->ensureFromExists();
+        $this->queryFlow[] = 'offset';
         $this->offsetMap[__FUNCTION__] = $offset;
         $this->offsetMap['method'] = __FUNCTION__;
         return $this;

@@ -1,8 +1,14 @@
+@use "css/globals" as *;
 @use "css/backend/admin/abstracts" as *;
 
 // ============================================
 // INPUT FIELD COMPONENT
 // ============================================
+form {
+  width: 100%;
+
+  @include input-field((textarea, select, custom-select, radio, checkbox, toggle));
+}
 .input-show {
   width: 100%;
   height: 60vh; // OR a fixed height like 600px. CRITICAL for scrolling.
@@ -40,7 +46,4 @@
       }
     }
   }
-}
-.input-wrapper {
-  @include input-field((textarea, select, custom-select, radio, checkbox, toggle));
 }

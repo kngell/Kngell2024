@@ -97,22 +97,7 @@ class FileContentManager implements FileContentInterface
         if ($result === false) {
             throw new FileException("Cannot write to file: {$filePath}");
         }
-        // if (is_writable($filePath)) {
-        //     @chmod($filePath, 0644);
-        // }
     }
-
-    // public function write(string $filePath, string $content, bool $append = false): void
-    // {
-    //     $flags = $append ? FILE_APPEND : 0;
-    //     $result = file_put_contents($filePath, $content, $flags);
-
-    //     if ($result === false) {
-    //         throw new FileException("Cannot write to file: {$filePath}");
-    //     }
-
-    //     chmod($filePath, 0644);
-    // }
 
     public function getStream(string $filePath, string $mode = 'r')
     {
@@ -123,7 +108,7 @@ class FileContentManager implements FileContentInterface
         return $stream;
     }
 
-    public function putStream(string $filePath, $stream): void
+    public function putStream(string $filePath, mixed $stream): void
     {
         $targetStream = $this->getStream($filePath, 'w');
         stream_copy_to_stream($stream, $targetStream);

@@ -1,29 +1,30 @@
 import BrowserLogger from "./BrowserLogger";
 
+let instance = null;
+
 export default class AjaxHandler {
   constructor(options = {}) {
+    if (instance) {
+      return instance;
+    }
+
+    this.logger = new BrowserLogger("AjaxHandler");
     this.defaults = {
       method: "GET",
       headers: {
         Accept: "application/json",
         "X-Requested-With": "XMLHttpRequest"
       },
-      json: true,
       timeout: 30000,
       ...options
     };
-    this.logger = new BrowserLogger("AjaxHandler");
+
+    instance = this;
+    return instance;
   }
 
   async request(customOptions = {}) {
     const options = { ...this.defaults, ...customOptions };
-
-    // ═══════════════════════════════════════════════════
-    // FIX #1: Guard against undefined overriding defaults
-    // ═══════════════════════════════════════════════════
-    if (options.json === undefined) {
-      options.json = this.defaults.json;
-    }
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), options.timeout);
@@ -57,144 +58,77 @@ export default class AjaxHandler {
       const response = await fetch(options.url, config);
       clearTimeout(timeoutId);
 
-      return await this.handleResponse(response, options);
+      // ✅ Parse and return response to caller
+      return await this.parseResponse(response);
     } catch (error) {
       clearTimeout(timeoutId);
-      return this.handleError(error, options);
+
+      // ✅ Return error as a structured response
+      return {
+        success: false,
+        error: this.formatError(error, options),
+        status: error?.status ?? null,
+        _isError: true
+      };
     }
   }
 
-  async handleResponse(response, options) {
-    if (response.status === 302 || response.status === 301 || response.type === "opaqueredirect") {
-      const redirectUrl = response.headers.get("Location");
-      this.logger.debug("HTTP Redirect detected:", redirectUrl);
-
-      return {
-        success: true,
-        redirected: true,
-        redirectType: "http",
-        redirectUrl: redirectUrl,
-        status: response.status,
-        message: "Redirect detected"
-      };
-    }
-
+  async parseResponse(response) {
     const responseText = await response.text();
     const contentType = response.headers.get("content-type") || "";
-    const isHtml = contentType.includes("text/html");
     const isJson = contentType.includes("application/json");
 
     this.logger.debug("Response received:", {
       status: response.status,
       ok: response.ok,
-      contentType: contentType,
-      redirected: response.redirected,
+      contentType,
       url: response.url,
       textLength: responseText.length
     });
 
-    // ═══════════════════════════════════════════════════════════
-    // FIX #2: Parse JSON ONCE upfront if content type is JSON.
-    //         This eliminates the double-parse and ensures the
-    //         full body is ALWAYS available for error responses.
-    // ═══════════════════════════════════════════════════════════
     if (isJson && responseText) {
-      let jsonData;
-
       try {
-        jsonData = JSON.parse(responseText);
-      } catch (parseError) {
-        this.logger.error("JSON parse error:", parseError);
-        throw new Error(`Invalid JSON response: ${responseText.substring(0, 100)}`);
-      }
-
-      this.logger.debug("Parsed JSON response:", jsonData);
-
-      // Handle JSON redirect
-      if (jsonData.redirect) {
-        this.logger.debug("JSON response contains redirect:", jsonData.redirect);
+        const jsonData = JSON.parse(responseText);
         return {
           ...jsonData,
-          redirected: true,
-          redirectType: "json",
-          finalUrl: jsonData.redirect
+          status: response.status,
+          ok: response.ok,
+          _parsed: true
         };
-      }
-
-      // ───────────────────────────────────────────────
-      // For error responses (422, 400, 500, etc.):
-      // Return the FULL parsed body — don't throw.
-      // The caller (processAjaxResult) knows how to
-      // handle { success: false, errors: { ... } }.
-      // ───────────────────────────────────────────────
-      if (!response.ok) {
-        this.logger.warn(
-          `Server returned ${response.status}:`,
-          jsonData.error || jsonData.message || response.statusText
-        );
-
-        // Ensure the envelope always has a consistent shape
+      } catch (parseError) {
+        this.logger.error("JSON parse error:", parseError);
+        // Return raw response if JSON parsing fails
         return {
-          success: false,
-          ...jsonData, // ← The FULL server response, including `errors`
-          status: response.status
+          data: responseText,
+          status: response.status,
+          ok: response.ok,
+          _parsed: false,
+          _parseError: parseError.message
         };
       }
-
-      // Happy path: 2xx with JSON
-      return jsonData;
     }
 
-    // ── Non-JSON responses below ──
-
-    // Handle empty successful responses
-    if (response.ok && (!responseText || responseText.trim() === "")) {
-      this.logger.debug("Empty successful response");
-      return {
-        success: true,
-        empty: true,
-        status: response.status,
-        message: "Request completed successfully"
-      };
-    }
-
-    // Handle non-JSON error responses
-    if (!response.ok) {
-      const errorMessage = responseText
-        ? responseText.substring(0, 200)
-        : `HTTP ${response.status}: ${response.statusText}`;
-
-      this.logger.error("Request failed:", errorMessage);
-      throw new Error(errorMessage);
-    }
-
-    // Fallback: return text
-    return responseText;
+    // ✅ Return plain text for non-JSON responses
+    return {
+      data: responseText,
+      status: response.status,
+      ok: response.ok,
+      _parsed: false
+    };
   }
 
-  handleError(error, options) {
+  formatError(error, options) {
     let errorMessage = "An error occurred";
-    let errorDetails = {};
 
     if (error.name === "AbortError") {
       errorMessage = `Request to ${options.url} timed out after ${options.timeout}ms`;
-      errorDetails = { type: "timeout", timeout: options.timeout };
-    } else if (error.message.includes("Failed to fetch")) {
+    } else if (error.message?.includes("Failed to fetch")) {
       errorMessage = `Network error: Cannot connect to ${options.url}`;
-      errorDetails = { type: "network", url: options.url };
     } else {
       errorMessage = error.message || errorMessage;
-      errorDetails = { type: "unknown", originalError: error };
     }
 
-    this.logger.error(`Request to ${options.url} failed:`, errorMessage);
-
-    return {
-      success: false,
-      error: errorMessage,
-      details: errorDetails,
-      originalError: error
-    };
+    return errorMessage;
   }
 
   async get(url, data = null, options = {}) {

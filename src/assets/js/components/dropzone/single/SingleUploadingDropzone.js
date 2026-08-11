@@ -4,16 +4,36 @@ import BrowserLogger from "js/core/utils/BrowserLogger";
 const logger = new BrowserLogger("SingleUploadingDropzone");
 
 export default class SingleUploadingDropzone extends BaseDropzone {
-  constructor(element, files, options = {}) {
-    super(element, options);
+  constructor(element, filesOrOptions, options = {}) {
+    // Handle both calling patterns
+    let files = [];
+    let finalOptions = options;
+
+    if (Array.isArray(filesOrOptions)) {
+      files = filesOrOptions;
+    } else if (filesOrOptions && typeof filesOrOptions === "object") {
+      finalOptions = filesOrOptions;
+      files = finalOptions.files || [];
+    }
+
+    super(element, finalOptions);
+
     this.files = files;
 
-    // CRITICAL: Sync files to the new input
-    this.syncFilesToInput(files);
+    if (!Array.isArray(this.files)) {
+      this.files = [];
+    }
+
+    if (this.files.length > 0) {
+      this.syncFilesToInput(this.files);
+    }
 
     this.progress = 0;
     this.interval = null;
-    logger.debug("SingleUploadingDropzone initialized", { inputName: this.inputName });
+    logger.debug("SingleUploadingDropzone initialized", {
+      inputName: this.inputName,
+      fileCount: this.files.length
+    });
 
     this.startUpload();
   }

@@ -31,7 +31,6 @@ class UpdateStatement extends AbstractStatement
         $parts = [$table . ' AS ' . $alias];
         $this->state->tables[$table] = $this->getColumns();
         $this->state->isUpdate = true;
-        $this->state->statementContext = self::TYPE;
 
         $parts[] = parent::build();
         $this->query = implode(' ', $parts);
@@ -66,6 +65,7 @@ class UpdateStatement extends AbstractStatement
             'set',
             $this->em,
         );
+        $setClause->setContext(self::TYPE);
         $this->add($setClause);
     }
 }

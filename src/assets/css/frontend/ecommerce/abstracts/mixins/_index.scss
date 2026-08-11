@@ -1,8 +1,6 @@
-@forward "responsive-mixins";
-@forward "flex-mixins";
+@forward "css/globals/mixins/responsive";
 @forward "font_face-mixins";
 @forward "search-mixins";
 @forward "dropdown-title-mixins";
-@forward "miscellaneous-mixins";
-@forward "button-mixins";
-@forward "input-mixins";
+// @forward "button";
+@forward "input-field";

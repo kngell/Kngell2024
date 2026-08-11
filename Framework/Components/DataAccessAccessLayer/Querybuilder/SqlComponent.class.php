@@ -12,8 +12,10 @@ abstract class SqlComponent
     protected string $query = '';
     protected ?TablesAliasHelper $helper = null;
     protected null|string|Closure $table = null;
+    protected ?StatementType $context = null;
     protected bool $withAlias = false;
     protected bool $distinct = false;
+    protected bool $distinctCount = false;
     protected ?string $customAlias = null;
     protected ?string $method = null;
     protected ?string $joinContext = null;
@@ -40,7 +42,7 @@ abstract class SqlComponent
         // Base implementation
     }
 
-    public function getContext(): null|StatementType
+    public function getBulkUpdateType(): ?BulkUpdateType
     {
         return null;
     }
@@ -90,14 +92,6 @@ abstract class SqlComponent
         return $this->state->parameters;
     }
 
-    /**
-     * @return null|SqlStatement
-     */
-    public function getStatement(): ?SqlStatement
-    {
-        return $this->sqlStatement;
-    }
-
     public function getAliasCheck(): array
     {
         return $this->state->aliasCheck;
@@ -127,7 +121,7 @@ abstract class SqlComponent
     }
 
     /**
-     * @return null|ConditionRuleInterface
+     * @return null|QueryRulesInterface
      */
     public function getRules(): ?QueryRulesInterface
     {
@@ -137,14 +131,15 @@ abstract class SqlComponent
     public function initializeWithDependencies(
         TablesAliasHelper $helper,
         QueryState $initialState,
+        ?string $customAlias = null,
+        ?array $queryMap = null,
     ): void {
         $this->helper = $helper;
         $this->state = $initialState;
+        $this->customAlias = $customAlias;
+        $this->queryMap = $queryMap ?? [];
     }
 
-    /**
-     * @return null|SqlClause|SqlCteClause
-     */
     public function getSqlClause(): null|SqlClause|SqlCteClause
     {
         return null;
@@ -165,7 +160,7 @@ abstract class SqlComponent
     public function prepareChild(SqlComponent $child): void
     {
         if ($this->helper && method_exists($child, 'initializeWithDependencies')) {
-            $child->initializeWithDependencies($this->helper, $this->state);
+            $child->initializeWithDependencies($this->helper, $this->state, $this->customAlias, $this->queryMap);
         }
     }
 
@@ -211,10 +206,18 @@ abstract class SqlComponent
             parameters: $this->getParameters(),
             executionTimeMs: $duration,
             metadata: [
-                'type' => (new ReflectionClass($this))->getShortName(),
+                'type' => (CustomReflection::getInstance($this)->getClass())->getShortName(),
                 'precedence_logic_detected' => $hasPrecedenceIssues,
             ],
         );
+    }
+
+    protected function getAliasPrefix(?string $alias): string
+    {
+        if ($this->customAlias !== null) {
+            return $this->customAlias . '.';
+        }
+        return !empty($alias) ? $alias . '.' : '';
     }
 
     protected function addParameters(): void

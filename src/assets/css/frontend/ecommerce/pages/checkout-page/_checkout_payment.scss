@@ -1,0 +1,391 @@
+@use "sass:color";
+@use "css/globals" as *;
+@use "css/frontend/ecommerce/abstracts" as *;
+
+// ============================================================
+// PAYMENT METHOD
+// CSS-only selectable accordion
+// ============================================================
+
+.payment-method {
+  .payment-options {
+    @include selectable-accordion($gap: 1.2rem, $content-display: block);
+
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  // ----------------------------------------------------------
+  // Payment option
+  // ----------------------------------------------------------
+
+  .payment-option {
+    position: relative;
+    min-width: 0;
+    overflow: hidden;
+
+    border: 0.2rem solid $border-neutral-secondary;
+    border-radius: $radius-m;
+
+    background: $background-neutral-primary;
+
+    transition:
+      border-color 0.25s ease,
+      background-color 0.25s ease,
+      box-shadow 0.25s ease;
+  }
+
+  // ----------------------------------------------------------
+  // Payment header
+  // ----------------------------------------------------------
+
+  .payment-header {
+    position: relative;
+
+    display: block;
+
+    width: 100%;
+    min-width: 0;
+    min-height: 7.6rem;
+
+    /*
+     * Right padding reserves space for the
+     * selection indicator.
+     */
+    padding: 1.8rem 6rem 1.8rem 2rem;
+
+    cursor: pointer;
+
+    transition: background-color 0.2s ease;
+
+    &:hover {
+      background: color.change($background-brand-primary, $alpha: 0.04);
+    }
+  }
+
+  // ----------------------------------------------------------
+  // Payment information
+  // ----------------------------------------------------------
+
+  .payment-info {
+    display: grid;
+
+    grid-template-columns: minmax(0, 1fr) auto;
+
+    grid-template-areas:
+      "title icons"
+      "description icons";
+
+    align-items: center;
+
+    column-gap: 2rem;
+    row-gap: 0.4rem;
+
+    width: 100%;
+    min-width: 0;
+  }
+
+  // ----------------------------------------------------------
+  // Title
+  // ----------------------------------------------------------
+
+  .payment-title {
+    grid-area: title;
+
+    min-width: 0;
+
+    font-size: 1.6rem;
+    font-weight: 700;
+    line-height: 1.3;
+
+    color: $text-neutral-primary;
+  }
+
+  // ----------------------------------------------------------
+  // Description
+  // ----------------------------------------------------------
+
+  .payment-info > .selectable-options__info-description {
+    grid-area: description; // FIXED: Added grid-area
+
+    min-width: 0;
+
+    font-size: 1.4rem;
+    line-height: 1.5;
+
+    color: $text-neutral-secondary;
+  }
+
+  // ----------------------------------------------------------
+  // Payment provider icons
+  // ----------------------------------------------------------
+
+  .payment-icons {
+    grid-area: icons; // FIXED: Added grid-area
+
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+
+    gap: 0.8rem;
+
+    min-width: max-content;
+  }
+
+  .payment-icons .icon {
+    display: block;
+
+    width: 5rem;
+    height: 3.2rem;
+
+    padding: 0.5rem;
+
+    border: 1px solid $border-neutral-secondary;
+    border-radius: $radius-s;
+
+    background: $background-neutral-primary;
+  }
+
+  // ----------------------------------------------------------
+  // Selection indicator
+  // ----------------------------------------------------------
+
+  .payment-option::after {
+    content: "✓";
+
+    position: absolute;
+    top: 1.8rem;
+    right: 1.8rem;
+
+    z-index: 2;
+
+    display: grid;
+    place-items: center;
+
+    width: 2.4rem;
+    height: 2.4rem;
+
+    border-radius: 50%;
+
+    background: $background-brand-primary;
+    color: $text-brand-inverse;
+
+    font-size: 1.2rem;
+    font-weight: 700;
+
+    opacity: 0;
+    transform: scale(0.7);
+
+    transition:
+      opacity 0.2s ease,
+      transform 0.2s ease;
+  }
+
+  // ----------------------------------------------------------
+  // Selected payment option
+  // ----------------------------------------------------------
+
+  .payment-option:has(input[type="radio"]:checked) {
+    border-color: $border-brand-primary;
+
+    background: $background-brand-tertiary;
+
+    box-shadow: $shadow-s;
+
+    &::after {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .payment-header {
+      background: transparent;
+    }
+  }
+
+  // ----------------------------------------------------------
+  // Accordion content
+  // ----------------------------------------------------------
+
+  .payment-option > .selectable-options__option-content {
+    width: 100%;
+    min-width: 0;
+
+    padding: 0 2rem 2rem;
+
+    // FIXED: Smooth content expansion to prevent jumps
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-in-out;
+
+    // Content wrapper for smooth expansion
+    > .payment-content-wrapper {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease-in-out;
+    }
+
+    > .payment-content-wrapper > .payment-content {
+      width: 100%;
+      min-width: 0;
+
+      padding: 1.8rem 0 0;
+
+      border-top: 1px solid $border-neutral-secondary;
+
+      color: $text-neutral-secondary;
+
+      line-height: 1.6;
+    }
+  }
+
+  // FIXED: When checked, expand the content smoothly
+  .payment-option:has(input[type="radio"]:checked) {
+    > .selectable-options__option-content {
+      display: block;
+      max-height: 800px; // Large enough to contain content
+
+      > .payment-content-wrapper {
+        max-height: 600px; // Adjust based on your content height
+      }
+    }
+  }
+}
+
+// ============================================================
+// CARD PAYMENT FORM
+// ============================================================
+
+.payment-option:has(input[value="card"]:checked) {
+  .payment-content {
+    .input-field {
+      margin-bottom: 1.4rem;
+    }
+
+    .input-field:last-child {
+      margin-bottom: 0;
+    }
+
+    #card_number,
+    #card_name,
+    #expiry,
+    #cvv {
+      width: 100%;
+    }
+  }
+}
+
+// ============================================================
+// PAYMENT SECURITY
+// ============================================================
+
+.payment-security {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+
+  margin-top: 1.6rem;
+  padding: 1.2rem 1.4rem;
+
+  border: 1px solid $border-neutral-secondary;
+  border-radius: $radius-m;
+
+  background: $background-neutral-primary;
+
+  // ----------------------------------------------------------
+  // Security icon
+  // ----------------------------------------------------------
+
+  .security-icon-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex: 0 0 auto;
+
+    width: 3.2rem;
+    height: 3.2rem;
+
+    border-radius: 50%;
+
+    background: color.change($background-brand-primary, $alpha: 0.08);
+  }
+
+  .selectable-options__security-icon {
+    width: 1.8rem;
+    height: 1.8rem;
+
+    color: $text-brand-primary;
+  }
+
+  // ----------------------------------------------------------
+  // Security text
+  // ----------------------------------------------------------
+
+  .security-text {
+    margin: 0;
+
+    font-size: 1.3rem;
+    line-height: 1.5;
+
+    color: $text-neutral-secondary;
+  }
+}
+
+// ============================================================
+// RESPONSIVE
+// ============================================================
+
+@media (max-width: 767px) {
+  .payment-method {
+    .payment-header {
+      min-height: 7.2rem;
+
+      padding: 1.6rem 5.2rem 1.6rem 1.6rem;
+    }
+
+    .payment-info {
+      grid-template-columns: 1fr;
+
+      grid-template-areas:
+        "title"
+        "description"
+        "icons";
+
+      row-gap: 0.6rem;
+    }
+
+    // FIXED: Ensure grid areas work in responsive
+    .payment-title {
+      grid-area: title;
+    }
+
+    .payment-info > .selectable-options__info-description {
+      grid-area: description;
+    }
+
+    .payment-icons {
+      grid-area: icons;
+    }
+
+    .payment-icons {
+      justify-content: flex-start;
+
+      margin-top: 0.4rem;
+    }
+
+    .payment-icons .icon {
+      width: 4.6rem;
+      height: 3rem;
+    }
+
+    .payment-option::after {
+      top: 1.6rem;
+      right: 1.6rem;
+    }
+
+    .payment-option > .selectable-options__option-content {
+      padding: 0 1.6rem 1.6rem;
+    }
+  }
+}

@@ -1,0 +1,977 @@
+@use "sass:list";
+@use "sass:map";
+@use "sass:color";
+@use "css/frontend/ecommerce/abstracts/variables" as *;
+@use "css/frontend/ecommerce/abstracts/_input_form-config" as *;
+@use "css/globals/functions/functions" as *;
+@use "css/globals/mixins/miscellaneous" as *;
+@use "css/globals/mixins/text-style" as *;
+@use "css/globals/mixins/icon_with_badge" as *;
+
+// Global config storage variable for override support
+$current-input-config: $input-field-config !default;
+
+@function config($key) {
+  @return map.get($current-input-config, $key);
+}
+
+@function component-class() {
+  @return config("component-class");
+}
+
+// ============================================
+// BASE STYLES
+// ============================================
+@mixin input-field-base() {
+  $selector: "." + component-class();
+
+  #{$selector} {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.8rem;
+    position: relative;
+
+    // BODY
+    &__body {
+      position: relative;
+      display: flex;
+      align-items: center;
+      width: 100%;
+      gap: config("gap-typing-area");
+      color: inherit;
+      background-color: config("background-default");
+      border: config("border-width") solid config("border-default");
+      border-radius: config("border-radius");
+      @include transition();
+
+      &:hover {
+        border-color: config("border-hover");
+      }
+
+      &:focus-within {
+        border-color: config("border-focus");
+        box-shadow: config("shadow");
+        #{$selector}__icon-right svg {
+          transform: rotate(180deg);
+        }
+      }
+
+      &:has(#{$selector}__label) {
+        .text.placeholder {
+          display: none;
+        }
+      }
+
+      &.open {
+        #{$selector}__icon-right svg {
+          transform: rotate(180deg);
+        }
+      }
+
+      &.open:has(#{$selector}__icon-left) {
+        #{$selector}__custom-select ~ #{$selector}__label {
+          left: 1.6rem;
+        }
+      }
+
+      // Left icon positioning
+      &:has(#{$selector}__icon-left) {
+        #{$selector}__input,
+        #{$selector}__textarea,
+        #{$selector}__select,
+        #{$selector}__custom-select {
+          padding-left: calc(
+            #{config("padding-horizontal")} + #{config("icon-size")} + #{config("gap-typing-area")}
+          );
+        }
+        #{$selector}__label {
+          left: calc(
+            #{config("padding-horizontal")} + #{config("icon-size")} + #{config("gap-typing-area")}
+          );
+        }
+        #{$selector}__input:focus ~ #{$selector}__label,
+        #{$selector}__input:not(:placeholder-shown) ~ #{$selector}__label,
+        #{$selector}__textarea:focus ~ #{$selector}__label,
+        #{$selector}__textarea:not(:placeholder-shown) ~ #{$selector}__label,
+        #{$selector}__select:focus ~ #{$selector}__label,
+        #{$selector}__select:valid ~ #{$selector}__label,
+        #{$selector}__custom-select.has-value ~ #{$selector}__label {
+          left: config("padding-horizontal");
+        }
+        #{$selector}__icon-left {
+          position: absolute;
+          pointer-events: none;
+          top: 50%;
+          transform: translateY(-50%);
+          left: config("padding-horizontal");
+        }
+      }
+
+      // Right icon positioning
+      &:has(#{$selector}__icon-right) {
+        #{$selector}__right-container {
+          position: absolute;
+          pointer-events: none;
+          top: 50%;
+          transform: translateY(-50%);
+          right: 0;
+        }
+      }
+    }
+
+    &__input-container {
+      position: relative;
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      align-items: flex-start;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    &__icon-left,
+    &__icon-right,
+    &__clear,
+    &__password-toggle {
+      @include icon-with-badge(
+        $with-badge: false,
+        $icon-size: config("icon-size"),
+        $padding: 0,
+        $align-self: false
+      );
+      svg {
+        @include transition();
+      }
+    }
+
+    &__right-container {
+      display: flex;
+      align-items: center;
+      padding-right: config("padding-horizontal");
+      gap: config("gap-typing-area");
+      flex-shrink: 0;
+    }
+
+    &__counter {
+      @include apply-text-style(config("counter-text-style"));
+      white-space: nowrap;
+    }
+
+    &__footer {
+      width: 100%;
+      display: none;
+    }
+
+    &__helper {
+      @include apply-text-style(config("helper-text-style"));
+      flex: 1;
+    }
+
+    &__error {
+      @include apply-text-style(config("error-text-style"));
+      display: none;
+      flex: 1;
+    }
+
+    &__footer-counter {
+      @include apply-text-style(config("error-text-style"));
+    }
+
+    // MODIFIERS
+    &.is-required {
+      #{$selector}__label::after {
+        content: "*";
+        color: config("text-error");
+        margin-left: 0.4rem;
+      }
+    }
+
+    &.is-error {
+      #{$selector}__body {
+        border-color: config("border-error");
+        &:focus-within {
+          box-shadow: config("shadow");
+        }
+      }
+      #{$selector}__label {
+        color: config("text-error");
+      }
+      #{$selector}__footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 config("padding-horizontal");
+        #{$selector}__error {
+          display: block;
+        }
+        #{$selector}__helper {
+          display: none;
+        }
+      }
+
+      #{$selector}__icon-left svg,
+      #{$selector}__icon-right svg {
+        fill: config("icon-error");
+      }
+      #{$selector}__counter,
+      #{$selector}__footer-counter {
+        color: config("text-error");
+      }
+    }
+
+    &.is-disabled {
+      #{$selector}__body {
+        background-color: config("background-disabled");
+        border-color: config("border-disabled");
+        cursor: not-allowed;
+        &:hover {
+          background-color: config("background-disabled");
+          border-color: config("border-disabled");
+        }
+      }
+      #{$selector}__input,
+      #{$selector}__textarea,
+      #{$selector}__select,
+      #{$selector}__custom-select {
+        color: config("text-disabled");
+        cursor: not-allowed;
+      }
+      #{$selector}__label {
+        color: config("text-disabled");
+      }
+      #{$selector}__icon-left svg,
+      #{$selector}__icon-right svg {
+        fill: config("icon-disabled");
+      }
+      #{$selector}__counter,
+      #{$selector}__footer-counter {
+        color: config("text-disabled");
+      }
+    }
+  }
+}
+
+// ============================================
+// INPUT TYPE
+// ============================================
+@mixin input-type() {
+  $selector: "." + component-class();
+
+  #{$selector} {
+    &__input {
+      width: 100%;
+      height: config("input-height");
+      padding: config("padding-vertical") config("padding-horizontal");
+      background-color: transparent;
+      border: none;
+      outline: none;
+      @include apply-text-style(config("input-text-style"));
+
+      &::placeholder {
+        color: transparent;
+      }
+
+      &:disabled {
+        cursor: not-allowed;
+      }
+    }
+  }
+}
+
+// ============================================
+// FLOATING LABEL (FIXED CENTERING)
+// ============================================
+@mixin floating-label() {
+  $selector: "." + component-class();
+
+  #{$selector}__label {
+    position: absolute;
+    top: 50%;
+    left: config("padding-horizontal");
+    transform: translateY(-50%);
+    pointer-events: none;
+    background-color: transparent;
+    padding: 0 0.4rem;
+    white-space: nowrap;
+    z-index: 1;
+    line-height: 1;
+    @include transition(all, config("transition-duration"), config("transition-timing"));
+    @include apply-text-style(config("label-text-style"));
+
+    #{$selector}__body:focus-within & {
+      color: config("text-default");
+    }
+  }
+
+  #{$selector}__input:focus ~ #{$selector}__label,
+  #{$selector}__input:not(:placeholder-shown) ~ #{$selector}__label,
+  #{$selector}__textarea:focus ~ #{$selector}__label,
+  #{$selector}__textarea:not(:placeholder-shown) ~ #{$selector}__label,
+  #{$selector}__select:focus ~ #{$selector}__label,
+  #{$selector}__select:valid ~ #{$selector}__label,
+  #{$selector}__body.open #{$selector}__label,
+  #{$selector}__custom-select.has-value ~ #{$selector}__label {
+    top: 0;
+    transform: translateY(-50%);
+    @include apply-text-style(config("label-floating-text-style"));
+    background-color: config("background-default");
+    padding: config("floating-label-vertical-padding") config("floating-label-horizontal-padding");
+    border-radius: config("floating-label-border-radius");
+  }
+}
+
+// ============================================
+// TEXTAREA TYPE
+// ============================================
+@mixin textarea-type() {
+  $selector: "." + component-class();
+  #{$selector} {
+    &__textarea {
+      width: 100%;
+      min-height: config("textarea-min-height");
+      padding: config("textarea-padding-vertical") config("padding-horizontal");
+      background-color: transparent;
+      border: none;
+      outline: none;
+      resize: vertical;
+      font-family: inherit;
+      @include apply-text-style(config("input-text-style"));
+
+      &::placeholder {
+        color: transparent;
+      }
+
+      &:disabled {
+        cursor: not-allowed;
+      }
+    }
+  }
+}
+
+// ============================================
+// SELECT TYPE
+// ============================================
+@mixin select-type() {
+  $selector: "." + component-class();
+  #{$selector} {
+    &__select {
+      width: 100%;
+      height: config("input-height");
+      padding: config("padding-vertical") config("padding-horizontal");
+      background-color: transparent;
+      border: none;
+      outline: none;
+      cursor: pointer;
+      appearance: none;
+      @include apply-text-style(config("input-text-style"));
+
+      &::placeholder {
+        color: transparent;
+      }
+
+      &:invalid {
+        color: config("text-placeholder");
+      }
+
+      &:valid {
+        color: config("text-default");
+      }
+
+      option {
+        color: config("text-default");
+      }
+
+      option[value=""] {
+        color: config("text-placeholder");
+      }
+
+      &:disabled {
+        cursor: not-allowed;
+        color: config("text-disabled");
+      }
+    }
+  }
+}
+
+// ============================================
+// CUSTOM SELECT TYPE
+// ============================================
+@mixin custom-select-type() {
+  $selector: "." + component-class();
+  #{$selector} {
+    &__custom-select {
+      width: 100%;
+      height: config("input-height");
+      padding: config("padding-vertical") config("padding-horizontal");
+      background-color: transparent;
+      border: none;
+      outline: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      @include apply-text-style(config("input-text-style"));
+
+      .text {
+        flex: 1;
+        text-align: left;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+
+        &.placeholder {
+          color: config("text-placeholder");
+        }
+      }
+
+      &.has-value {
+        .text {
+          color: config("text-default");
+        }
+      }
+
+      &:disabled {
+        cursor: not-allowed;
+        color: config("text-disabled");
+      }
+    }
+
+    &__dropdown {
+      position: absolute;
+      top: calc(100% + 0.4rem);
+      left: 0;
+      right: 0;
+      z-index: 100;
+      display: none;
+      background-color: config("background-default");
+      border: config("border-width") solid config("border-default");
+      border-radius: config("border-radius");
+      box-shadow: $shadow-m;
+      overflow: hidden;
+
+      &.is-open {
+        display: block;
+      }
+
+      .search-group {
+        position: relative;
+        padding: 1.2rem config("padding-horizontal");
+        border-bottom: config("border-width") solid config("border-default");
+        box-shadow: config("shadow");
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+
+        &__icon-container {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+
+          svg {
+            width: config("icon-size");
+            height: config("icon-size");
+            fill: config("icon-secondary");
+          }
+        }
+
+        &__input-search {
+          width: 100%;
+          height: 3.6rem;
+          border: none;
+          outline: none;
+          background-color: transparent;
+          @include apply-text-style(config("input-text-style"));
+
+          &::placeholder {
+            color: config("text-placeholder");
+          }
+        }
+      }
+
+      .option-list {
+        max-height: 25rem;
+        overflow-y: auto;
+        margin: 0;
+        padding: 0.8rem 0;
+        list-style: none;
+
+        &__item {
+          padding: 1rem config("padding-horizontal");
+          cursor: pointer;
+          @include apply-text-style(config("select-option-text-style"));
+          transition: background-color config("transition-duration") config("transition-timing");
+
+          &:hover {
+            background-color: config("background-hover");
+          }
+
+          &.selected {
+            background-color: config("background-brand-light");
+          }
+        }
+
+        &::-webkit-scrollbar {
+          width: 0.6rem;
+        }
+
+        &::-webkit-scrollbar-track {
+          background-color: config("background-hover");
+          border-radius: $radius-full;
+        }
+
+        &::-webkit-scrollbar-thumb {
+          background-color: config("border-secondary");
+          border-radius: $radius-full;
+
+          &:hover {
+            background-color: config("border-default");
+          }
+        }
+      }
+    }
+  }
+}
+
+// ============================================
+// RADIO TYPE
+// ============================================
+@mixin radio-type() {
+  $selector: "." + component-class();
+
+  #{$selector} {
+    &__radio-options {
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+
+      &.horizontal {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 2.4rem;
+      }
+    }
+
+    &__fieldset {
+      border: none;
+      padding: 0;
+      margin: 0;
+      width: 100%;
+    }
+
+    &__legend {
+      @include apply-text-style(config("label-text-style"));
+      margin-bottom: 1.2rem;
+      padding: 0;
+      display: block;
+    }
+
+    &__radio {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.8rem;
+      cursor: pointer;
+      position: relative;
+
+      &:hover {
+        #{$selector}__radio-custom {
+          border-color: config("border-hover");
+        }
+      }
+    }
+
+    &__radio-input {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+      margin: 0;
+      padding: 0;
+    }
+
+    &__radio-custom {
+      width: 2rem;
+      height: 2rem;
+      border: 0.2rem solid config("border-default");
+      border-radius: 50%;
+      position: relative;
+      flex-shrink: 0;
+      background-color: config("background-default");
+      transition: all config("transition-duration") config("transition-timing");
+
+      &::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0);
+        width: 1rem;
+        height: 1rem;
+        background-color: $background-brand-primary;
+        border-radius: 50%;
+        transition: transform config("transition-duration") config("transition-timing");
+      }
+    }
+
+    &__radio-input:checked {
+      + #{$selector}__radio-custom {
+        border-color: config("border-focus");
+
+        &::after {
+          transform: translate(-50%, -50%) scale(1);
+        }
+      }
+    }
+
+    &__radio-input:focus {
+      + #{$selector}__radio-custom {
+        border-color: config("border-focus");
+        box-shadow: 0 0 0 0.2rem rgba($background-brand-primary, 0.2);
+      }
+    }
+
+    &__radio-label {
+      @include apply-text-style(config("input-text-style"));
+      cursor: pointer;
+    }
+
+    &.is-error {
+      #{$selector}__radio-custom {
+        border-color: config("border-error");
+      }
+
+      #{$selector}__radio-input:checked + #{$selector}__radio-custom {
+        border-color: config("border-error");
+
+        &::after {
+          background-color: config("border-error");
+        }
+      }
+
+      #{$selector}__radio-label,
+      #{$selector}__legend {
+        color: config("text-error");
+      }
+    }
+
+    &.is-disabled {
+      #{$selector}__radio {
+        cursor: not-allowed;
+      }
+
+      #{$selector}__radio-custom {
+        border-color: config("border-disabled");
+        background-color: config("background-disabled");
+
+        &::after {
+          background-color: config("border-disabled");
+        }
+      }
+
+      #{$selector}__radio-label,
+      #{$selector}__legend {
+        color: config("text-disabled");
+        cursor: not-allowed;
+      }
+    }
+  }
+}
+
+// ============================================
+// CHECKBOX TYPE
+// ============================================
+@mixin checkbox-type() {
+  $selector: "." + component-class();
+
+  #{$selector} {
+    &__fieldset {
+      border: none;
+      padding: 0;
+      margin: 0;
+      width: 100%;
+    }
+
+    &__legend {
+      @include apply-text-style(config("label-text-style"));
+      margin-bottom: 1.2rem;
+      padding: 0;
+    }
+
+    &__checkbox-options {
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+
+      &.horizontal {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 2.4rem;
+      }
+    }
+
+    &__checkbox {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.8rem;
+      cursor: pointer;
+      position: relative;
+
+      &:hover {
+        #{$selector}__checkbox-custom {
+          border-color: config("border-hover");
+        }
+      }
+    }
+
+    &__checkbox-input {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+      margin: 0;
+      padding: 0;
+    }
+
+    &__checkbox-custom {
+      width: 2rem;
+      height: 2rem;
+      border: 0.2rem solid config("border-default");
+      border-radius: $radius-xs;
+      @include flex-center;
+      position: relative;
+      flex-shrink: 0;
+      background-color: config("background-default");
+      @include transition(all, config("transition-duration"), config("transition-timing"));
+
+      &::after {
+        content: "";
+        width: 0.4rem;
+        height: 0.8rem;
+        border: solid $background-neutral-primary;
+        border-width: 0 0.2rem 0.2rem 0;
+        transform: rotate(45deg) scale(0);
+        @include transition(all, config("transition-duration"), config("transition-timing"));
+      }
+    }
+
+    &__checkbox-input:checked + #{$selector}__checkbox-custom {
+      background-color: config("border-focus");
+      border-color: config("border-focus");
+
+      &::after {
+        transform: rotate(45deg) scale(1);
+      }
+    }
+
+    &__checkbox-input:focus + #{$selector}__checkbox-custom {
+      border-color: config("border-focus");
+      box-shadow: 0 0 0 0.2rem rgba(config("border-focus"), 0.2);
+    }
+
+    &__checkbox-label {
+      @include apply-text-style(config("label-text-style"));
+      cursor: pointer;
+    }
+
+    &.is-error {
+      #{$selector}__checkbox-custom {
+        border-color: config("border-error");
+      }
+
+      #{$selector}__checkbox-input:checked + #{$selector}__checkbox-custom {
+        background-color: config("border-error");
+        border-color: config("border-error");
+      }
+
+      #{$selector}__checkbox-label {
+        color: config("text-error");
+      }
+    }
+
+    &.is-disabled {
+      #{$selector}__checkbox {
+        cursor: not-allowed;
+      }
+
+      #{$selector}__checkbox-custom {
+        border-color: config("border-disabled");
+        background-color: config("background-disabled");
+
+        &::after {
+          border-color: config("text-disabled");
+        }
+      }
+
+      #{$selector}__checkbox-input:checked + #{$selector}__checkbox-custom {
+        background-color: config("border-disabled");
+      }
+
+      #{$selector}__checkbox-label {
+        color: config("text-disabled");
+        cursor: not-allowed;
+      }
+    }
+  }
+}
+
+// ============================================
+// TOGGLE TYPE
+// ============================================
+@mixin toggle-type() {
+  $selector: "." + component-class();
+
+  #{$selector} {
+    &__toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 1.2rem;
+      cursor: pointer;
+      position: relative;
+
+      &--label-left {
+        flex-direction: row-reverse;
+        align-self: flex-end;
+      }
+
+      &:hover {
+        #{$selector}__toggle-slider {
+          background-color: config("border-secondary");
+        }
+      }
+    }
+
+    &__toggle-input {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+      margin: 0;
+      padding: 0;
+    }
+
+    &__toggle-slider {
+      position: relative;
+      display: inline-block;
+      width: 4.4rem;
+      height: 2.4rem;
+      background-color: config("background-disabled");
+      border-radius: $radius-full;
+      transition: all config("transition-duration") config("transition-timing");
+      flex-shrink: 0;
+
+      &::before {
+        content: "";
+        position: absolute;
+        top: 0.2rem;
+        left: 0.2rem;
+        width: 2rem;
+        height: 2rem;
+        background-color: config("background-default");
+        border-radius: 50%;
+        transition: transform config("transition-duration") config("transition-timing");
+        box-shadow: config("shadow");
+      }
+    }
+
+    &__toggle-input:checked {
+      + #{$selector}__toggle-slider {
+        background-color: config("border-focus");
+
+        &::before {
+          transform: translateX(2rem);
+        }
+      }
+    }
+
+    &__toggle-input:focus {
+      + #{$selector}__toggle-slider {
+        box-shadow: 0 0 0 0.2rem rgba($background-brand-primary, 0.2);
+      }
+    }
+
+    &__toggle-label {
+      @include apply-text-style(config("label-text-style"));
+      cursor: pointer;
+      user-select: none;
+    }
+
+    &.is-required {
+      #{$selector}__toggle-label::after {
+        content: "*";
+        color: config("text-error");
+        margin-left: 0.4rem;
+      }
+    }
+
+    &.is-error {
+      #{$selector}__toggle-slider {
+        border: config("border-width") solid config("border-error");
+      }
+
+      #{$selector}__toggle-input:checked + #{$selector}__toggle-slider {
+        background-color: config("border-error");
+      }
+
+      #{$selector}__toggle-label {
+        color: config("text-error");
+      }
+    }
+
+    &.is-disabled {
+      #{$selector}__toggle {
+        cursor: not-allowed;
+      }
+
+      #{$selector}__toggle-slider {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      #{$selector}__toggle-label {
+        color: config("text-disabled");
+        cursor: not-allowed;
+      }
+    }
+  }
+}
+
+// ============================================
+// ENTRY MIXIN
+// ============================================
+@mixin input-field($types: (), $config-overrides: ()) {
+  // Properly assign merged config state dynamically
+  $current-input-config: map.merge($input-field-config, $config-overrides) !global;
+
+  $has-input: index($types, input) != null or length($types) == 0;
+  $has-textarea: index($types, textarea) != null;
+  $has-select: index($types, select) != null;
+  $has-custom-select: index($types, custom-select) != null;
+  $has-radio: index($types, radio) != null;
+  $has-checkbox: index($types, checkbox) != null;
+  $has-toggle: index($types, toggle) != null;
+
+  @include input-field-base();
+  @include input-type();
+  @include floating-label();
+
+  @if $has-textarea {
+    @include textarea-type();
+  }
+  @if $has-select {
+    @include select-type();
+  }
+  @if $has-custom-select {
+    @include custom-select-type();
+  }
+  @if $has-radio {
+    @include radio-type();
+  }
+  @if $has-checkbox {
+    @include checkbox-type();
+  }
+  @if $has-toggle {
+    @include toggle-type();
+  }
+}

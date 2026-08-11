@@ -73,7 +73,7 @@ class CollectionPresenter implements TypePresenterInterface
         // Format each item
         $formattedItems = [];
         foreach ($items as $item) {
-            $formattedItems[] = $this->presenterFactory->displayValue($item, $property, $regionContext);
+            $formattedItems[] = $this->presenterFactory->displayValue($item, $property);
         }
 
         // Limit items if specified
@@ -165,7 +165,7 @@ class CollectionPresenter implements TypePresenterInterface
             if (is_object($item) && method_exists($item, 'toArray')) {
                 $result[$index] = $item->toArray();
             } else {
-                $result[$index] = $this->presenterFactory->displayValue($item, $property, $regionContext);
+                $result[$index] = $this->presenterFactory->displayValue($item, $property);
             }
         }
 

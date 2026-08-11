@@ -1,0 +1,962 @@
+@use "sass:list";
+@use "sass:map";
+@use "sass:color";
+@use "css/globals/variables" as *;
+@use "css/globals/functions/functions" as *;
+@use "css/frontend/ecommerce/abstracts/variables" as *;
+
+$form-element-config: (
+  "component-class": "input-field",
+
+  // Layout
+  "input-height": 4.8rem,
+  "padding-horizontal": 1.6rem,
+  "padding-vertical": 1.2rem,
+  "icon-size": 2rem,
+  "gap": 0.8rem,
+
+  // Border
+  "border-width": 0.2rem,
+  "border-radius": $radius-s,
+  "shadow": 0 0 0 3px rgba($primary-color, 0.1),
+  // Colors - using frontend checkout colors
+  "background-primary": map-get($colors-ecommerce, white),
+  "background-secondary": map-get($colors-ecommerce, gray-100),
+  "background-disabled": map-get($colors-ecommerce, gray-100),
+  "border-primary": $light-grey,
+  "border-secondary": $dark-grey,
+  "border-brand": $primary-color,
+  "border-error": $danger-color,
+  "border-disabled": $light-grey,
+
+  "text-primary": $text-neutral-inverse-primary,
+  "text-secondary": $dark-grey,
+  "text-tertiary": $dark-grey,
+  "text-disabled": $dark-grey,
+  "text-error": $danger-color,
+
+  "icon-primary": $dark-grey,
+  "icon-tertiary": $dark-grey,
+  "icon-disabled": $dark-grey,
+  "icon-error": $danger-color,
+
+  // Floating label
+  "floating-label-padding": 0.4rem,
+  "floating-label-radius": $radius-xxs,
+
+  // Typography
+  "input-font-size": 1.4rem,
+  "label-font-size": 1.3rem,
+  "helper-font-size": 1.2rem,
+  "error-font-size": 1.2rem,
+
+  // Animation
+  "transition-duration": 0.2s,
+  "transition-timing": ease,
+
+  // Textarea
+  "textarea-min-height": 10rem,
+
+  // Responsive
+  "responsive": true,
+  "responsive-scale-factor": 0.9
+);
+
+@function form-config($key, $config: null) {
+  $merged-config: if($config, $config, $form-element-config);
+  @return map.get($merged-config, $key);
+}
+@function form-component-class($config: null) {
+  @return form-config("component-class", $config);
+}
+
+// ============================================
+// BASE FORM ELEMENT
+// ============================================
+
+@mixin form-element-base($config: null) {
+  $merged-config: map.merge($form-element-config, if($config, $config, ()));
+  $selector: "." + form-component-class($merged-config);
+
+  #{$selector} {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: form-config("gap", $merged-config);
+    position: relative;
+
+    // ============================================
+    // BODY
+    // ============================================
+
+    &__body {
+      position: relative;
+      display: flex;
+      align-items: center;
+      width: 100%;
+      gap: form-config("gap", $merged-config);
+      background-color: form-config("background-primary", $merged-config);
+      border: form-config("border-width", $merged-config) solid
+        form-config("border-primary", $merged-config);
+      border-radius: form-config("border-radius", $merged-config);
+      transition: all form-config("transition-duration", $merged-config)
+        form-config("transition-timing", $merged-config);
+
+      &:hover {
+        background-color: form-config("background-secondary", $merged-config);
+        border-color: form-config("border-secondary", $merged-config);
+      }
+
+      &:focus-within {
+        border-color: form-config("border-brand", $merged-config);
+        box-shadow: form-config("shadow", $merged-config);
+      }
+
+      // Left icon positioning
+      &:has(.form-element__icon-left) {
+        .form-element__input,
+        .form-element__textarea,
+        .form-element__select {
+          padding-left: calc(
+            #{form-config("padding-horizontal", $merged-config)} +
+              #{form-config("icon-size", $merged-config)} + #{form-config("gap", $merged-config)}
+          );
+        }
+        .form-element__label {
+          left: calc(
+            #{form-config("padding-horizontal", $merged-config)} +
+              #{form-config("icon-size", $merged-config)} + #{form-config("gap", $merged-config)}
+          );
+        }
+        .form-element__icon-left {
+          position: absolute;
+          pointer-events: none;
+          top: 50%;
+          transform: translateY(-50%);
+          left: form-config("padding-horizontal", $merged-config);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+
+          svg {
+            width: form-config("icon-size", $merged-config);
+            height: form-config("icon-size", $merged-config);
+            fill: form-config("icon-primary", $merged-config);
+          }
+        }
+      }
+
+      // Right icon positioning
+      &:has(.form-element__icon-right) {
+        .form-element__right-container {
+          position: absolute;
+          top: 50%;
+          transform: translateY(-50%);
+          right: form-config("padding-horizontal", $merged-config);
+        }
+      }
+    }
+
+    // ============================================
+    // INPUT CONTAINER
+    // ============================================
+
+    &__input-container {
+      position: relative;
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    // ============================================
+    // ICONS
+    // ============================================
+
+    &__icon-left,
+    &__icon-right {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+
+      svg {
+        width: form-config("icon-size", $merged-config);
+        height: form-config("icon-size", $merged-config);
+        fill: form-config("icon-primary", $merged-config);
+        transition: transform form-config("transition-duration", $merged-config)
+          form-config("transition-timing", $merged-config);
+      }
+    }
+
+    &__right-container {
+      display: flex;
+      align-items: center;
+      gap: form-config("gap", $merged-config);
+      flex-shrink: 0;
+    }
+
+    // ============================================
+    // FOOTER
+    // ============================================
+
+    &__footer {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 form-config("padding-horizontal", $merged-config);
+      gap: form-config("gap", $merged-config);
+    }
+
+    &__helper {
+      font-size: form-config("helper-font-size", $merged-config);
+      color: form-config("text-tertiary", $merged-config);
+      flex: 1;
+    }
+
+    &__error {
+      font-size: form-config("error-font-size", $merged-config);
+      color: form-config("text-error", $merged-config);
+      display: none;
+      flex: 1;
+    }
+
+    &__counter {
+      font-size: form-config("helper-font-size", $merged-config);
+      color: form-config("text-tertiary", $merged-config);
+      white-space: nowrap;
+    }
+
+    // ============================================
+    // MODIFIERS
+    // ============================================
+
+    &.is-required {
+      .form-element__label::after {
+        content: "*";
+        color: form-config("text-error", $merged-config);
+        margin-left: 0.4rem;
+      }
+    }
+
+    &.is-error {
+      .form-element__body {
+        border-color: form-config("border-error", $merged-config);
+
+        &:focus-within {
+          box-shadow: 0 0 0 3px rgba($danger-color, 0.1);
+        }
+      }
+
+      .form-element__label {
+        color: form-config("text-error", $merged-config);
+      }
+
+      .form-element__error {
+        display: block;
+      }
+
+      .form-element__helper {
+        display: none;
+      }
+
+      .form-element__icon-left svg,
+      .form-element__icon-right svg {
+        fill: form-config("icon-error", $merged-config);
+      }
+    }
+
+    &.is-disabled {
+      .form-element__body {
+        background-color: form-config("background-disabled", $merged-config);
+        border-color: form-config("border-disabled", $merged-config);
+        cursor: not-allowed;
+
+        &:hover {
+          background-color: form-config("background-disabled", $merged-config);
+          border-color: form-config("border-disabled", $merged-config);
+        }
+      }
+
+      .form-element__input,
+      .form-element__textarea,
+      .form-element__select {
+        color: form-config("text-disabled", $merged-config);
+        cursor: not-allowed;
+      }
+
+      .form-element__label {
+        color: form-config("text-disabled", $merged-config);
+      }
+
+      .form-element__icon-left svg,
+      .form-element__icon-right svg {
+        fill: form-config("icon-disabled", $merged-config);
+      }
+    }
+
+    // ============================================
+    // RESPONSIVE
+    // ============================================
+
+    @if form-config("responsive", $merged-config) {
+      @media (max-width: map-get($breakpoints, sm)) {
+        &__body {
+          min-height: calc(
+            form-config("input-height", $merged-config) *
+              form-config("responsive-scale-factor", $merged-config)
+          );
+        }
+
+        &__input,
+        &__select {
+          font-size: calc(
+            form-config("input-font-size", $merged-config) *
+              form-config("responsive-scale-factor", $merged-config)
+          );
+          padding: calc(
+              form-config("padding-vertical", $merged-config) *
+                form-config("responsive-scale-factor", $merged-config)
+            )
+            calc(
+              form-config("padding-horizontal", $merged-config) *
+                form-config("responsive-scale-factor", $merged-config)
+            );
+        }
+      }
+    }
+  }
+}
+
+// ============================================
+// INPUT TYPE
+// ============================================
+
+@mixin form-element-input($config: null) {
+  $merged-config: map.merge($form-element-config, if($config, $config, ()));
+  $selector: "." + form-component-class($merged-config);
+
+  #{$selector} {
+    &__input {
+      width: 100%;
+      height: form-config("input-height", $merged-config);
+      padding: form-config("padding-vertical", $merged-config)
+        form-config("padding-horizontal", $merged-config);
+      background-color: transparent;
+      border: none;
+      outline: none;
+      font-size: form-config("input-font-size", $merged-config);
+      font-family: inherit;
+      color: form-config("text-primary", $merged-config);
+
+      &::placeholder {
+        color: transparent;
+      }
+
+      &:disabled {
+        cursor: not-allowed;
+      }
+    }
+  }
+}
+
+// ============================================
+// FLOATING LABEL
+// ============================================
+
+@mixin form-element-floating-label($config: null) {
+  $merged-config: map.merge($form-element-config, if($config, $config, ()));
+  $selector: "." + form-component-class($merged-config);
+
+  #{$selector} {
+    &__label {
+      position: absolute;
+      top: 50%;
+      left: form-config("padding-horizontal", $merged-config);
+      transform: translateY(-50%);
+      pointer-events: none;
+      background-color: transparent;
+      padding: 0;
+      white-space: nowrap;
+      z-index: 1;
+      font-size: form-config("label-font-size", $merged-config);
+      color: form-config("text-secondary", $merged-config);
+      transition: all form-config("transition-duration", $merged-config)
+        form-config("transition-timing", $merged-config);
+
+      .form-element__body:focus-within & {
+        color: form-config("text-primary", $merged-config);
+      }
+    }
+
+    // Floating state
+    &__input:focus ~ &__label,
+    &__input:not(:placeholder-shown) ~ &__label,
+    &__textarea:focus ~ &__label,
+    &__textarea:not(:placeholder-shown) ~ &__label,
+    &__select:focus ~ &__label,
+    &__select:valid ~ &__label {
+      top: -1rem;
+      transform: translateY(0);
+      font-size: calc(form-config("label-font-size", $merged-config) * 0.85);
+      color: form-config("border-brand", $merged-config);
+      background-color: form-config("background-primary", $merged-config);
+      padding: 0 form-config("floating-label-padding", $merged-config);
+      border-radius: form-config("floating-label-radius", $merged-config);
+    }
+  }
+}
+
+// ============================================
+// TEXTAREA TYPE
+// ============================================
+
+@mixin form-element-textarea($config: null) {
+  $merged-config: map.merge($form-element-config, if($config, $config, ()));
+  $selector: "." + form-component-class($merged-config);
+
+  #{$selector} {
+    &__textarea {
+      width: 100%;
+      min-height: form-config("textarea-min-height", $merged-config);
+      padding: form-config("padding-vertical", $merged-config)
+        form-config("padding-horizontal", $merged-config);
+      background-color: transparent;
+      border: none;
+      outline: none;
+      resize: vertical;
+      font-size: form-config("input-font-size", $merged-config);
+      font-family: inherit;
+      color: form-config("text-primary", $merged-config);
+
+      &::placeholder {
+        color: transparent;
+      }
+
+      &:disabled {
+        cursor: not-allowed;
+      }
+    }
+
+    // Textarea specific label positioning
+    .form-element__textarea:focus ~ .form-element__label,
+    .form-element__textarea:not(:placeholder-shown) ~ .form-element__label {
+      top: -1rem;
+      transform: translateY(0);
+    }
+  }
+}
+
+// ============================================
+// SELECT TYPE
+// ============================================
+
+@mixin form-element-select($config: null) {
+  $merged-config: map.merge($form-element-config, if($config, $config, ()));
+  $selector: "." + form-component-class($merged-config);
+
+  #{$selector} {
+    &__select {
+      width: 100%;
+      height: form-config("input-height", $merged-config);
+      padding: form-config("padding-vertical", $merged-config)
+        form-config("padding-horizontal", $merged-config);
+      background-color: transparent;
+      border: none;
+      outline: none;
+      cursor: pointer;
+      appearance: none;
+      font-size: form-config("input-font-size", $merged-config);
+      font-family: inherit;
+      color: form-config("text-primary", $merged-config);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23666' stroke-width='2' fill='none'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 1.6rem center;
+      background-size: 1.2rem;
+
+      &:invalid {
+        color: form-config("text-tertiary", $merged-config);
+      }
+
+      &:valid {
+        color: form-config("text-primary", $merged-config);
+      }
+
+      option {
+        color: form-config("text-primary", $merged-config);
+      }
+
+      option[value=""] {
+        color: form-config("text-tertiary", $merged-config);
+      }
+
+      &:disabled {
+        cursor: not-allowed;
+        color: form-config("text-disabled", $merged-config);
+      }
+    }
+  }
+}
+
+// ============================================
+// RADIO TYPE
+// ============================================
+
+@mixin form-element-radio($config: null) {
+  $merged-config: map.merge($form-element-config, if($config, $config, ()));
+  $selector: "." + form-component-class($merged-config);
+
+  #{$selector} {
+    &__radio-options {
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+
+      &.horizontal {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 2.4rem;
+      }
+    }
+
+    &__fieldset {
+      border: none;
+      padding: 0;
+      margin: 0;
+      width: 100%;
+    }
+
+    &__legend {
+      font-size: form-config("label-font-size", $merged-config);
+      color: form-config("text-secondary", $merged-config);
+      margin-bottom: 1.2rem;
+      padding: 0;
+      display: block;
+    }
+
+    &__radio {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.8rem;
+      cursor: pointer;
+      position: relative;
+
+      &:hover {
+        .form-element__radio-custom {
+          border-color: form-config("border-brand", $merged-config);
+        }
+      }
+    }
+
+    &__radio-input {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+      margin: 0;
+      padding: 0;
+    }
+
+    &__radio-custom {
+      width: 2rem;
+      height: 2rem;
+      border: 0.2rem solid form-config("border-secondary", $merged-config);
+      border-radius: 50%;
+      position: relative;
+      flex-shrink: 0;
+      background-color: form-config("background-primary", $merged-config);
+      transition: all form-config("transition-duration", $merged-config)
+        form-config("transition-timing", $merged-config);
+
+      &::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0);
+        width: 1rem;
+        height: 1rem;
+        background-color: form-config("border-brand", $merged-config);
+        border-radius: 50%;
+        transition: transform form-config("transition-duration", $merged-config)
+          form-config("transition-timing", $merged-config);
+      }
+    }
+
+    &__radio-input:checked + &__radio-custom {
+      border-color: form-config("border-brand", $merged-config);
+
+      &::after {
+        transform: translate(-50%, -50%) scale(1);
+      }
+    }
+
+    &__radio-input:focus + &__radio-custom {
+      border-color: form-config("border-brand", $merged-config);
+      box-shadow: 0 0 0 0.2rem rgba($primary-color, 0.2);
+    }
+
+    &__radio-label {
+      font-size: form-config("input-font-size", $merged-config);
+      color: form-config("text-primary", $merged-config);
+      cursor: pointer;
+    }
+
+    // Error state
+    &.is-error {
+      .form-element__radio-custom {
+        border-color: form-config("border-error", $merged-config);
+      }
+
+      .form-element__radio-input:checked + .form-element__radio-custom {
+        border-color: form-config("border-error", $merged-config);
+
+        &::after {
+          background-color: form-config("border-error", $merged-config);
+        }
+      }
+
+      .form-element__radio-label,
+      .form-element__legend {
+        color: form-config("text-error", $merged-config);
+      }
+    }
+
+    // Disabled state
+    &.is-disabled {
+      .form-element__radio {
+        cursor: not-allowed;
+      }
+
+      .form-element__radio-custom {
+        border-color: form-config("border-disabled", $merged-config);
+        background-color: form-config("background-disabled", $merged-config);
+
+        &::after {
+          background-color: form-config("border-disabled", $merged-config);
+        }
+      }
+
+      .form-element__radio-label,
+      .form-element__legend {
+        color: form-config("text-disabled", $merged-config);
+        cursor: not-allowed;
+      }
+    }
+  }
+}
+
+// ============================================
+// CHECKBOX TYPE
+// ============================================
+
+@mixin form-element-checkbox($config: null) {
+  $merged-config: map.merge($form-element-config, if($config, $config, ()));
+  $selector: "." + form-component-class($merged-config);
+
+  #{$selector} {
+    &__fieldset {
+      border: none;
+      padding: 0;
+      margin: 0;
+      width: 100%;
+    }
+
+    &__legend {
+      font-size: form-config("label-font-size", $merged-config);
+      color: form-config("text-secondary", $merged-config);
+      margin-bottom: 1.2rem;
+      padding: 0;
+    }
+
+    &__checkbox-options {
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+
+      &.horizontal {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 2.4rem;
+      }
+    }
+
+    &__checkbox {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.8rem;
+      cursor: pointer;
+      position: relative;
+
+      &:hover {
+        .form-element__checkbox-custom {
+          border-color: form-config("border-brand", $merged-config);
+        }
+      }
+    }
+
+    &__checkbox-input {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+      margin: 0;
+      padding: 0;
+    }
+
+    &__checkbox-custom {
+      width: 2rem;
+      height: 2rem;
+      border: 0.2rem solid form-config("border-secondary", $merged-config);
+      border-radius: $radius-xxs;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      flex-shrink: 0;
+      background-color: form-config("background-primary", $merged-config);
+      transition: all form-config("transition-duration", $merged-config)
+        form-config("transition-timing", $merged-config);
+
+      &::after {
+        content: "";
+        width: 0.4rem;
+        height: 0.8rem;
+        border: solid form-config("background-primary", $merged-config);
+        border-width: 0 0.2rem 0.2rem 0;
+        transform: rotate(45deg) scale(0);
+        transition: all form-config("transition-duration", $merged-config)
+          form-config("transition-timing", $merged-config);
+      }
+    }
+
+    &__checkbox-input:checked + &__checkbox-custom {
+      background-color: form-config("border-brand", $merged-config);
+      border-color: form-config("border-brand", $merged-config);
+
+      &::after {
+        transform: rotate(45deg) scale(1);
+      }
+    }
+
+    &__checkbox-input:focus + &__checkbox-custom {
+      border-color: form-config("border-brand", $merged-config);
+      box-shadow: 0 0 0 0.2rem rgba($primary-color, 0.2);
+    }
+
+    &__checkbox-label {
+      font-size: form-config("input-font-size", $merged-config);
+      color: form-config("text-primary", $merged-config);
+      cursor: pointer;
+    }
+
+    // Error state
+    &.is-error {
+      .form-element__checkbox-custom {
+        border-color: form-config("border-error", $merged-config);
+      }
+
+      .form-element__checkbox-input:checked + .form-element__checkbox-custom {
+        background-color: form-config("border-error", $merged-config);
+        border-color: form-config("border-error", $merged-config);
+      }
+
+      .form-element__checkbox-label,
+      .form-element__legend {
+        color: form-config("text-error", $merged-config);
+      }
+    }
+
+    // Disabled state
+    &.is-disabled {
+      .form-element__checkbox {
+        cursor: not-allowed;
+      }
+
+      .form-element__checkbox-custom {
+        border-color: form-config("border-disabled", $merged-config);
+        background-color: form-config("background-disabled", $merged-config);
+
+        &::after {
+          border-color: form-config("text-disabled", $merged-config);
+        }
+      }
+
+      .form-element__checkbox-input:checked + .form-element__checkbox-custom {
+        background-color: form-config("border-disabled", $merged-config);
+      }
+
+      .form-element__checkbox-label,
+      .form-element__legend {
+        color: form-config("text-disabled", $merged-config);
+        cursor: not-allowed;
+      }
+    }
+  }
+}
+
+// ============================================
+// TOGGLE TYPE
+// ============================================
+
+@mixin form-element-toggle($config: null) {
+  $merged-config: map.merge($form-element-config, if($config, $config, ()));
+  $selector: "." + form-component-class($merged-config);
+
+  #{$selector} {
+    &__toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 1.2rem;
+      cursor: pointer;
+      position: relative;
+
+      &--label-left {
+        flex-direction: row-reverse;
+      }
+
+      &:hover {
+        .form-element__toggle-slider {
+          border-color: form-config("border-brand", $merged-config);
+        }
+      }
+    }
+
+    &__toggle-input {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+      margin: 0;
+      padding: 0;
+    }
+
+    &__toggle-slider {
+      position: relative;
+      display: inline-block;
+      width: 4.4rem;
+      height: 2.4rem;
+      background-color: form-config("border-disabled", $merged-config);
+      border-radius: $radius-full;
+      transition: all form-config("transition-duration", $merged-config)
+        form-config("transition-timing", $merged-config);
+      flex-shrink: 0;
+
+      &::before {
+        content: "";
+        position: absolute;
+        top: 0.2rem;
+        left: 0.2rem;
+        width: 2rem;
+        height: 2rem;
+        background-color: form-config("background-primary", $merged-config);
+        border-radius: 50%;
+        transition: transform form-config("transition-duration", $merged-config)
+          form-config("transition-timing", $merged-config);
+        box-shadow: 0 0.2rem 0.4rem rgba(0, 0, 0, 0.1);
+      }
+    }
+
+    &__toggle-input:checked + &__toggle-slider {
+      background-color: form-config("border-brand", $merged-config);
+
+      &::before {
+        transform: translateX(2rem);
+      }
+    }
+
+    &__toggle-input:focus + &__toggle-slider {
+      box-shadow: 0 0 0 0.2rem rgba($primary-color, 0.2);
+    }
+
+    &__toggle-label {
+      font-size: form-config("input-font-size", $merged-config);
+      color: form-config("text-primary", $merged-config);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    // Required state
+    &.is-required {
+      .form-element__toggle-label::after {
+        content: "*";
+        color: form-config("text-error", $merged-config);
+        margin-left: 0.4rem;
+      }
+    }
+
+    // Error state
+    &.is-error {
+      .form-element__toggle-slider {
+        border: form-config("border-width", $merged-config) solid
+          form-config("border-error", $merged-config);
+      }
+
+      .form-element__toggle-input:checked + .form-element__toggle-slider {
+        background-color: form-config("border-error", $merged-config);
+      }
+
+      .form-element__toggle-label {
+        color: form-config("text-error", $merged-config);
+      }
+    }
+
+    // Disabled state
+    &.is-disabled {
+      .form-element__toggle {
+        cursor: not-allowed;
+      }
+
+      .form-element__toggle-slider {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .form-element__toggle-label {
+        color: form-config("text-disabled", $merged-config);
+        cursor: not-allowed;
+      }
+    }
+  }
+}
+
+// ============================================
+// PUBLIC MIXIN WITH CONFIG OVERRIDES
+// ============================================
+
+@mixin form-element($types: (), $config-overrides: ()) {
+  // Merge overrides with default config
+  $merged-config: map.merge($form-element-config, $config-overrides);
+
+  // Base styles (needed for all types)
+  @include form-element-base($merged-config);
+  @include form-element-floating-label($merged-config);
+
+  // Input is always included
+  @include form-element-input($merged-config);
+
+  // Optional types
+  @if index($types, textarea) {
+    @include form-element-textarea($merged-config);
+  }
+
+  @if index($types, select) {
+    @include form-element-select($merged-config);
+  }
+
+  @if index($types, radio) {
+    @include form-element-radio($merged-config);
+  }
+
+  @if index($types, checkbox) {
+    @include form-element-checkbox($merged-config);
+  }
+
+  @if index($types, toggle) {
+    @include form-element-toggle($merged-config);
+  }
+}

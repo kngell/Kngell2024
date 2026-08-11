@@ -3,6 +3,7 @@
 declare(strict_types=1);
 class FileUploadMap
 {
+    use FileTrimTrait;
     private const array FILE_KEYS = ['error', 'name', 'size', 'tmp_name', 'type'];
 
     /**
@@ -10,8 +11,14 @@ class FileUploadMap
      */
     private array $files;
 
+    /** @var array<string, FileUpload> Flat, raw indexed map for error tracking */
+    private array $indexedFiles = [];
+
     public function __construct(array $files)
     {
+        if (!empty($files)) {
+            error_log('Files received: ' . print_r($_FILES, true));
+        }
         if (!is_array($files)) {
             throw new InvalidArgumentException('Files must be an array');
         }
@@ -102,9 +109,6 @@ class FileUploadMap
         return null;
     }
 
-    /**
-     * Get all uploaded files (including multiple uploads) as a flat array.
-     */
     public function getAllFiles(): array
     {
         $allFiles = [];
@@ -128,9 +132,6 @@ class FileUploadMap
         return false;
     }
 
-    /**
-     * Get files by upload status.
-     */
     public function getFilesByError(int $errorCode): array
     {
         return array_filter(
@@ -140,9 +141,6 @@ class FileUploadMap
         );
     }
 
-    /**
-     * Check if any files exceed maximum size.
-     */
     public function hasOversizedFiles(int $maxSize): bool
     {
         foreach ($this->getAllFiles() as $file) {
@@ -272,23 +270,24 @@ class FileUploadMap
     {
         $this->files = [];
 
-        foreach ($files as $key => $file) {
-            if (!is_string($key)) {
+        $normalizedFiles = FileRequestNormalizer::normalize($files);
+
+        foreach ($normalizedFiles as $rawFieldName => $fileData) {
+            if (!$this->isValidFileStructure($fileData)) {
                 continue;
             }
 
-            unset($file['full_path']);
+            $fileUploadInstance = $this->sanitizeSingleFile($fileData);
 
-            if (!$this->isValidFileStructure($file)) {
-                continue;
-            }
+            $this->indexedFiles[$rawFieldName] = $fileUploadInstance;
 
-            // Handle different file structures
-            if (is_array($file['name'])) {
-                $key = $key . '[]';
-                $this->files[$key] = $this->sanitizeFileArray($file);
+            $targetComponentName = $this->getBaseFieldName($rawFieldName);
+
+            // 3. Group files under the exact target array component name
+            if (str_ends_with($rawFieldName, ']') || str_contains($rawFieldName, '[')) {
+                $this->files[$targetComponentName][] = $fileUploadInstance;
             } else {
-                $this->files[$key] = $this->sanitizeSingleFile($file);
+                $this->files[$targetComponentName] = $fileUploadInstance;
             }
         }
     }

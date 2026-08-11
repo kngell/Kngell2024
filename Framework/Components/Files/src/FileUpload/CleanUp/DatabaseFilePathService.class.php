@@ -11,8 +11,8 @@ final class DatabaseFilePathService
     public function __construct(
         private ProductModel $productModel,
         private ProductImageGalleryModel $gallery,
-        private HeroModel $heroModel,
         private SmallBannerModel $bannerModel,
+        private CategoryModel $categoryModel,
         private ?LoggerInterface $logger = null,
     ) {
     }
@@ -83,16 +83,16 @@ final class DatabaseFilePathService
             }
         }
 
-        $heroImgs = $this->heroModel->getImagesPath();
-        foreach ($heroImgs as $item) {
+        $bannerImgs = $this->bannerModel->getImagesPath();
+        foreach ($bannerImgs as $item) {
             if (!empty($item['image_url'])) {
                 $paths[] = $item['image_url'];
             }
         }
-        $bannerImgs = $this->bannerModel->getImagesPath();
-        foreach ($bannerImgs as $item) {
-            if (!empty($item['custom_image_url'])) {
-                $paths[] = $item['custom_image_url'];
+        $categoryImgs = $this->categoryModel->getImagesPath();
+        foreach ($categoryImgs as $item) {
+            if (!empty($item['image_url'])) {
+                $paths[] = $item['image_url'];
             }
         }
 

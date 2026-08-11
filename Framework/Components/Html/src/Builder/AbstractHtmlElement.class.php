@@ -7,10 +7,12 @@ abstract class AbstractHtmlElement extends AbstractHtmlComponent
     protected ?TokenInterface $token;
     protected bool $includeToken = true;
 
-    public function __construct(?TokenInterface $token = null)
-    {
+    public function __construct(
+        ?TokenInterface $token = null,
+        ?TranslatorServiceInterface $translator = null,
+    ) {
         $this->token = $token;
-        parent::__construct();
+        parent::__construct($translator);
     }
 
     public function generate(): string
@@ -111,6 +113,9 @@ abstract class AbstractHtmlElement extends AbstractHtmlComponent
 
     protected function end(): string
     {
+        if (empty($this->tag)) {
+            return '';
+        }
         if (in_array(strtolower($this->tag), self::VOID_TAGS, true)) {
             return '';
         }

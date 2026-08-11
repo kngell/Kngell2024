@@ -11,6 +11,9 @@
   <!-- Custom -->
   <?= $this->content('footer'); ?>
 
+  <!-- DevServer Reload Client (dev mode only) -->
+  <script src="/__dev__/reload-client.js"></script>
+
   </body>
 
   </html>

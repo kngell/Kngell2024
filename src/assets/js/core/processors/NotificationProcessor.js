@@ -1,31 +1,39 @@
 import BaseResponseProcessor from "./BaseResponseProcessor";
 
 export default class NotificationProcessor extends BaseResponseProcessor {
-  constructor(notificationHelper, options = {}) {
+  constructor(feedbackChannel, options = {}) {
     super();
-    this.notificationHelper = notificationHelper;
-    this.options = options;
+    this.feedbackChannel = feedbackChannel;
+    this.options = {
+      permanentErrors: options.permanentErrors ?? true,
+      ...options
+    };
   }
 
   handle(context) {
     const { result } = context;
 
-    const type = result.type || (result.success === false ? "error" : "success");
-    const message = result.error || result.message || this.getDefaultMessage(result.success);
+    // Determine notification type and message
+    let type = result.type;
+    let message = result.error || result.message;
 
-    const isPermanent = result.success === false && this.options.permanentErrors;
-
-    if (this.notificationHelper) {
-      if (result.success === false) {
-        this.notificationHelper.closeAll();
-      }
-
-      this.notificationHelper.show(message, type, {
-        permanent: isPermanent,
-      });
+    // Auto-detect based on success flag
+    if (result.success === false && !type) {
+      type = "error";
     }
-  }
-  getDefaultMessage(success) {
-    return success ? "Operation completed successfully" : "Operation failed";
+    if (result.success === true && !type) {
+      type = "success";
+    }
+
+    // Fallback message
+    if (!message) {
+      message = type === "error" ? "Operation failed" : "Operation completed successfully";
+    }
+
+    // Show notification through channel
+    if (this.feedbackChannel && this.feedbackChannel[type]) {
+      const options = type === "error" && this.options.permanentErrors ? { permanent: true } : {};
+      this.feedbackChannel[type](message, options);
+    }
   }
 }

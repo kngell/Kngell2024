@@ -9,11 +9,13 @@ abstract class AbstractRules implements QueryRulesInterface
     protected array $tables;
     protected QueryState $state;
     protected TypeNormalizerInterface $normalizer;
+    protected ?string $customAlias = null;
 
-    public function __construct(EntityManagerInterface $em, ?string $method, QueryState $state)
+    public function __construct(EntityManagerInterface $em, ?string $method, ?string $customAlias, QueryState $state)
     {
         $this->em = $em;
         $this->method = $method;
+        $this->customAlias = $customAlias;
         $this->tables = $state->tables;
         $this->state = $state;
         $this->normalizer = $em->getNormalizer();

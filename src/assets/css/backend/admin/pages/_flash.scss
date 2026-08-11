@@ -1,0 +1,304 @@
+@use "css/backend/admin/abstracts" as *;
+
+// ============================================================
+// FLASH MESSAGE COMPONENT
+// ============================================================
+
+// ---------- Local config ----------
+$flash-config: (
+  gap: 1.2rem,
+  padding-y: 1.2rem,
+  padding-x: 1.6rem,
+  radius: $radius-s,
+  icon-size: 2rem,
+  close-size: 2.4rem,
+  close-icon-size: 1.6rem,
+  max-width: 60rem,
+  z-index: 1080,
+  toast-offset: 2rem,
+  enter-duration: 250ms,
+  exit-duration: 200ms,
+  easing: cubic-bezier(0.4, 0, 0.2, 1),
+  progress-height: 3px,
+  progress-default-duration: 5000ms
+);
+
+// ---------- Variant map ----------
+$flash-variants: (
+  danger: (
+    bg: $background-semantic-error-subtle,
+    border: $border-semantic-error,
+    text: $text-semantic-error,
+    icon: $icon-semantic-error,
+    progress: $danger-color
+  ),
+  warning: (
+    bg: $yellow-100,
+    border: $yellow-500,
+    text: $yellow-700,
+    icon: $yellow-700,
+    progress: $warning-color
+  ),
+  success: (
+    bg: $primary-100,
+    border: $success-color,
+    text: $primary-700,
+    icon: $success-color,
+    progress: $success-color
+  ),
+  info: (
+    bg: $primary-50,
+    border: $info-color,
+    text: $primary-700,
+    icon: $info-color,
+    progress: $info-color
+  )
+);
+
+// ============================================================
+// CONTAINER
+// ============================================================
+.flash-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  width: 100%;
+  margin-bottom: 1.6rem;
+
+  // -------- Toast (floating) variant --------
+  &--toast {
+    position: fixed;
+    top: map.get($flash-config, toast-offset);
+    right: map.get($flash-config, toast-offset);
+    z-index: map.get($flash-config, z-index);
+    width: auto;
+    max-width: map.get($flash-config, max-width);
+    margin-bottom: 0;
+    pointer-events: none; // let clicks pass through gaps
+
+    .flash {
+      pointer-events: auto;
+      box-shadow: $shadow-l;
+    }
+
+    @media (max-width: map.get($breakpoints, sm)) {
+      top: auto;
+      bottom: map.get($flash-config, toast-offset);
+      left: map.get($flash-config, toast-offset);
+      right: map.get($flash-config, toast-offset);
+      max-width: none;
+    }
+  }
+}
+
+// ============================================================
+// FLASH MESSAGE
+// ============================================================
+.flash {
+  // Layout
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: map.get($flash-config, gap);
+  width: 100%;
+  padding: map.get($flash-config, padding-y) map.get($flash-config, padding-x);
+  overflow: hidden; // clip the progress bar to rounded corners
+
+  // Visuals
+  border: $stroke-s solid transparent;
+  border-radius: map.get($flash-config, radius);
+  box-shadow: $shadow-s;
+
+  // Typography
+  @include apply-text($text-m, regular);
+
+  // Enter animation (works on initial render & when JS adds .show)
+  @include animation(
+    flashSlideDown map.get($flash-config, enter-duration) map.get($flash-config, easing) both
+  );
+
+  // Exit state — toggled by JS via .flash--dismissing
+  &--dismissing {
+    @include animation(
+      flashSlideOutUp map.get($flash-config, exit-duration) map.get($flash-config, easing) forwards
+    );
+    pointer-events: none;
+  }
+
+  // Bootstrap fade compatibility (kept for legacy markup)
+  &.fade:not(.show) {
+    opacity: 0;
+  }
+
+  // ----------------------------------------------------------
+  // ELEMENTS
+  // ----------------------------------------------------------
+  &__icon {
+    flex-shrink: 0;
+    width: map.get($flash-config, icon-size);
+    height: map.get($flash-config, icon-size);
+    margin-top: 0.2rem;
+    fill: currentColor;
+  }
+
+  &__body {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  &__text {
+    word-wrap: break-word;
+    line-height: 1.5;
+  }
+
+  &__close {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: map.get($flash-config, close-size);
+    height: map.get($flash-config, close-size);
+    padding: 0;
+    margin: -0.2rem -0.4rem -0.2rem 0; // optical balance
+    background: transparent;
+    border: none;
+    border-radius: $radius-xs;
+    cursor: pointer;
+    color: inherit;
+    opacity: 0.75;
+    transition:
+      opacity map.get($flash-config, exit-duration) ease,
+      background-color map.get($flash-config, exit-duration) ease;
+
+    &:hover {
+      opacity: 1;
+      background-color: rgba(0, 0, 0, 0.06);
+    }
+
+    &:focus-visible {
+      opacity: 1;
+      outline: $stroke-s solid currentColor;
+      outline-offset: 2px;
+    }
+
+    &:active {
+      background-color: rgba(0, 0, 0, 0.12);
+    }
+  }
+
+  &__close-icon {
+    width: map.get($flash-config, close-icon-size);
+    height: map.get($flash-config, close-icon-size);
+    fill: currentColor;
+  }
+
+  // ----------------------------------------------------------
+  // PROGRESS BAR (auto-dismiss countdown)
+  // ----------------------------------------------------------
+  &__progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: map.get($flash-config, progress-height);
+    background-color: currentColor;
+    opacity: 0.4;
+    transform-origin: left center;
+    transform: scaleX(1);
+
+    // Animation runs only when a duration is set on the parent
+    [data-flash-duration] & {
+      @include animation(
+        flashProgress var(--flash-duration, #{map.get($flash-config, progress-default-duration)})
+          linear forwards
+      );
+    }
+  }
+
+  // Pause auto-dismiss on hover/focus (UX win)
+  &:hover .flash__progress,
+  &:focus-within .flash__progress {
+    animation-play-state: paused;
+  }
+
+  // ----------------------------------------------------------
+  // VARIANTS (generated from map)
+  // ----------------------------------------------------------
+  @each $name, $tokens in $flash-variants {
+    &--#{$name} {
+      background-color: map.get($tokens, bg);
+      border-color: map.get($tokens, border);
+      color: map.get($tokens, text);
+
+      .flash__icon {
+        color: map.get($tokens, icon);
+      }
+
+      .flash__progress {
+        background-color: map.get($tokens, progress);
+        opacity: 0.6;
+      }
+    }
+  }
+}
+
+// ============================================================
+// LEGACY / BOOTSTRAP COMPATIBILITY
+// ============================================================
+.alert {
+  @extend .flash;
+
+  &-danger {
+    @extend .flash--danger;
+  }
+  &-warning {
+    @extend .flash--warning;
+  }
+  &-success {
+    @extend .flash--success;
+  }
+  &-info {
+    @extend .flash--info;
+  }
+}
+
+.btn-close {
+  @extend .flash__close;
+}
+.table-flash-container {
+  @extend .flash-container;
+}
+
+// ============================================================
+// RESPONSIVE
+// ============================================================
+@media (max-width: map.get($breakpoints, sm)) {
+  .flash {
+    padding: 1rem 1.2rem;
+    gap: 0.8rem;
+
+    &__text {
+      font-size: 1.4rem;
+    }
+  }
+}
+
+// ============================================================
+// REDUCED MOTION
+// ============================================================
+@media (prefers-reduced-motion: reduce) {
+  .flash,
+  .flash--dismissing,
+  .flash__progress,
+  .flash__close {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .flash__progress {
+    display: none; // no countdown if user disabled motion
+  }
+}

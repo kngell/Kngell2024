@@ -25,9 +25,11 @@ class DatabaseArrayTransformer implements ToArrayTransformerInterface
     private function transformRecursive(Entity $entity): array
     {
         $entityId = spl_object_id($entity);
+
         if (in_array($entityId, $this->processedEntities, true)) {
             return ['id' => $entity->getFieldValue($entity->getEntityKeyField())];
         }
+
         $this->processedEntities[] = $entityId;
 
         $array = $this->simpleArrayStrategy->transform($entity);
@@ -45,33 +47,18 @@ class DatabaseArrayTransformer implements ToArrayTransformerInterface
             return $this->transformRecursive($value);
         }
 
-        // Handle collections/iterables
         if ($this->isEntityCollection($value)) {
             return $this->transformCollection($value);
         }
 
-        // Already normalized by SimpleArrayTransformer
         return $value;
     }
 
     private function isEntityCollection(mixed $value): bool
     {
-        // Current: arrays containing objects
-        if (is_array($value) && ArrayUtils::isObjectList($value)) {
-            return true;
-        }
-
-        // Future: CollectionInterface objects
-        if ($value instanceof CollectionInterface) {
-            return true;
-        }
-
-        // Future: Any iterable containing entities
-        if (is_iterable($value) && !is_array($value)) {
-            // Check first item to see if it contains entities
-            foreach ($value as $item) {
-                return $item instanceof Entity;
-            }
+        if (is_array($value) && !empty($value)) {
+            $firstItem = reset($value);
+            return $firstItem instanceof Entity;
         }
 
         return false;
@@ -81,18 +68,11 @@ class DatabaseArrayTransformer implements ToArrayTransformerInterface
     {
         $result = [];
 
-        // Convert to array if it's a non-array iterable
-        if (is_iterable($collection) && !is_array($collection)) {
-            $collection = iterator_to_array($collection);
-        }
-
-        if (is_array($collection)) {
-            foreach ($collection as $index => $item) {
-                if ($item instanceof Entity) {
-                    $result[$index] = $this->transformRecursive($item);
-                } else {
-                    $result[$index] = $item;
-                }
+        foreach ($collection as $index => $item) {
+            if ($item instanceof Entity) {
+                $result[$index] = $this->transformRecursive($item);
+            } else {
+                $result[$index] = $item;
             }
         }
 

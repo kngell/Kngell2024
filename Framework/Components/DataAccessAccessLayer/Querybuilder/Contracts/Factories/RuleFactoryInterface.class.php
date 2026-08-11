@@ -6,5 +6,5 @@ interface RuleFactoryInterface
 {
     public function supports(SqlStatement $statement): bool;
 
-    public function create(string $method, mixed $data): QueryRulesInterface;
+    public function create(string $method, mixed $data, ?string $customAlias): QueryRulesInterface;
 }

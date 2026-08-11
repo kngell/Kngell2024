@@ -3,11 +3,18 @@
     [
       "@babel/preset-env",
       {
-        "useBuiltIns": "usage",
-        "corejs": "3.42.0"
-        // "modules": "commonjs"
+        "targets": "> 0.25%, not dead"
       }
     ]
   ],
-  "plugins": ["@babel/plugin-transform-runtime","@babel/plugin-transform-class-properties"]
+  "plugins": [
+    "@babel/plugin-transform-class-properties",
+    [
+      "babel-plugin-polyfill-corejs3",
+      {
+        "method": "usage-pure",
+        "proposals": true
+      }
+    ]
+  ]
 }

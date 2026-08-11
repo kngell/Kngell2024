@@ -4,7 +4,7 @@ declare(strict_types=1);
 class FormArrayTransformer implements ToArrayTransformerInterface
 {
     public function __construct(
-        private FieldMapper $fieldMapper,
+        private EntityFieldMapper $fieldMapper,
         private ArrayFlattener $arrayFlattener,
     ) {
     }
@@ -18,13 +18,12 @@ class FormArrayTransformer implements ToArrayTransformerInterface
     {
         $fieldMapping = $options['field_mapping'] ?? [];
         $formatValues = $options['format_values'] ?? true;
-        if (!$fieldMapping->isEmpty()) {
+        if ($fieldMapping instanceof FormFieldMappingPayloadInterface && !$fieldMapping->isEmpty()) {
             $mappedData = $this->fieldMapper->applyMapping($entity, $fieldMapping, $formatValues);
             return $this->arrayFlattener->flatten($mappedData);
         }
 
         $allData = $entity->toDeepArray(true, 2);
-
         return $this->arrayFlattener->flatten($allData);
     }
 }

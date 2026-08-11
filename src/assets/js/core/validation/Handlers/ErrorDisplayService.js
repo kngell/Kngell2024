@@ -7,11 +7,7 @@ export default class ErrorDisplayService {
     this.errors = new Map();
   }
 
-  /**
-   * Find the appropriate container for a field based on its structure
-   */
   findFieldContainer(field) {
-    // Try input-field pattern first (newer)
     const inputField = field.closest(".input-field");
     if (inputField) {
       return {

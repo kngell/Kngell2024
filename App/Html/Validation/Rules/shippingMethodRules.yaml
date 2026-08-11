@@ -1,0 +1,11 @@
+name:
+  display: Shipping Method
+  required: true
+  min: 3
+  max: 100
+code:
+  display: Method Code
+  required: true
+  unique: ignore_current
+  min: 3
+  max: 50

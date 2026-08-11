@@ -16,10 +16,10 @@ class ClosureConditionRule extends AbstractRules
         string $method,
         private QueryState $state,
         private mixed $conditions,
+        ?string $customAlias = null,
     ) {
-        $this->em = $em;
+        parent::__construct($em, $method, $customAlias, $state);
         $this->tables = $tables;
-        $this->method = $method;
     }
 
     public function getRule(array $conditions): string

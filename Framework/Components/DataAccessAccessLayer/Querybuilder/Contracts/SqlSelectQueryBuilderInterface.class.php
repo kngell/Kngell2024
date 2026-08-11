@@ -4,90 +4,43 @@ declare(strict_types=1);
 /**
  * SELECT QUERY BUILDER - Data retrieval operations.
  */
-interface SqlSelectQueryBuilderInterface extends SqlQueryBuilderInterface
+interface SqlSelectQueryBuilderInterface extends SqlQueryBuilderInterface, SqlCommonClauseInterface, SqlCommonConditionClauseInterface
 {
     // =============================================
     // CLAUSE CONSTRUCTION METHODS
     // =============================================
-    public function select(string ...$columns): self;
+    public function select(string ...$columns): static;
 
-    public function distinct(bool $enable = true): self;
+    public function distinct(bool $enable = true): static;
 
-    public function from(mixed $table, ?string $alias = null): self;
+    public function distinctCount(bool $enable = true): static;
 
-    public function groupBy(string ...$columns): self;
+    public function groupBy(string ...$columns): static;
 
-    public function having(mixed ...$conditions): self;
+    public function having(mixed ...$conditions): static;
 
-    public function orderBy(string ...$columnsDirections): self;
+    public function orderBy(mixed ...$columnsDirections): static;
 
-    public function limit(int $count): self;
+    public function limit(int $count): static;
 
-    public function offset(int $count): self;
+    public function offset(int $count): static;
 
-    public function withAlias(bool $withAlias = true): self;
+    public function withAlias(bool $withAlias = true): static;
 
     // ===========================================
     // JOIN CONSTRUCTION METHODS
     // ===========================================
-    public function join(string|Closure $table, null|string|array $params = null): self;
+    public function join(string|Closure $table, null|string|array $params = null): static;
 
-    public function leftJoin(string|Closure $table, null|string|array $params = null): self;
+    public function leftJoin(string|Closure $table, null|string|array $params = null): static;
 
-    public function innerJoin(string|Closure $table, null|string|array $params = null): self;
+    public function innerJoin(string|Closure $table, null|string|array $params = null): static;
 
-    public function rightJoin(string|Closure $table, null|string|array $params = null): self;
-
-    // ===========================================
-    // WHERE CONDITIONS (SELECT-specific)
-    // ===========================================
-    public function where(mixed ...$conditions): self;
-
-    public function whereEqualTo(string $column, mixed $value): self;
-
-    public function whereNotEqualTo(string $column, mixed $value): self;
-
-    public function whereLessThan(string $column, mixed $value): self;
-
-    public function whereGreaterThan(string $column, mixed $value): self;
-
-    public function whereLike(string $column, string $pattern): self;
-
-    public function whereNotLike(string $column, string $pattern): self;
-
-    public function whereIn(mixed ...$conditions): self;
-
-    public function whereNotIn(mixed ...$conditions): self;
-
-    public function whereNull(string $column): self;
-
-    public function whereNotNull(string $column): self;
-
-    public function whereBetween(string $column, mixed $min, mixed $max): self;
-
-    // ===========================================
-    // JOIN CONDITIONS
-    // ===========================================
-    public function on(mixed ...$onConditions): self;
-
-    public function onEqualTo(string $leftColumn, string $rightColumn): self;
-
-    public function onNotEqualTo(string $leftColumn, string $rightColumn): self;
-
-    // ===========================================
-    // LOGICAL COMBINATION
-    // ===========================================
-    public function andWhere(mixed ...$conditions): self;
-
-    public function and(mixed ...$conditions): self;
-
-    public function orWhere(mixed ...$conditions): self;
-
-    public function or(mixed ...$conditions): self;
+    public function rightJoin(string|Closure $table, null|string|array $params = null): static;
 
     // ===========================================
     // SET COMBINATION
     // ===========================================
 
-    public function unionAll(SqlSelectQuery|Closure $query): self;
+    public function unionAll(SqlSelectQuery|Closure $query): static;
 }

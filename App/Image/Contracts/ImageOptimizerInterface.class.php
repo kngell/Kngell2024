@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 interface ImageOptimizerInterface
 {
-    public function optimize(string $imagePath, int $width, array $options = []): OptimizedImageInterface;
+    public function optimize(string $imagePath, int $width, array $options = []): ?OptimizedImageInterface;
 
     public function generateWebP(string $imagePath, int $width): OptimizedImageInterface;
 

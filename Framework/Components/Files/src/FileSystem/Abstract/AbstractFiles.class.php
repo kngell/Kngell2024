@@ -10,6 +10,7 @@ use RecursiveDirectoryIterator;
 abstract class AbstractFiles
 {
     protected string $originalFolder;
+
     /**
      * Supported file size units for the byte conversion functions below.
      *
@@ -22,7 +23,9 @@ abstract class AbstractFiles
      * It's needed to compare paths (especially on windows).
      *
      * @param string $path Path which should transformed to the Unix Style.
+     *
      * @return string
+     *
      * @api
      */
     public static function getUnixStylePath(string $path): string
@@ -38,7 +41,9 @@ abstract class AbstractFiles
      * Makes sure path has a trailing slash.
      *
      * @param string $path
+     *
      * @return string
+     *
      * @api
      */
     public static function getNormalizedPath(string $path): string
@@ -53,8 +58,11 @@ abstract class AbstractFiles
      * Usage: concatenatePaths(array('dir1/dir2', 'dir3', 'file')).
      *
      * @param array $paths the file paths to be combined. Last array element may include the filename.
+     *
      * @return string concatenated path without trailing slash.
+     *
      * @see getUnixStylePath()
+     *
      * @api
      */
     public static function concatenatePaths(array $paths): string
@@ -83,8 +91,11 @@ abstract class AbstractFiles
      * @param string $suffix If specified, only filenames with this extension are returned (eg. ".php" or "foo.bar")
      * @param bool $returnRealPath If turned on, all paths are resolved by calling realpath()
      * @param bool $returnDotFiles If turned on, also files beginning with a dot will be returned
-     * @return array Filenames including full path
+     *
      * @throws Exception
+     *
+     * @return array Filenames including full path
+     *
      * @api
      */
     public static function readDirectoryRecursively(string $path, ?string $suffix = null, bool $returnRealPath = false, bool $returnDotFiles = false): array
@@ -97,12 +108,14 @@ abstract class AbstractFiles
      * @param string $suffix
      * @param bool $returnRealPath
      * @param bool $returnDotFiles
-     * @return \Generator
+     *
      * @throws Exception
+     *
+     * @return Generator
      */
     public static function getRecursiveDirectoryGenerator(string $path, ?string $suffix = null, bool $returnRealPath = false, bool $returnDotFiles = false)
     {
-        if (! is_dir($path)) {
+        if (!is_dir($path)) {
             throw new Exception('"' . $path . '" is no directory.', 1207253462);
         }
 
@@ -136,14 +149,18 @@ abstract class AbstractFiles
      * directory. The passed directory itself won't be deleted though.
      *
      * @param string $path Path to the directory which shall be emptied.
-     * @return void
+     *
      * @throws Exception
+     *
+     * @return void
+     *
      * @see removeDirectoryRecursively()
+     *
      * @api
      */
     public static function emptyDirectoryRecursively(string $path)
     {
-        if (! is_dir($path)) {
+        if (!is_dir($path)) {
             throw new Exception('"' . $path . '" is no directory.', 1169047616);
         }
 
@@ -154,11 +171,11 @@ abstract class AbstractFiles
         } else {
             $directoryIterator = new RecursiveDirectoryIterator($path);
             foreach ($directoryIterator as $fileInfo) {
-                if (! $fileInfo->isDir()) {
+                if (!$fileInfo->isDir()) {
                     if (self::unlink($fileInfo->getPathname()) !== true) {
                         throw new Exception('Could not unlink file "' . $fileInfo->getPathname() . '".', 1169047619);
                     }
-                } elseif (! $directoryIterator->isDot()) {
+                } elseif (!$directoryIterator->isDot()) {
                     self::removeDirectoryRecursively($fileInfo->getPathname());
                 }
             }
@@ -173,10 +190,14 @@ abstract class AbstractFiles
      *
      * @param string $path The path on which empty directories shall be removed
      * @param string $basePath A parent path of $path where removal of directories stops
-     * @return void
+     *
      * @see removeDirectoryRecursively()
+     *
      * @api
+     *
      * @throws Exception
+     *
+     * @return void
      */
     public static function removeEmptyDirectoriesOnPath(string $path, ?string $basePath = null)
     {
@@ -206,9 +227,13 @@ abstract class AbstractFiles
      * also finally remove the emptied directory.
      *
      * @param  string $path Path to the directory which shall be removed completely.
-     * @return void
+     *
      * @throws Exception
+     *
+     * @return void
+     *
      * @see emptyDirectoryRecursively()
+     *
      * @api
      */
     public static function removeDirectoryRecursively(string $path)
@@ -223,7 +248,7 @@ abstract class AbstractFiles
                 if (rmdir($path) !== true) {
                     throw new Exception('Could not remove directory "' . $path . '".', 1316000298);
                 }
-            } catch (\Exception $exception) {
+            } catch (Exception $exception) {
                 throw new Exception('Could not remove directory "' . $path . '".', 1323961907);
             }
         }
@@ -234,9 +259,13 @@ abstract class AbstractFiles
      * don't exist yet, they will be created as well.
      *
      * @param string $path Path to the directory which shall be created
-     * @return void
+     *
      * @throws Exception
+     *
+     * @return void
+     *
      * @todo Make mode configurable / make umask configurable
+     *
      * @api
      */
     public static function createDirectoryRecursively(string $path)
@@ -247,11 +276,11 @@ abstract class AbstractFiles
         if (is_file($path)) {
             throw new Exception('Could not create directory "' . $path . '", because a file with that name exists!', 1349340620);
         }
-        if (! is_link($path) && ! is_dir($path) && $path !== '') {
+        if (!is_link($path) && !is_dir($path) && $path !== '') {
             $oldMask = umask(000);
             mkdir($path, 0775, true);
             umask($oldMask);
-            if (! is_dir($path)) {
+            if (!is_dir($path)) {
                 throw new Exception('Could not create directory "' . $path . '"!', 1170251400);
             }
         }
@@ -271,27 +300,30 @@ abstract class AbstractFiles
      * @param string $targetDirectory
      * @param bool $keepExistingFiles
      * @param bool $copyDotFiles
-     * @return void
+     *
      * @throws Exception
+     *
+     * @return void
+     *
      * @api
      */
     public static function copyDirectoryRecursively(string $sourceDirectory, string $targetDirectory, bool $keepExistingFiles = false, bool $copyDotFiles = false)
     {
-        if (! is_dir($sourceDirectory)) {
+        if (!is_dir($sourceDirectory)) {
             throw new Exception('"' . $sourceDirectory . '" is no directory.', 1235428779);
         }
 
         self::createDirectoryRecursively($targetDirectory);
-        if (! is_dir($targetDirectory)) {
+        if (!is_dir($targetDirectory)) {
             throw new Exception('"' . $targetDirectory . '" is no directory.', 1235428780);
         }
 
         foreach (self::getRecursiveDirectoryGenerator($sourceDirectory, null, false, $copyDotFiles) as $filename) {
-            $filename = strval($filename);
+            $filename = (string) $filename;
             $relativeFilename = str_replace($sourceDirectory, '', $filename);
             self::createDirectoryRecursively($targetDirectory . dirname($relativeFilename));
             $targetPathAndFilename = self::concatenatePaths([$targetDirectory, $relativeFilename]);
-            if ($keepExistingFiles === false || ! file_exists($targetPathAndFilename)) {
+            if ($keepExistingFiles === false || !file_exists($targetPathAndFilename)) {
                 copy($filename, $targetPathAndFilename);
             }
         }
@@ -306,7 +338,9 @@ abstract class AbstractFiles
      * @param resource $context (optional) A context resource created by stream_context_create()
      * @param int $offset (optional) Offset where reading of the file starts, as of PHP 7.1 supports negative offsets.
      * @param int $maximumLength (optional) Maximum length to read. Default is -1 (no limit)
+     *
      * @return mixed The file content as a string or false if the file could not be opened.
+     *
      * @api
      */
     public static function getFileContents(string $pathAndFilename, int $flags = 0, $context = null, ?int $offset = null, int $maximumLength = -1)
@@ -320,7 +354,7 @@ abstract class AbstractFiles
             } else {
                 $content = file_get_contents($pathAndFilename, (bool) $flags, $context, $offset);
             }
-        } catch (\Exception $ignoredException) {
+        } catch (Exception $ignoredException) {
             $content = false;
         }
 
@@ -332,6 +366,7 @@ abstract class AbstractFiles
      * constant.
      *
      * @param int $errorCode One of the UPLOAD_ERR_ constants
+     *
      * @return string
      */
     public static function getUploadErrorMessage(int $errorCode): string
@@ -358,21 +393,24 @@ abstract class AbstractFiles
 
     /**
      * A version of is_link() that works on Windows too.
+     *
      * @see http://www.php.net/is_link
      *
      * If http://bugs.php.net/bug.php?id=51766 gets fixed we can drop this.
      *
      * @param string $pathAndFilename Path and name of the file or directory
+     *
      * @return bool true if the path exists and is a symbolic link, false otherwise
+     *
      * @api
      */
     public static function is_link(string $pathAndFilename): bool
     {
         // if not on Windows, call PHPs own is_link() function
-        if (DIRECTORY_SEPARATOR === '/') {
+        if (DS === '/') {
             return \is_link($pathAndFilename);
         }
-        if (! file_exists($pathAndFilename)) {
+        if (!file_exists($pathAndFilename)) {
             return false;
         }
         $normalizedPathAndFilename = strtolower(rtrim(self::getUnixStylePath($pathAndFilename), '/'));
@@ -393,31 +431,33 @@ abstract class AbstractFiles
      * exists though, this method will return false.
      *
      * @param string $pathAndFilename Path and name of the file or directory
+     *
      * @return bool true if file/directory was removed successfully
+     *
      * @api
      */
     public static function unlink(string $pathAndFilename): bool
     {
         try {
             // if not on Windows, call PHPs own unlink() function
-            if (DIRECTORY_SEPARATOR === '/' || is_file($pathAndFilename)) {
-                if (! @\unlink($pathAndFilename)) {
+            if (DS === '/' || is_file($pathAndFilename)) {
+                if (!@\unlink($pathAndFilename)) {
                     clearstatcache();
 
-                    return ! file_exists($pathAndFilename);
+                    return !file_exists($pathAndFilename);
                 }
 
                 return true;
             }
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
             clearstatcache();
 
-            return ! file_exists($pathAndFilename);
+            return !file_exists($pathAndFilename);
         }
 
         try {
             return rmdir($pathAndFilename);
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
             return false;
         }
     }
@@ -429,11 +469,12 @@ abstract class AbstractFiles
      * @param int $decimals number of decimal places in the resulting string
      * @param string $decimalSeparator decimal separator of the resulting string
      * @param string $thousandsSeparator thousands separator of the resulting string
+     *
      * @return string the size string, e.g. "1,024 MB"
      */
     public static function bytesToSizeString($bytes, ?int $decimals = null, ?string $decimalSeparator = null, ?string $thousandsSeparator = null): string
     {
-        if (! is_int($bytes) && ! is_float($bytes)) {
+        if (!is_int($bytes) && !is_float($bytes)) {
             if (is_numeric($bytes)) {
                 $bytes = (float) $bytes;
             } else {
@@ -464,8 +505,10 @@ abstract class AbstractFiles
      * Converts a size string (e.g. "1024.0 MB") to the number of bytes it represents.
      *
      * @param string $sizeString the human-readable size string (e.g. ini_get('upload_max_filesize'))
-     * @return float The number of bytes the $sizeString represents or 0 if the number could not be parsed
+     *
      * @throws Exception if the specified unit could not be resolved
+     *
+     * @return float The number of bytes the $sizeString represents or 0 if the number could not be parsed
      */
     public static function sizeStringToBytes(string $sizeString): float
     {
@@ -495,8 +538,10 @@ abstract class AbstractFiles
      *
      * @param string $target The absolute target where the the symlink should point to relativiely
      * @param string $link The absolute path to the link where the symlink will be created
-     * @return bool
+     *
      * @throws Exception
+     *
+     * @return bool
      */
     public static function createRelativeSymlink(string $target, string $link): bool
     {
@@ -504,7 +549,7 @@ abstract class AbstractFiles
             self::unlink($link);
         }
         $relativeTargetPath = self::getRelativePath($link, $target);
-        if (DIRECTORY_SEPARATOR !== '/') {
+        if (DS !== '/') {
             $relativeTargetPath = str_replace('/', '\\', $relativeTargetPath);
             $flag = (is_dir($target) ? '/d' : '');
             $output = [];
@@ -529,6 +574,7 @@ abstract class AbstractFiles
      *
      * @param string $from An absolute path to base on
      * @param string $to An absolute path to find the relative representation onto $from
+     *
      * @return string
      */
     public static function getRelativePath(string $from, string $to): string

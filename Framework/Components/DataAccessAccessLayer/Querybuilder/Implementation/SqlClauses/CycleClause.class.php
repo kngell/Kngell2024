@@ -51,10 +51,21 @@ class CycleClause extends SqlComponent implements RegularClauseComponentInterfac
 
     public function getSqlClause(): ?SqlClause
     {
-        if ($this->state->statementContext === StatementType::BULK_UPDATE) {
+        if ($this->context === StatementType::BULK_UPDATE) {
             return null;
         }
         return self::CLAUSE;
+    }
+
+    /**
+     * @param null|StatementType $context
+     *
+     * @return CycleClause
+     */
+    public function setContext(?StatementType $context): CycleClause
+    {
+        $this->context = $context;
+        return $this;
     }
 
     private function buildPostgreSQLCycle(): string

@@ -1,0 +1,19 @@
+@use "sass:color";
+@use "css/globals/variables" as *;
+@use "css/globals/mixins/responsive" as *;
+
+// =====================================================
+// SELECTABLE OPTIONS STATE
+// =====================================================
+
+@mixin selectable-state(
+  $selector: ":has(input[type='radio']:checked)",
+  $content-selector: ".selectable-options__option-content",
+  $display: block
+) {
+  &#{$selector} {
+    #{$content-selector} {
+      display: $display;
+    }
+  }
+}

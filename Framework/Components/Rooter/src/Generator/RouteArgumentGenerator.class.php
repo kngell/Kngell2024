@@ -168,46 +168,73 @@ final readonly class RouteArgumentGenerator
 
     private function validatePathVariable(RouteInfo $route, array $urlRouteParams): void
     {
-        /** @var PathElement $path */
+        // Remove path variables (parameters that should be passed to method)
         foreach ($route->getPath() as $path) {
             if ($path->getType()->name === 'VARIABLE') {
-                if (array_key_exists($path->getValue(), $urlRouteParams)) {
-                    unset($urlRouteParams[$path->getValue()]);
-                }
+                unset($urlRouteParams[$path->getValue()]);
             }
         }
 
-        // List of ALL route metadata parameters that should be ignored
-        $metadataParams = [
-            'path',           // The route pattern itself
-            'controller',     // Controller name
-            'method',        // Method name
-            'httpMethod',    // HTTP method (GET, POST, etc.)
-            'middleware',    // Middleware array
-            'responseBody',   // Response body config
-            'ResponseStatus', // HTTP status
-            'arguments',     // Generic arguments
-            '_group',        // Route group config
-            'prefix',        // Group prefix
-            'constraints',   // Parameter constraints
-            'parameterMapping', // Parameter mapping config
-            'parameterAliases', // Parameter aliases config
-        ];
+        // Remove routing parameters (already filtered, but safe to keep)
+        unset($urlRouteParams['controller']);
+        unset($urlRouteParams['method']);
+        unset($urlRouteParams['action']);
 
-        // Filter out metadata parameters
-        $extraParams = array_filter($urlRouteParams, function ($key) use ($metadataParams) {
-            return !in_array($key, $metadataParams, true);
-        }, ARRAY_FILTER_USE_KEY);
-
-        if (!empty($extraParams)) {
+        // Anything left is an error
+        if (!empty($urlRouteParams)) {
             throw new InvalidRouteArgumentException(
                 sprintf(
                     'URL contains extra parameters that don\'t match method arguments: %s',
-                    implode(', ', array_keys($extraParams)),
+                    implode(', ', array_keys($urlRouteParams)),
                 ),
             );
         }
     }
+    // private function validatePathVariable(RouteInfo $route, array $urlRouteParams): void
+    // {
+    //     /** @var PathElement $path */
+    //     foreach ($route->getPath() as $path) {
+    //         if ($path->getType()->name === 'VARIABLE') {
+    //             unset($urlRouteParams[$path->getValue()]);
+    //         }
+    //         if ($path->getType()->name === 'VARIABLE') {
+    //             if (array_key_exists($path->getValue(), $urlRouteParams)) {
+    //                 unset($urlRouteParams[$path->getValue()]);
+    //             }
+    //         }
+    //     }
+
+    //     // List of ALL route metadata parameters that should be ignored
+    //     $metadataParams = [
+    //         'path',           // The route pattern itself
+    //         'controller',     // Controller name
+    //         'method',        // Method name
+    //         'httpMethod',    // HTTP method (GET, POST, etc.)
+    //         'middleware',    // Middleware array
+    //         'responseBody',   // Response body config
+    //         'ResponseStatus', // HTTP status
+    //         'arguments',     // Generic arguments
+    //         '_group',        // Route group config
+    //         'prefix',        // Group prefix
+    //         'constraints',   // Parameter constraints
+    //         'parameterMapping', // Parameter mapping config
+    //         'parameterAliases', // Parameter aliases config
+    //     ];
+
+    //     // Filter out metadata parameters
+    //     $extraParams = array_filter($urlRouteParams, function ($key) use ($metadataParams) {
+    //         return !in_array($key, $metadataParams, true);
+    //     }, ARRAY_FILTER_USE_KEY);
+
+    //     if (!empty($extraParams)) {
+    //         throw new InvalidRouteArgumentException(
+    //             sprintf(
+    //                 'URL contains extra parameters that don\'t match method arguments: %s',
+    //                 implode(', ', array_keys($extraParams)),
+    //             ),
+    //         );
+    //     }
+    // }
 
     private function createRequestBodyArgs(RouteArguments $argument, Request $request): mixed
     {

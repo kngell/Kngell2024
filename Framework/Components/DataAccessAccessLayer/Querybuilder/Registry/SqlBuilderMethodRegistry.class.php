@@ -87,6 +87,16 @@ final class SqlBuilderMethodRegistry
             'operator' => SqlOperator::GREATER_THAN,
         ],
 
+        'xorWhere' => [
+            'clause' => SqlClause::WHERE,
+            'link' => SqlConditionLink::XOR,  // ← Add this
+            'operator' => SqlOperator::EQUALS,
+        ],
+        'xorHaving' => [
+            'clause' => SqlClause::HAVING,
+            'link' => SqlConditionLink::XOR,  // ← Add this
+            'operator' => SqlOperator::EQUALS,
+        ],
         // =========================================
         // PATTERN MATCHING METHODS
         // =========================================
@@ -200,6 +210,11 @@ final class SqlBuilderMethodRegistry
         // ==========================================
         // NULL OPERATIONS METHODS
         // ==========================================
+        'when' => [
+            'clause' => null,
+            'link' => null,
+            'operator' => SqlOperator::EQUALS,
+        ],
         'whereNull' => [
             'clause' => SqlClause::WHERE,
             'link' => SqlConditionLink::AND,
@@ -233,29 +248,98 @@ final class SqlBuilderMethodRegistry
         ],
 
         // ========================================
-        // JOIN CONDITION METHODS (ON clause - part of FROM)
+        // FROM/JOIN METHODS
         // ========================================
-        'inner' => [
-            'clause' => SqlClause::FROM, // ON conditions are part of FROM clause
-            'link' => SqlConditionLink::ON,
-            'operator' => SqlOperator::EQUALS, // SQLOperator::ON
+        'from' => [
+            'clause' => SqlClause::FROM,
+            'link' => null,
+            'operator' => SqlOperator::EQUALS,
         ],
+        'join' => [
+            'clause' => SqlClause::FROM,
+            'link' => null,
+            'operator' => SqlOperator::EQUALS,
+        ],
+        // JOIN keywords (link is null - these are not conditions)
+        'innerJoin' => [
+            'clause' => SqlClause::FROM,
+            'link' => null,
+            'operator' => SqlOperator::EQUALS,
+        ],
+        'leftJoin' => [
+            'clause' => SqlClause::FROM,
+            'link' => null,
+            'operator' => SqlOperator::EQUALS,
+        ],
+        'rightJoin' => [
+            'clause' => SqlClause::FROM,
+            'link' => null,
+            'operator' => SqlOperator::EQUALS,
+        ],
+        'crossJoin' => [
+            'clause' => SqlClause::FROM,
+            'link' => null,
+            'operator' => SqlOperator::EQUALS,
+        ],
+        'fullJoin' => [
+            'clause' => SqlClause::FROM,
+            'link' => null,
+            'operator' => SqlOperator::EQUALS,
+        ],
+        'naturalJoin' => [
+            'clause' => SqlClause::FROM,
+            'link' => null,
+            'operator' => SqlOperator::EQUALS,
+        ],
+
+        // Short form JOIN keywords
+        'inner' => [
+            'clause' => SqlClause::FROM,
+            'link' => null,
+            'operator' => SqlOperator::EQUALS,
+        ],
+        'left' => [
+            'clause' => SqlClause::FROM,
+            'link' => null,
+            'operator' => SqlOperator::EQUALS,
+        ],
+        'right' => [
+            'clause' => SqlClause::FROM,
+            'link' => null,
+            'operator' => SqlOperator::EQUALS,
+        ],
+        'cross' => [
+            'clause' => SqlClause::FROM,
+            'link' => null,
+            'operator' => SqlOperator::EQUALS,
+        ],
+        'full' => [
+            'clause' => SqlClause::FROM,
+            'link' => null,
+            'operator' => SqlOperator::EQUALS,
+        ],
+        'natural' => [
+            'clause' => SqlClause::FROM,
+            'link' => null,
+            'operator' => SqlOperator::EQUALS,
+        ],
+
+        // ON condition methods (link is ON)
         'on' => [
-            'clause' => SqlClause::FROM, // ON conditions are part of FROM clause
+            'clause' => SqlClause::FROM,
             'link' => SqlConditionLink::ON,
-            'operator' => SqlOperator::EQUALS, // SQLOperator::ON
+            'operator' => SqlOperator::EQUALS,
         ],
         'andOn' => [
             'clause' => SqlClause::FROM,
             'link' => SqlConditionLink::ON,
-            'operator' => SqlOperator::EQUALS, // SQLOperator::ON
+            'operator' => SqlOperator::EQUALS,
         ],
         'orOn' => [
             'clause' => SqlClause::FROM,
             'link' => SqlConditionLink::ON,
-            'operator' => SqlOperator::OR, // SQLOperator::ON
+            'operator' => SqlOperator::EQUALS,
         ],
-
         'onEqualTo' => [
             'clause' => SqlClause::FROM,
             'link' => SqlConditionLink::ON,
@@ -295,6 +379,21 @@ final class SqlBuilderMethodRegistry
             'clause' => SqlClause::FROM,
             'link' => SqlConditionLink::ON,
             'operator' => SqlOperator::IS_NULL,
+        ],
+        'onClosure' => [
+            'clause' => SqlClause::FROM,
+            'link' => SqlConditionLink::ON,
+            'operator' => SqlOperator::EQUALS,
+        ],
+        'onValue' => [
+            'clause' => SqlClause::FROM,
+            'link' => SqlConditionLink::AND,
+            'operator' => SqlOperator::EQUALS,
+        ],
+        'orOnValue' => [
+            'clause' => SqlClause::FROM,
+            'link' => SqlConditionLink::OR,
+            'operator' => SqlOperator::EQUALS,
         ],
 
         // ========================================
@@ -346,70 +445,70 @@ final class SqlBuilderMethodRegistry
         // EXPRESSION/OPERATION METHODS (for SELECT, SET, etc.)
         // ========================================
         'add' => [
-            'clause' => SqlClause::SELECT, // Typically used in SELECT
-            'link' => SqlConditionLink::AND,
+            'clause' => SqlClause::SELECT,
+            'link' => null,
             'operator' => SqlOperator::ADD,
         ],
         'subtract' => [
             'clause' => SqlClause::SELECT,
-            'link' => SqlConditionLink::AND,
+            'link' => null,
             'operator' => SqlOperator::SUBTRACT,
         ],
         'multiply' => [
             'clause' => SqlClause::SELECT,
-            'link' => SqlConditionLink::AND,
+            'link' => null,
             'operator' => SqlOperator::MULTIPLY,
         ],
         'divide' => [
             'clause' => SqlClause::SELECT,
-            'link' => SqlConditionLink::AND,
+            'link' => null,
             'operator' => SqlOperator::DIVIDE,
         ],
         'modulo' => [
             'clause' => SqlClause::SELECT,
-            'link' => SqlConditionLink::AND,
+            'link' => null,
             'operator' => SqlOperator::MODULO,
         ],
 
         'bitwiseAnd' => [
             'clause' => SqlClause::SELECT,
-            'link' => SqlConditionLink::AND,
+            'link' => null,
             'operator' => SqlOperator::BITWISE_AND,
         ],
         'bitwiseOr' => [
             'clause' => SqlClause::SELECT,
-            'link' => SqlConditionLink::AND,
+            'link' => null,
             'operator' => SqlOperator::BITWISE_OR,
         ],
         'bitwiseXor' => [
             'clause' => SqlClause::SELECT,
-            'link' => SqlConditionLink::AND,
+            'link' => null,
             'operator' => SqlOperator::BITWISE_XOR,
         ],
         'bitwiseNot' => [
             'clause' => SqlClause::SELECT,
-            'link' => SqlConditionLink::AND,
+            'link' => null,
             'operator' => SqlOperator::BITWISE_NOT,
         ],
 
         'concat' => [
             'clause' => SqlClause::SELECT,
-            'link' => SqlConditionLink::AND,
+            'link' => null,
             'operator' => SqlOperator::CONCAT,
         ],
 
         'jsonExtract' => [
             'clause' => SqlClause::SELECT,
-            'link' => SqlConditionLink::AND,
+            'link' => null,
             'operator' => SqlOperator::JSON_EXTRACT,
         ],
         'jsonExtractText' => [
             'clause' => SqlClause::SELECT,
-            'link' => SqlConditionLink::AND,
+            'link' => null,
             'operator' => SqlOperator::JSON_EXTRACT_TEXT,
         ],
         'jsonContains' => [
-            'clause' => SqlClause::WHERE, // Can be used in WHERE conditions
+            'clause' => SqlClause::WHERE,
             'link' => SqlConditionLink::AND,
             'operator' => SqlOperator::JSON_CONTAINS,
         ],
@@ -429,7 +528,8 @@ final class SqlBuilderMethodRegistry
             'link' => SqlConditionLink::AND,
             'operator' => SqlOperator::ARRAY_OVERLAP,
         ],
-        //Insert Clauses
+
+        // Insert Clauses
         'into' => [
             'clause' => SqlClause::INTO,
             'link' => null,
@@ -440,18 +540,18 @@ final class SqlBuilderMethodRegistry
             'link' => null,
             'operator' => null,
         ],
-        //Update Clauses
+
+        // Update Clauses
         'set' => [
             'clause' => SqlClause::SET,
             'link' => null,
             'operator' => SqlOperator::EQUALS,
         ],
-        'from' => [
-            'clause' => SqlClause::FROM,
-            'link' => SqlConditionLink::ON,
-            'operator' => SqlOperator::EQUALS,
-        ],
     ];
+
+    // ========================================
+    // PUBLIC API - Method Classification
+    // ========================================
 
     /**
      * Get complete mapping for a method.
@@ -470,13 +570,16 @@ final class SqlBuilderMethodRegistry
      */
     public static function getClauseContext(string $method): SqlClause
     {
+        if ($method === 'when') {
+            return SqlKeyword::WHEN->toSqlClause();
+        }
         return self::getMapping($method)['clause'];
     }
 
     /**
      * Get logical link for a method.
      */
-    public static function getLogicalLink(string $method): SqlConditionLink
+    public static function getLogicalLink(string $method): ?SqlConditionLink
     {
         return self::getMapping($method)['link'];
     }
@@ -484,7 +587,7 @@ final class SqlBuilderMethodRegistry
     /**
      * Get default operator for a method.
      */
-    public static function getDefaultOperator(string $method): SqlOperator
+    public static function getDefaultOperator(string $method): ?SqlOperator
     {
         return self::getMapping($method)['operator'];
     }
@@ -496,6 +599,144 @@ final class SqlBuilderMethodRegistry
     {
         return array_key_exists($method, self::METHOD_MAPPINGS);
     }
+
+    // ========================================
+    // JOIN/ON CLASSIFICATION METHODS
+    // ========================================
+
+    public static function isJoinMethod(string $method): bool
+    {
+        $mapping = self::getMapping($method);
+
+        // Must be FROM clause
+        if ($mapping['clause'] !== SqlClause::FROM) {
+            return false;
+        }
+
+        // Link must be null (JOIN keywords are not conditions)
+        if ($mapping['link'] !== null) {
+            return false;
+        }
+
+        // Exclude the main 'from' method (table source)
+        if ($method === 'from') {
+            return false;
+        }
+
+        // Exclude ON methods (though they'd be caught by link !== null anyway)
+        if (self::isOnMethod($method)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public static function isOnMethod(string $method): bool
+    {
+        $mapping = self::getMapping($method);
+
+        // Must be FROM clause
+        if ($mapping['clause'] !== SqlClause::FROM) {
+            return false;
+        }
+
+        // Link must be ON (primary indicator)
+        if ($mapping['link'] === SqlConditionLink::ON) {
+            return true;
+        }
+
+        // Fallback: method name starts with 'on' (convention)
+        // This catches any method that follows the naming convention
+        if (str_starts_with($method, 'on')) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if a method is the main FROM clause (table source).
+     */
+    public static function isFromMethod(string $method): bool
+    {
+        return $method === 'from';
+    }
+
+    /**
+     * Get all JOIN keyword methods.
+     */
+    public static function getJoinMethods(): array
+    {
+        static $cachedJoinMethods = null;
+
+        if ($cachedJoinMethods === null) {
+            $cachedJoinMethods = array_filter(
+                array_keys(self::METHOD_MAPPINGS),
+                fn ($method) => self::isJoinMethod($method),
+            );
+            $cachedJoinMethods = array_values($cachedJoinMethods);
+        }
+
+        return $cachedJoinMethods;
+    }
+
+    /**
+     * Get all ON condition methods.
+     */
+    public static function getOnMethods(): array
+    {
+        static $cachedOnMethods = null;
+
+        if ($cachedOnMethods === null) {
+            $cachedOnMethods = array_filter(
+                array_keys(self::METHOD_MAPPINGS),
+                fn ($method) => self::isOnMethod($method),
+            );
+            $cachedOnMethods = array_values($cachedOnMethods);
+        }
+
+        return $cachedOnMethods;
+    }
+
+    /**
+     * Check if a method is a WHERE condition method.
+     */
+    public static function isWhereMethod(string $method): bool
+    {
+        $mapping = self::getMapping($method);
+        return $mapping['clause'] === SqlClause::WHERE;
+    }
+
+    /**
+     * Check if a method is a HAVING condition method.
+     */
+    public static function isHavingMethod(string $method): bool
+    {
+        $mapping = self::getMapping($method);
+        return $mapping['clause'] === SqlClause::HAVING;
+    }
+
+    /**
+     * Check if a method uses AND logic (for WHERE/HAVING).
+     */
+    public static function isAndMethod(string $method): bool
+    {
+        $link = self::getLogicalLink($method);
+        return $link === SqlConditionLink::AND;
+    }
+
+    /**
+     * Check if a method uses OR logic (for WHERE/HAVING).
+     */
+    public static function isOrMethod(string $method): bool
+    {
+        $link = self::getLogicalLink($method);
+        return $link === SqlConditionLink::OR;
+    }
+
+    // ========================================
+    // UTILITY METHODS
+    // ========================================
 
     /**
      * Get all methods that use a specific operator.

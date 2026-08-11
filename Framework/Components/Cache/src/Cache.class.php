@@ -28,7 +28,6 @@ class Cache extends AbstractCache
 
         try {
             $serializedValue = $this->serializer->serialize($value);
-
             $isCompressed = false;
             if ($this->serializer->supportsCompression() && strlen($serializedValue) > 1024) {
                 $serializedValue = $this->serializer->compress($serializedValue);

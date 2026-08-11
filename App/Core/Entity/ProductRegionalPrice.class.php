@@ -20,8 +20,8 @@ class ProductRegionalPrice extends Entity implements TimestampableInterface, Sof
     private ?Money $costPrice;
     private ?Money $salePrice;
     private bool $priceIncludesTax = false;
-    private ?DateTimeImmutable $saleStartDate;
-    private ?DateTimeImmutable $saleEndDate;
+    private ?DateTimeImmutable $saleStartDate = null;
+    private ?DateTimeImmutable $saleEndDate = null;
     private ?bool $isActive;
     private bool $isOnSale = true;
     private ?int $discountPercent = null;

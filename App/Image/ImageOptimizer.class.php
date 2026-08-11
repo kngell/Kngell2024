@@ -20,7 +20,7 @@ class ImageOptimizer implements ImageOptimizerInterface
         return $this;
     }
 
-    public function optimize(?string $imagePath, int $width, array $options = []): OptimizedImageInterface
+    public function optimize(?string $imagePath, int $width, array $options = []): ?OptimizedImageInterface
     {
         $options = new ImageOptimizationOptions($options);
         $imagePath = STORAGE . ltrim($imagePath, DS);
@@ -33,7 +33,8 @@ class ImageOptimizer implements ImageOptimizerInterface
 
         $metadata = $this->metadataService->createFromWebPath($imagePath);
         if (!$metadata) {
-            throw new InvalidArgumentException("Image not found or invalid: {$imagePath}");
+            return null;
+            // throw new InvalidArgumentException("Image not found or invalid: {$imagePath}");
         }
 
         $absolutePath = $this->metadataService->webPathToAbsolutePath($imagePath);
@@ -41,7 +42,8 @@ class ImageOptimizer implements ImageOptimizerInterface
 
         $manipulator = $this->findManipulator($metadata['mime_type']);
         if (!$manipulator) {
-            throw new RuntimeException("No processor found for image type: {$metadata['mime_type']}");
+            return null;
+            // throw new RuntimeException("No processor found for image type: {$metadata['mime_type']}");
         }
 
         $targetPath = $this->generateTargetPath($fileInfo, $width, $options);

@@ -46,11 +46,11 @@ final readonly class EntityTraverser
         }
 
         if ($this->isCollection($value)) {
-            return $this->transformCollection($value, $property, $includeRelationships, $maxDepth, $currentDepth, $excludedProperties, $formatValues);
+            return $this->transformCollection($value, $property, $includeRelationships, $maxDepth, $currentDepth, $excludedProperties);
         }
 
         if ($value instanceof Entity) {
-            return $this->transformSingleEntity($value, $includeRelationships, $maxDepth, $currentDepth, $excludedProperties, $formatValues);
+            return $this->transformSingleEntity($value, $includeRelationships, $maxDepth, $currentDepth, $excludedProperties);
         }
 
         return $value;

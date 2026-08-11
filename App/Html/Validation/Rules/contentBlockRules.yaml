@@ -1,0 +1,11 @@
+section_id:
+  display: Section
+  required: true
+position:
+  display: Position
+  required: true
+title:
+  display: Title
+  required: true
+  min: 3
+  max: 255

@@ -4,13 +4,17 @@ declare(strict_types=1);
 
 trait EntityTimestampableTrait
 {
-    protected const string DATE_FORMAT = 'Y-m-d H:i:s';
+    protected const TIMESTAMP_TIMEZONE = 'UTC';
+    /**
+     * Use untyped constants unless your project is guaranteed to run on PHP 8.3+.
+     */
+    private const DATE_FORMAT = 'Y-m-d H:i:s';
 
     #[DisplayFormat(
         dateStyle: 'Y-m-d',
         suffix: ' UTC',
     )]
-    private DateTimeImmutable $createdAt;
+    private ?DateTimeImmutable $createdAt = null;
 
     #[DisplayFormat(
         dateStyle: 'Y-m-d',
@@ -18,26 +22,46 @@ trait EntityTimestampableTrait
     )]
     private ?DateTimeImmutable $updatedAt = null;
 
-    public function touchUpdatedAt(): self
+    /**
+     * Set updated_at to the current UTC time.
+     */
+    public function touchUpdatedAt(?DateTimeImmutable $at = null): static
     {
-        $this->updatedAt = new DateTimeImmutable();
+        $this->updatedAt = self::normalizeTimestamp($at ?? self::now());
+
         return $this;
     }
 
     /**
-     * Touch created_at with current time (if not already set).
+     * Set created_at to the current UTC time only if it is not already set.
      */
-    public function touchCreatedAt(): self
+    public function touchCreatedAt(?DateTimeImmutable $at = null): static
     {
         if ($this->createdAt === null) {
-            $this->createdAt = new DateTimeImmutable();
+            $this->createdAt = self::normalizeTimestamp($at ?? self::now());
         }
 
         return $this;
     }
 
     /**
-     * Get raw database string values.
+     * Set created_at if missing and always update updated_at.
+     */
+    public function touchTimestamps(?DateTimeImmutable $at = null): TimestampableInterface
+    {
+        $timestamp = self::normalizeTimestamp($at ?? self::now());
+
+        if ($this->createdAt === null) {
+            $this->createdAt = $timestamp;
+        }
+
+        $this->updatedAt = $timestamp;
+
+        return $this;
+    }
+
+    /**
+     * Get created_at as raw database string.
      */
     public function getCreatedAtRaw(): ?string
     {
@@ -45,7 +69,7 @@ trait EntityTimestampableTrait
     }
 
     /**
-     * Get raw database string values.
+     * Get updated_at as raw database string.
      */
     public function getUpdatedAtRaw(): ?string
     {
@@ -53,7 +77,7 @@ trait EntityTimestampableTrait
     }
 
     /**
-     * Check if created_at is set.
+     * Check whether created_at is set.
      */
     public function hasCreatedAt(): bool
     {
@@ -61,7 +85,7 @@ trait EntityTimestampableTrait
     }
 
     /**
-     * Check if updated_at is set.
+     * Check whether updated_at is set.
      */
     public function hasUpdatedAt(): bool
     {
@@ -69,7 +93,7 @@ trait EntityTimestampableTrait
     }
 
     /**
-     * Get created_at in specified format.
+     * Get created_at in the specified format.
      */
     public function getCreatedAtFormatted(?string $format = null): ?string
     {
@@ -77,73 +101,51 @@ trait EntityTimestampableTrait
     }
 
     /**
-     * Get updated_at in specified format.
+     * Get updated_at in the specified format.
      */
     public function getUpdatedAtFormatted(?string $format = null): ?string
     {
         return $this->updatedAt?->format($format ?? self::DATE_FORMAT);
     }
 
-    /**
-     * @return null|DateTimeImmutable
-     */
+    public function getCreatedAt(): ?DateTimeImmutable
+    {
+        return $this->createdAt;
+    }
+
+    public function setCreatedAt(DateTimeImmutable $createdAt): TimestampableInterface
+    {
+        $this->createdAt = self::normalizeTimestamp($createdAt);
+
+        return $this;
+    }
+
     public function getUpdatedAt(): ?DateTimeImmutable
     {
         return $this->updatedAt;
     }
 
-    /**
-     * @param null|DateTimeImmutable $updatedAt
-     *
-     * @return TimestampableInterface
-     */
     public function setUpdatedAt(?DateTimeImmutable $updatedAt): TimestampableInterface
     {
-        $this->updatedAt = $updatedAt;
+        $this->updatedAt = $updatedAt !== null
+            ? self::normalizeTimestamp($updatedAt)
+            : null;
+
         return $this;
     }
 
-    /**
-     * @return ?DateTimeImmutable
-     */
-    public function getCreatedAt(): ?DateTimeImmutable
+    private static function now(): DateTimeImmutable
     {
-        return isset($this->createdAt) ? $this->createdAt : null;
+        return new DateTimeImmutable(
+            'now',
+            new DateTimeZone(self::TIMESTAMP_TIMEZONE),
+        );
     }
 
-    /**
-     * @param DateTimeImmutable $createdAt
-     *
-     * @return TimestampableInterface
-     */
-    public function setCreatedAt(DateTimeImmutable $createdAt): TimestampableInterface
+    private static function normalizeTimestamp(DateTimeImmutable $timestamp): DateTimeImmutable
     {
-        $this->createdAt = $createdAt;
-        return $this;
-    }
-
-    public function touchTimestamps(): void
-    {
-        if (!$this instanceof TimestampableInterface) {
-            return;
-        }
-
-        $now = new DateTimeImmutable();
-
-        if (method_exists($this, 'setUpdatedAt')) {
-            $this->setUpdatedAt($now);
-        }
-        if (method_exists($this, 'setCreatedAt')) {
-            if (method_exists($this, 'getCreatedAt')) {
-                $existingCreatedAt = $this->getCreatedAt();
-                if ($existingCreatedAt === null) {
-                    $this->setCreatedAt($now);
-                }
-                // If created_at already exists, DON'T update it
-            } else {
-                // No getter - assume it's not set
-                $this->setCreatedAt($now);
-            }
-        }
+        return $timestamp->setTimezone(
+            new DateTimeZone(self::TIMESTAMP_TIMEZONE),
+        );
     }
 }

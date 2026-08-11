@@ -5,8 +5,8 @@ declare(strict_types=1);
 class LabelElement extends AbstractHtmlElement
 {
     // ── Label-Specific Properties ───────────────────────────────────
-    protected string $for = '';
-    protected string $formId = '';
+    protected string $for;
+    protected string $formId;
 
     public function __construct(?string $content = null)
     {

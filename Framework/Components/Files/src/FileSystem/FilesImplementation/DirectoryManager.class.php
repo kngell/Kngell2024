@@ -33,11 +33,11 @@ class DirectoryManager implements DirectoryInterface, FileSystemInterface
                 RecursiveIteratorIterator::SELF_FIRST,
             );
         } else {
-            $iterator = new DirectoryIterator($path);
+            $iterator = new RecursiveDirectoryIterator($path, RecursiveDirectoryIterator::SKIP_DOTS);
         }
 
         foreach ($iterator as $item) {
-            if ($item->isDot()) {
+            if ($this->shouldSkipItem($item, $recursive)) {
                 continue;
             }
             $items[] = new FileInformation($item->getPathname());
@@ -45,6 +45,32 @@ class DirectoryManager implements DirectoryInterface, FileSystemInterface
 
         return $items;
     }
+    // public function list(string $path, bool $recursive = false): array
+    // {
+    //     if (!is_dir($path)) {
+    //         throw new FileException("Directory does not exist: {$path}");
+    //     }
+
+    //     $items = [];
+
+    //     if ($recursive) {
+    //         $iterator = new RecursiveIteratorIterator(
+    //             new RecursiveDirectoryIterator($path, RecursiveDirectoryIterator::SKIP_DOTS),
+    //             RecursiveIteratorIterator::SELF_FIRST,
+    //         );
+    //     } else {
+    //         $iterator = new DirectoryIterator($path);
+    //     }
+
+    //     foreach ($iterator as $item) {
+    //         if ($item->isDot()) {
+    //             continue;
+    //         }
+    //         $items[] = new FileInformation($item->getPathname());
+    //     }
+
+    //     return $items;
+    // }
 
     public function delete(string $path): void
     {
@@ -54,7 +80,7 @@ class DirectoryManager implements DirectoryInterface, FileSystemInterface
 
         $items = array_diff(scandir($path), ['.', '..']);
         foreach ($items as $item) {
-            $itemPath = $path . DIRECTORY_SEPARATOR . $item;
+            $itemPath = $path . DS . $item;
             if (is_dir($itemPath)) {
                 $this->delete($itemPath);
             } else {
@@ -155,5 +181,22 @@ class DirectoryManager implements DirectoryInterface, FileSystemInterface
             'readable' => ByteHelper::format($bytes),
             'file_count' => $this->getFileCount($path),
         ];
+    }
+
+    private function shouldSkipItem(SplFileInfo $item, bool $recursive): bool
+    {
+        $filename = $item->getFilename();
+
+        // Skip . and ..
+        if ($filename === '.' || $filename === '..') {
+            return true;
+        }
+
+        // For non-recursive, skip directories (only return files)
+        if (!$recursive && $item->isDir()) {
+            return true;
+        }
+
+        return false;
     }
 }

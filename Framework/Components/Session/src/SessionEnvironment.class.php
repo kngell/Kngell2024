@@ -62,15 +62,14 @@ class SessionEnvironment
         return $this->getSessionParam('path') ?? '/';
     }
 
-    /**
-     * Cookie domain, for example 'www.php.net'. To make cookies visible on all
-     * subdomains then the domain must be prefixed with a dot like '.php.net'.
-     *
-     * @return string
-     */
     public function getDomain(): string
     {
-        return $this->getSessionParam('domain') ?? ($_SERVER['SERVER_NAME'] ?? 'localhost');
+        $domain = $this->getSessionParam('domain');
+        if (empty($domain) || $domain === 'localhost') {
+            return '';
+        }
+
+        return $domain;
     }
 
     public function isSecure(): bool

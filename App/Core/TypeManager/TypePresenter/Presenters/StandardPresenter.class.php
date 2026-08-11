@@ -4,9 +4,14 @@ declare(strict_types=1);
 
 class StandardPresenter implements TypePresenterInterface
 {
+    public function __construct(
+        private ?TranslatorServiceInterface $translator = null,
+    ) {
+    }
+
     public function supports(mixed $value, ?ReflectionProperty $property = null): bool
     {
-        return is_scalar($value);
+        return is_scalar($value) || $value === null;
     }
 
     public function display(mixed $value, ?ReflectionProperty $property = null, ?RegionContextInterface $regionContext = null): mixed
@@ -14,58 +19,30 @@ class StandardPresenter implements TypePresenterInterface
         if ($value === null) {
             return null;
         }
+
         if ($value === '') {
             return '';
         }
 
         if (is_bool($value)) {
-            return $value ? 'Yes' : 'No';
+            return $this->translator?->translate($value ? 'common.yes' : 'common.no') ?? ($value ? 'Yes' : 'No');
         }
 
-        if (is_numeric($value)) {
-            if ($property !== null) {
-                $name = $property->getName();
-
-                if (str_ends_with(strtolower($name), 'id')) {
-                    return (string) $value;
-                }
-                if (!empty($property->getAttributes(EntityFieldId::class))) {
-                    return (string) $value;
-                }
-            }
-
-            return $this->formatNumber($value, $property);
-        }
-
+        // Pass through strings, ints, floats - let specific presenters handle formatting
         return $value;
     }
 
-    private function formatNumber(mixed $value, ?ReflectionProperty $property): string
+    private function prepareBoolean(mixed $value): bool
     {
-        $isIntegerType = false;
-        if ($property !== null && $property->hasType()) {
-            $type = $property->getType();
-
-            if ($type instanceof ReflectionNamedType && $type->getName() === 'int') {
-                $isIntegerType = true;
-            }
+        if (is_bool($value)) {
+            return $value;
         }
 
-        $numericValue = $isIntegerType ? (int) $value : (float) $value;
-
-        // 3. Resolve formatting rules
-        $decimals = $isIntegerType ? 0 : 2;
-        $decimalSeparator = '.';
-        $thousandsSeparator = ',';
-
-        if ($property !== null) {
-            $attributes = $property->getAttributes(DisplayFormat::class);
-            if (!empty($attributes)) {
-                $format = $attributes[0]->newInstance();
-                $decimals = $format->decimals ?? $decimals;
-            }
+        if (is_string($value)) {
+            $value = strtolower(trim($value));
+            return in_array($value, ['1', 'true', 'yes', 'y', 'on', 'active']);
         }
 
-        return number_format((float) $numericValue, $decimals, $decimalSeparator, $thousandsSeparator);
+        return (bool) $value;
     }
 }

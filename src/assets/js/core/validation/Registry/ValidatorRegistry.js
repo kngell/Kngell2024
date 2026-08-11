@@ -18,7 +18,8 @@ import MaxFilesValidator from "js/core/validation/Validators/MaxFilesValidator";
 import MimesValidator from "js/core/validation/Validators/MimesValidator";
 import UniqueInArrayValidator from "js/core/validation/Validators/UniqueInArrayValidator";
 import IntegerValidator from "js/core/validation/Validators/IntegerValidator";
-import RequiredCheckedValidator from "js/core/validation/Validators/RequiredCheckedValidator.js";
+import RequiredCheckedValidator from "js/core/validation/Validators/RequiredCheckedValidator";
+import DecimalValidator from "js/core/validation/Validators/DecimalValidator";
 
 export default class ValidatorRegistry {
   static validators = {
@@ -43,6 +44,7 @@ export default class ValidatorRegistry {
     unique_in_array: UniqueInArrayValidator,
     integer: IntegerValidator,
     required_checked: RequiredCheckedValidator,
+    decimal: DecimalValidator
   };
 
   static getValidator(ruleName) {

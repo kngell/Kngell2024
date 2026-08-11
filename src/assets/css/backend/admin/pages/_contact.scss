@@ -1,3 +1,4 @@
+@use "css/globals" as *;
 @use "css/backend/admin/abstracts" as *;
 
 /*--------------- PRODUCT ADD -------------*/
@@ -42,7 +43,7 @@
               textarea,
               email,
               checkbox,
-              radio,
+              radio
             ),
             $options: (
               floating: false,
@@ -50,7 +51,7 @@
               checkbox-required: true,
               border-color: map-deep-get($color-neutral, gray, gray-100),
               radius: map-deep-get($radius, s),
-              padding: 0.8em 1.2em,
+              padding: 0.8em 1.2em
             )
           );
         }

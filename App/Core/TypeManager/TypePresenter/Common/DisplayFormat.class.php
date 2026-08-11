@@ -1,14 +1,18 @@
 <?php
 
-// DisplayFormat.php
 declare(strict_types=1);
 
 #[Attribute(Attribute::TARGET_PROPERTY)]
 class DisplayFormat
 {
+    // Global obfuscation constants
+    public const OBFUSCATION_PREFIX = '#';
+    public const OBFUSCATION_PREFIXES = ['#', 'enc:', 'obf:', 'hash:'];
+    public const DEFAULT_OBFUSCATION_STRATEGY = 'hashid';
+
     public function __construct(
         // General display style
-        public ?string $style = null, // 'auto', 'date', 'time', 'datetime', 'relative'
+        public ?string $style = null, // 'auto', 'date', 'time', 'datetime', 'relative', 'yesno', 'truefalse', 'activeinactive', 'onoff'
 
         // Custom format strings (PHP date() format)
         public ?string $format = null,
@@ -30,14 +34,25 @@ class DisplayFormat
         public ?string $unit = null,
         public ?bool $compact = null,
 
-        // NEW: Obfuscation support
-        public ?bool $obfuscate = null,      // Whether to obfuscate IDs
-        public ?string $obfuscationStrategy = null, // 'hashid', 'encrypt', or null for default
+        // Obfuscation support
+        public ?bool $obfuscate = null,
+        public ?string $obfuscationStrategy = null,
 
         // General
         public ?string $prefix = null,
         public ?string $suffix = null,
         public ?string $nullPlaceholder = null,
+
+        // NEW: Raw value flag - when true, returns the raw value instead of formatted
+        public ?bool $raw = null,
     ) {
+        if ($this->obfuscate === true && $this->prefix === null) {
+            $this->prefix = self::OBFUSCATION_PREFIX;
+        }
+
+        // Auto-set default strategy if not specified
+        if ($this->obfuscate === true && $this->obfuscationStrategy === null) {
+            $this->obfuscationStrategy = self::DEFAULT_OBFUSCATION_STRATEGY;
+        }
     }
 }

@@ -9,12 +9,13 @@ class DeleteResult
         private array $id,
         private ?string $name,
         private ?string $errorMessage,
+        private ?string $operation,
         private array $errorDetails,
         private int $affectedRows,
         private bool $wasSkipped,
         private string $skipReason,
         private bool $isSoftDeleted,
-        private string $deletionType,
+        private string $deleteOption,
         private array $warnings,
     ) {
     }
@@ -41,7 +42,11 @@ class DeleteResult
 
     public function getErrorDetails(): array
     {
-        return $this->errorDetails;
+        return array_merge(
+            $this->errorDetails,
+            ['operation' => $this->operation,
+            ],
+        );
     }
 
     public function getAffectedRows(): int
@@ -64,24 +69,28 @@ class DeleteResult
         return $this->isSoftDeleted;
     }
 
-    public function getDeletionType(): string
-    {
-        return $this->deletionType;
-    }
-
     public function getWarnings(): array
     {
         return $this->warnings;
     }
 
+    /**
+     * @return string
+     */
+    public function getDeleteOption(): string
+    {
+        return $this->deleteOption;
+    }
+
     public static function success(
         array $id,
-        string $name,
+        ?string $name,
         int $affectedRows = 0,
         bool $wasSkipped = false,
         string $skipReason = '',
         bool $isSoftDeleted = false,
-        string $deletionType = 'archive',
+        string $deleteOption = 'archive',
+        string $operation = 'DELETE',
         array $warnings = [],
     ): self {
         return new self(
@@ -89,18 +98,20 @@ class DeleteResult
             id: $id,
             name: $name,
             errorMessage: null,
+            operation: $operation,
             errorDetails: [],
             affectedRows: $affectedRows,
             wasSkipped: $wasSkipped,
             skipReason: $skipReason,
             isSoftDeleted: $isSoftDeleted,
-            deletionType: $deletionType,
+            deleteOption: $deleteOption,
             warnings: $warnings,
         );
     }
 
     public static function failure(
         string $errorMessage,
+        string $operation = 'DELETE',
         array $errorDetails = [],
     ): self {
         return new self(
@@ -108,12 +119,13 @@ class DeleteResult
             id: [],
             name: null,
             errorMessage: $errorMessage,
+            operation: $operation,
             errorDetails: $errorDetails,
             affectedRows: 0,
             wasSkipped: false,
             skipReason: '',
             isSoftDeleted: false,
-            deletionType: '',
+            deleteOption: '',
             warnings: [],
         );
     }

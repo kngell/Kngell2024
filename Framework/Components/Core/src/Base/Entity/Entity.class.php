@@ -11,7 +11,6 @@ abstract class Entity
     private array $tableMap;
     private array $relatedEntities = [];
     private array $pendingData = [];
-    private array $pendingCollections = [];
     private ?array $cachedFieldMap = null;
 
     public function __construct(
@@ -201,6 +200,11 @@ abstract class Entity
         return $this->getMapper()->getPropertyForField($this, $field);
     }
 
+    public function getFormat(): ?DisplayFormat
+    {
+        return $this->getMapper()->getFormat($this);
+    }
+
     public function hasProperty(string $propertyName): bool
     {
         return $this->getMapper()->hasProperty($this, $propertyName);
@@ -241,6 +245,18 @@ abstract class Entity
     // ------------------------------------------------------------
     // OTHER METHODS
     // ------------------------------------------------------------
+    public function deobsfuscated(string $field, mixed $value): ?int
+    {
+        $property = $this->getProperty($field);
+        $normalizer = $this->getNormalizer();
+
+        $rawId = $normalizer->normalizeForClientToEntity($value, $property, $this);
+
+        if ($rawId === null) {
+            return $value;
+        }
+        return is_numeric($rawId) ? (int) $rawId : $rawId;
+    }
 
     public function getDirtyData(): array
     {
@@ -344,6 +360,11 @@ abstract class Entity
         return $this->dependencies->getRelationManager();
     }
 
+    public function getPresenterFactory(): TypePresenterFactoryInterface
+    {
+        return $this->dependencies->getTypePresenterFactory();
+    }
+
     public function getChangeTracker(): ChangeTrackerInterface
     {
         return $this->dependencies->getChangeTracker();
@@ -352,6 +373,19 @@ abstract class Entity
     public function prepareRowHydration(): void
     {
         $this->getRelationManager()->resetCurrentPointers($this->relatedEntities);
+    }
+
+    /**
+     * @return EntityDependenciesFactoryInterface
+     */
+    public function getDependencies(): EntityDependenciesFactoryInterface
+    {
+        return $this->dependencies;
+    }
+
+    public function getNormalizer(): TypeNormalizerInterface
+    {
+        return $this->dependencies->getNormalizer();
     }
 
     // Protected getters for internal use
@@ -368,11 +402,6 @@ abstract class Entity
     protected function getTransformer(): EntityToArrayTransformerInterface
     {
         return $this->dependencies->getTransformer();
-    }
-
-    protected function getNormalizer(): TypeNormalizerInterface
-    {
-        return $this->dependencies->getNormalizer();
     }
 
     protected function getTypePresenterFactory(): TypePresenterFactory

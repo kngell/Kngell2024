@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 use Brick\Money\Money;
 
-class ProductVariation extends Entity implements TimestampableInterface
+class ProductVariation extends Entity implements TimestampableInterface, SoftDeletableInterface
 {
     use EntityTimestampableTrait;
+    use SoftDeletableTrait;
 
     #[EntityFieldId()]
     private int $id; //Unique product identifier

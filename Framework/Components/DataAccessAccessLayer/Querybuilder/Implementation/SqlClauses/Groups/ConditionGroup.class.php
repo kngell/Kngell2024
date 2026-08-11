@@ -134,29 +134,6 @@ class ConditionGroup extends SqlQuery implements ClauseComponentInterface, Opera
         return !empty($this->conditions) ? $this->conditions[0] : null;
     }
 
-    // private function needsGroupParentheses(): bool
-    // {
-    //     $childCount = $this->children->count();
-
-    //     // Single child rarely needs parentheses
-    //     if ($childCount === 1) {
-    //         $firstChild = $this->children->first();
-    //         return $firstChild instanceof ConditionGroup ||
-    //                ($firstChild instanceof ConditionClause && $firstChild->getLogicalLink() === 'OR');
-    //     }
-
-    //     // Multiple children need parentheses if they have OR operators
-    //     foreach ($this->children->all() as $child) {
-    //         if ($child instanceof ConditionClause && $child->getLogicalLink() === 'OR') {
-    //             return true;
-    //         }
-    //         if ($child instanceof ConditionGroup && $child->hasOrOperators()) {
-    //             return true;
-    //         }
-    //     }
-
-    //     return false;
-    // }
     /**
      * @param bool $isExplicit
      *

@@ -1,6 +1,5 @@
 <?php
 
-// HashidObfuscator.php
 declare(strict_types=1);
 
 use Hashids\Hashids;

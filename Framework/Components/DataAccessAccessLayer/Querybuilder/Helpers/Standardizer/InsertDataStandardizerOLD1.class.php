@@ -39,7 +39,7 @@ final class InsertDataStandardizerOLD1 extends AbstractDataStandardizer
         }
 
         // 3️⃣ Flat key/value list
-        if (ArrayUtils::isKeyValueList($data)) {
+        if (ArrayUtils::isSequentialKeyValueList($data)) {
             $assoc = $this->toAssoc($data);
             return new SqlGenericDataPayload($assoc, $this->method);
         }
@@ -86,7 +86,7 @@ final class InsertDataStandardizerOLD1 extends AbstractDataStandardizer
             return new SqlGenericDataPayload($data, $this->method);
         }
 
-        if (ArrayUtils::isKeyValueList($data)) {
+        if (ArrayUtils::isSequentialKeyValueList($data)) {
             $assoc = $this->toAssoc($data);
             return new SqlGenericDataPayload($assoc, $this->method);
         }

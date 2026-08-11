@@ -33,8 +33,6 @@ interface SessionStorageInterface
      * @param string $key   The key of the item to store.
      * @param mixed  $value The value of the item to store. Must be serializable.
      *
-     * @throws BaseIna MUST be thrown if the $key string is not a legal value.
-     *
      * @return void
      */
     public function setSession(string $key, mixed $value): void;
@@ -100,4 +98,6 @@ interface SessionStorageInterface
      * @return bool
      */
     public function SessionExists(string $key): bool;
+
+    public function save(): void;
 }

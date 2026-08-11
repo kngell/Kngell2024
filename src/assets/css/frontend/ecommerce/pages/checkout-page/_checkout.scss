@@ -1,0 +1,108 @@
+@use "sass:color";
+@use "sass:map";
+@use "css/globals" as *;
+@use "css/frontend/ecommerce/abstracts" as *;
+
+// ============================================
+// CHECKOUT
+// ============================================
+.checkout__workflow {
+  --step-padding: 2.4rem;
+  --step-border-color: #{$gray-100};
+  --step-border-radius: #{$radius-custom};
+  --step-shadow: #{$shadow-custom};
+  --step-bg-start: #{rgba($background-brand-tertiary, 0.08)};
+  --step-bg-end: #{rgba($background-brand-tertiary, 0.02)};
+  --step-active-border: #{$border-brand-primary};
+  --step-active-shadow: #{$shadow-m};
+
+  display: flex;
+  flex-direction: column;
+  gap: 4rem;
+
+  .layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) clamp(34rem, 28vw, 40rem);
+    gap: 3.2rem;
+    align-items: start;
+    @include input-field((checkbox));
+    &__main {
+      min-width: 0;
+      max-width: 100%;
+
+      .checkout__step {
+        padding: var(--step-padding);
+        border-radius: var(--step-border-radius);
+        box-shadow: $shadow-custom;
+        background-color: $white;
+        transition: all 0.3s ease;
+
+        // Active state
+        &.checkout__step--active {
+          border-color: var(--step-active-border);
+          animation: fadeIn 0.3s ease-in-out;
+        }
+
+        // Hidden state (CSS-only multi-step)
+        &:not(.checkout__step--active) {
+          display: none;
+        }
+      }
+    }
+
+    &__summary {
+      position: sticky;
+      top: 2rem;
+      align-self: start;
+      width: 100%;
+    }
+  }
+}
+
+// Step fade-in animation
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// ============================================
+// RESPONSIVE
+// ============================================
+@include respond-below(xl) {
+  .checkout__workflow {
+    .layout {
+      grid-template-columns: 1fr;
+      gap: 2.4rem;
+
+      &__summary {
+        position: static;
+        order: -1;
+      }
+    }
+  }
+}
+
+@include respond-below(lg) {
+  .checkout__workflow {
+    --step-padding: 2rem;
+    gap: 3.2rem;
+  }
+}
+
+@include respond-below(md) {
+  .checkout__workflow {
+    --step-padding: 1.6rem;
+    --step-border-radius: #{$radius-s};
+    gap: 2.4rem;
+
+    .layout {
+      gap: 1.6rem;
+    }
+  }
+}

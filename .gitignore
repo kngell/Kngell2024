@@ -4,12 +4,12 @@
 /Temp/
 /public/
 /webpack/
+/storage/
 
 # IDE/editor settings
 .vscode/
 
 # Application runtime and cache
-/storage/sessions/
 /Temp/
 /.temp_cache/
 

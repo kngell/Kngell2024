@@ -4,63 +4,55 @@ declare(strict_types=1);
 
 class SuperGlobals implements SuperGlobalsInterface
 {
-    private readonly array $__get;
-    private readonly array $__post;
-    private readonly array $__cookies;
-    private readonly array $__files;
-    private readonly array $__server;
-    private readonly array $__request;
+    private array $get;
+    private array $post;
+    private array $cookies;
+    private array $files;
+    private array $server;
+    private array $request;
 
     public function __construct()
     {
-        $this->__get = filter_input_array(INPUT_GET, FILTER_SANITIZE_URL) ?? [];
-        $this->__post = filter_input_array(INPUT_POST, FILTER_SANITIZE_FULL_SPECIAL_CHARS) ?? [];
-        $this->__cookies = filter_input_array(INPUT_COOKIE, FILTER_SANITIZE_SPECIAL_CHARS) ?? [];
-        $this->__server = $_SERVER; //filter_input_array(INPUT_SERVER, FILTER_DEFAULT) ?? [];
-        $this->__files = filter_var_array($_FILES, FILTER_DEFAULT) ?? [];
-        $this->__request = $_REQUEST;
+        $this->get = $this->sanitizeGetParameters($_GET);
+        $this->post = $this->sanitizeArray($_POST, 'htmlspecialchars');
+        $this->cookies = $this->sanitizeArray($_COOKIE, 'htmlspecialchars');
+        $this->files = $_FILES;
+        $this->server = $this->sanitizeServerVariables($_SERVER);
+        $this->request = array_merge($this->get, $this->post);
     }
 
     public function request(?string $key = null): mixed
     {
-        return $this->getVariabale($key, $this->__request);
+        return $this->getVariable($key, $this->request);
     }
 
     public function get(?string $key = null): mixed
     {
-        return $this->getVariabale($key, $this->__get);
+        return $this->getVariable($key, $this->get);
     }
 
-    /**
-     * Get the value of postVar.
-     */
     public function post(?string $key = null): mixed
     {
-        return $this->getVariabale($key, $this->__post);
+        return $this->getVariable($key, $this->post);
     }
 
     public function cookies(?string $key = null): mixed
     {
-        return $this->getVariabale($key, $this->__cookies);
+        return $this->getVariable($key, $this->cookies);
     }
 
-    /**
-     * Get the value of filesVar.
-     */
     public function files(?string $key = null): mixed
     {
-        return $this->getVariabale($key, $this->__files);
+        return $this->getVariable($key, $this->files);
     }
 
     public function server(?string $key = null): mixed
     {
-        if (null != $key) {
-            if (!isset($this->__server[strtoupper($key)])) {
-                return '';
-            }
-            return $this->__server[strtoupper($key)];
+        if ($key !== null) {
+            $key = strtoupper($key);
+            return $this->server[$key] ?? null;
         }
-        return $this->recursiveStripTags($this->__server ?? []);
+        return $this->server;
     }
 
     public function emptyGlobals(): void
@@ -70,16 +62,49 @@ class SuperGlobals implements SuperGlobalsInterface
         $_REQUEST = [];
         $_COOKIE = [];
         $_FILES = [];
+
+        // Also clear the stored arrays
+        $this->get = [];
+        $this->post = [];
+        $this->request = [];
+        $this->cookies = [];
+        $this->files = [];
+        $this->server = [];
     }
 
-    private function recursiveStripTags(array $array): array
+    public function getRaw(?string $key = null): mixed
+    {
+        if ($key === null) {
+            return $_GET;
+        }
+        return $_GET[$key] ?? null;
+    }
+
+    public function getPathId(?string $path = null): ?string
+    {
+        if ($path === null) {
+            $path = $this->server('REQUEST_URI') ?? '';
+        }
+
+        $path = parse_url($path, PHP_URL_PATH) ?? '';
+        $segments = explode('/', trim($path, '/'));
+        $id = end($segments);
+
+        if ($id && preg_match('/^[a-zA-Z0-9\-_]+$/', $id)) {
+            return $id;
+        }
+
+        return null;
+    }
+
+    private function sanitizeGetParameters(array $data): array
     {
         $result = [];
-        foreach ($array as $key => $value) {
+        foreach ($data as $key => $value) {
             if (is_array($value)) {
-                $result[$key] = $this->recursiveStripTags($value);
+                $result[$key] = $this->sanitizeGetParameters($value);
             } elseif (is_string($value)) {
-                $result[$key] = strip_tags($value);
+                $result[$key] = preg_replace('/[^a-zA-Z0-9\-_\.\/]/', '', $value);
             } else {
                 $result[$key] = $value;
             }
@@ -87,15 +112,64 @@ class SuperGlobals implements SuperGlobalsInterface
         return $result;
     }
 
-    private function getVariabale(?string $key, array $var): mixed
+    private function sanitizeArray(array $data, callable $callback): array
     {
-        if ($var == []) {
-            return [];
+        $result = [];
+        foreach ($data as $key => $value) {
+            if (is_array($value)) {
+                $result[$key] = $this->sanitizeArray($value, $callback);
+            } elseif (is_string($value)) {
+                $result[$key] = $callback($value);
+            } else {
+                $result[$key] = $value;
+            }
         }
-        if (null != $key) {
-            return $var[$key] ?? null;
+        return $result;
+    }
+
+    private function sanitizeServerVariables(array $server): array
+    {
+        $allowedKeys = [
+            'HTTP_HOST', 'HTTP_USER_AGENT', 'HTTP_ACCEPT',
+            'HTTP_ACCEPT_LANGUAGE', 'HTTP_ACCEPT_ENCODING',
+            'HTTPS', 'REQUEST_METHOD', 'REQUEST_URI',
+            'QUERY_STRING', 'SCRIPT_NAME', 'SCRIPT_FILENAME',
+            'PHP_SELF', 'REMOTE_ADDR', 'REMOTE_PORT',
+            'SERVER_NAME', 'SERVER_PORT', 'SERVER_PROTOCOL',
+            'REQUEST_TIME', 'REQUEST_TIME_FLOAT',
+        ];
+
+        $result = [];
+        foreach ($server as $key => $value) {
+            if (in_array($key, $allowedKeys, true)) {
+                if (is_string($value)) {
+                    $result[$key] = htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+                } else {
+                    $result[$key] = $value;
+                }
+            }
         }
-        // $var['profileUpload'] = array_map('strip_tags', $var['profileUpload'] ?? []);
-        return $var;
+        return $result;
+    }
+
+    private function getVariable(?string $key, array $array): mixed
+    {
+        if ($key === null) {
+            return $array;
+        }
+
+        if (strpos($key, '.') !== false) {
+            $keys = explode('.', $key);
+            $value = $array;
+            foreach ($keys as $segment) {
+                if (!isset($value[$segment]) || !is_array($value)) {
+                    return null;
+                }
+                $value = $value[$segment];
+            }
+            return $value;
+        }
+
+        return $array[$key] ?? null;
     }
 }

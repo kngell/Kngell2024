@@ -1,0 +1,888 @@
+
+
+        <div class="footer-page span-all">
+            <!-- Header -->
+            <div class="footer-page__header">
+                <div class="title">
+                    <div class="title-left">
+                        <h4 class="title-left__text">Footer Page Manager</h4>
+                        <nav class="title-left__breadcrumbs">
+                            <ul class="breadcrumbs-list">
+                                <li class="breadcrumbs-list__item">
+                                    <a href="/admin/dashboard" class="breadcrumbs-list__item--link">Dashboard</a>
+                                </li>
+                                <li class="breadcrumbs-list__item">
+                                    <a href="/admin/pages" class="breadcrumbs-list__item--link">Pages</a>
+                                </li>
+                                <li class="breadcrumbs-list__item">
+                                    <a href="#" class="breadcrumbs-list__item--link active">Footer Manager</a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                    <div class="title-right">
+                        <form method="POST" action="/admin/footer/save-all" class="inline-form">
+                            <button type="submit" class="btn btn--primary btn--md-compact btn--icon-left">
+                                <span class="btn__icon">
+                                    <svg class="icon plus" aria-label="Save" role="img" width="16" height="16">
+                                        <use href="/public/assets/img/icons-sprite.svg#icon-save"></use>
+                                    </svg>
+                                </span>
+                                <span class="btn__label">Save All Changes</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer-page__content">
+                <!-- Footer Tabs Navigation - Using GET parameters for no-JS -->
+                <div class="footer-tabs">
+                    <a href="?tab=columns" class="tab-btn active" data-tab="columns">
+                        <svg class="icon" width="16" height="16">
+                            <use href="/public/assets/img/icons-sprite.svg#icon-menu"></use>
+                        </svg>
+                        Menu Columns
+                    </a>
+                    <a href="?tab=links" class="tab-btn" data-tab="links">
+                        <svg class="icon" width="16" height="16">
+                            <use href="/public/assets/img/icons-sprite.svg#icon-link"></use>
+                        </svg>
+                        Menu Links
+                    </a>
+                    <a href="?tab=about" class="tab-btn" data-tab="about">
+                        <svg class="icon" width="16" height="16">
+                            <use href="/public/assets/img/icons-sprite.svg#icon-info"></use>
+                        </svg>
+                        About Section
+                    </a>
+                    <a href="?tab=social" class="tab-btn" data-tab="social">
+                        <svg class="icon" width="16" height="16">
+                            <use href="/public/assets/img/icons-sprite.svg#icon-share"></use>
+                        </svg>
+                        Social Links
+                    </a>
+                    <a href="?tab=settings" class="tab-btn" data-tab="settings">
+                        <svg class="icon" width="16" height="16">
+                            <use href="/public/assets/img/icons-sprite.svg#icon-settings"></use>
+                        </svg>
+                        Settings
+                    </a>
+                </div>
+
+                <!-- Tab 1: Menu Columns -->
+                <div class="tab-content active" id="columns-tab">
+                    <div class="section-header">
+                        <h2>Footer Menu Columns</h2>
+                        <a href="/admin/footer/column/add?tab=columns" class="btn btn-secondary">
+                            <svg class="icon" width="16" height="16">
+                                <use href="/public/assets/img/icons-sprite.svg#icon-plus"></use>
+                            </svg>
+                            Add Column
+                        </a>
+                    </div>
+
+                    <!-- Sort order form for no-JS -->
+                    <form method="POST" action="/admin/footer/update-sort" class="mb-2">
+                        <input type="hidden" name="type" value="columns">
+                        <input type="hidden" name="redirect" value="?tab=columns">
+                        <button type="submit" class="btn btn-secondary btn-sm">Apply Sort Order</button>
+                    </form>
+
+                    <div class="sortable-grid" id="columns-grid">
+                        <!-- Column 1 -->
+                        <div class="grid-item" data-id="1" data-sort="1">
+                            <div class="drag-handle">
+                                <svg class="icon" width="16" height="16">
+                                    <use href="/public/assets/img/icons-sprite.svg#icon-drag"></use>
+                                </svg>
+                            </div>
+                            <div class="item-content">
+                                <div class="item-header">
+                                    <h3>Company</h3>
+                                    <span class="status-badge active">Active</span>
+                                </div>
+                                <div class="item-details">
+                                    <code>key: company</code>
+                                    <span>Sort: 
+                                        <input type="number" name="sort[1]" form="sort-form-columns" value="1" class="sort-input" min="1">
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="item-actions">
+                                <a href="/admin/footer/column/edit/1?tab=columns" class="icon-btn">
+                                    <svg class="icon" width="16" height="16">
+                                        <use href="/public/assets/img/icons-sprite.svg#icon-edit"></use>
+                                    </svg>
+                                </a>
+                                <a href="/admin/footer/column/delete/1?tab=columns" class="icon-btn delete" onclick="return confirm('Are you sure? This will delete all links under this column.')">
+                                    <svg class="icon" width="16" height="16">
+                                        <use href="/public/assets/img/icons-sprite.svg#icon-trash"></use>
+                                    </svg>
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Column 2 -->
+                        <div class="grid-item" data-id="2" data-sort="2">
+                            <div class="drag-handle">
+                                <svg class="icon" width="16" height="16">
+                                    <use href="/public/assets/img/icons-sprite.svg#icon-drag"></use>
+                                </svg>
+                            </div>
+                            <div class="item-content">
+                                <div class="item-header">
+                                    <h3>Resources</h3>
+                                    <span class="status-badge active">Active</span>
+                                </div>
+                                <div class="item-details">
+                                    <code>key: resources</code>
+                                    <span>Sort: 
+                                        <input type="number" name="sort[2]" form="sort-form-columns" value="2" class="sort-input" min="1">
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="item-actions">
+                                <a href="/admin/footer/column/edit/2?tab=columns" class="icon-btn">
+                                    <svg class="icon" width="16" height="16">
+                                        <use href="/public/assets/img/icons-sprite.svg#icon-edit"></use>
+                                    </svg>
+                                </a>
+                                <a href="/admin/footer/column/delete/2?tab=columns" class="icon-btn delete" onclick="return confirm('Are you sure?')">
+                                    <svg class="icon" width="16" height="16">
+                                        <use href="/public/assets/img/icons-sprite.svg#icon-trash"></use>
+                                    </svg>
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Column 3 -->
+                        <div class="grid-item" data-id="3" data-sort="3">
+                            <div class="drag-handle">
+                                <svg class="icon" width="16" height="16">
+                                    <use href="/public/assets/img/icons-sprite.svg#icon-drag"></use>
+                                </svg>
+                            </div>
+                            <div class="item-content">
+                                <div class="item-header">
+                                    <h3>Support</h3>
+                                    <span class="status-badge active">Active</span>
+                                </div>
+                                <div class="item-details">
+                                    <code>key: support</code>
+                                    <span>Sort: 
+                                        <input type="number" name="sort[3]" form="sort-form-columns" value="3" class="sort-input" min="1">
+                                    </span>
+                                </div>
+                                <div class="date-range">
+                                    <small>From: 2024-01-01</small>
+                                </div>
+                            </div>
+                            <div class="item-actions">
+                                <a href="/admin/footer/column/edit/3?tab=columns" class="icon-btn">
+                                    <svg class="icon" width="16" height="16">
+                                        <use href="/public/assets/img/icons-sprite.svg#icon-edit"></use>
+                                    </svg>
+                                </a>
+                                <a href="/admin/footer/column/delete/3?tab=columns" class="icon-btn delete" onclick="return confirm('Are you sure?')">
+                                    <svg class="icon" width="16" height="16">
+                                        <use href="/public/assets/img/icons-sprite.svg#icon-trash"></use>
+                                    </svg>
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Column 4 -->
+                        <div class="grid-item" data-id="4" data-sort="4">
+                            <div class="drag-handle">
+                                <svg class="icon" width="16" height="16">
+                                    <use href="/public/assets/img/icons-sprite.svg#icon-drag"></use>
+                                </svg>
+                            </div>
+                            <div class="item-content">
+                                <div class="item-header">
+                                    <h3>Legal</h3>
+                                    <span class="status-badge active">Active</span>
+                                </div>
+                                <div class="item-details">
+                                    <code>key: legal</code>
+                                    <span>Sort: 
+                                        <input type="number" name="sort[4]" form="sort-form-columns" value="4" class="sort-input" min="1">
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="item-actions">
+                                <a href="/admin/footer/column/edit/4?tab=columns" class="icon-btn">
+                                    <svg class="icon" width="16" height="16">
+                                        <use href="/public/assets/img/icons-sprite.svg#icon-edit"></use>
+                                    </svg>
+                                </a>
+                                <a href="/admin/footer/column/delete/4?tab=columns" class="icon-btn delete" onclick="return confirm('Are you sure?')">
+                                    <svg class="icon" width="16" height="16">
+                                        <use href="/public/assets/img/icons-sprite.svg#icon-trash"></use>
+                                    </svg>
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Column 5 -->
+                        <div class="grid-item" data-id="5" data-sort="5">
+                            <div class="drag-handle">
+                                <svg class="icon" width="16" height="16">
+                                    <use href="/public/assets/img/icons-sprite.svg#icon-drag"></use>
+                                </svg>
+                            </div>
+                            <div class="item-content">
+                                <div class="item-header">
+                                    <h3>Connect</h3>
+                                    <span class="status-badge inactive">Inactive</span>
+                                </div>
+                                <div class="item-details">
+                                    <code>key: connect</code>
+                                    <span>Sort: 
+                                        <input type="number" name="sort[5]" form="sort-form-columns" value="5" class="sort-input" min="1">
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="item-actions">
+                                <a href="/admin/footer/column/edit/5?tab=columns" class="icon-btn">
+                                    <svg class="icon" width="16" height="16">
+                                        <use href="/public/assets/img/icons-sprite.svg#icon-edit"></use>
+                                    </svg>
+                                </a>
+                                <a href="/admin/footer/column/delete/5?tab=columns" class="icon-btn delete" onclick="return confirm('Are you sure?')">
+                                    <svg class="icon" width="16" height="16">
+                                        <use href="/public/assets/img/icons-sprite.svg#icon-trash"></use>
+                                    </svg>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Hidden sort form for columns -->
+                    <form id="sort-form-columns" method="POST" action="/admin/footer/update-sort" style="display: none;">
+                        <input type="hidden" name="type" value="columns">
+                        <input type="hidden" name="redirect" value="?tab=columns">
+                    </form>
+                </div>
+
+                <!-- Tab 2: Menu Links -->
+                <div class="tab-content" id="links-tab">
+                    <div class="section-header">
+                        <h2>Footer Menu Links</h2>
+                        <div class="filter-group">
+                            <!-- Filter form for no-JS -->
+                            <form method="GET" class="filter-form">
+                                <input type="hidden" name="tab" value="links">
+                                <select name="column" class="filter-select" onchange="this.form.submit()">
+                                    <option value="all">All Columns</option>
+                                    <option value="1">Company</option>
+                                    <option value="2">Resources</option>
+                                    <option value="3">Support</option>
+                                    <option value="4">Legal</option>
+                                    <option value="5">Connect</option>
+                                </select>
+                            </form>
+                            <a href="/admin/footer/link/add?tab=links" class="btn btn-secondary">
+                                <svg class="icon" width="16" height="16">
+                                    <use href="/public/assets/img/icons-sprite.svg#icon-plus"></use>
+                                </svg>
+                                Add Link
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Sort order form for links -->
+                    <form method="POST" action="/admin/footer/update-sort" class="mb-2">
+                        <input type="hidden" name="type" value="links">
+                        <input type="hidden" name="redirect" value="?tab=links">
+                        <button type="submit" class="btn btn-secondary btn-sm">Apply Sort Order</button>
+                    </form>
+
+                    <div class="links-container" id="links-container">
+                        <!-- Company Column Links -->
+                        <div class="column-group" data-column-id="1">
+                            <div class="column-group-header">
+                                <h3>Company</h3>
+                                <span class="link-count">4 links</span>
+                            </div>
+                            <div class="sortable-list" data-column="1">
+                                <!-- Link 1 -->
+                                <div class="list-item" data-id="1" data-sort="1">
+                                    <div class="drag-handle">
+                                        <svg class="icon" width="16" height="16">
+                                            <use href="/public/assets/img/icons-sprite.svg#icon-drag"></use>
+                                        </svg>
+                                    </div>
+                                    <div class="item-info">
+                                        <strong>About Us</strong>
+                                        <code>/about</code>
+                                        <span class="target-badge">_self</span>
+                                    </div>
+                                    <div class="item-status">
+                                        <span class="status-badge active">Active</span>
+                                    </div>
+                                    <div class="item-actions">
+                                        <input type="number" name="sort[1]" form="sort-form-links" value="1" class="sort-input" min="1" style="width: 50px;">
+                                        <a href="/admin/footer/link/edit/1?tab=links" class="icon-btn">
+                                            <svg class="icon" width="16" height="16">
+                                                <use href="/public/assets/img/icons-sprite.svg#icon-edit"></use>
+                                            </svg>
+                                        </a>
+                                        <a href="/admin/footer/link/delete/1?tab=links" class="icon-btn delete" onclick="return confirm('Are you sure?')">
+                                            <svg class="icon" width="16" height="16">
+                                                <use href="/public/assets/img/icons-sprite.svg#icon-trash"></use>
+                                            </svg>
+                                        </a>
+                                    </div>
+                                </div>
+                                <!-- Link 2 -->
+                                <div class="list-item" data-id="2" data-sort="2">
+                                    <div class="drag-handle">
+                                        <svg class="icon" width="16" height="16">
+                                            <use href="/public/assets/img/icons-sprite.svg#icon-drag"></use>
+                                        </svg>
+                                    </div>
+                                    <div class="item-info">
+                                        <strong>Careers</strong>
+                                        <code>/careers</code>
+                                        <span class="target-badge">_self</span>
+                                    </div>
+                                    <div class="item-status">
+                                        <span class="status-badge active">Active</span>
+                                    </div>
+                                    <div class="item-actions">
+                                        <input type="number" name="sort[2]" form="sort-form-links" value="2" class="sort-input" min="1" style="width: 50px;">
+                                        <a href="/admin/footer/link/edit/2?tab=links" class="icon-btn">
+                                            <svg class="icon" width="16" height="16">
+                                                <use href="/public/assets/img/icons-sprite.svg#icon-edit"></use>
+                                            </svg>
+                                        </a>
+                                        <a href="/admin/footer/link/delete/2?tab=links" class="icon-btn delete" onclick="return confirm('Are you sure?')">
+                                            <svg class="icon" width="16" height="16">
+                                                <use href="/public/assets/img/icons-sprite.svg#icon-trash"></use>
+                                            </svg>
+                                        </a>
+                                    </div>
+                                </div>
+                                <!-- Link 3 -->
+                                <div class="list-item" data-id="3" data-sort="3">
+                                    <div class="drag-handle">
+                                        <svg class="icon" width="16" height="16">
+                                            <use href="/public/assets/img/icons-sprite.svg#icon-drag"></use>
+                                        </svg>
+                                    </div>
+                                    <div class="item-info">
+                                        <strong>Blog</strong>
+                                        <code>/blog</code>
+                                        <span class="target-badge">_self</span>
+                                    </div>
+                                    <div class="item-status">
+                                        <span class="status-badge active">Active</span>
+                                    </div>
+                                    <div class="item-actions">
+                                        <input type="number" name="sort[3]" form="sort-form-links" value="3" class="sort-input" min="1" style="width: 50px;">
+                                        <a href="/admin/footer/link/edit/3?tab=links" class="icon-btn">
+                                            <svg class="icon" width="16" height="16">
+                                                <use href="/public/assets/img/icons-sprite.svg#icon-edit"></use>
+                                            </svg>
+                                        </a>
+                                        <a href="/admin/footer/link/delete/3?tab=links" class="icon-btn delete" onclick="return confirm('Are you sure?')">
+                                            <svg class="icon" width="16" height="16">
+                                                <use href="/public/assets/img/icons-sprite.svg#icon-trash"></use>
+                                            </svg>
+                                        </a>
+                                    </div>
+                                </div>
+                                <!-- Link 4 -->
+                                <div class="list-item" data-id="4" data-sort="4">
+                                    <div class="drag-handle">
+                                        <svg class="icon" width="16" height="16">
+                                            <use href="/public/assets/img/icons-sprite.svg#icon-drag"></use>
+                                        </svg>
+                                    </div>
+                                    <div class="item-info">
+                                        <strong>Partners</strong>
+                                        <code>/partners</code>
+                                        <span class="target-badge">_self</span>
+                                    </div>
+                                    <div class="item-status">
+                                        <span class="status-badge inactive">Inactive</span>
+                                    </div>
+                                    <div class="item-actions">
+                                        <input type="number" name="sort[4]" form="sort-form-links" value="4" class="sort-input" min="1" style="width: 50px;">
+                                        <a href="/admin/footer/link/edit/4?tab=links" class="icon-btn">
+                                            <svg class="icon" width="16" height="16">
+                                                <use href="/public/assets/img/icons-sprite.svg#icon-edit"></use>
+                                            </svg>
+                                        </a>
+                                        <a href="/admin/footer/link/delete/4?tab=links" class="icon-btn delete" onclick="return confirm('Are you sure?')">
+                                            <svg class="icon" width="16" height="16">
+                                                <use href="/public/assets/img/icons-sprite.svg#icon-trash"></use>
+                                            </svg>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Resources Column Links -->
+                        <div class="column-group" data-column-id="2">
+                            <div class="column-group-header">
+                                <h3>Resources</h3>
+                                <span class="link-count">5 links</span>
+                            </div>
+                            <div class="sortable-list" data-column="2">
+                                <!-- Link 5 -->
+                                <div class="list-item" data-id="5" data-sort="1">
+                                    <div class="drag-handle">
+                                        <svg class="icon" width="16" height="16">
+                                            <use href="/public/assets/img/icons-sprite.svg#icon-drag"></use>
+                                        </svg>
+                                    </div>
+                                    <div class="item-info">
+                                        <strong>Documentation</strong>
+                                        <code>/docs</code>
+                                        <span class="target-badge">_self</span>
+                                    </div>
+                                    <div class="item-status">
+                                        <span class="status-badge active">Active</span>
+                                    </div>
+                                    <div class="item-actions">
+                                        <input type="number" name="sort[5]" form="sort-form-links" value="1" class="sort-input" min="1" style="width: 50px;">
+                                        <a href="/admin/footer/link/edit/5?tab=links" class="icon-btn">
+                                            <svg class="icon" width="16" height="16">
+                                                <use href="/public/assets/img/icons-sprite.svg#icon-edit"></use>
+                                            </svg>
+                                        </a>
+                                        <a href="/admin/footer/link/delete/5?tab=links" class="icon-btn delete" onclick="return confirm('Are you sure?')">
+                                            <svg class="icon" width="16" height="16">
+                                                <use href="/public/assets/img/icons-sprite.svg#icon-trash"></use>
+                                            </svg>
+                                        </a>
+                                    </div>
+                                </div>
+                                <!-- Link 6 -->
+                                <div class="list-item" data-id="6" data-sort="2">
+                                    <div class="drag-handle">
+                                        <svg class="icon" width="16" height="16">
+                                            <use href="/public/assets/img/icons-sprite.svg#icon-drag"></use>
+                                        </svg>
+                                    </div>
+                                    <div class="item-info">
+                                        <strong>API Reference</strong>
+                                        <code>/api</code>
+                                        <span class="target-badge">_self</span>
+                                    </div>
+                                    <div class="item-status">
+                                        <span class="status-badge active">Active</span>
+                                    </div>
+                                    <div class="item-actions">
+                                        <input type="number" name="sort[6]" form="sort-form-links" value="2" class="sort-input" min="1" style="width: 50px;">
+                                        <a href="/admin/footer/link/edit/6?tab=links" class="icon-btn">
+                                            <svg class="icon" width="16" height="16">
+                                                <use href="/public/assets/img/icons-sprite.svg#icon-edit"></use>
+                                            </svg>
+                                        </a>
+                                        <a href="/admin/footer/link/delete/6?tab=links" class="icon-btn delete" onclick="return confirm('Are you sure?')">
+                                            <svg class="icon" width="16" height="16">
+                                                <use href="/public/assets/img/icons-sprite.svg#icon-trash"></use>
+                                            </svg>
+                                        </a>
+                                    </div>
+                                </div>
+                                <!-- Link 7 -->
+                                <div class="list-item" data-id="7" data-sort="3">
+                                    <div class="drag-handle">
+                                        <svg class="icon" width="16" height="16">
+                                            <use href="/public/assets/img/icons-sprite.svg#icon-drag"></use>
+                                        </svg>
+                                    </div>
+                                    <div class="item-info">
+                                        <strong>Tutorials</strong>
+                                        <code>/tutorials</code>
+                                        <span class="target-badge">_self</span>
+                                    </div>
+                                    <div class="item-status">
+                                        <span class="status-badge active">Active</span>
+                                    </div>
+                                    <div class="item-actions">
+                                        <input type="number" name="sort[7]" form="sort-form-links" value="3" class="sort-input" min="1" style="width: 50px;">
+                                        <a href="/admin/footer/link/edit/7?tab=links" class="icon-btn">
+                                            <svg class="icon" width="16" height="16">
+                                                <use href="/public/assets/img/icons-sprite.svg#icon-edit"></use>
+                                            </svg>
+                                        </a>
+                                        <a href="/admin/footer/link/delete/7?tab=links" class="icon-btn delete" onclick="return confirm('Are you sure?')">
+                                            <svg class="icon" width="16" height="16">
+                                                <use href="/public/assets/img/icons-sprite.svg#icon-trash"></use>
+                                            </svg>
+                                        </a>
+                                    </div>
+                                </div>
+                                <!-- Link 8 -->
+                                <div class="list-item" data-id="8" data-sort="4">
+                                    <div class="drag-handle">
+                                        <svg class="icon" width="16" height="16">
+                                            <use href="/public/assets/img/icons-sprite.svg#icon-drag"></use>
+                                        </svg>
+                                    </div>
+                                    <div class="item-info">
+                                        <strong>Community</strong>
+                                        <code>/community</code>
+                                        <span class="target-badge">_blank</span>
+                                    </div>
+                                    <div class="item-status">
+                                        <span class="status-badge active">Active</span>
+                                    </div>
+                                    <div class="item-actions">
+                                        <input type="number" name="sort[8]" form="sort-form-links" value="4" class="sort-input" min="1" style="width: 50px;">
+                                        <a href="/admin/footer/link/edit/8?tab=links" class="icon-btn">
+                                            <svg class="icon" width="16" height="16">
+                                                <use href="/public/assets/img/icons-sprite.svg#icon-edit"></use>
+                                            </svg>
+                                        </a>
+                                        <a href="/admin/footer/link/delete/8?tab=links" class="icon-btn delete" onclick="return confirm('Are you sure?')">
+                                            <svg class="icon" width="16" height="16">
+                                                <use href="/public/assets/img/icons-sprite.svg#icon-trash"></use>
+                                            </svg>
+                                        </a>
+                                    </div>
+                                </div>
+                                <!-- Link 9 -->
+                                <div class="list-item" data-id="9" data-sort="5">
+                                    <div class="drag-handle">
+                                        <svg class="icon" width="16" height="16">
+                                            <use href="/public/assets/img/icons-sprite.svg#icon-drag"></use>
+                                        </svg>
+                                    </div>
+                                    <div class="item-info">
+                                        <strong>Beta Program</strong>
+                                        <code>/beta</code>
+                                        <span class="target-badge">_self</span>
+                                    </div>
+                                    <div class="item-status">
+                                        <span class="status-badge active">Active</span>
+                                    </div>
+                                    <div class="date-range">
+                                        <small>Jun 1 - Aug 31, 2026</small>
+                                    </div>
+                                    <div class="item-actions">
+                                        <input type="number" name="sort[9]" form="sort-form-links" value="5" class="sort-input" min="1" style="width: 50px;">
+                                        <a href="/admin/footer/link/edit/9?tab=links" class="icon-btn">
+                                            <svg class="icon" width="16" height="16">
+                                                <use href="/public/assets/img/icons-sprite.svg#icon-edit"></use>
+                                            </svg>
+                                        </a>
+                                        <a href="/admin/footer/link/delete/9?tab=links" class="icon-btn delete" onclick="return confirm('Are you sure?')">
+                                            <svg class="icon" width="16" height="16">
+                                                <use href="/public/assets/img/icons-sprite.svg#icon-trash"></use>
+                                            </svg>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Hidden sort form for links -->
+                    <form id="sort-form-links" method="POST" action="/admin/footer/update-sort" style="display: none;">
+                        <input type="hidden" name="type" value="links">
+                        <input type="hidden" name="redirect" value="?tab=links">
+                    </form>
+                </div>
+
+                <!-- Tab 3: About Section -->
+                <div class="tab-content" id="about-tab">
+                    <div class="form-card">
+                        <h2>About Section Configuration</h2>
+
+                        <form method="POST" action="/admin/footer/about">
+                            <input type="hidden" name="redirect" value="?tab=about">
+                            
+                            <div class="form-group">
+                                <label for="about-content">Content</label>
+                                <textarea id="about-content" name="content" rows="5" class="form-control">We are dedicated to providing innovative solutions that help businesses grow and succeed in the digital age. With over 10 years of experience, our team is committed to excellence and customer satisfaction.</textarea>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="logo-url">Logo URL</label>
+                                    <input type="text" id="logo-url" name="logo_url" value="/assets/images/logo-footer.png" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label for="logo-icon">Logo Icon</label>
+                                    <input type="text" id="logo-icon" name="logo_icon" value="icon-logo-footer" class="form-control">
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="logo-alt">Logo Alt Text</label>
+                                    <input type="text" id="logo-alt" name="logo_alt" value="Company Logo" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label for="logo-link">Logo Link</label>
+                                    <input type="text" id="logo-link" name="logo_link" value="/" class="form-control">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="is_active" value="1" checked>
+                                    <span>Active</span>
+                                </label>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="valid-from">Valid From</label>
+                                    <input type="datetime-local" id="valid-from" name="valid_from" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label for="valid-to">Valid To</label>
+                                    <input type="datetime-local" id="valid-to" name="valid_to" class="form-control">
+                                </div>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">Save About Section</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Tab 4: Social Links -->
+                <div class="tab-content" id="social-tab">
+                    <div class="section-header">
+                        <h2>Social Media Links</h2>
+                        <a href="/admin/footer/social/add?tab=social" class="btn btn-secondary">
+                            <svg class="icon" width="16" height="16">
+                                <use href="/public/assets/img/icons-sprite.svg#icon-plus"></use>
+                            </svg>
+                            Add Social Link
+                        </a>
+                    </div>
+
+                    <div class="social-grid" id="social-grid">
+                        <!-- Social 1 -->
+                        <div class="social-card" data-id="1">
+                            <div class="social-icon">
+                                <svg class="icon" width="20" height="20">
+                                    <use href="/public/assets/img/icons-sprite.svg#icon-facebook"></use>
+                                </svg>
+                            </div>
+                            <div class="social-info">
+                                <h3>Facebook</h3>
+                                <code>https://facebook.com/company</code>
+                                <span class="platform-badge">facebook</span>
+                            </div>
+                            <div class="social-status">
+                                <span class="status-badge active">Active</span>
+                            </div>
+                            <div class="social-actions">
+                                <a href="/admin/footer/social/edit/1?tab=social" class="icon-btn">
+                                    <svg class="icon" width="16" height="16">
+                                        <use href="/public/assets/img/icons-sprite.svg#icon-edit"></use>
+                                    </svg>
+                                </a>
+                                <a href="/admin/footer/social/delete/1?tab=social" class="icon-btn delete" onclick="return confirm('Are you sure?')">
+                                    <svg class="icon" width="16" height="16">
+                                        <use href="/public/assets/img/icons-sprite.svg#icon-trash"></use>
+                                    </svg>
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Social 2 -->
+                        <div class="social-card" data-id="2">
+                            <div class="social-icon">
+                                <svg class="icon" width="20" height="20">
+                                    <use href="/public/assets/img/icons-sprite.svg#icon-twitter"></use>
+                                </svg>
+                            </div>
+                            <div class="social-info">
+                                <h3>Twitter</h3>
+                                <code>https://twitter.com/company</code>
+                                <span class="platform-badge">twitter</span>
+                            </div>
+                            <div class="social-status">
+                                <span class="status-badge active">Active</span>
+                            </div>
+                            <div class="social-actions">
+                                <a href="/admin/footer/social/edit/2?tab=social" class="icon-btn">
+                                    <svg class="icon" width="16" height="16">
+                                        <use href="/public/assets/img/icons-sprite.svg#icon-edit"></use>
+                                    </svg>
+                                </a>
+                                <a href="/admin/footer/social/delete/2?tab=social" class="icon-btn delete" onclick="return confirm('Are you sure?')">
+                                    <svg class="icon" width="16" height="16">
+                                        <use href="/public/assets/img/icons-sprite.svg#icon-trash"></use>
+                                    </svg>
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Social 3 -->
+                        <div class="social-card" data-id="3">
+                            <div class="social-icon">
+                                <svg class="icon" width="20" height="20">
+                                    <use href="/public/assets/img/icons-sprite.svg#icon-linkedin"></use>
+                                </svg>
+                            </div>
+                            <div class="social-info">
+                                <h3>LinkedIn</h3>
+                                <code>https://linkedin.com/company/company</code>
+                                <span class="platform-badge">linkedin</span>
+                            </div>
+                            <div class="social-status">
+                                <span class="status-badge active">Active</span>
+                            </div>
+                            <div class="social-actions">
+                                <a href="/admin/footer/social/edit/3?tab=social" class="icon-btn">
+                                    <svg class="icon" width="16" height="16">
+                                        <use href="/public/assets/img/icons-sprite.svg#icon-edit"></use>
+                                    </svg>
+                                </a>
+                                <a href="/admin/footer/social/delete/3?tab=social" class="icon-btn delete" onclick="return confirm('Are you sure?')">
+                                    <svg class="icon" width="16" height="16">
+                                        <use href="/public/assets/img/icons-sprite.svg#icon-trash"></use>
+                                    </svg>
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Social 4 -->
+                        <div class="social-card" data-id="4">
+                            <div class="social-icon">
+                                <svg class="icon" width="20" height="20">
+                                    <use href="/public/assets/img/icons-sprite.svg#icon-github"></use>
+                                </svg>
+                            </div>
+                            <div class="social-info">
+                                <h3>GitHub</h3>
+                                <code>https://github.com/company</code>
+                                <span class="platform-badge">github</span>
+                            </div>
+                            <div class="social-status">
+                                <span class="status-badge active">Active</span>
+                            </div>
+                            <div class="social-actions">
+                                <a href="/admin/footer/social/edit/4?tab=social" class="icon-btn">
+                                    <svg class="icon" width="16" height="16">
+                                        <use href="/public/assets/img/icons-sprite.svg#icon-edit"></use>
+                                    </svg>
+                                </a>
+                                <a href="/admin/footer/social/delete/4?tab=social" class="icon-btn delete" onclick="return confirm('Are you sure?')">
+                                    <svg class="icon" width="16" height="16">
+                                        <use href="/public/assets/img/icons-sprite.svg#icon-trash"></use>
+                                    </svg>
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Social 5 -->
+                        <div class="social-card" data-id="5">
+                            <div class="social-icon">
+                                <svg class="icon" width="20" height="20">
+                                    <use href="/public/assets/img/icons-sprite.svg#icon-instagram"></use>
+                                </svg>
+                            </div>
+                            <div class="social-info">
+                                <h3>Instagram</h3>
+                                <code>https://instagram.com/company</code>
+                                <span class="platform-badge">instagram</span>
+                            </div>
+                            <div class="social-status">
+                                <span class="status-badge inactive">Inactive</span>
+                            </div>
+                            <div class="social-actions">
+                                <a href="/admin/footer/social/edit/5?tab=social" class="icon-btn">
+                                    <svg class="icon" width="16" height="16">
+                                        <use href="/public/assets/img/icons-sprite.svg#icon-edit"></use>
+                                    </svg>
+                                </a>
+                                <a href="/admin/footer/social/delete/5?tab=social" class="icon-btn delete" onclick="return confirm('Are you sure?')">
+                                    <svg class="icon" width="16" height="16">
+                                        <use href="/public/assets/img/icons-sprite.svg#icon-trash"></use>
+                                    </svg>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 5: Settings -->
+                <div class="tab-content" id="settings-tab">
+                    <div class="form-card">
+                        <h2>Footer Settings</h2>
+
+                        <div class="settings-group">
+                            <h3>Cache Management</h3>
+                            <div class="form-group">
+                                <form method="POST" action="/admin/footer/clear-cache" class="inline-form">
+                                    <input type="hidden" name="redirect" value="?tab=settings">
+                                    <button type="submit" class="btn btn-secondary">
+                                        <svg class="icon" width="16" height="16">
+                                            <use href="/public/assets/img/icons-sprite.svg#icon-refresh"></use>
+                                        </svg>
+                                        Clear Footer Cache
+                                    </button>
+                                </form>
+                                <small>Clear cached footer data to see recent changes immediately</small>
+                            </div>
+                        </div>
+
+                        <div class="settings-group">
+                            <h3>Preview</h3>
+                            <div class="form-group">
+                                <a href="/admin/footer/preview" target="_blank" class="btn btn-secondary">
+                                    <svg class="icon" width="16" height="16">
+                                        <use href="/public/assets/img/icons-sprite.svg#icon-eye"></use>
+                                    </svg>
+                                    Live Preview
+                                </a>
+                                <form method="POST" action="/admin/footer/publish" class="inline-form">
+                                    <input type="hidden" name="redirect" value="?tab=settings">
+                                    <button type="submit" class="btn btn-primary">
+                                        <svg class="icon" width="16" height="16">
+                                            <use href="/public/assets/img/icons-sprite.svg#icon-publish"></use>
+                                        </svg>
+                                        Publish to Production
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div class="settings-group">
+                            <h3>Export/Import</h3>
+                            <div class="form-group">
+                                <a href="/admin/footer/export" class="btn btn-secondary" download>
+                                    <svg class="icon" width="16" height="16">
+                                        <use href="/public/assets/img/icons-sprite.svg#icon-download"></use>
+                                    </svg>
+                                    Export Configuration
+                                </a>
+                                <form method="POST" action="/admin/footer/import" enctype="multipart/form-data" class="inline-form">
+                                    <input type="hidden" name="redirect" value="?tab=settings">
+                                    <label class="btn btn-secondary">
+                                        <svg class="icon" width="16" height="16">
+                                            <use href="/public/assets/img/icons-sprite.svg#icon-upload"></use>
+                                        </svg>
+                                        Import Configuration
+                                        <input type="file" name="config" accept=".json" style="display: none;" onchange="this.form.submit()">
+                                    </label>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+  
+
+    <noscript>
+        <div style="position: fixed; bottom: 1rem; left: 1rem; background: #fef3c7; color: #d97706; padding: 0.75rem 1rem; border-radius: 0.5rem; font-size: 0.875rem; z-index: 9999; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            ⚠️ JavaScript is disabled. The page works with traditional form submissions. Use the sort input fields and "Apply Sort Order" buttons to reorder items.
+        </div>
+    </noscript>

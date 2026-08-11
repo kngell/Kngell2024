@@ -3,8 +3,6 @@ import FormDataProcessor from "js/core/validation/Handlers/FormDataProcessor";
 import ErrorDisplayService from "js/core/validation/Handlers/ErrorDisplayService";
 import FormValidator from "js/core/validation/Handlers/FormValidator";
 import AjaxHandler from "js/core/utils/AjaxHandler";
-import RedirectProcessor from "js/core/processors/RedirectProcessor";
-import NotificationProcessor from "js/core/processors/NotificationProcessor";
 
 export class FormValidationFactory {
   /**
@@ -25,6 +23,7 @@ export class FormValidationFactory {
 
     const submissionMode = options.submissionMode || form.dataset.submissionMode || "ajax";
 
+    // ✅ Only custom processors - no RedirectProcessor or NotificationProcessor
     const responseProcessors = this.buildResponseProcessors(options);
 
     return new FormValidator({
@@ -60,35 +59,21 @@ export class FormValidationFactory {
   }
 
   /**
-   * Build response processors from options.
-   * No auto-detection — caller provides what they need.
+   * Build response processors.
+   * ✅ ONLY custom processors - FormValidator does NOT handle redirects or notifications
+   * RedirectProcessor is handled by BaseHandler
+   * NotificationProcessor/MessageHandler handle flash messages
    */
   static buildResponseProcessors(options) {
     const processors = [];
 
-    // Custom processors first (highest priority)
+    // ✅ Custom processors only (entity events, etc.)
     if (Array.isArray(options.responseProcessors)) {
       processors.push(...options.responseProcessors);
     }
 
-    // Redirect processor (unless disabled)
-    if (options.enableRedirectProcessor !== false) {
-      processors.push(
-        new RedirectProcessor({
-          delays: options.redirectDelays
-        })
-      );
-    }
-
-    // Notification processor (unless disabled)
-    if (options.enableNotificationProcessor !== false) {
-      processors.push(
-        new NotificationProcessor(
-          options.notificationPublisher || null,
-          options.notificationOptions || {}
-        )
-      );
-    }
+    // ❌ REMOVED: RedirectProcessor - handled by BaseHandler
+    // ❌ REMOVED: NotificationProcessor - handled by MessageHandler
 
     return processors;
   }
@@ -106,22 +91,16 @@ export class FormValidationFactory {
 
   /**
    * Create a FormValidator for modal forms.
-   * Typically disables redirect processor since modal
-   * handles navigation.
    */
   static createModalFormValidator(form, options = {}) {
     return this.createFormValidator(form, {
       ...options,
       submissionMode: "ajax",
       ajaxHandler: options.ajaxHandler !== false,
-      enableRealTime: options.enableRealTime !== false,
-      enableRedirectProcessor: false
+      enableRealTime: options.enableRealTime !== false
     });
   }
 
-  /**
-   * Create validators for all forms matching selector.
-   */
   static createFormValidators(
     selector = 'form[data-validate="true"]',
     options = {},
@@ -140,8 +119,6 @@ export class FormValidationFactory {
 
   /**
    * Initialize all forms on the page.
-   * Each form provides its own config via data attributes.
-   * No type detection — forms are self-describing.
    */
   static initializeAllForms() {
     const forms = document.querySelectorAll('form[data-validate="true"]');
@@ -160,7 +137,10 @@ export class FormValidationFactory {
         validators.push(validator);
         promises.push(validator.initialize());
       } catch (error) {
-        console.error(`Failed to initialize form: ${form.id || "anonymous"}`, error);
+        console.error(
+          `Failed to initialize form: ${form.getAttribute("id") || "anonymous"}`,
+          error
+        );
       }
     });
 

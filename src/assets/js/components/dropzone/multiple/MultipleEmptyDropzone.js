@@ -4,14 +4,15 @@ import BrowserLogger from "js/core/utils/BrowserLogger";
 const logger = new BrowserLogger("MultipleEmptyDropzone");
 
 export default class MultipleEmptyDropzone extends BaseDropzone {
-  constructor(element) {
-    super(element);
-    this.isMultiple = true;
+  constructor(element, options = {}) {
+    super(element, options);
 
-    // Setup change listener
     this.setupChangeListener();
 
-    logger.debug("MultipleEmptyDropzone initialized");
+    logger.debug("MultipleEmptyDropzone initialized", {
+      inputName: this.originalInputName,
+      multiple: this.input?.multiple
+    });
   }
 
   setupChangeListener() {
@@ -25,7 +26,7 @@ export default class MultipleEmptyDropzone extends BaseDropzone {
         const files = Array.from(e.target.files || []);
         if (files.length > 0) {
           this.handleFiles(files);
-          e.target.value = ""; // Clear to allow re-select
+          e.target.value = "";
         }
       };
 
@@ -34,49 +35,55 @@ export default class MultipleEmptyDropzone extends BaseDropzone {
   }
 
   handleFiles(files) {
-    // Prevent multiple triggers
     if (this._processingFiles) return;
     this._processingFiles = true;
 
-    logger.debug("Files selected", { count: files.length });
     this.files = files;
-
-    // CRITICAL: Sync to file input
     this.syncFilesToInput(files);
 
-    const uploadingEl = this.createUploadingElement();
+    const uploadingEl = this.createUploadingElement(files);
+
+    uploadingEl.__files = files;
+
     this.destroy();
     this.element.replaceWith(uploadingEl);
 
-    import("./MultipleUploadingDropzone").then((module) => {
-      new module.default(uploadingEl, this.files);
+    import("../DropzoneFactory").then(({ default: DropzoneFactory }) => {
+      DropzoneFactory.init(uploadingEl);
       setTimeout(() => {
         this._processingFiles = false;
       }, 300);
     });
   }
 
-  createUploadingElement() {
+  createUploadingElement(files) {
     const rootClass = this.rootBaseClass;
-    const totalSize = this.files.reduce((sum, f) => sum + f.size, 0);
+    const totalSize = files.reduce((sum, f) => sum + f.size, 0);
+    const totalSizeMB = (totalSize / 1024 / 1024).toFixed(1);
 
     const el = document.createElement("div");
     el.className = `${rootClass} ${rootClass}--uploading`;
     el.dataset.state = "uploading";
-    el.dataset.mode = "multiple";
+    el.dataset.mode = "multiple"; // CRITICAL: Set mode to multiple
     el.innerHTML = `
-      <div class="${rootClass}__icon">
-        <svg><use href="#icon-upload"></use></svg>
-      </div>
-      <div class="${rootClass}__text">
-        <span class="${rootClass}__main-text">Uploading ${this.files.length} files...</span>
-        <span class="${rootClass}__hint-text">Total: ${(totalSize / 1024 / 1024).toFixed(1)} MB</span>
-      </div>
-      <div class="${rootClass}__progress">
-        <div class="${rootClass}__progress-fill" style="width: 0%"></div>
-      </div>
-      <input type="file" name="image_url[]" multiple accept="image/*">
-    `;
+    <div class="${rootClass}__icon">
+      <svg><use href="#icon-upload"></use></svg>
+    </div>
+    <div class="${rootClass}__text">
+      <span class="${rootClass}__main-text">Uploading ${files.length} file(s)...</span>
+      <span class="${rootClass}__hint-text">Total: ${totalSizeMB} MB</span>
+    </div>
+    <div class="${rootClass}__progress">
+      <div class="${rootClass}__progress-fill" style="width: 0%"></div>
+    </div>
+  `;
+
+    const fileInput = this.createFileInput();
+    fileInput.multiple = true;
+    el.appendChild(fileInput);
+
+    // Store files for the next state
+    el.__files = files;
 
     return el;
   }
@@ -84,6 +91,7 @@ export default class MultipleEmptyDropzone extends BaseDropzone {
   destroy() {
     if (this.input && this.boundChangeHandler) {
       this.input.removeEventListener("change", this.boundChangeHandler);
+      this.boundChangeHandler = null;
     }
     this._processingFiles = false;
     super.destroy();

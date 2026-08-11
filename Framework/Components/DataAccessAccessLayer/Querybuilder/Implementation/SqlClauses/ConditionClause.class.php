@@ -12,13 +12,15 @@ class ConditionClause extends SqlQuery implements RegularClauseComponentInterfac
         private mixed $conditions,
         string $method,
         EntityManagerInterface $em,
+        ?string $customAlias = null,
     ) {
         $this->clauseContext = SqlBuilderMethodRegistry::getClauseContext($method);
         parent::__construct($this->clauseContext, null, $em);
         $this->method = $method;
+        $this->customAlias = $customAlias;
     }
 
-    public function getSqlClause(): SqlClause
+    public function getSqlClause(): null|SqlClause|SqlCteClause
     {
         return $this->clauseContext;
     }
@@ -38,11 +40,7 @@ class ConditionClause extends SqlQuery implements RegularClauseComponentInterfac
         if ($this->conditionRule instanceof QueryRulesInterface && method_exists($this->conditionRule, 'getState')) {
             $this->state = $this->state->merge($this->conditionRule->getState());
         }
-        // if ($this->requiresGrouping()) {
-        //     $conditionSql = '(' . $conditionSql . ')';
-        // }
         return $this->combineWithChildren($conditionSql, $childrenSql);
-        // return $this->applyConditionParentheses($result);
     }
 
     public function getMethod(): string
@@ -74,27 +72,19 @@ class ConditionClause extends SqlQuery implements RegularClauseComponentInterfac
 
     public function getConditions(): array
     {
-        if ($this->method === 'on') {
+        if (in_array($this->method, ['on', 'onValue', 'orOnValue'])) {
             $this->helper->setJoinMapping(
-                $this->conditions['fromTable'],
-                $this->conditions['toTable'],
+                $this->conditions['fromTable'] ?? null,
+                $this->conditions['toTable'] ?? null,
             );
-            return $this->conditions['onConditions'];
+            return $this->conditions['onConditions'] ?? (array) $this->conditions;
         }
         return (array) $this->conditions;
     }
 
     public function requiresGrouping(): bool
     {
-        // $ruleMethod = $this->conditionRule->getMethod();
-        // $ruleLogicalLink = SqlBuilderMethodRegistry::getLogicalLink($ruleMethod);
-
-        // OR conditions always need grouping
         if ($this->getLogicalLink() === 'OR') {
-            //|| $ruleLogicalLink->name === 'OR')
-            // if ($this->getLogicalLink() === 'OR') {
-            //     $this->logicalLink = SqlConditionLink::AND->name;
-            // }
             return true;
         }
 
@@ -111,9 +101,6 @@ class ConditionClause extends SqlQuery implements RegularClauseComponentInterfac
         return false;
     }
 
-    /**
-     * @return null|ConditionRuleInterface
-     */
     public function getRules(): ?QueryRulesInterface
     {
         if (isset($this->conditionRule)) {
@@ -156,7 +143,7 @@ class ConditionClause extends SqlQuery implements RegularClauseComponentInterfac
                 $this->state->joinContext = $this->joinContext;
             }
             $registry = new SqlFactoryRegistry($this, $this->em, $this->state);
-            $this->conditionRule = $registry->getRule($this->method, $this->conditions);
+            $this->conditionRule = $registry->getRule($this->method, $this->conditions, $this->customAlias);
         }
     }
 
@@ -182,17 +169,5 @@ class ConditionClause extends SqlQuery implements RegularClauseComponentInterfac
              ? $conditionSql
              : "{$conditionSql} {$junction} {$childrenSql}";
         // return $this->applyConditionParentheses($conditionSql);
-    }
-
-    private function applyConditionParentheses(string $sql): string
-    {
-        if ($this->requiresGrouping()) {
-            $sql = '(' . $sql . ')';
-
-            if ($this->getLogicalLink() === SqlConditionLink::OR) {
-                $this->logicalLink = SqlConditionLink::AND->name;
-            }
-        }
-        return $sql;
     }
 }

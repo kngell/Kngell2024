@@ -1,1 +1,0 @@
-{"__type__":"json","data":["optimized_4a63ed8037f7226c6324e293e92a6caf_MacBook_Pro_14_69d32_","optimized_1716496e0225506fb49fd98b734ab0c6_MacBook_Pro_14_69d32_","optimized_6e665f856d1113536480c89f1e542b59_MacBook_Pro_14_69d32_"]}

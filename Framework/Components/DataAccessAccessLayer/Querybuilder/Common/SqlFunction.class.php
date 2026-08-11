@@ -32,6 +32,8 @@ enum SqlFunction: string
     case SUBSTRING = 'SUBSTRING';
     case TRIM = 'TRIM';
     case LENGTH = 'LENGTH';
+    case LPAD = 'LPAD';
+    case RPAD = 'RPAD';
 
     // Numeric functions
     case ABS = 'ABS';

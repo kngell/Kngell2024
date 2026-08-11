@@ -16,6 +16,10 @@ class EntityMapper implements EntityMapperInterface
         if ($default !== null) {
             return $default;
         }
+        $reflection = $this->getReflector($entity);
+        if ($reflection->hasProperty('defaultTableName')) {
+            return $reflection->getProperty('defaultTableName')->getRawValue($entity);
+        }
         $table = StringUtils::studlyCapsToUnderscore($entity::class);
         if (str_ends_with($table, '_show')) {
             return str_replace('_show', '', $table);
@@ -26,6 +30,17 @@ class EntityMapper implements EntityMapperInterface
     public function getEntityKeyField(Entity $entity): string|bool
     {
         return $this->getDatabaseFieldForEntityKey($entity);
+    }
+
+    public function getFormat(Entity $entity): ?DisplayFormat
+    {
+        $keyField = $this->getEntityKeyField($entity);
+        $property = $this->getPropertyForField($entity, $keyField);
+        $attributes = $property->getAttributes(DisplayFormat::class);
+        if (isset($attributes[0])) {
+            return $attributes[0]?->newInstance();
+        }
+        return null;
     }
 
     public function getEntityKeyProperty(Entity $entity): string|bool
@@ -187,8 +202,9 @@ class EntityMapper implements EntityMapperInterface
     public function getFieldValue(Entity $entity, string $field): mixed
     {
         $reflector = $this->getReflector($entity);
+        $fieldName = StringUtils::snakeCaseToCamelCase($field);
         foreach ($reflector->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
-            if (strtolower($method->getName()) === 'get' . strtolower($field) && $entity->entityKeyIsInitialzed()) {
+            if (strtolower($method->getName()) === 'get' . strtolower($fieldName) && $entity->entityKeyIsInitialzed()) {
                 return $method->invoke($entity);
             }
         }

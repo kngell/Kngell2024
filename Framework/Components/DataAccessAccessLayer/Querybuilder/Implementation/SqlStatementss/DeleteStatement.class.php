@@ -20,13 +20,14 @@ class DeleteStatement extends AbstractStatement
     public function build(): string
     {
         if ($this->table === null) {
-            throw new QueryBuildException('UPDATE statement requires a table');
+            throw new QueryBuildException('DELETE statement requires a table');
         }
         list($table, $alias) = $this->helper->get($this->table, $this->state->tableAlias, $this->state->aliasCheck);
 
         if (!empty($this->customAlias)) {
             $alias = $this->customAlias;
         }
+        $parts = [];
         if ($this->isMariadbDialect()) {
             $parts = [$alias];
         }
@@ -97,7 +98,7 @@ class DeleteStatement extends AbstractStatement
             $joinConfig['method'] ?? null,
         );
         $join->setMethod($joinType->name)->setJoinContext($tableName);
-
+        $join->setContext(self::TYPE);
         if (isset($this->map['join'][$tableName])) {
             $onClause = $this->createOnClause($tableName);
             $join->add($onClause);

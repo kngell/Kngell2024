@@ -70,7 +70,7 @@ class ObfuscationService
 
         static $contextCache = [];
         if (!isset($contextCache[$entityClass])) {
-            $contextCache[$entityClass] = (new ReflectionClass($entityClass))->newInstanceWithoutConstructor();
+            $contextCache[$entityClass] = (CustomReflection::getInstance($entityClass)->getClass())->newInstanceWithoutConstructor();
         }
 
         return $presenter->normalizeForEntity(
@@ -132,7 +132,7 @@ class ObfuscationService
     private function getReflectionClass(string $entityClass): ReflectionClass
     {
         if (!isset($this->reflectionCache[$entityClass])) {
-            $this->reflectionCache[$entityClass] = new ReflectionClass($entityClass);
+            $this->reflectionCache[$entityClass] = CustomReflection::getInstance($entityClass)->getClass();
         }
 
         return $this->reflectionCache[$entityClass];

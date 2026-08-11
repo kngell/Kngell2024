@@ -16,19 +16,26 @@ trait TagRendererTrait
         'data-tags' => ',',
     ];
 
+    /**
+     * Get HTML tag with attributes.
+     */
     protected function getTagAttributes(array $tagAttrs, string $tag): string
     {
+        if (empty($tag)) {
+            return '';
+        }
+
         $attributes = ['<' . $tag];
 
+        // Skip system/internal attributes and objects
+        $skipKeys = [
+            'content', 'contentUp', 'tag', 'formErrors', 'formValues',
+            'token', 'position', 'htmlBlock', 'errorMessage', 'level',
+            'key', 'includeToken', 'defaultValue', 'children', 'parent',
+        ];
+
         foreach ($tagAttrs as $attr => $value) {
-            if (
-                in_array($attr, [
-                    'content', 'contentUp', 'tag', 'formErrors', 'formValues',
-                    'token', 'position', 'htmlBlock', 'errorMessage', 'level',
-                    'key', 'includeToken', 'defaultValue', 'children', 'parent',
-                ], true)
-                || is_object($value)
-            ) {
+            if (in_array($attr, $skipKeys, true) || is_object($value)) {
                 continue;
             }
 
@@ -42,73 +49,93 @@ trait TagRendererTrait
         return implode('', $attributes);
     }
 
+    /**
+     * Build a single tag attribute
+     * Delegates to TagAttributeHelper for consistent building.
+     */
     private function tagAttribute(string $key, string|array|bool|int|null $value): string
     {
         $type = gettype($value);
+
         return match (true) {
-            $this instanceof CheckBoxType && $key === 'value' && $value === 'on' => 'checked',
+            // Action attribute - always render
             $key === 'action' => ' ' . $key . '="' . $value . '"',
+
+            // Boolean attributes (disabled, readonly, required, etc.)
             $type === 'boolean' => $value === true ? ' ' . $key : '',
-            is_array($value) && $key === 'style' => $this->buildStyleAttribute($value),
-            is_array($value) && in_array($key, ['custom', 'aria']) => $this->customAttr($value),
+
+            // Style attribute - uses helper
+            is_array($value) && $key === 'style' => TagAttributeHelper::build($key, $value),
+
+            // Custom attributes (data-*, aria-*) - uses helper
+            is_array($value) && in_array($key, ['custom', 'aria']) => TagAttributeHelper::buildCustom($value),
+
+            // Other array attributes (class, etc.) - uses helper with separator
             is_array($value) => $this->buildArrayAttribute($key, $value),
+
+            // Special case for SelectOption - allow empty values
             !is_array($value) && empty($value) && $this instanceof SelectOption => ' ' . $key . "='" . $value . "'",
-            default => (!empty($value) || $value === '0')
-                ? ' ' . StringUtils::camelCaseToKebabCase($key) . "='" . $value . "'"
-                : '',
+
+            // Default - use helper
+            default => TagAttributeHelper::build($key, $value),
         };
     }
 
-    private function buildStyleAttribute(array $value): string
-    {
-        if (!$this->arrayNotEmpty($value)) {
-            return '';
-        }
-        return " style='" . implode('; ', array_map(
-            fn ($k, $v) => "$k: $v",
-            array_keys($value),
-            array_filter($value, fn ($v) => $v !== null && $v !== ''),
-        )) . "'";
-    }
-
+    /**
+     * Build array attribute with custom separator handling
+     * Only needed for special cases like class with multiple values.
+     */
     private function buildArrayAttribute(string $key, array $value): string
     {
         if (!$this->arrayNotEmpty($value)) {
             return '';
         }
-        $filtered = array_filter($value, fn ($v) => !empty($v) || $v === '0');
-        return " $key='" . trim(implode($this->separator($key, $value), $filtered)) . "'";
+
+        // Use ArrayUtils::flatten
+        $flattened = ArrayUtils::flatten($value);
+
+        // Filter empty values (preserving '0')
+        $filtered = array_filter($flattened, function ($v) {
+            return $v !== null && $v !== '' && $v !== false;
+        });
+
+        if (empty($filtered)) {
+            return '';
+        }
+
+        $separator = $this->getSeparator($key, $filtered);
+        $attributeValue = trim(implode($separator, $filtered));
+
+        return ' ' . $key . "='" . $attributeValue . "'";
     }
 
-    private function separator(string $key, array $value): string
+    /**
+     * Get separator for array attribute values.
+     */
+    private function getSeparator(string $key, array $values): string
     {
-        if ($key === 'class') {
-            $filtered = array_filter($value, fn ($v) => !empty($v) || $v === '0');
-            return count($filtered) > 1 ? ' ' : '';
+        // For class with multiple values, use space
+        if ($key === 'class' && count($values) > 1) {
+            return ' ';
         }
         return self::SEPARATORS[$key] ?? ' ';
     }
 
+    /**
+     * Check if array has any non-empty values
+     * Preserves '0' values.
+     */
     private function arrayNotEmpty(array $arr): bool
     {
         foreach ($arr as $v) {
             if (is_array($v) && $this->arrayNotEmpty($v)) {
                 return true;
             }
-            if (!empty($v) || $v === '0') {
+            // '0' is considered not empty
+            if ($v !== null && $v !== '' && $v !== false) {
                 return true;
             }
         }
         return false;
-    }
-
-    private function customAttr(array $attrs): string
-    {
-        $attrStr = '';
-        foreach ($attrs as $key => $attr) {
-            $key = StringUtils::camelCaseToKebabCase($key);
-            $attrStr .= !empty($attr) ? " $key='" . $attr . "'" : '';
-        }
-        return $attrStr;
     }
 }

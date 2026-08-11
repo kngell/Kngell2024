@@ -6,52 +6,71 @@ class HtmlBuilder extends AbstractHtmlElement
 {
     use ElementFactoryTrait;
 
-    public function __construct(TokenInterface $token, string $tag = '')
-    {
+    private const GENERIC_TAGS = [
+        'div', 'section', 'body', 'nav', 'ul', 'li', 'dl',
+        'table', 'thead', 'tbody', 'tr', 'td', 'span', 'th',
+        'button', 'small', 'svg', 'use', 'caption', 'colgroup',
+        'col', 'code', 'address', 'aside', 'dialog',
+        // Add HTML_TAG_ELEMENTS here since they return the same
+        'p', 'dd', 'dt', 'img', 'video', 'i', 'strong', 'desc',
+    ];
+
+    public function __construct(
+        TokenInterface $token,
+        ?TranslatorServiceInterface $translator = null,
+        string $tag = '',
+    ) {
         $this->tag = $tag;
-        parent::__construct($token);
+        parent::__construct($token, $translator);
     }
 
     public function form(bool $includeCsrftoken = true): FormBuilder
     {
-        return new FormBuilder($this->token, $includeCsrftoken);
+        return new FormBuilder($this->token, $this->translator, $includeCsrftoken);
     }
 
     public function textarea(string $content = ''): TextAreaElement
     {
-        try {
-            return new TextAreaElement($content);
-        } catch (Throwable $th) {
-            throw new FormElementNotFound(TextAreaElement::class);
-        }
+        return new TextAreaElement($content);
     }
 
     public function div(): static
     {
-        return new self($this->token, 'div');
+        return $this->tag('div');
     }
 
     public function nav(): static
     {
-        return new static($this->token, 'nav');
+        return $this->tag('nav');
     }
 
-    public function tag(string $tag): self|HtmlaElement|HtmlTagElement|SelectElement
+    public function link(): HtmlLinkElement
     {
-        return match (true) {
-            in_array($tag, [
-                'div', 'section', 'body', 'nav', 'ul', 'li', 'dl',
-                'table', 'thead', 'tbody', 'tr', 'td', 'span', 'th',
-                'button', 'small', 'svg', 'use', 'caption', 'colgroup',
-                'col', 'code',
-            ]) || preg_match('~[0-9]+~', $tag)
-                => new self($this->token, $tag),
-            $tag === 'a'
-                => new HtmlaElement(),
-            in_array($tag, ['p', 'dd', 'dt', 'img', 'video', 'i', 'strong', 'desc'])
-                => new HtmlTagElement($tag),
-            $tag === 'select'
-                => new SelectElement($this->token),
+        return new HtmlLinkElement();
+    }
+
+    public function span(): static
+    {
+        return $this->tag('span');
+    }
+
+    public function select(): SelectElement
+    {
+        return new SelectElement();
+    }
+
+    public function tag(string $tag): AbstractHtmlElement
+    {
+        return match ($tag) {
+            'a' => new HtmlLinkElement(),
+            'select' => new SelectElement(),
+            default => new self($this->token, $this->translator, $tag)
         };
+    }
+
+    private function isGenericTag(string $tag): bool
+    {
+        return in_array($tag, self::GENERIC_TAGS, true)
+            || preg_match('~[0-9]+~', $tag);
     }
 }

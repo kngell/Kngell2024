@@ -8,12 +8,17 @@ abstract class AbstractModelBaseOperations implements ModelOperationsInterface, 
     {
     }
 
-    protected function getQueryResult(EntityManagerInterface $em, bool $skipped = false): QueryResult
+    protected function getQueryResult(EntityManagerInterface $em, bool $skipped = false, string $reason = 'Operation Already done'): QueryResult
     {
         if (!$skipped) {
             return $em->persist()->getQueryResult()->setLastOperationId($em->getLastOperationId());
         }
         $em->reset();
-        return $em->getQueryResult();
+        $result = $em->getQueryResult()->setSkipped(true, $reason);
+        return match (true) {
+            $this instanceof ModelOperationUpdate => $result->setSqlOperation(SqlStatement::UPDATE),
+            $this instanceof ModelOperationDelete => $result->setSqlOperation(SqlStatement::DELETE),
+            default => $result
+        };
     }
 }

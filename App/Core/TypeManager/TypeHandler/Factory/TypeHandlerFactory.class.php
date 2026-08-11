@@ -18,6 +18,9 @@ final class TypeHandlerFactory
     public function __construct(
         private readonly PriceRangeType $priceRangeType,
         private readonly MoneyType $moneyType,
+        private readonly WeightType $weightType,
+        private readonly DimensionsType $dimensionsType,
+        private readonly ObfuscatorManager $obfuscatorManager,
     ) {
     }
 
@@ -25,24 +28,25 @@ final class TypeHandlerFactory
     {
         $this->initializeIfNeeded();
 
+        if (ObfuscationUtils::isObfuscated($value)) {
+            return $this->valueBasedHandlers['obfuscated'];
+        }
+
+        if ($property !== null && $this->hasObfuscateAttribute($property)) {
+            return $this->valueBasedHandlers['obfuscated'];
+        }
+
+        // Priority 2: Handle null values
         if ($value === null) {
             return $this->valueBasedHandlers['null'];
         }
 
+        // Priority 3: Handle empty string
         if ($value === '') {
             return $this->valueBasedHandlers['empty_string'];
         }
 
-        if ($property !== null) {
-            $attributes = $property->getAttributes(EntityFieldId::class);
-            foreach ($attributes as $attribute) {
-                $fieldId = $attribute->newInstance();
-                if ($fieldId->shouldObfuscate()) {
-                    return $this->valueBasedHandlers['obfuscator'];
-                }
-            }
-        }
-
+        // Priority 3: Type-based handlers (property type hints)
         if ($property !== null) {
             $typeBasedHandler = $this->getTypeBasedHandler($property, $value);
             if ($typeBasedHandler !== null) {
@@ -50,20 +54,28 @@ final class TypeHandlerFactory
             }
         }
 
+        // Priority 4: Value-based handlers (actual value type)
         $valueBasedHandler = $this->getValueBasedHandler($value, $property);
         if ($valueBasedHandler !== null) {
             return $valueBasedHandler;
         }
 
+        // Priority 5: Fallback to standard handler
         return $this->valueBasedHandlers['standard'];
     }
 
+    /**
+     * Get handler by type name (for explicit use).
+     */
     public function getHandlerForType(string $type): ?TypeHandlerInterface
     {
         $this->initializeIfNeeded();
         return $this->typeBasedHandlers[$type] ?? $this->valueBasedHandlers[$type] ?? null;
     }
 
+    /**
+     * Get registered types for debugging.
+     */
     public function getRegisteredTypes(): array
     {
         $this->initializeIfNeeded();
@@ -80,12 +92,10 @@ final class TypeHandlerFactory
     {
         $this->initializeIfNeeded();
 
-        // Handle NULL values
         if ($value === null) {
             return $this->valueBasedHandlers['null'];
         }
 
-        // Try type-based matching if expected type is provided
         if ($expectedType !== null) {
             $handler = $this->getHandlerForType($expectedType);
             if ($handler !== null && $handler->supports($value, null)) {
@@ -93,17 +103,25 @@ final class TypeHandlerFactory
             }
         }
 
-        // Fall back to value-based detection
         foreach ($this->valueBasedHandlers as $name => $handler) {
-            if ($name === 'null') {
+            if ($name === 'null' || $name === 'empty_string') {
                 continue;
             }
-
             if ($handler->supports($value, null)) {
                 return $handler;
             }
         }
         return $this->valueBasedHandlers['standard'];
+    }
+
+    public function getHandlerForClientInput(mixed $value, ReflectionProperty $property): TypeHandlerInterface
+    {
+        return $this->getHandlerForValue($value, $property);
+    }
+
+    public function getHandlerForDatabaseOutput(mixed $value, ReflectionProperty $property): TypeHandlerInterface
+    {
+        return $this->getHandlerForValue($value, $property);
     }
 
     private function getTypeBasedHandler(ReflectionProperty $property, mixed $value): ?TypeHandlerInterface
@@ -113,36 +131,24 @@ final class TypeHandlerFactory
             return null;
         }
 
-        // 🟢 FIX: Check for empty string FIRST - highest priority
+        // Empty string handling (convert to null for DB)
         if ($value === '' && $propertyType->allowsNull()) {
-            // Empty string should be handled by EmptyStringType
             return $this->valueBasedHandlers['empty_string'] ?? null;
         }
 
-        // Check for Money type with HIGH priority
-        if ($propertyType instanceof ReflectionNamedType && $propertyType->getName() === Money::class) {
-            return $this->typeBasedHandlers[Money::class] ?? null;
+        // Handle named types
+        if ($propertyType instanceof ReflectionNamedType) {
+            return $this->handleNamedType($propertyType, $value);
         }
 
         // Handle union types
         if ($propertyType instanceof ReflectionUnionType) {
-            // First check if any union type is Money
-            foreach ($propertyType->getTypes() as $type) {
-                if ($type instanceof ReflectionNamedType && $type->getName() === Money::class) {
-                    return $this->typeBasedHandlers[Money::class] ?? null;
-                }
-            }
             return $this->handleUnionType($propertyType, $value);
         }
 
         // Handle intersection types
         if ($propertyType instanceof ReflectionIntersectionType) {
             return $this->handleIntersectionType($propertyType, $value);
-        }
-
-        // Handle named types
-        if ($propertyType instanceof ReflectionNamedType) {
-            return $this->handleNamedType($propertyType, $value);
         }
 
         return null;
@@ -152,17 +158,17 @@ final class TypeHandlerFactory
     {
         $typeName = $type->getName();
 
-        // Handle enums - HIGHEST PRIORITY
+        // Enums - convert string ↔ enum
         if (enum_exists($typeName)) {
             return $this->typeBasedHandlers['enum'] ?? null;
         }
 
-        // Handle registered class types
+        // Registered class types (Money, Weight, Dimensions, PriceRange, etc.)
         if (isset($this->typeBasedHandlers[$typeName])) {
             return $this->typeBasedHandlers[$typeName];
         }
 
-        // Handle built-in scalar types
+        // Built-in scalar types
         $scalarType = $this->normalizeScalarType($typeName);
         if (isset($this->typeBasedHandlers[$scalarType])) {
             return $this->typeBasedHandlers[$scalarType];
@@ -181,7 +187,6 @@ final class TypeHandlerFactory
                 }
             }
         }
-
         return null;
     }
 
@@ -195,6 +200,7 @@ final class TypeHandlerFactory
     private function getValueBasedHandler(mixed $value, ?ReflectionProperty $property): ?TypeHandlerInterface
     {
         foreach ($this->valueBasedHandlers as $name => $handler) {
+            // Skip null and empty_string handlers (handled separately)
             if ($name === 'null' || $name === 'empty_string') {
                 continue;
             }
@@ -208,7 +214,6 @@ final class TypeHandlerFactory
                 continue;
             }
         }
-
         return null;
     }
 
@@ -230,7 +235,6 @@ final class TypeHandlerFactory
 
         $this->initializeValueBasedHandlers();
         $this->initializeTypeBasedHandlers();
-
         $this->isInitialized = true;
     }
 
@@ -239,64 +243,25 @@ final class TypeHandlerFactory
         $this->valueBasedHandlers = [
             'null' => new NullType(),
             'empty_string' => new EmptyStringType(),
-            'binary' => new BinaryType(),
-            'hex_literal' => new HexLiteralType(),
             'array' => new ArrayType(),
-            'entity' => new EntityType(),
             'datetime' => new DateTimeType(),
             'uuid' => new UuidType(),
+            'obfuscated' => new ObfuscatedType($this->obfuscatorManager),  // ← ADD THIS
             'standard' => new StandardType(),
         ];
     }
 
-    // private function initializeTypeBasedHandlers(): void
-    // {
-    //     $this->typeBasedHandlers = [
-    //         // Scalar types (with both names for compatibility)
-    //         'bool' => new StandardType(),
-    //         'boolean' => new StandardType(),
-    //         'int' => new StandardType(),
-    //         'integer' => new StandardType(),
-    //         'float' => new StandardType(),
-    //         'double' => new StandardType(),
-    //         'string' => new StandardType(),
-    //         'array' => new ArrayType(),
-
-    //         // Class types
-    //         Entity::class => new EntityType(),
-    //         DateTime::class => new DateTimeType(),
-    //         DateTimeImmutable::class => new DateTimeType(),
-    //         DateTimeInterface::class => new DateTimeType(),
-
-    //         // Your custom types
-    //         PriceRange::class => $this->container->get(PriceRangeType::class),
-    //         Weight::class => new WeightType(),
-    //         Dimensions::class => new DimensionsType(),
-    //         UuidInterface::class => new UuidType(),
-
-    //         // Special handlers
-    //         'binary' => new BinaryType(),
-    //         'hex_literal' => new HexLiteralType(),
-    //         'enum' => new EnumType(),
-    //         'object' => new ObjectType(),
-    //     ];
-
-    //     // Add Money type if available
-    //     if (class_exists(Money::class)) {
-    //         $this->typeBasedHandlers[Money::class] = $this->container->get(MoneyType::class);
-    //     }
-    // }
     private function initializeTypeBasedHandlers(): void
     {
         $this->typeBasedHandlers = [
             // Scalar types
-            'bool' => new StandardType(),
-            'boolean' => new StandardType(),
-            'int' => new StandardType(),
-            'integer' => new StandardType(),
-            'float' => new StandardType(),
-            'double' => new StandardType(),
-            'string' => new StandardType(),
+            'bool' => new BooleanType(),
+            'boolean' => new BooleanType(),
+            'int' => new IntegerType(),
+            'integer' => new IntegerType(),
+            'float' => new FloatType(),
+            'double' => new FloatType(),
+            'string' => new StringType(),
             'array' => new ArrayType(),
 
             // Class types
@@ -304,22 +269,31 @@ final class TypeHandlerFactory
             DateTime::class => new DateTimeType(),
             DateTimeImmutable::class => new DateTimeType(),
             DateTimeInterface::class => new DateTimeType(),
-
-            // Custom types — injected directly
-            PriceRange::class => $this->priceRangeType,
-            Weight::class => new WeightType(),
-            Dimensions::class => new DimensionsType(),
             UuidInterface::class => new UuidType(),
 
+            // Value object types
+            Money::class => $this->moneyType,
+            Weight::class => $this->weightType,
+            Dimensions::class => $this->dimensionsType,
+            PriceRange::class => $this->priceRangeType,
+
             // Special handlers
-            'binary' => new BinaryType(),
-            'hex_literal' => new HexLiteralType(),
             'enum' => new EnumType(),
             'object' => new ObjectType(),
+            // Note: ObfuscatedType is NOT here because it's detected by attribute,
+            // not by type name. It's in valueBasedHandlers and detected via hasObfuscateAttribute()
         ];
+    }
 
-        if ($this->moneyType !== null) {
-            $this->typeBasedHandlers[Money::class] = $this->moneyType;
+    private function hasObfuscateAttribute(ReflectionProperty $property): bool
+    {
+        $attributes = $property->getAttributes(DisplayFormat::class);
+        foreach ($attributes as $attribute) {
+            $format = $attribute->newInstance();
+            if ($format->obfuscate === true) {
+                return true;
+            }
         }
+        return false;
     }
 }

@@ -1,3 +1,4 @@
+@use "css/globals" as *;
 @use "css/frontend/ecommerce/abstracts" as *;
 /*---------------- FOOTER ----------------*/
 
@@ -76,6 +77,7 @@
       width: 17.3rem;
       justify-content: space-between;
       align-items: flex-start;
+      gap: 2.4rem;
       .social-container {
         width: 1.6rem;
         height: 1.6rem;

@@ -16,6 +16,8 @@ interface SqlCompositeQueryBuilderInterface
 
     public function selectDistinctWithAliases(string|array|Closure ...$columns): SqlSelectQueryBuilderInterface;
 
+    public function selectDistinct(string|array|Closure ...$columns): SqlSelectQueryBuilderInterface;
+
     public function insert(mixed ...$data): SqlInsertQueryBuilderInterface;
 
     public function update(null|string|Closure $table = null): SqlUpdateQueryBuilderInterface;

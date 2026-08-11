@@ -1,0 +1,11 @@
+column_key:
+  display: Column Key
+  required: true
+  unique: ignore_current
+  min: 3
+  max: 50
+title:
+  display: Title
+  required: true
+  min: 3
+  max: 100

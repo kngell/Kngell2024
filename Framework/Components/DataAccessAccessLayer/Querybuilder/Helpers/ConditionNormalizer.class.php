@@ -63,68 +63,6 @@ class ConditionNormalizer
         return $result;
     }
 
-    // private function process(array $conditions): array
-    // {
-    //     $result = [];
-    //     $keys = array_keys($conditions);
-    //     $count = count($keys);
-    //     $i = 0;
-
-    //     while ($i < $count) {
-    //         $key = $keys[$i];
-    //         $value = $conditions[$key];
-
-    //         // Case 1: Associative Key (e.g., 'expires_at' => 'IS NULL')
-    //         if (is_string($key)) {
-    //             // Check if this is a raw SQL condition where value is an operator
-    //             if (is_string($value) && ($operator = $this->findOperator($value))) {
-    //                 $result[] = $key;
-    //                 $result[] = $operator->value; // Use the operator enum value
-    //             } else {
-    //                 $result[] = $key;
-    //                 $result[] = $value;
-    //             }
-    //             $i++;
-    //             continue;
-    //         }
-
-    //         // Case 2: Logical Operator Token (e.g., 'OR')
-    //         if (is_string($value) && ($op = $this->findOperator($value)) && $op->isLogical()) {
-    //             $result[] = $op->value;
-    //             $i++;
-    //             continue;
-    //         }
-
-    //         // Case 3: Nested Array (Recursion)
-    //         if (is_array($value)) {
-    //             $result = array_merge($result, $this->process($value));
-    //             $i++;
-    //             continue;
-    //         }
-
-    //         // Case 4: Raw SQL condition string with numeric key (e.g., 'icon IS NOT NULL')
-    //         if (is_string($value) && ($parsed = $this->parseRawCondition($value))) {
-    //             $result = array_merge($result, $parsed);
-    //             $i++;
-    //             continue;
-    //         }
-
-    //         // Case 5: Sequential Condition (e.g., ['user_id', 86] or ['age', '>', 18])
-    //         if (is_string($value)) {
-    //             $this->handleSequential($result, $conditions, $keys, $i);
-    //             $i = $this->getNextIndex($conditions, $keys, $i);
-    //             continue;
-    //         }
-
-    //         $i++;
-    //     }
-
-    //     return $result;
-    // }
-
-    /**
-     * Find matching SqlOperator (handles multi-word operators like "IS NOT NULL").
-     */
     private function findOperator(string $value): ?SqlOperator
     {
         $upperValue = strtoupper(trim($value));

@@ -8,7 +8,7 @@ class DeletionValidatorResult
     private array $warnings = [];
     private ?object $record = null;
     private ?string $displayName = null;
-    private ?string $displayImage = null;
+    private null|string|array $displayImage = null;
     private bool $softDeleted = false;
     private array $metadata = [];
 
@@ -60,22 +60,22 @@ class DeletionValidatorResult
 
     // --- Display ---
 
-    public function setDisplayName(string $name): void
+    public function setDisplayName(?string $name): void
     {
         $this->displayName = $name;
     }
 
-    public function getDisplayName(): ?string
+    public function getDisplayName(): null|string
     {
         return $this->displayName;
     }
 
-    public function setDisplayImage(?string $image): void
+    public function setDisplayImage(null|string|array $image): void
     {
         $this->displayImage = $image;
     }
 
-    public function getDisplayImage(): ?string
+    public function getDisplayImage(): null|string|array
     {
         return $this->displayImage;
     }

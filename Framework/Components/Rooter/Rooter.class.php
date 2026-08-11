@@ -46,14 +46,11 @@ class Rooter implements RooterInterface
 
     public static function redirect(string $url, bool|HttpStatusCode $permanent = true): Response
     {
-        $response = new Response();
         if (is_bool($permanent)) {
             $statusCode = $permanent ? HttpStatusCode::HTTP_SEE_OTHER : HttpStatusCode::HTTP_MOVED_PERMANENTLY;
         } else {
             $statusCode = $permanent;
         }
-        $response->setStatusCode($statusCode);
-        $response->redirect($url);
-        return $response;
+        return new RedirectResponse($url, $statusCode->value);
     }
 }

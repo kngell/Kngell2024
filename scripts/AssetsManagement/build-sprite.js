@@ -12,7 +12,9 @@ const path = require("path");
 const config = {
   inputDir: "./src/assets/img/icons",
   outputFile: "./public/assets/img/icons-sprite.svg",
-  prefix: "icon-", // Optional prefix for symbol IDs
+  prefix: "icon-",
+  defaultViewBox: "0 0 24 24",
+  preserveAttributes: ["fill", "stroke", "stroke-width", "stroke-linecap", "stroke-linejoin"]
 };
 
 function buildSprite() {
@@ -50,15 +52,59 @@ function buildSprite() {
       // Read the SVG file
       let svgContent = fs.readFileSync(filePath, "utf8");
 
-      // Extract viewBox from the original SVG
+      // Extract viewBox or dimensions
+      let viewBox = config.defaultViewBox;
       const viewBoxMatch = svgContent.match(/viewBox="([^"]+)"/);
-      const viewBox = viewBoxMatch ? viewBoxMatch[1] : "0 0 24 24";
+      if (viewBoxMatch) {
+        viewBox = viewBoxMatch[1];
+      } else {
+        // Try to extract from width/height if viewBox not present
+        const widthMatch = svgContent.match(/width="([^"]+)"/);
+        const heightMatch = svgContent.match(/height="([^"]+)"/);
+        if (widthMatch && heightMatch) {
+          viewBox = `0 0 ${widthMatch[1]} ${heightMatch[1]}`;
+        }
+      }
 
-      // Extract the inner content (everything between <svg> tags)
-      const innerContent = svgContent
+      // Extract the inner content and preserve important attributes
+      let innerContent = svgContent
         .replace(/<svg[^>]*>/, "")
         .replace(/<\/svg>/, "")
         .trim();
+
+      // If the SVG has fill="currentColor" or stroke="currentColor", keep them
+      // but if they're on the SVG tag, we need to move them to the inner elements
+
+      // Extract SVG attributes to check for fill/stroke
+      const svgAttrsMatch = svgContent.match(/<svg([^>]*)>/);
+      let svgAttrs = {};
+      if (svgAttrsMatch) {
+        const attrs = svgAttrsMatch[1].match(/(\w+)="([^"]+)"/g) || [];
+        attrs.forEach((attr) => {
+          const [key, value] = attr.split("=");
+          if (config.preserveAttributes.includes(key)) {
+            svgAttrs[key] = value.replace(/"/g, "");
+          }
+        });
+      }
+
+      // If inner content has multiple elements, wrap them properly
+      // Ensure path elements have necessary attributes if not present
+      if (Object.keys(svgAttrs).length > 0) {
+        // Add attributes to each path/element if they don't have them
+        const elements = innerContent.match(/<[^>]+>/g) || [];
+        const updatedElements = elements.map((el) => {
+          let newEl = el;
+          Object.entries(svgAttrs).forEach(([key, value]) => {
+            if (!el.includes(`${key}=`)) {
+              // Insert attribute before closing >
+              newEl = newEl.replace(/>$/, ` ${key}="${value}">`);
+            }
+          });
+          return newEl;
+        });
+        innerContent = updatedElements.join(" ");
+      }
 
       // Create symbol
       spriteContent += `  <!-- ${fileName} -->\n`;
@@ -66,7 +112,7 @@ function buildSprite() {
       spriteContent += `    ${innerContent}\n`;
       spriteContent += `  </symbol>\n\n`;
 
-      console.log(`✅ Added: ${symbolId}`);
+      console.log(`✅ Added: ${symbolId} (viewBox: ${viewBox})`);
     } catch (error) {
       console.error(`❌ Error processing ${file}:`, error.message);
     }

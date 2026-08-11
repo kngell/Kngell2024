@@ -4,24 +4,24 @@ declare(strict_types=1);
 
 abstract class AbstractInput extends AbstractHtmlComponent
 {
-    // Subclasses define this (e.g., 'text', 'checkbox', 'hidden')
     protected const string TYPE = '';
     private const string TAG = 'input';
 
     // ── Input-Specific Properties ───────────────────────────────────
-    protected bool $readonly = false;
-    protected int $size = 0;
-    protected int $maxlength = 0;
-    protected mixed $min = null;
-    protected mixed $max = null;
-    protected bool $multiple = false;
-    protected string $pattern = '';
-    protected int $step = 0;
-    protected bool $autofocus = false;
-    protected int $height = 0;
-    protected int $width = 0;
-    protected string $list = '';
-    protected string $autocomplete = '';
+    protected bool $readonly;
+    protected int $size;
+    protected int $maxlength;
+    protected mixed $min;
+    protected mixed $max;
+    protected bool $multiple;
+    protected string $pattern;
+    protected int $step;
+    protected bool $autofocus;
+    protected int $height;
+    protected int $width;
+    protected string $list;
+    protected string $autocomplete;
+    protected string $type;
 
     /**
      * Default generate for ALL input types.
@@ -120,6 +120,17 @@ abstract class AbstractInput extends AbstractHtmlComponent
     public function autocomplete(string $autocomplete): static
     {
         $this->autocomplete = $autocomplete;
+        return $this;
+    }
+
+    /**
+     * @param string $type
+     *
+     * @return AbstractInput
+     */
+    public function type(string $type): AbstractInput
+    {
+        $this->type = $type;
         return $this;
     }
 }

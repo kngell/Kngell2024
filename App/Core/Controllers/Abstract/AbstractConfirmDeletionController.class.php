@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 abstract class AbstractConfirmDeletionController extends Controller
 {
-    use AjaxResponseTrait;
+    use ResolveDataTrait;
 
     public function __construct(
-        protected HtmlTemplatePathInterface $templatePath,
         FormCreatorService $frm,
+        protected ConfirmDeletionFormConfigFactory $factory,
     ) {
-        $this->layout('admin');
+        $this->layout(NavbarType::ADMIN);
         $this->frm = $frm;
     }
 
@@ -18,6 +18,7 @@ abstract class AbstractConfirmDeletionController extends Controller
     {
         $isAjax = $this->request->isAjax();
         $id = $this->resolveEntityId();
+        $this->resolveBlockType();
         $redirectUrl = $this->resolveRedirectUrl();
 
         if (empty($id)) {
@@ -81,13 +82,12 @@ abstract class AbstractConfirmDeletionController extends Controller
 
         return $this->redirect($redirectUrl);
     }
-    // --- Abstract contracts ---
 
     abstract protected function getValidator(): AbstractDeleteValidator;
 
-    abstract protected function getLabel(): string;
+    abstract protected function entityClass(): string;
 
-    abstract protected function getDeleteRoute(): string;
+    abstract protected function getLabel(): string;
 
     abstract protected function getConfirmRedirectUrl(array $id): string;
 
@@ -98,6 +98,7 @@ abstract class AbstractConfirmDeletionController extends Controller
     protected function buildFlashData(
         array $id,
         DeletionValidatorResult $validationResult,
+        ?string $blockType = null,
     ): array {
         return [
             'id' => $id,
@@ -106,29 +107,38 @@ abstract class AbstractConfirmDeletionController extends Controller
             'image' => $validationResult->getDisplayImage(),
             'metadata' => $validationResult->getAllMetadata(),
             'timestamp' => time(),
+            'block_type' => $blockType,
         ];
     }
 
     // --- Private helpers ---
-    private function resolveEntityId(): array
-    {
-        $post = $this->request->getPost();
-        $keyField = $this->getEntityKeyfield();
+    // private function resolveEntityId(): array
+    // {
+    //     $post = $this->request->getPost();
+    //     $keyField = $this->getEntityKeyfield();
 
-        // Try keyField first
-        $value = $post->get($keyField, '');
-        if (!empty($value)) {
-            return ['key' => $keyField, 'value' => $value];
-        }
+    //     $value = $post->get($keyField, '');
+    //     if (!empty($value)) {
+    //         return ['key' => $keyField, 'value' => $value];
+    //     }
 
-        // Fallback to public_id
-        $value = $post->get('public_id', '');
-        if (!empty($value)) {
-            return ['key' => 'public_id', 'value' => $value];
-        }
+    //     $value = $post->get('public_id', '');
+    //     if (!empty($value)) {
+    //         if (!is_string($value)) {
+    //             throw new InvalidArgumentException('Invalid public_id payload type received.');
+    //         }
 
-        return ['key' => '', 'value' => ''];
-    }
+    //         if (!StringUtils::isUuid($value) && !preg_match('/^[a-zA-Z0-9_\-]+$/', $value)) {
+    //             throw new InvalidArgumentException(sprintf(
+    //                 'Security Violation: Malformed public_id string provided for entity class %s.',
+    //                 $this->entityClass(),
+    //             ));
+    //         }
+
+    //         return ['key' => 'public_id', 'value' => $value];
+    //     }
+    //     return [];
+    // }
 
     private function renderConfirmResponse(
         array $flashData,
@@ -168,12 +178,6 @@ abstract class AbstractConfirmDeletionController extends Controller
         }
 
         return $this->redirect($this->getConfirmRedirectUrl($id));
-    }
-
-    private function resolveRedirectUrl(): string
-    {
-        return $this->getRedirectUrl()
-            ?? DeletionFlowConfig::DEFAULT_REDIRECT->value;
     }
 
     private function getFlashKey(): string

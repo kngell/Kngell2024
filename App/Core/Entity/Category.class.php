@@ -16,7 +16,6 @@ class Category extends Entity implements TimestampableInterface, SoftDeletableIn
     #[DisplayFormat(
         obfuscate: true,
         obfuscationStrategy: 'hashid',
-        prefix: '#',
         nullPlaceholder: 'No ID',
     )]
     #[EntityFieldId(name: 'cat_id', type: FieldType::INT)]
@@ -33,15 +32,16 @@ class Category extends Entity implements TimestampableInterface, SoftDeletableIn
     private string $name;
     private string $slug;
     private ?string $icon = null;
-    private int $parentId;
+    private ?int $parentId = null;
     private int $level = 0;
     private null|string $path = null;
     private null|int $orderIndex = 0;
     private bool $isActive = true;
-    private null|string $metaTitle;
-    private null|string $metaDescription;
-    private null|string $description;
-    private null|string $imageUrl;
+    private null|string $metaTitle = null;
+    private null|string $metaDescription = null;
+    private null|string $description = null;
+    private null|string $imageUrl = null;
+    private null|string $mainAltText = null;
 
     // SEO & Social Media.
     private ?string $metaKeywords = null;
@@ -50,6 +50,7 @@ class Category extends Entity implements TimestampableInterface, SoftDeletableIn
     private ?string $ogImage = null;
     private ?string $twitterCard = null;
     private ?string $canonicalUrl = null;
+    private ?string $ogAltText = null;
 
     //Content & Display
     private ?string $shortDescription = null;
@@ -194,26 +195,6 @@ class Category extends Entity implements TimestampableInterface, SoftDeletableIn
     public function setIcon(?string $icon): Category
     {
         $this->icon = $icon;
-
-        return $this;
-    }
-
-    /**
-     * @return int
-     */
-    public function getParentId(): int
-    {
-        return $this->parentId;
-    }
-
-    /**
-     * @param int $parentId
-     *
-     * @return Category
-     */
-    public function setParentId(int $parentId): Category
-    {
-        $this->parentId = $parentId;
 
         return $this;
     }
@@ -866,7 +847,7 @@ class Category extends Entity implements TimestampableInterface, SoftDeletableIn
         return $this->minPrice;
     }
 
-    public function setMinPrice($minPrice): self
+    public function setMinPrice(Money $minPrice): self
     {
         $this->minPrice = $minPrice;
         return $this;
@@ -880,7 +861,7 @@ class Category extends Entity implements TimestampableInterface, SoftDeletableIn
         return $this->maxPrice;
     }
 
-    public function setMaxPrice($maxPrice): self
+    public function setMaxPrice(Money $maxPrice): self
     {
         $this->maxPrice = $maxPrice;
         return $this;
@@ -897,6 +878,66 @@ class Category extends Entity implements TimestampableInterface, SoftDeletableIn
     public function setPriceRanges(?PriceRange $priceRanges): self
     {
         $this->priceRanges = $priceRanges;
+        return $this;
+    }
+
+    /**
+     * @return null|string
+     */
+    public function getMainAltText(): ?string
+    {
+        return $this->mainAltText;
+    }
+
+    /**
+     * @param null|string $mainAltText
+     *
+     * @return Category
+     */
+    public function setMainAltText(?string $mainAltText): Category
+    {
+        $this->mainAltText = $mainAltText;
+
+        return $this;
+    }
+
+    /**
+     * @return null|string
+     */
+    public function getOgAltText(): ?string
+    {
+        return $this->ogAltText;
+    }
+
+    /**
+     * @param null|string $ogAltText
+     *
+     * @return Category
+     */
+    public function setOgAltText(?string $ogAltText): Category
+    {
+        $this->ogAltText = $ogAltText;
+
+        return $this;
+    }
+
+    /**
+     * @return null|int
+     */
+    public function getParentId(): ?int
+    {
+        return $this->parentId;
+    }
+
+    /**
+     * @param null|int $parentId
+     *
+     * @return Category
+     */
+    public function setParentId(?int $parentId): Category
+    {
+        $this->parentId = $parentId;
+
         return $this;
     }
 }

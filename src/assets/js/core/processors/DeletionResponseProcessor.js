@@ -10,65 +10,120 @@ export default class DeletionResponseProcessor extends BaseResponseProcessor {
   }
 
   /**
-   * Set callback for when entity is successfully deleted.
+   * Set callback for when an entity is successfully deleted.
    * @param {Function} callback - (entityId, result) => void
+   * @returns {this}
    */
   setOnEntityDeleted(callback) {
     this.onEntityDeleted = callback;
     return this;
   }
 
-  canHandle(context) {
-    const { form } = context;
-
-    // Match any deletion form
-    return form?.id === "confirm-deletion-frm" || form?.dataset?.ajaxForm !== undefined;
+  /**
+   * Identify any deletion form by id or data attribute.
+   */
+  _isDeletionForm(form) {
+    if (!form) return false;
+    return (
+      form.getAttribute("id") === "confirm-deletion-frm" || form.dataset?.ajaxForm !== undefined
+    );
   }
+
+  canHandle(context) {
+    return this._isDeletionForm(context?.form);
+  }
+
+  // handle(context) {
+  //   const { result, form } = context;
+
+  //   // Cancel any redirect/reload baked into the response (success OR error path).
+  //   // Deletion is an in-place action — never navigate away from this flow.
+  //   context.shouldRedirect = false;
+  //   context.shouldReload = false;
+  //   context.preventDefault = true;
+  //   context.redirectUrl = null;
+
+  //   // Only run success-side logic when the deletion actually succeeded
+  //   if (result?.success !== true) {
+  //     return;
+  //   }
+
+  //   const entityId = this.extractEntityId(form);
+
+  //   logger.debug("Entity deleted:", entityId);
+
+  //   // Populate metadata for downstream consumers
+  //   context.metadata = context.metadata || {};
+  //   context.metadata.isDeletion = true;
+  //   context.metadata.entityId = entityId;
+  //   context.metadata.deletionType = result.data?.deletion_type || null;
+  //   context.metadata.entityName = result.data?.name || null;
+  //   context.metadata.wasSkipped = result.data?.was_skipped || false;
+
+  //   if (entityId && this.onEntityDeleted) {
+  //     this.onEntityDeleted(entityId, result);
+  //   }
+  // }
 
   handle(context) {
     const { result, form } = context;
 
-    if (result.success !== true) {
+    console.log("🔍 DeletionResponseProcessor.handle called");
+    console.log("result:", result);
+    console.log("result.success:", result?.success);
+
+    // Cancel any redirect/reload
+    context.shouldRedirect = false;
+    context.shouldReload = false;
+    context.preventDefault = true;
+    context.redirectUrl = null;
+
+    // Only run success-side logic when the deletion actually succeeded
+    if (result?.success !== true) {
+      console.log("❌ Deletion not successful, skipping");
       return;
     }
 
-    // Prevent default redirect — we handle it
-    context.shouldRedirect = false;
-    context.shouldReload = false;
-    context.redirectUrl = null;
-    context.preventDefault = true;
-
-    // Extract entity ID from form
     const entityId = this.extractEntityId(form);
+    console.log("✅ Entity ID:", entityId);
 
-    logger.debug("Entity deleted:", entityId);
-
-    context.metadata.isDeletion = true;
-    context.metadata.entityId = entityId;
-    context.metadata.deletionType = result.data?.deletion_type || "archive";
-    context.metadata.entityName = result.data?.name || null;
-    context.metadata.wasSkipped = result.data?.was_skipped || false;
-
-    // Notify caller
     if (entityId && this.onEntityDeleted) {
+      console.log("📢 Calling onEntityDeleted callback");
       this.onEntityDeleted(entityId, result);
+    } else {
+      console.log("⚠️ No entityId or no callback");
     }
   }
 
+  /**
+   * Extract entity ID from the form's hidden "id" input.
+   * Defensively strips "column_name <value>" prefix if present.
+   */
   extractEntityId(form) {
     if (!form) {
       logger.warn("No form provided");
       return null;
     }
 
-    // Generic: look for hidden input named "id"
     const idInput = form.querySelector('input[name="id"]');
     if (idInput?.value) {
-      logger.debug("Found entity ID:", idInput.value);
-      return idInput.value;
+      let value = String(idInput.value).trim();
+
+      const prefixMatch = value.match(/^[a-z_]+\s+(.+)$/i);
+      if (prefixMatch) {
+        logger.warn(`Stripping unexpected prefix from entity ID: "${value}"`);
+        value = prefixMatch[1];
+      }
+
+      logger.debug("Found entity ID:", value);
+      return value;
     }
 
-    logger.warn("No id field found in form");
+    if (form.dataset?.entityId) {
+      return form.dataset.entityId;
+    }
+
+    logger.warn("No entity ID field found in form");
     return null;
   }
 }

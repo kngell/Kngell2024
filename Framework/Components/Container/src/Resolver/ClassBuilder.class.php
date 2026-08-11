@@ -60,7 +60,7 @@ class ClassBuilder
     public function canAutoWire(string $class): bool
     {
         try {
-            $reflector = new ReflectionClass($class);
+            $reflector = CustomReflection::getInstance($class)->getClass();
             return $reflector->isInstantiable();
         } catch (ReflectionException) {
             return false;
@@ -73,7 +73,7 @@ class ClassBuilder
     public function getConstructorParameters(string $class): array
     {
         try {
-            $reflector = new ReflectionClass($class);
+            $reflector = CustomReflection::getInstance($class)->getClass();
             $constructor = $reflector->getConstructor();
 
             if ($constructor === null) {

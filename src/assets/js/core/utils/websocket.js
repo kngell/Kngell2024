@@ -18,15 +18,18 @@ class WebSocket {
         logger.info("🔌 WebSocket: Connection opened...");
         logger.debug("", {
           timestamp: Date.now(),
-          connectionCount: (window._wsConnectionCount = (window._wsConnectionCount || 0) + 1),
+          connectionCount: (window._wsConnectionCount = (window._wsConnectionCount || 0) + 1)
         });
       };
 
       ws.onmessage = function (event) {
         const data = JSON.parse(event.data);
         if (data.type === "full-reload") {
-          logger.debug("🔌 WebSocket: FULL RELOAD TRIGGERED", data.reason);
-          window.location.reload(true);
+          logger.debug(
+            "🔌 WebSocket: FULL RELOAD received; letting webpack-dev-server handle it.",
+            data.reason
+          );
+          return;
         } else if (data.type === "css-update") {
           logger.debug("🔌 WebSocket: CSS UPDATE TRIGGERED", data.reason);
           const links = document.querySelectorAll("link[rel='stylesheet']");
@@ -43,7 +46,7 @@ class WebSocket {
         logger.debug("", {
           code: event.code,
           reason: event.reason,
-          wasClean: event.wasClean,
+          wasClean: event.wasClean
         });
 
         if (!event.wasClean && event.code !== 1000) {

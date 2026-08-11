@@ -9,8 +9,10 @@ interface SessionInterface
      *
      * @param string $key   The key of the item to store.
      * @param mixed  $value The value of the item to store. Must be serializable.
-     * @return void
+     *
      * @throws SessionInvalidArgumentException MUST be thrown if the $key string is not a legal value.
+     *
+     * @return void
      */
     public function set(string $key, mixed $value): void;
 
@@ -19,8 +21,10 @@ interface SessionInterface
      *
      * @param string $key   The key of the item to store.
      * @param mixed  $value The value of the item to store. Must be serializable.
-     * @return void
+     *
      * @throws SessionInvalidArgumentException MUST be thrown if the $key string is not a legal value.
+     *
+     * @return void
      */
     public function setArray(string $key, mixed $value): void;
 
@@ -29,8 +33,10 @@ interface SessionInterface
      *
      * @param string $key   The key of the item to store.
      * @param mixed|null $default the default value to return if the request value can't be found
-     * @return mixed
+     *
      * @throws SessionInvalidArgumentException MUST be thrown if the $key string is not a legal value.
+     *
+     * @return mixed
      */
     public function get(string $key, mixed $default = null): mixed;
 
@@ -38,8 +44,10 @@ interface SessionInterface
      * Removes the value for the specified key from the session.
      *
      * @param string $key   The key of the item that will be unset.
-     * @return bool
+     *
      * @throws SessionInvalidArgumentException
+     *
+     * @return bool
      */
     public function delete(string $key): bool;
 
@@ -55,20 +63,25 @@ interface SessionInterface
      *
      * @param string $key - The key to retrieve and remove the value for.
      * @param null $value
+     *
      * @return mixed
      */
-    public function flush(string $key, $value = null) : mixed;
+    public function flush(string $key, $value = null): mixed;
 
     /**
      * Determines whether an item is present in the session.
      *
      * @param string $key The session item key.
-     * @return bool
+     *
      * @throws SessionInvalidArgumentException  MUST be thrown if the $key string is not a legal value.
+     *
+     * @return bool
      */
     public function exists(string $key): bool;
 
-    public function uagent_no_version() : string;
+    public function uagent_no_version(): string;
 
-    public function regenerate() : void;
+    public function regenerate(): void;
+
+    public function save(): void;
 }

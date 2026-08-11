@@ -9,24 +9,63 @@ class View implements ViewInterface
     private string $_footer;
     private string $_outputBuffer;
     private string $_pageTitle = '';
-    private string $_layout = 'default';
+    private NavbarType $_layout = NavbarType::DEFAULT;
     private string $_token = '';
     private array $properties = [];
     private Request $request;
+    private ?string $cachedLayoutPath = null;
 
     public function __construct(private ViewEnvironment $viewEnv)
     {
     }
 
+    // public function render(string $templatePath, array $context = []): string
+    // {
+    //     try {
+    //         $templatePath = $this->viewEnv->getFile($templatePath);
+    //         $html = $this->renderViewContent($templatePath, $context);
+    //         return $this->formatOutput($html);
+    //     } catch (ViewException $ex) {
+    //         throw new ViewException("View Error: {$ex->getMessage()}");
+    //     }
+    // }
+
     public function render(string $templatePath, array $context = []): string
     {
-        try {
-            $templatePath = $this->viewEnv->getFile($templatePath);
-            $html = $this->renderViewContent($templatePath, $context);
-            return $this->formatOutput($html);
-        } catch (ViewException $ex) {
-            throw new ViewException("View Error: {$ex->getMessage()}");
-        }
+        $start = microtime(true);
+        $timers = [];
+
+        // Step 1: Get template file
+        $t1 = microtime(true);
+        $templatePath = $this->viewEnv->getFile($templatePath);
+        $timers['get_file'] = (microtime(true) - $t1) * 1000;
+
+        // Step 2: Render view content (this is where the 8.2 seconds is)
+        $t2 = microtime(true);
+        $html = $this->renderViewContent($templatePath, $context);
+        $timers['render_content'] = (microtime(true) - $t2) * 1000;
+
+        // Step 3: Format output
+        $t3 = microtime(true);
+        $output = $this->formatOutput($html);
+        $timers['format_output'] = (microtime(true) - $t3) * 1000;
+
+        $totalTime = (microtime(true) - $start) * 1000;
+
+        // Log breakdown
+        error_log(sprintf(
+            "[PERFORMANCE] View::render breakdown:\n" .
+            "  Get file: %.2f ms\n" .
+            "  Render content: %.2f ms\n" .
+            "  Format output: %.2f ms\n" .
+            '  TOTAL: %.2f ms',
+            $timers['get_file'],
+            $timers['render_content'],
+            $timers['format_output'],
+            $totalTime,
+        ));
+
+        return $output;
     }
 
     public function pageTitle(string $title): void
@@ -34,7 +73,7 @@ class View implements ViewInterface
         $this->_pageTitle = $title;
     }
 
-    public function setLayout(string $layout): void
+    public function setLayout(NavbarType $layout): void
     {
         $this->_layout = $layout;
     }
@@ -60,9 +99,9 @@ class View implements ViewInterface
     }
 
     /**
-     * @return string
+     * @return NavbarType
      */
-    public function getLayout(): string
+    public function getLayout(): NavbarType
     {
         return $this->_layout;
     }
@@ -101,22 +140,26 @@ class View implements ViewInterface
         return $this->_token;
     }
 
+    private function loadFunctions(): void
+    {
+        static $loaded = false;
+        if (!$loaded) {
+            require_once APP . 'Functions' . DS . 'functions.php';
+            $loaded = true;
+        }
+    }
+
+    private function getLayoutPath(): string
+    {
+        if ($this->cachedLayoutPath === null) {
+            $this->cachedLayoutPath = $this->viewEnv->getLayoutPath() . DS . $this->_layout->value . '.php';
+        }
+        return $this->cachedLayoutPath;
+    }
+
     private function renderViewContent(string $templatePath, array $context): string
     {
         extract($context, EXTR_SKIP);
-
-        // Make view methods available in templates
-        $css = fn ($path = null) => $this->css($path);
-        $js = fn ($path = null, $flag = 'defer') => $this->js($path, $flag);
-        $asset = fn ($path) => $this->asset($path);
-        $token = fn () => $this->token();
-        $start = fn ($type) => $this->start($type);
-        $end = fn () => $this->end();
-        $content = fn ($type) => $this->content($type);
-        $getPageTitle = fn () => $this->getPageTitle();
-        $isUserLoggedIn = fn () => $this->isUserLoggedIn();
-        $isDevEnv = fn () => $this->isDevEnv();
-
         require_once APP . 'Functions' . DS . 'functions.php';
         require_once $templatePath;
 
@@ -124,7 +167,7 @@ class View implements ViewInterface
             throw new ViewNotFoundException('Layout not found. Please set a valid layout using setLayout() method.');
         }
 
-        $layoutPath = $this->viewEnv->getLayoutPath() . DS . $this->_layout . '.php';
+        $layoutPath = $this->viewEnv->getLayoutPath() . DS . $this->_layout->value . '.php';
         if (!file_exists($layoutPath)) {
             throw new ViewNotFoundException("Layout file '{$this->_layout}.php' not found in layout path.");
         }
@@ -192,9 +235,46 @@ class View implements ViewInterface
         return trim($result);
     }
 
-    private function css(string|null $path = null): string
+    private function css(array|string|null $formAsset): string
     {
-        return $this->viewEnv->getCss($path);
+        if (empty($formAsset)) {
+            return '';
+        }
+
+        if (is_string($formAsset)) {
+            return $this->viewEnv->getCss($formAsset);
+        }
+
+        // Try to find 'css' key deeply
+        $cssAssets = ArrayUtils::deepGet($formAsset, 'css', []);
+
+        // If not found, try wildcard
+        if (empty($cssAssets)) {
+            $allCss = ArrayUtils::deepGetAll($formAsset, '*.css');
+            $cssAssets = [];
+            foreach ($allCss as $css) {
+                if (is_array($css)) {
+                    $cssAssets = array_merge($cssAssets, array_filter($css, 'is_string'));
+                } elseif (is_string($css)) {
+                    $cssAssets[] = $css;
+                }
+            }
+        }
+
+        // Ensure it's an array and filter empty strings
+        $cssAssets = is_array($cssAssets) ? $cssAssets : [$cssAssets];
+        $cssAssets = array_unique(array_filter($cssAssets, function ($item) {
+            return is_string($item) && !empty($item);
+        }));
+
+        if (empty($cssAssets)) {
+            return '';
+        }
+
+        return implode('', array_map(
+            [$this->viewEnv, 'getCss'],
+            $cssAssets,
+        ));
     }
 
     private function js(string|null $path = null, string $flag = 'defer'): string
@@ -231,16 +311,6 @@ class View implements ViewInterface
             'footer' => $this->_footer ?? '',
             default => throw new ViewException('no content to display')
         };
-    }
-
-    private function getContentOverview(string $content): string
-    {
-        return substr(strip_tags($this->htmlDecode($content)), 0, 200) . '...';
-    }
-
-    private function htmlDecode(string|null $str): string
-    {
-        return !empty($str) ? htmlspecialchars_decode(html_entity_decode($str), ENT_QUOTES) : '';
     }
 
     private function isUserLoggedIn(): bool

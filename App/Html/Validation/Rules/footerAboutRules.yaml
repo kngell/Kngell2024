@@ -1,0 +1,9 @@
+content:
+  display: Content
+  required: true
+  min: 3
+
+logo_url:
+  display: Logo Url
+  required: true
+  min: 3

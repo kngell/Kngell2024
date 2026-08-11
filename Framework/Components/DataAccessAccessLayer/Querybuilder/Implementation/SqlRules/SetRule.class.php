@@ -11,8 +11,9 @@ class SetRule extends AbstractRules implements QueryRulesInterface
         string $method,
         QueryState $state,
         private array $setData,
+        ?string $customAlias = null,
     ) {
-        parent::__construct($em, $method, $state);
+        parent::__construct($em, $method, $customAlias, $state);
     }
 
     public function getRule(array $setData): string

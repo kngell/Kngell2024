@@ -19,7 +19,7 @@ abstract class AbstractStatement extends SqlQuery implements SqlStatementInterfa
 
     protected function initialize(): void
     {
-        $this->statementType->validate(array_keys($this->queryFlow));
+        $this->statementType->validate($this->queryFlow, $this->map ?? []);
 
         $buildOrder = $this->getStatement()->getBuildOrder();
         if (empty($buildOrder)) {
@@ -54,34 +54,39 @@ abstract class AbstractStatement extends SqlQuery implements SqlStatementInterfa
         $this->builtClauses[] = $clause;
 
         return (bool) array_intersect(
-            array_keys($this->queryFlow),
+            $this->queryFlow,
             $methods,
         );
     }
 
-    protected function buildWhereClauseFromMap(): void
+    protected function buildWhereClauseFromMap(array $where = []): void
     {
-        $conditionsMap = $this->map;
-        if (!isset($conditionsMap['where']) || empty($conditionsMap['where'])) {
+        $where = $this->getWhereConditions($where);
+        if (empty($where)) {
             return;
         }
 
-        $builder = new ConditionGroupBuilder($this->em);
-        $where = $conditionsMap['where'];
-
-        /** @var SqlGenericDataPayload $conditionData */
-        foreach ($where as $conditionData) {
-            $builder->addCondition(
-                $conditionData->getMethod(),
-                $conditionData->getData(),
-            );
-        }
-        $groupedElements = $builder->getGroupedElements();
+        $helper = new ConditionBuilderHelper(
+            $this->em,
+            $where,
+        );
+        $groupedElements = $helper->getBuilder()->getGroupedElements();
         if ($groupedElements->isEmpty()) {
             return;
         }
         foreach ($groupedElements->all() as $element) {
             $this->add($element);
         }
+    }
+
+    private function getWhereConditions(array $where): array
+    {
+        if (!empty($where)) {
+            return $where;
+        }
+        if (empty($this->map['where'])) {
+            return [];
+        }
+        return $this->map['where'];
     }
 }

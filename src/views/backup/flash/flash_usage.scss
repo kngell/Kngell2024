@@ -1,0 +1,33 @@
+@use "flash-message.mixin" as *;
+
+// Default flash component with standard tokens
+@include flash-message();
+
+// Toast-only, custom radius, no Bootstrap aliases
+@include flash-message(
+  $namespace: "toast",
+  $config: (
+    radius: 1.6rem,
+    legacy-bootstrap: false,
+    enter-duration: 350ms
+  )
+);
+// Example: Override only the danger variant
+@use "sass:map";
+@use "flash-message.mixin" as *;
+@use "variables" as *;
+
+@include flash-message(
+  $variants: map.merge(
+      $flash-default-variants,
+      (
+        danger: (
+          bg: $red-50,
+          border: $red-700,
+          text: $red-900,
+          icon: $red-700,
+          progress: $red-700
+        )
+      )
+    )
+);

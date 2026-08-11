@@ -1,4 +1,5 @@
 # Admin routes group
+# Admin routes group
 admin:
   _group:
     prefix: /admin
@@ -19,12 +20,6 @@ admin:
     controller: product-delete
     method: confirm
     httpMethod: post
-  /{controller}/{id+}/{method}:
-# Dynamic routes can be defined in groups too
-admin2:
-  _group:
-    prefix: /admin2
-    middleware: [auth, admin]
   /{controller}/index:
     method: index
   /{controller}/show/{id}:
@@ -32,6 +27,41 @@ admin2:
   /{controller}/create:
     method: create
     httpMethod: post
+  /content-block-page/add/{type}:
+    controller: content-block-page
+    method: add
+    httpMethod: get
+  /content-block-page/edit/{type}/{id}:
+    controller: content-block-page
+    method: edit
+    httpMethod: get
+  /content-block-page/{id:\d+}/edit/{type}:
+    controller: content-block-page
+    method: edit
+    httpMethod: get
+  /content-block-save/index/{type}:
+    controller: content-block-save
+    method: index
+    httpMethod: post
+  /content-block-list/index/{type}:
+    controller: content-block-list
+    method: index
+    httpMethod: get
+
+  # ==========================================
+  # Dynamic Fallbacks (Keep these at the very bottom!)
+  # ==========================================
+
+  # Matches: /admin/posts/42/edit/featured (Where ID must be a number)
+  '/{controller}/{id:\d+}/{method}/{type}':
+  # Matches: /admin/posts/a1b2c3d4-e5f6/edit (Where ID is a UUID/Hash)
+  '/{controller}/{id:[\da-f-]+}/{method}':
+  '/{controller}/{method}/{id:[\da-f-]+}':
+  # Matches: /admin/posts/42/edit (Where ID must be a number)
+  '/{controller}/{id:\d+}/{method}':
+  '/{controller}/{method}/{id:\d+}':
+  # Matches generic actions: /admin/reports/export
+  "/{controller}/{method}":
 
 /{controller}/{id}/edit:
   method: edit
@@ -62,15 +92,19 @@ admin2:
 #   ResponseStatus:
 #     HttpStatusCode: 201  # Created
 
-/{controller}/{method}/{id:\d+}:
-  # This will match /products/show/123, /users/edit/456, etc.
-/{controller}/{id:\d+}/{method}:
-
 # API routes group
 api:
   _group:
     prefix: /api
     middleware: [api]
+  /form-validation/{method}:
+    controller: Form-validation-api
+    httpMethod: get
+    responseBody:
+      type: JSON
+      produces: application/json
+    ResponseStatus:
+      HttpStatusCode: 200
   /v1/users:
     controller: api
     method: getUsers
@@ -152,6 +186,18 @@ admin_api:
   controller: login
   method: authenticate-user
   httpMethod: post
+/cart:
+  controller: user-cart
+  method: get-cart
+  httpMethod: get
+/checkout:
+  controller: checkout
+  method: index
+  httpMethod: get
+/csrf-token:
+  controller: token-resource
+  method: provide-token
+  httpMethod: get
 
 /{title}/{id:\d+}/{page:\d+}:
   controller: products
@@ -278,6 +324,11 @@ admin_api:
   controller: cart
   method: restore-user-cart
   httpMethod: post
-/admin/{controller}/{method}:
-  middleware: requireLogin
+
+/{controller}/{id:[\da-f-]+}/{method}:
+/{controller}/{method}/{id:[\da-f-]+}:
+
+# Then this (if you keep it)
+/{controller}/{id:\d+}/{method}:
+/{controller}/{method}/{id:\d+}:
 /{controller}/{method}:

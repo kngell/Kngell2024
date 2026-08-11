@@ -1,7 +1,7 @@
 @use "css/backend/admin/abstracts/variables" as *;
-@use "css/backend/admin/abstracts/functions" as *;
-@use "responsive" as *;
-@use "text-style" as *;
+@use "css/globals/functions/functions" as *;
+@use "css/globals/mixins/responsive" as *;
+@use "css/globals/mixins/text-style" as *;
 @use "progress-bar" as *;
 
 @mixin page-footer {
@@ -13,7 +13,7 @@
   display: flex;
   padding: 1.6rem 0rem;
   margin-top: auto;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
   gap: 1.6rem;
   align-self: stretch;
@@ -73,12 +73,10 @@
     }
   }
   .buttons {
+    width: 100%;
     display: flex;
+    justify-content: space-between;
     align-items: center;
     gap: 1.6rem;
-
-    @include respond-below(md) {
-      justify-content: space-between;
-    }
   }
 }

@@ -1,5 +1,10 @@
 @use "sass:map";
+@use "sass:color";
 @use "partials/color_map_variable" as *;
+@use "css/globals/design_token" as *;
+@use "css/globals/variables" as *;
+@use "functions" as *;
+@forward "css/globals/variables";
 
 /* ************** TYPOGRAPHY ************** */
 :root {
@@ -26,23 +31,7 @@ $font: (
   weight-normal: 400,
   weight-medium: 500
 );
-/********* COLORS **********/
-$primary-color: #4a6cf7;
-$colors-ecommerce: (
-  white: #ffffff,
-  black: #000000,
-  gray-100: #f5f5f5,
-  gray-300: #919191,
-  gray-400: #989898,
-  gray-500: #656565,
-  gray-600: #666666,
-  gray-800: #2e2e2e,
-  focus: #0066cc
-);
-$bar-color1: #d9d9d9;
-//Buttuns
-$btn-border-color: #545454;
-$star-color-full: #ffb547;
+
 // Banner - hero section
 $color-muted: #909090;
 $color-white: #fff;
@@ -66,6 +55,7 @@ $color-big-card-light: #f9f9f9;
 $color-big-card-normal: #eaeaea;
 $color-big-card-dark: #2c2c2c;
 $color-dark: #353535;
+
 $banner-bg-primary: #211c24;
 $banner-text-white: #ffffff;
 $banner-text-muted: #989898;
@@ -73,9 +63,11 @@ $banner-border-color: #ffffff;
 $banner-bg-form: #f5f5f5;
 $banner-text-gray: #787878;
 $footer-text: #cfcfcf;
-//Categories
+
+// Categories
 $sections-bg1: #fafafa;
-//Products
+
+// Products
 $product-bg-color: #f6f6f6;
 $color-underline: #b5b5b5;
 $color-text-filter: #a7a7a7;
@@ -85,6 +77,7 @@ $color-scroll-barre-bg1: #414141;
 $color-scroll-barre-bg2: #cecece;
 $color-text-details: #9d9d9d;
 $color-features-border: #cdcdcd;
+
 /* ************** TYPOGRAPHY ************** */
 $base-font-size: 62.5%;
 $paragraph-size: 1.6rem;
@@ -93,30 +86,27 @@ $heading-font-family: "Manrope", sans-serif;
 $font-weight-bold: 700;
 $heading-line-height: 1.4;
 $new-arrival-tag-color: #8b8b8b;
-//BreadCrummbs color
+
+// BreadCrummbs color
 $breadcrumbs-color: #a4a4a4;
-//Brands
+
+// Brands
 $brand-span-color: #929292;
-//Products
+
+// Products
 $product-header-color: #6c6c6c;
 $product-header-dropdown-border: #d4d4d4;
 $product-price-color: #a0a0a0;
 $truck-color: #797979;
 $feature-text-color: #717171;
-//Reviews
+
+// Reviews
 $review-text-color: #7e7e7e;
-//checkout multisteps form
-$checkout-primary-color: #007bff;
-$checkout-success-color: #28a745;
-$checkout-danger-color: #dc3545;
-$checkout-secondary-color: #6c757d;
-$checkout-light-grey: #e0e0e0;
-$checkout-dark-grey: #777;
-$checkout-text-color: #333;
-$checkout-box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+
+// Checkout multisteps form
 $form-step-address-title: #17183b;
 $form-step-shipping-bg: #d1d1d8;
-$checkout-step-background-color: #fff;
+
 /* ************** RADIUS ************** */
 $category-border-radius: 15px;
 
@@ -130,27 +120,13 @@ $input-config: (
   label-floating-color: #333,
   font-size: 1.6rem
 );
+
 $padding: (
   top: 1.6rem,
   right: 1.6rem,
   bottom: 0.6rem,
   left: 1.6rem
 );
-/* ************** BREAKPOINTS ************** */
-$breakpoints: (
-  "xs": 480px,
-  "sm": 576px,
-  "md": 768px,
-  "lg": 992px,
-  "xl": 1200px,
-  "xxl": 1400px
-);
-// $breakpoints-short: (
-//   mobile: 480px,
-//   tablet: 640px,
-//   desktop: 1024px,
-//   large: 1440px,
-// );
 
 $spacing: (
   xs: 0.4rem,
@@ -177,4 +153,359 @@ $sizes: (
   logo-height: 3.2rem,
   logo-height-mobile: 2rem,
   divider-height: 2.4rem
+);
+
+// ============================================
+// FRONTEND BUTTON CONFIG (Like Backend)
+// ============================================
+
+$button-sizes: (
+  sm: (
+    padding-y: 0.6rem,
+    padding-x: 1.2rem,
+    icon-size: 1.4rem
+  ),
+  md: (
+    padding-y: 1rem,
+    padding-x: 1.6rem,
+    icon-size: 1.8rem
+  ),
+  lg: (
+    padding-y: 1.2rem,
+    padding-x: 2.4rem,
+    icon-size: 2rem
+  ),
+  xl: (
+    padding-y: 1.6rem,
+    padding-x: 3.2rem,
+    icon-size: 2.4rem
+  ),
+  hero-btn-size: (
+    padding-y: 1.6rem,
+    padding-x: 5.6rem,
+    icon-size: null
+  )
+);
+
+$button-variants: (
+  primary: (
+    background: map-get($colors-ecommerce, black),
+    color: map-get($colors-ecommerce, white),
+    hover-background: color.adjust(map-get($colors-ecommerce, black), $lightness: 15%),
+    hover-color: map-get($colors-ecommerce, white),
+    active-bg-color: color.adjust(map-get($colors-ecommerce, black), $lightness: -10%),
+    typography: (
+      font-family: inherit,
+      font-weight: 500,
+      font-size: 1.6rem,
+      line-height: 1.5,
+      letter-spacing: 0.5px
+    ),
+    radius: 0.6rem,
+    shadow: 0 4px 15px rgba(0, 0, 0, 0.1)
+  ),
+
+  secondary: (
+    background: transparent,
+    color: map-get($colors-ecommerce, gray-800),
+    border: 1px solid map-get($colors-ecommerce, gray-400),
+    hover-background: map-get($colors-ecommerce, gray-100),
+    hover-color: map-get($colors-ecommerce, black),
+    active-bg-color: map-get($colors-ecommerce, gray-300),
+    typography: (
+      font-family: inherit,
+      font-weight: 400,
+      font-size: 1.6rem,
+      line-height: 1.5,
+      letter-spacing: 0.5px
+    ),
+    radius: 0.6rem,
+    shadow: null
+  ),
+
+  // Dark - matches backend dark
+  dark: (
+      background: map-get($colors-ecommerce, black),
+      color: map-get($colors-ecommerce, white),
+      hover-background: color.adjust(map-get($colors-ecommerce, black), $lightness: 20%),
+      hover-color: map-get($colors-ecommerce, white),
+      active-bg-color: color.adjust(map-get($colors-ecommerce, black), $lightness: -10%),
+      typography: (
+        font-family: inherit,
+        font-weight: 500,
+        font-size: 1.6rem,
+        line-height: 1.5,
+        letter-spacing: 0.5px
+      ),
+      radius: 0.6rem,
+      shadow: 0 4px 15px rgba(0, 0, 0, 0.1)
+    ),
+
+  light: (
+    background: map-get($colors-ecommerce, white),
+    color: map-get($colors-ecommerce, black),
+    hover-background: map-get($colors-ecommerce, gray-100),
+    hover-color: map-get($colors-ecommerce, black),
+    active-bg-color: map-get($colors-ecommerce, gray-300),
+    typography: (
+      font-family: inherit,
+      font-weight: 500,
+      font-size: 1.6rem,
+      line-height: 1.5,
+      letter-spacing: 0.5px
+    ),
+    radius: 0.6rem,
+    shadow: 0 2px 8px rgba(0, 0, 0, 0.05)
+  ),
+
+  outline-white: (
+    background: transparent,
+    color: $color-white,
+    border: 1px solid $color-white,
+    hover-background: $color-white,
+    hover-color: $banner-bg-primary,
+    active-bg-color: color.adjust($color-white, $lightness: -5%),
+    typography: (
+      font-family: inherit,
+      font-weight: 500,
+      font-size: 1.6rem,
+      line-height: 1.5,
+      letter-spacing: 0.5px
+    ),
+    radius: 0.6rem,
+    shadow: null
+  ),
+
+  outline-dark: (
+    background: transparent,
+    color: $color-dark,
+    border: 1px solid $color-dark,
+    hover-background: $banner-bg-primary,
+    hover-color: $color-white,
+    active-bg-color: color.adjust($banner-bg-primary, $lightness: -10%),
+    typography: (
+      font-family: inherit,
+      font-weight: 400,
+      font-size: 1.6rem,
+      line-height: 1.5,
+      letter-spacing: 0.5px
+    ),
+    radius: 0.6rem,
+    shadow: null
+  ),
+
+  // Danger
+  danger: (
+      background: $danger-color,
+      color: map-get($colors-ecommerce, white),
+      hover-background: color.adjust($danger-color, $lightness: -10%),
+      hover-color: map-get($colors-ecommerce, white),
+      active-bg-color: color.adjust($danger-color, $lightness: -15%),
+      typography: (
+        font-family: inherit,
+        font-weight: 500,
+        font-size: 1.6rem,
+        line-height: 1.5,
+        letter-spacing: 0.5px
+      ),
+      radius: 0.6rem,
+      shadow: 0 4px 15px rgba(220, 53, 69, 0.3)
+    ),
+
+  // Success
+  success: (
+      background: $success-color,
+      color: map-get($colors-ecommerce, white),
+      hover-background: color.adjust($success-color, $lightness: -10%),
+      hover-color: map-get($colors-ecommerce, white),
+      active-bg-color: color.adjust($success-color, $lightness: -15%),
+      typography: (
+        font-family: inherit,
+        font-weight: 500,
+        font-size: 1.6rem,
+        line-height: 1.5,
+        letter-spacing: 0.5px
+      ),
+      radius: 0.6rem,
+      shadow: 0 4px 15px rgba(40, 167, 69, 0.3)
+    ),
+
+  // Ghost
+  ghost: (
+      background: transparent,
+      color: map-get($colors-ecommerce, gray-600),
+      hover-background: map-get($colors-ecommerce, gray-100),
+      hover-color: map-get($colors-ecommerce, black),
+      active-bg-color: map-get($colors-ecommerce, gray-200),
+      typography: (
+        font-family: inherit,
+        font-weight: 400,
+        font-size: 1.6rem,
+        line-height: 1.5,
+        letter-spacing: 0.5px
+      ),
+      radius: 0.6rem,
+      shadow: null
+    ),
+
+  add-to-cart: (
+    background: map-get($colors-ecommerce, gray-600),
+    color: map-get($colors-ecommerce, white),
+    hover-background: color.adjust(map-get($colors-ecommerce, black), $lightness: 15%),
+    hover-color: map-get($colors-ecommerce, white),
+    active-bg-color: color.adjust(map-get($colors-ecommerce, black), $lightness: -10%),
+    typography: (
+      font-family: inherit,
+      font-weight: 500,
+      font-size: 1.4rem,
+      line-height: 1.71429,
+      letter-spacing: 0.3px
+    ),
+    radius: 0.6rem,
+    shadow: null,
+    gap: 0.8rem
+  ),
+
+  // View Details
+  view-details: (
+      background: transparent,
+      color: map-get($colors-ecommerce, gray-800),
+      border: 1px solid map-get($colors-ecommerce, gray-400),
+      hover-background: map-get($colors-ecommerce, gray-100),
+      hover-color: map-get($colors-ecommerce, black),
+      active-bg-color: map-get($colors-ecommerce, gray-300),
+      typography: (
+        font-family: inherit,
+        font-weight: 400,
+        font-size: 1.4rem,
+        line-height: 1.71429,
+        letter-spacing: 0.3px
+      ),
+      radius: 0.6rem,
+      shadow: null
+    ),
+  checkout-next: (
+    background: $primary-color,
+    color: map-get($colors-ecommerce, white),
+    hover-background: color.adjust($primary-color, $lightness: -10%),
+    hover-color: map-get($colors-ecommerce, white),
+    active-bg-color: color.adjust($primary-color, $lightness: -15%),
+    typography: (
+      font-family: inherit,
+      font-weight: 500,
+      font-size: 1.6rem,
+      line-height: 1.5,
+      letter-spacing: 0.5px
+    ),
+    radius: 0.6rem,
+    shadow: 0 4px 15px rgba(0, 123, 255, 0.3)
+  ),
+  checkout-back: (
+    background: transparent,
+    color: $secondary-color,
+    border: 1px solid $secondary-color,
+    hover-background: $secondary-color,
+    hover-color: map-get($colors-ecommerce, white),
+    active-bg-color: color.adjust($secondary-color, $lightness: -10%),
+    typography: (
+      font-family: inherit,
+      font-weight: 400,
+      font-size: 1.6rem,
+      line-height: 1.5,
+      letter-spacing: 0.5px
+    ),
+    radius: 0.6rem,
+    shadow: null
+  ),
+  checkout-submit: (
+    background: $success-color,
+    color: map-get($colors-ecommerce, white),
+    hover-background: color.adjust($success-color, $lightness: -10%),
+    hover-color: map-get($colors-ecommerce, white),
+    active-bg-color: color.adjust($success-color, $lightness: -15%),
+    typography: (
+      font-family: inherit,
+      font-weight: 600,
+      font-size: 1.8rem,
+      line-height: 1.5,
+      letter-spacing: 0.5px
+    ),
+    radius: 0.6rem,
+    shadow: 0 4px 15px rgba(40, 167, 69, 0.3)
+  )
+);
+// ============================================
+// CHECKOUT CONFIGURATION
+// ============================================
+$checkout-config: (
+  step: (
+    background: map-get($colors-ecommerce, white),
+    border-radius: $radius-m,
+    box-shadow: $shadow-s,
+    padding: map.get($spacing, xl),
+    transition: all 0.3s ease
+  ),
+  progress: (
+    height: 80px,
+    background: map-get($colors-ecommerce, gray-100),
+    border-radius: $radius-m,
+    padding: map.get($spacing, md) map.get($spacing, xl),
+    margin-bottom: map.get($spacing, xl)
+  )
+);
+$checkout-button-sizes: (
+  checkout: (
+    padding-y: 1.2rem,
+    padding-x: 2.5rem,
+    icon-size: 1.6rem
+  )
+);
+
+// Checkout button variants
+$checkout-button-variants: (
+  next: (
+    background: $primary-color,
+    color: map-get($colors-ecommerce, white),
+    hover-background: color.adjust($primary-color, $lightness: -10%),
+    active-bg-color: color.adjust($primary-color, $lightness: -15%),
+    typography: (
+      font-family: inherit,
+      font-weight: 500,
+      font-size: 1.4rem,
+      line-height: 1.5,
+      letter-spacing: 0.5px
+    ),
+    radius: 0.5rem,
+    shadow: null
+  ),
+  prev: (
+    background: $secondary-color,
+    color: map-get($colors-ecommerce, white),
+    hover-background: color.adjust($secondary-color, $lightness: -10%),
+    active-bg-color: color.adjust($secondary-color, $lightness: -15%),
+    typography: (
+      font-family: inherit,
+      font-weight: 500,
+      font-size: 1.4rem,
+      line-height: 1.5,
+      letter-spacing: 0.5px
+    ),
+    radius: 0.5rem,
+    shadow: null
+  ),
+  submit: (
+    background: $success-color,
+    color: map-get($colors-ecommerce, white),
+    hover-background: color.adjust($success-color, $lightness: -10%),
+    active-bg-color: color.adjust($success-color, $lightness: -15%),
+    typography: (
+      font-family: inherit,
+      font-weight: 500,
+      font-size: 1.4rem,
+      line-height: 1.5,
+      letter-spacing: 0.5px
+    ),
+    radius: 0.5rem,
+    shadow: null
+  )
 );

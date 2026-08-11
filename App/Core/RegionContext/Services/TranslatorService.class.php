@@ -12,6 +12,7 @@ class TranslatorService implements TranslatorServiceInterface
     private ?CacheInterface $cache = null;
 
     public function __construct(
+        private FileContentInterface $fileContentManager,
         string $defaultLocale = 'en_US',
         string $fallbackLocale = 'en_US',
         string $translationsPath = '',
@@ -30,12 +31,12 @@ class TranslatorService implements TranslatorServiceInterface
         $locale = $locale ?? $this->locale;
         $translation = $this->getTranslation($key, $locale);
 
-        // If not found in requested locale, try fallback
+        // Si la traduction n'est pas trouvée dans la langue demandée, on tente le fallback
         if ($translation === $key && $locale !== $this->fallbackLocale) {
             $translation = $this->getTranslation($key, $this->fallbackLocale);
         }
 
-        // Replace parameters
+        // Remplacement dynamique des paramètres ({param})
         if (!empty($parameters)) {
             $translation = $this->replaceParameters($translation, $parameters);
         }
@@ -63,34 +64,34 @@ class TranslatorService implements TranslatorServiceInterface
     }
 
     /**
-     * Load all translations for a specific domain/locale.
+     * Charge tous les termes d'un domaine / d'une table de traduction spécifique (ex: "common", "hero").
      */
     public function loadDomain(string $domain, ?string $locale = null): void
     {
         $locale = $locale ?? $this->locale;
         $cacheKey = $this->getCacheKey($domain, $locale);
 
-        // Try cache first
+        // Tentative de récupération depuis le cache
         if ($this->cacheEnabled && $this->cache && $this->cache->exists($cacheKey)) {
             $translations = $this->cache->get($cacheKey);
-            $this->mergeTranslations($translations, $domain);
+            $this->mergeTranslations($translations, $locale);
             return;
         }
 
-        // Load from file
+        // Résolution du fichier et chargement sécurisé via le FileContentManager
         $filePath = $this->getDomainFilePath($domain, $locale);
-        $translations = $this->loadTranslationsFromFile($filePath, $domain);
+        $translations = $this->loadTranslationsFromSource($filePath, $domain);
 
-        // Cache if enabled
+        // Sauvegarde dans le cache si activé
         if ($this->cacheEnabled && $this->cache) {
-            $this->cache->set($cacheKey, $translations, 3600); // 1 hour
+            $this->cache->set($cacheKey, $translations, 3600); // Cache d'une heure
         }
 
-        $this->mergeTranslations($translations, $domain);
+        $this->mergeTranslations($translations, $locale);
     }
 
     /**
-     * Clear loaded translations (useful for testing).
+     * Vide le registre des traductions chargées en mémoire (pratique pour les tests unitaires).
      */
     public function clear(): void
     {
@@ -98,7 +99,7 @@ class TranslatorService implements TranslatorServiceInterface
     }
 
     /**
-     * Get available locales.
+     * Scane le dossier racine des langues pour lister les locales disponibles.
      */
     public function getAvailableLocales(): array
     {
@@ -119,151 +120,135 @@ class TranslatorService implements TranslatorServiceInterface
 
     private function getTranslation(string $key, string $locale): string
     {
-        // Check if already loaded
+        // Si le terme complet est déjà en mémoire, on le renvoie directement
         if (isset($this->translations[$locale][$key])) {
             return $this->translations[$locale][$key];
         }
 
-        // Parse key to extract domain (e.g., "common.yes" -> domain="common", key="yes")
+        // Extraction du domaine (ex: "common.yes" -> domaine = "common", sous-clé = "yes")
         $parts = explode('.', $key, 2);
         if (count($parts) !== 2) {
-            return $key; // Invalid key format
+            return $key; // Format de clé invalide
         }
 
         [$domain, $itemKey] = $parts;
 
-        // Lazy-load the domain
+        // Lazy-loading du fichier de domaine s'il n'est pas encore instancié
         $this->loadDomain($domain, $locale);
 
-        // Return translation or original key if not found
         return $this->translations[$locale][$key] ?? $key;
     }
 
-    private function loadTranslationsFromFile(string $filePath, string $domain): array
+    private function loadTranslationsFromSource(string $filePath, string $domain): array
     {
         if (!file_exists($filePath)) {
             return [];
         }
 
-        $content = file_get_contents($filePath);
-
-        // Support different formats
         $extension = pathinfo($filePath, PATHINFO_EXTENSION);
 
+        // Traitement sécurisé du format PHP (sans eval()) via ton gestionnaire
+        if ($extension === 'php') {
+            $translations = $this->fileContentManager->executePhpFile($filePath);
+            return $this->flattenArray(is_array($translations) ? $translations : [], $domain);
+        }
+
+        // Traitement du format JSON via ton objet de contenu typé JsonFile
+        if ($extension === 'json') {
+            $jsonFile = new JsonFile($filePath, $this->fileContentManager);
+            return $this->flattenArray($jsonFile->getContentAsArray(), $domain);
+        }
+
+        // Lecture brute du contenu pour les autres extensions secondaires (YML, INI)
+        $content = $this->fileContentManager->read($filePath);
+
         return match($extension) {
-            'php' => $this->loadPhpTranslations($content, $domain),
-            'json' => $this->loadJsonTranslations($content, $domain),
             'yml', 'yaml' => $this->loadYamlTranslations($content, $domain),
             default => $this->loadIniTranslations($content, $domain),
         };
     }
 
-    private function loadPhpTranslations(string $content, string $domain): array
+    private function loadYamlTranslations(string $content, string $domain): array
     {
-        $translations = eval('?>' . $content);
-return $this->flattenArray($translations ?? [], $domain);
-}
+        if (!function_exists('yaml_parse')) {
+            throw new RuntimeException('YAML extension not installed');
+        }
+        $translations = yaml_parse($content);
+        return $this->flattenArray($translations ?? [], $domain);
+    }
 
-private function loadJsonTranslations(string $content, string $domain): array
-{
-$translations = json_decode($content, true);
-return $this->flattenArray($translations ?? [], $domain);
-}
+    private function loadIniTranslations(string $content, string $domain): array
+    {
+        $translations = parse_ini_string($content, true, INI_SCANNER_TYPED);
+        return $this->flattenArray($translations ?? [], $domain);
+    }
 
-private function loadYamlTranslations(string $content, string $domain): array
-{
-if (!function_exists('yaml_parse')) {
-throw new RuntimeException('YAML extension not installed');
-}
-$translations = yaml_parse($content);
-return $this->flattenArray($translations ?? [], $domain);
-}
+    /**
+     * Aplatit de manière récursive les dictionnaires multidimensionnels en notation pointée (dot notation).
+     */
+    private function flattenArray(array $array, string $prefix = ''): array
+    {
+        $result = [];
+        foreach ($array as $key => $value) {
+            $newKey = $prefix ? $prefix . '.' . $key : $key;
 
-private function loadIniTranslations(string $content, string $domain): array
-{
-$translations = parse_ini_string($content, true, INI_SCANNER_TYPED);
-return $this->flattenArray($translations ?? [], $domain);
-}
+            if (is_array($value)) {
+                $result = array_merge($result, $this->flattenArray($value, $newKey));
+            } else {
+                $result[$newKey] = $value;
+            }
+        }
+        return $result;
+    }
 
-/**
-* Flatten nested array to dot notation.
-*/
-private function flattenArray(array $array, string $prefix = ''): array
-{
-$result = [];
-foreach ($array as $key => $value) {
-$newKey = $prefix ? $prefix . '.' . $key : $key;
+    /**
+     * Enregistre les traductions plates directement sous l'arborescence de la locale correspondante.
+     */
+    private function mergeTranslations(array $newTranslations, string $locale): void
+    {
+        foreach ($newTranslations as $key => $value) {
+            $this->translations[$locale][$key] = $value;
+        }
+    }
 
-if (is_array($value)) {
-$result = array_merge($result, $this->flattenArray($value, $newKey));
-} else {
-$result[$newKey] = $value;
-}
-}
-return $result;
-}
+    private function replaceParameters(string $translation, array $parameters): string
+    {
+        foreach ($parameters as $key => $value) {
+            $placeholder = '{' . $key . '}';
+            $translation = str_replace($placeholder, (string) $value, $translation);
+        }
+        return $translation;
+    }
 
-private function mergeTranslations(array $newTranslations, string $domain): void
-{
-foreach ($newTranslations as $key => $value) {
-// Extract locale from key if present in format "locale.domain.key"
-$keyParts = explode('.', $key, 3);
+    private function getDefaultTranslationsPath(): string
+    {
+        return dirname(__DIR__, 3) . '/translations';
+    }
 
-if (count($keyParts) === 3) {
-[$locale, $actualDomain, $itemKey] = $keyParts;
-$fullKey = $actualDomain . '.' . $itemKey;
-$this->translations[$locale][$fullKey] = $value;
-} else {
-// Use current locale
-$this->translations[$this->locale][$key] = $value;
-}
-}
-}
+    private function getDomainFilePath(string $domain, string $locale): string
+    {
+        $formats = ['php', 'json', 'yml', 'ini'];
 
-private function replaceParameters(string $translation, array $parameters): string
-{
-foreach ($parameters as $key => $value) {
-$placeholder = '{' . $key . '}';
-$translation = str_replace($placeholder, (string) $value, $translation);
-}
-return $translation;
-}
+        foreach ($formats as $format) {
+            $filePath = sprintf(
+                '%s/%s/%s.%s',
+                $this->translationsPath,
+                $locale,
+                $domain,
+                $format,
+            );
 
-private function getDefaultTranslationsPath(): string
-{
-return dirname(__DIR__, 3) . '/translations';
-}
+            if (file_exists($filePath)) {
+                return $filePath;
+            }
+        }
 
-private function getDomainFilePath(string $domain, string $locale): string
-{
-// Try multiple file formats
-$formats = ['php', 'json', 'yml', 'ini'];
+        // Route fallback par défaut vers un fichier PHP si aucun n'est trouvé
+        return sprintf('%s/%s/%s.php', $this->translationsPath, $locale, $domain);
+    }
 
-foreach ($formats as $format) {
-$filePath = sprintf(
-'%s/%s/%s.%s',
-$this->translationsPath,
-$locale,
-$domain,
-$format,
-);
-
-if (file_exists($filePath)) {
-return $filePath;
-}
-}
-
-// Return a non-existent path for domains without translations
-return sprintf(
-'%s/%s/%s.php',
-$this->translationsPath,
-$locale,
-$domain,
-);
-}
-
-private function getCacheKey(string $domain, string $locale): string
-{
-return 'translations.' . $domain . '.' . $locale;
-}
+    private function getCacheKey(string $domain, string $locale): string
+    {
+        return 'translations.' . $domain . '.' . $locale;
+    }
 }

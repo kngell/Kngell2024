@@ -2,10 +2,10 @@
 @use "sass:map";
 @use "sass:color";
 @use "css/backend/admin/abstracts/variables" as *;
-@use "css/backend/admin/abstracts/functions" as *;
-@use "miscellaneous" as *;
-@use "text-style" as *;
-@use "icon_with_badge" as *;
+@use "css/globals/functions/functions" as *;
+@use "css/globals/mixins/miscellaneous" as *;
+@use "css/globals/mixins/text-style" as *;
+@use "css/globals/mixins/icon_with_badge" as *;
 
 // Global map to track all included styles
 $_included-styles: () !default;
@@ -17,7 +17,7 @@ $included-file-styles: () !default;
     $_included-styles: map.merge(
       $_included-styles,
       (
-        $unique-id: true,
+        $unique-id: true
       )
     ) !global;
     @content;
@@ -582,6 +582,7 @@ $included-file-styles: () !default;
     $check-color: map.get($options, "check-color");
     $checkmark-type: map.get($options, "checkmark-type");
     $svg-checkmark-data-uri: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M5 12l5 5L20 7' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    $align-label: map.get($options, "align-label");
 
     input[type="checkbox"] {
       display: none;
@@ -589,7 +590,7 @@ $included-file-styles: () !default;
       & + .#{$input-box}__label {
         position: relative;
         display: flex;
-        align-items: flex-start;
+        align-items: $align-label;
         cursor: pointer;
         gap: $gap;
         @include apply-text-style(map.get($options, "default-label-style"));

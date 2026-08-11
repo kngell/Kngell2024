@@ -1,45 +1,30 @@
 <?php
 
 declare(strict_types=1);
+
 class DocumentUploadService extends AbstractFileUploadService
 {
-    public function __construct(
-        private DocumentProcessor $documentProcessor,
-        FileMoverInterface $fileMover,
-        FileMetadataService $metadataService,
-        Request $request,
-        ?string $fieldName = null,
-    ) {
-        parent::__construct($fileMover, $request, $fieldName);
-    }
-
-    public function getStorageBaseDirectory(): string
-    {
-        throw new Exception('Not implemented');
-    }
-
-    public function getWebBasePath(): string
-    {
-        throw new Exception('Not implemented');
-    }
+    private const string TARGET_DIR = STORAGE . 'uploads/documents/';
+    private const string TEMP_DIR = STORAGE . 'uploads/temp/documents/';
+    private const string WEB_PATH = '/uploads/documents/';
 
     public function getHandledUploadFileType(): UploadFileType
     {
         return UploadFileType::DOCUMENT;
     }
 
-    protected function getTempDirectory(): string
+    public function getWebBasePath(): string
     {
-        throw new Exception('Not implemented');
-    }
-
-    protected function getProcessor(): object
-    {
-        return $this->documentProcessor;
+        return self::WEB_PATH;
     }
 
     protected function getTargetDirectory(): string
     {
-        return SRC . 'Upload' . DS . 'documents' . DS;
+        return self::TARGET_DIR;
+    }
+
+    protected function getTempDirectory(): string
+    {
+        return self::TEMP_DIR;
     }
 }

@@ -12,6 +12,8 @@ interface EntityMapperInterface
 
     public function getEntityKeyProperty(Entity $entity): string|bool;
 
+    public function getFormat(Entity $entity): ?DisplayFormat;
+
     public function getFieldToPropertyMap(Entity $entity): array;
 
     public function convertToPropertyName(string $fieldName): string;

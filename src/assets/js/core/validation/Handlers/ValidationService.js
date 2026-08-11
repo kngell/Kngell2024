@@ -46,7 +46,7 @@ export default class ValidationService {
       const rulesData = {
         rules: data.rules,
         settings: data.settings,
-        loadedAt: Date.now(),
+        loadedAt: Date.now()
       };
 
       this.cache.set(rulesName, rulesData);
@@ -78,7 +78,7 @@ export default class ValidationService {
   }
 
   getApiBaseUrl() {
-    return process.env.NODE_ENV === "development" ? "/form-validation-api" : "/api/validation-api";
+    return process.env.NODE_ENV === "development" ? "/api/form-validation" : "/api/validation-api";
   }
 
   getRulesFileFromDOM() {
@@ -91,42 +91,42 @@ export default class ValidationService {
       productRules: {
         rules: {
           sku: { display: "SKU", required: true, min: 3, max: 64 },
-          name: { display: "Product Name", required: true, min: 3, max: 255 },
+          name: { display: "Product Name", required: true, min: 3, max: 255 }
         },
         settings: {
           messages: {
             required: "%s is required.",
             min: "%s must be at least %s characters.",
-            max: "%s must be at most %s characters.",
-          },
-        },
+            max: "%s must be at most %s characters."
+          }
+        }
       },
       product_deletion: {
         rules: {
           confirm_delete: {
             display: "Delete Confirmation",
             required: true,
-            required_checked: true,
+            required_checked: true
           },
           confirm_irreversible: {
             display: "Irreversible Action",
             required: true,
-            required_checked: true,
-          },
+            required_checked: true
+          }
         },
         settings: {
           messages: {
             required: "%s is required.",
-            required_checked: "You must check %s to proceed.",
-          },
-        },
-      },
+            required_checked: "You must check %s to proceed."
+          }
+        }
+      }
     };
 
     return (
       fallbacks[rulesName] || {
         rules: {},
-        settings: { messages: { required: "%s is required." } },
+        settings: { messages: { required: "%s is required." } }
       }
     );
   }
@@ -170,7 +170,7 @@ export default class ValidationService {
     return {
       cacheSize: this.cache.size,
       loadingCount: this.loadingPromises.size,
-      warningsShown: Array.from(this.warningsShown),
+      warningsShown: Array.from(this.warningsShown)
     };
   }
 }

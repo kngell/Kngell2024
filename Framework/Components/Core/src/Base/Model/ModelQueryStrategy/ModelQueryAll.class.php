@@ -21,9 +21,10 @@ class ModelQueryAll extends AbstractModelBaseQuery
             $offset = $params['offset'];
             unset($params['offset']);
         }
-
-        [$targetEntity, $conditions] = $this->utils->processConditions($entity, $params);
-        $em->getRepository($targetEntity)->findAll($conditions, $limit, $offset, $columns);
+        $queryPayload = ModelQueryPayload::create($entity, $params);
+        $conditions = $queryPayload->getConditions();
+        $processed = $this->utils->processConditions($entity, $conditions);
+        $em->getRepository($processed->entity)->findAll($processed->conditions, $limit, $offset, $columns);
         return $this->getQueryResult($em, 'all');
     }
 }

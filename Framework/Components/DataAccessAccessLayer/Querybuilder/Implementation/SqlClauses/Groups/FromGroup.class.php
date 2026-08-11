@@ -6,9 +6,10 @@ class FromGroup extends SqlComponent implements ClauseComponentInterface
 {
     private const SqlClause CLAUSE = SqlClause::FROM;
 
-    public function __construct(private null|STatementType $context = null)
+    public function __construct(null|STatementType $context = null)
     {
         parent::__construct(null);
+        $this->context = $context;
     }
 
     public function build(): string

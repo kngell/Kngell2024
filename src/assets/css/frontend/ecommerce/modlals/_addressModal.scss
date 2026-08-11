@@ -1,0 +1,49 @@
+@use "css/globals" as *;
+@use "css/frontend/ecommerce/abstracts" as *;
+
+.address-frm {
+  width: 100%;
+  .form-section {
+    border-radius: $radius-s;
+    box-shadow: $shadow-s;
+    gap: 0;
+    &:not(:last-of-type) {
+      margin-bottom: 1.6rem;
+    }
+    &__header {
+      &::after {
+        height: 0;
+      }
+    }
+  }
+}
+.modal.address-modal__content {
+  max-width: 84rem;
+  .address-modal {
+    &__header {
+      background-color: $primary-50;
+      padding-top: 1.6rem;
+      padding-bottom: 1.6rem;
+      &-top {
+        width: 100%;
+      }
+      &-title,
+      &-content {
+        padding: 0;
+
+        &--icon {
+          background-color: $primary-100;
+          @include transition(background-color, 0.3s, ease);
+          &:hover {
+            background-color: $primary-200;
+          }
+        }
+        &--text {
+          padding: 0;
+        }
+      }
+    }
+  }
+}
+
+// @include input-field((toggle, select, select));

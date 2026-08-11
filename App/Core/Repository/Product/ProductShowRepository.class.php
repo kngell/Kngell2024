@@ -4,19 +4,17 @@ declare(strict_types=1);
 
 class ProductShowRepository extends Repository
 {
-    // use NestedRelationshipAliasExpanderTrait;
-
     protected const array COLUMN_MAPS = [
         'ProductShow' => [
             'public_id', 'pdt_id', 'sku', 'name', 'slug', 'description', 'short_description',
-            'main_image', 'main_video', 'product_weight', 'product_dimension', 'stock_quantity',
+            'main_image', 'alt_text', 'main_video', 'product_weight', 'product_dimension', 'stock_quantity',
             'allow_back_orders', 'is_track_stock', 'is_featured', 'is_virtual',
             'is_downloadable', 'product_visibility', 'total_sales', 'average_rating',
             'review_count', 'created_at', 'updated_at', 'deleted_at',
         ],
         'ProductStatus' => ['id', 'status_code', 'name', 'description', 'is_active'],
         'StockStatus' => ['id', 'stock_status_code', 'label', 'description', 'sort_order'],
-        'Category' => ['cat_id', 'name'],
+        'Category' => ['cat_id', 'name', 'public_id'],
         'Brand' => ['br_id', 'name'],
         'ProductRegionalPrice' => [
             'price_id', 'region_code', 'currency_id', 'base_price', 'compare_price',
@@ -54,6 +52,7 @@ class ProductShowRepository extends Repository
                 $qb = $this->em->createQueryBuilder();
                 $select = $this->getEnrichedQueryBuilder($conditions, null, $qb);
                 $select->build();
+                // $this->debugSql($qb);
             } catch (Throwable $th) {
                 throw $th;
             }
@@ -116,20 +115,19 @@ class ProductShowRepository extends Repository
             ->from('product');
 
         $this->applySmartJoins($select, $conditions, $isFullQuery);
-        $orderBy = [];
-        if (isset($conditions['ORDER BY'])) {
-            $orderBy[] = $conditions['ORDER BY'];
-        }
-        if (isset($conditions['order by'])) {
-            $orderBy[] = $conditions['order by'];
-        }
-        $conditions = $this->applySqlKeywordsForSelect(
-            $conditions,
-            $select,
-        );
         $conditions = $this->applyGlobalScopes($conditions);
+
+        $orderBy = [];
+        if (isset($conditions['ORDER BY']) || isset($conditions['order by'])) {
+            $orderBy = ['ORDER BY' => $conditions['ORDER BY'] ?? $conditions['order by'] ?? []];
+            unset($conditions['ORDER BY'],$conditions['order by']);
+        }
         $this->applyMixedConditions($select, $conditions);
 
+        $conditions = $this->applySqlKeywordsForSelect(
+            $orderBy,
+            $select,
+        );
         if ($isFullQuery) {
             $select->orderBy(
                 'product.pdt_id ASC',

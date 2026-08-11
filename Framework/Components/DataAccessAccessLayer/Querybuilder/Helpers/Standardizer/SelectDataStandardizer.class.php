@@ -16,7 +16,8 @@ class SelectDataStandardizer extends AbstractDataStandardizer
 
         return match ($format) {
             'associative' => new SelectPayload($this->convertAssociativeToColumnList($data)),
-            'column_list' => new SelectPayload($data),
+            'column_list' ,'mixte_type' => new SelectPayload($data),
+            // 'mixte_type' => new SelectPayload($this->normalizedData($data)),
             default => throw new InvalidArgumentException("Unsupported data format: $format")
         };
     }
@@ -24,6 +25,19 @@ class SelectDataStandardizer extends AbstractDataStandardizer
     public function getContext(): string
     {
         return 'select';
+    }
+
+    private function normalizedData(array $data): array
+    {
+        $normalizedData = [];
+        foreach ($data as $column) {
+            if ($column instanceof SqlComponent) {
+                $normalizedData[] = $column->build();
+            } else {
+                $normalizedData[] = $column;
+            }
+        }
+        return $normalizedData;
     }
 
     private function normalizeMultidimensional(array $data): array
@@ -49,6 +63,9 @@ class SelectDataStandardizer extends AbstractDataStandardizer
 
         if (ArrayUtils::isStringList($data)) {
             return 'column_list';
+        }
+        if (ArrayUtils::hasMixedTypes($data)) {
+            return 'mixte_type';
         }
 
         return 'unknown';

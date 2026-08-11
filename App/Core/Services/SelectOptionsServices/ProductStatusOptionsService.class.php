@@ -2,48 +2,39 @@
 
 declare(strict_types=1);
 
-final class ProductStatusOptionsService implements SelectOptionsServiceInterface
+final class ProductStatusOptionsService extends AbstractSelectOptionsService
 {
-    private const string SELECT_LABLE = '-- Select a Status --';
-    private const string ENTITY = 'ProductStatus';
+    protected const string SELECT_LABEL = '-- Select a Status --';
+
+    protected ?string $entityClass = ProductStatus::class;
 
     public function __construct(
-        private ProductStatusModel $productStatusModel,
+        private ProductStatusModel $model,
     ) {
     }
 
-    public function getActiveOptions(): array
+    protected function fetchOptions(bool $active = true): array
     {
-        try {
-            $statuses = $this->productStatusModel->getActiveStatuses();
-
-            $options = ['' => self::SELECT_LABLE];
-
-            foreach ($statuses as $status) {
-                // Ensure the entity is valid and has required methods
-                if ($status instanceof ProductStatus) {
-                    $options[$status->getId()] = $this->formatLabel($status);
-                }
-            }
-            return $options;
-        } catch (QueryResultException $e) {
-            error_log('ProductStatusService: Failed to load Product Status - ' . $e->getMessage());
-            return $this->getDefaultOption();
-        }
+        $conditions = $active ? ['is_active', true] : [];
+        $statuses = $this->model->all($conditions)->asClass();
+        return $this->processEntities($statuses);
     }
 
-    private function formatLabel(ProductStatus $status): string
+    protected function formatLabel(object $entity): string
     {
-        $code = $status->getStatusCode()->value;
-        $name = $status->getName();
+        if (!$entity instanceof ProductStatus) {
+            return '';
+        }
+
+        $code = $entity->getStatusCode()->value;
+        $name = $entity->getName();
         return "{$name} ({$code})";
     }
 
-    // Optional: Hardcoded fallback if the database fails
-    private function getDefaultOption(): array
+    protected function getDefaultOptions(): array
     {
         return [
-            '' => self::SELECT_LABLE,
+            '' => self::SELECT_LABEL,
             '1' => 'draft',
         ];
     }

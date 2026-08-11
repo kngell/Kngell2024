@@ -9,7 +9,7 @@ $this->start('head'); ?>
     <!-- Content -->
     <section class="product span-all">
         <div class="product__header">
-            <?= $productMainHeader ?? '' ?>
+            <?= $adminMainHeader ?? '' ?>
         </div>
         <?= $productForm ?? '' ?>
     </section>

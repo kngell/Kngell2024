@@ -15,14 +15,15 @@ class CategoryService
         $conditions = ['is_active' => true];
 
         if ($onlyWithIcons) {
-            $conditions['icon IS NOT NULL'] = true;
+            $conditions = array_merge($conditions, ['icon IS NOT NULL']);
         }
 
         if ($parentId !== null) {
-            $conditions['parent_id'] = $parentId;
+            $conditions = array_merge($conditions, ['parent_id' => $parentId]);
         }
 
         $conditions['ORDER BY'] = 'order_index ASC, name ASC';
+        $conditions['limit'] = 50;
 
         $categories = $this->fetchCategories($conditions);
 
@@ -38,7 +39,7 @@ class CategoryService
         ];
 
         if ($onlyWithIcons) {
-            $conditions['icon IS NOT NULL'] = true;
+            $conditions = array_merge($conditions, ['icon IS NOT NULL']);
         }
 
         $categories = $this->fetchCategories($conditions);

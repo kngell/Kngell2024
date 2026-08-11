@@ -4,15 +4,6 @@ declare(strict_types=1);
 
 class RememberPreviousPageMiddleware implements MiddlewareInterface
 {
-    private const string SESSION_KEY = 'previous_url';
-
-    private const array EXCLUDE_METHODS = [
-        HttpMethod::POST,
-        HttpMethod::PUT,
-        HttpMethod::PATCH,
-        HttpMethod::DELETE,
-    ];
-
     public function __construct(
         private readonly NavigationHistoryService $navigationHistory,
     ) {

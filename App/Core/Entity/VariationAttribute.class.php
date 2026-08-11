@@ -1,9 +1,10 @@
 <?php
 
 declare(strict_types=1);
-class VariationAttribute extends Entity implements TimestampableInterface
+class VariationAttribute extends Entity implements TimestampableInterface, SoftDeletableInterface
 {
     use EntityTimestampableTrait;
+    use SoftDeletableTrait;
 
     #[EntityFieldId()]
     private int $id; //Unique product identifier

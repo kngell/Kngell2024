@@ -3,6 +3,19 @@
 declare(strict_types=1);
 enum SqlKeyword: string
 {
+    public function toSqlClause(): ?SqlClause
+    {
+        return match ($this) {
+            // WHEN uses WHERE-like condition syntax
+            self::WHEN => SqlClause::WHERE,
+
+            // CASE expression keywords (not clauses)
+            self::CASE => null,
+            self::THEN => null,
+            self::ELSE => null,
+            self::END => null,
+        };
+    }
     // =============================================
     // JOIN KEYWORDS (Used in FROM clause)
     // =============================================
@@ -52,7 +65,7 @@ enum SqlKeyword: string
     // PREDICATE KEYWORDS
     // =============================================
     case EXISTS = 'EXISTS';
-    case UNIQUE_PRED = 'UNIQUE';              // <unique predicate>
+    case UNIQUE_PRED = 'UNIQUE_PRED';              // <unique predicate>
     case MATCH = 'MATCH';                      // <match predicate>
     case OVERLAPS = 'OVERLAPS';                // <overlaps predicate>
     case SIMILAR = 'SIMILAR';                  // <similar predicate>

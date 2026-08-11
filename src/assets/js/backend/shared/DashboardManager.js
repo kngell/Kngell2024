@@ -22,6 +22,7 @@ export default class DashboardManager {
     try {
       this.setup();
       this.addEventListeners();
+      this.checkInitialActiveState(); // Add this line
 
       if (this.debug) {
         logger.debug("DashboardManager initialized");
@@ -74,19 +75,15 @@ export default class DashboardManager {
     const text = link.textContent.trim();
     const href = link.getAttribute("href");
 
-    // Prevent reload if already active and pointing to same page or #
     const isAlreadyActive = link.classList.contains("active");
-    const isSamePage =
-      href === "#" ||
-      href === "" ||
-      href === window.location.pathname ||
-      href === window.location.href;
+
+    // Improved same page detection
+    const isSamePage = this.isSamePage(href);
 
     if (isSamePage) {
-      if (href === "#") {
+      if (href === "#" || href === "") {
         e.preventDefault();
       } else if (isAlreadyActive) {
-        // If it's already active and we are on the same page, prevent reload loop
         e.preventDefault();
         if (this.debug) {
           logger.debug("Prevented redundant navigation/reload for active link", { text, href });
@@ -101,6 +98,94 @@ export default class DashboardManager {
     if (this.debug) {
       logger.debug("Menu navigation:", { text, href });
     }
+  }
+
+  isSamePage(href) {
+    if (!href || href === "#" || href === "") return true;
+
+    try {
+      const currentUrl = new URL(window.location.href);
+      const linkUrl = new URL(href, window.location.origin);
+
+      const currentSegments = currentUrl.pathname.split("/").filter((s) => s);
+      const linkSegments = linkUrl.pathname.split("/").filter((s) => s);
+
+      let linkIndex = 0;
+      let currentIndex = 0;
+
+      while (linkIndex < linkSegments.length && currentIndex < currentSegments.length) {
+        const linkSegment = linkSegments[linkIndex];
+        const currentSegment = currentSegments[currentIndex];
+
+        if (linkSegment === "**") {
+          // ** matches multiple segments (greedy)
+          if (linkIndex === linkSegments.length - 1) {
+            // Last segment is **, matches all remaining
+            return true;
+          }
+
+          // Find the next non-wildcard segment in link pattern
+          let nextLinkIndex = linkIndex + 1;
+          while (nextLinkIndex < linkSegments.length && linkSegments[nextLinkIndex] === "**") {
+            nextLinkIndex++;
+          }
+
+          if (nextLinkIndex >= linkSegments.length) {
+            return true;
+          }
+
+          const nextLinkSegment = linkSegments[nextLinkIndex];
+
+          // Find where the next segment appears in current URL
+          let found = false;
+          for (let i = currentIndex; i < currentSegments.length; i++) {
+            if (this.matchesSegment(currentSegments[i], nextLinkSegment)) {
+              linkIndex = nextLinkIndex;
+              currentIndex = i;
+              found = true;
+              break;
+            }
+          }
+
+          if (!found) return false;
+          continue;
+        }
+
+        if (!this.matchesSegment(currentSegment, linkSegment)) {
+          return false;
+        }
+
+        linkIndex++;
+        currentIndex++;
+      }
+
+      // Both should have consumed all segments
+      return linkIndex === linkSegments.length && currentIndex === currentSegments.length;
+    } catch (e) {
+      return href === window.location.pathname || href === window.location.href;
+    }
+  }
+
+  matchesSegment(currentSegment, patternSegment) {
+    if (patternSegment === "*") return true;
+    if (patternSegment.startsWith(":")) {
+      const isNumeric = /^\d+$/.test(currentSegment);
+      const isUUID = /^[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}$/i.test(
+        currentSegment
+      );
+      return isNumeric || isUUID;
+    }
+    return patternSegment === currentSegment;
+  }
+
+  getCurrentBlockType() {
+    const pathParts = window.location.pathname.split("/").filter((p) => p);
+    // Look for pattern: admin/content-block/{type}/...
+    const contentBlockIndex = pathParts.findIndex((p) => p === "content-block");
+    if (contentBlockIndex !== -1 && pathParts[contentBlockIndex + 1]) {
+      return pathParts[contentBlockIndex + 1];
+    }
+    return null;
   }
   handleOutsideClick(e) {
     const menuList = document.querySelector(".menu-list");
@@ -137,12 +222,6 @@ export default class DashboardManager {
       this.closeAllDropdownsExcept();
     }
   }
-  // handleOutsideClick(e) {
-  //   const menuList = document.querySelector(".menu-list");
-  //   if (menuList && !menuList.contains(e.target)) {
-  //     this.closeAllDropdownsExcept();
-  //   }
-  // }
 
   handleDropdownClick(e) {
     e.preventDefault();
@@ -197,7 +276,7 @@ export default class DashboardManager {
   }
 
   updateActiveState(clickedLink) {
-    // Clear all active states and has-active-child classes
+    // Clear all active states
     document
       .querySelectorAll(
         ".menu-list__item, .dropdown-list__item, .menu-list__item--link, .dropdown-list__item--link"
@@ -221,6 +300,18 @@ export default class DashboardManager {
         parentDropdown.classList.add("has-active-child");
       }
     }
+  }
+  checkInitialActiveState() {
+    const currentPathname = window.location.pathname;
+
+    document
+      .querySelectorAll(".menu-list__item--link, .dropdown-list__item--link")
+      .forEach((link) => {
+        const href = link.getAttribute("href");
+        if (href && this.isSamePage(href)) {
+          this.updateActiveState(link);
+        }
+      });
   }
 
   refreshRoutePatterns() {

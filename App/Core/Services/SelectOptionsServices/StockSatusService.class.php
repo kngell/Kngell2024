@@ -2,46 +2,35 @@
 
 declare(strict_types=1);
 
-final class StockStatusService
+final class StockStatusService extends AbstractSelectOptionsService
 {
-    // Inject the model responsible for database access
+    protected const string SELECT_LABEL = '-- Select stock status --';
+
+    protected ?string $entityClass = StockStatus::class;
+
     public function __construct(
-        private StockStatusModel $stockStatusModel,
+        private StockStatusModel $model,
     ) {
     }
 
-    /**
-     * Retrieves stock statuses from the database, formatted for a dropdown.
-     *
-     * @return array<string, string>
-     */
-    public function getStockStatusOptions(): array
+    protected function fetchOptions(bool $active = true): array
     {
-        try {
-            /** @var StockStatus[] $statuses */
-            $statuses = $this->stockStatusModel->all()->asClass();
-
-            $options = ['' => '-- Select stock status --'];
-
-            foreach ($statuses as $status) {
-                if ($status instanceof StockStatus) {
-                    // Use the status code as the dropdown value and the label for display
-                    $options[$status->getId()] = $status->getStockStatusCode()->value;
-                }
-            }
-            return $options;
-        } catch (QueryResultException $e) {
-            error_log('StockStatusService: Failed to load stock statuses - ' . $e->getMessage());
-            // Fallback to hardcoded values if the database connection fails
-            return $this->getDefaultStockStatusOptions();
-        }
+        $statuses = $this->model->all()->asClass();
+        return $this->processEntities($statuses);
     }
 
-    // Fallback method
-    private function getDefaultStockStatusOptions(): array
+    protected function formatLabel(object $entity): string
+    {
+        if (!$entity instanceof StockStatus) {
+            return '';
+        }
+        return $entity->getStockStatusCode()->value;
+    }
+
+    protected function getDefaultOptions(): array
     {
         return [
-            '' => '-- Select stock status --',
+            '' => self::SELECT_LABEL,
             '1' => 'In Stock',
             '2' => 'Out of Stock',
         ];

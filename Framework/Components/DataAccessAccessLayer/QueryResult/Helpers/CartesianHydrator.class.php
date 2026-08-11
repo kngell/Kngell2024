@@ -11,21 +11,41 @@ class CartesianHydrator
 
     public function hydrateSingle(array $rows, string $entityClass, array $tableAlias, array $tableMap): Entity
     {
-        $entity = $this->entityFactory->create(
-            $entityClass,
-            $tableAlias,
-            $tableMap,
-        );
+        if (empty($rows)) {
+            return $this->entityFactory->create($entityClass, $tableAlias, $tableMap);
+        }
 
-        foreach ($rows as $row) {
-            foreach ($row as $key => $value) {
-                $entity->__set($key, $value);
+        $primaryKeyField = $this->entityFactory->getPrimaryKeyField($entityClass);
+        $prefixedPk = $this->getPrefixedFieldName($primaryKeyField, $rows[0], $tableAlias);
+        $rootPrefix = $this->getPrefixFromKey($prefixedPk);
+
+        $groupedRows = $this->groupRowsByPrimaryKey($rows, $prefixedPk);
+        $idRows = reset($groupedRows);
+
+        $entity = $this->entityFactory->create($entityClass, $tableAlias, $tableMap);
+        foreach ($idRows as $index => $row) {
+            if ($index > 0) {
+                $entity->prepareRowHydration();
+            }
+
+            $segmentedRow = $this->segmentRowByPrefix($row, $rootPrefix);
+            $rowKeys = array_keys($row);
+
+            foreach ($segmentedRow as $prefix => $packet) {
+                if (!$packet['is_root']) {
+                    $pkKey = $this->findPrefixedPrimaryKey($rowKeys, $prefix);
+                    if ($pkKey !== null && ($row[$pkKey] ?? null) === null) {
+                        continue;
+                    }
+                }
+                foreach ($packet['data'] as $key => $value) {
+                    $entity->__set($key, $value);
+                }
             }
         }
 
         $entity->completeHydration();
         $entity->track();
-
         return $entity;
     }
 
@@ -37,29 +57,36 @@ class CartesianHydrator
             return $entities;
         }
 
-        // Get primary key field
         $primaryKeyField = $this->entityFactory->getPrimaryKeyField($entityClass);
 
         if (!$primaryKeyField) {
             return $this->hydrateSeparateEntities($rows, $entityClass, $tableAlias, $tableMap);
         }
 
-        // Group by primary key
         $prefixedPk = $this->getPrefixedFieldName($primaryKeyField, $rows[0], $tableAlias);
+        $rootPrefix = $this->getPrefixFromKey($prefixedPk);
         $groupedRows = $this->groupRowsByPrimaryKey($rows, $prefixedPk);
 
-        // Create one entity per unique ID
         foreach ($groupedRows as $idRows) {
-            $entity = $this->entityFactory->create(
-                $entityClass,
-                $tableAlias,
-                $tableMap,
-            );
+            $entity = $this->entityFactory->create($entityClass, $tableAlias, $tableMap);
 
-            foreach ($idRows as $row) {
-                $entity->prepareRowHydration();
-                foreach ($row as $key => $value) {
-                    $entity->__set($key, $value);
+            foreach ($idRows as $index => $row) {
+                if ($index > 0) {
+                    $entity->prepareRowHydration();
+                }
+                $segmentedRow = $this->segmentRowByPrefix($row, $rootPrefix);
+                $rowKeys = array_keys($row);
+                foreach ($segmentedRow as $prefix => $packet) {
+                    if (!$packet['is_root']) {
+                        $pkKey = $this->findPrefixedPrimaryKey($rowKeys, $prefix);
+                        if ($pkKey !== null && ($row[$pkKey] ?? null) === null) {
+                            continue;
+                        }
+                    }
+
+                    foreach ($packet['data'] as $key => $value) {
+                        $entity->__set($key, $value);
+                    }
                 }
             }
 
@@ -74,42 +101,31 @@ class CartesianHydrator
     private function hydrateSeparateEntities(array $rows, string $entityClass, array $tableAlias, array $tableMap): array
     {
         $entities = [];
-
         foreach ($rows as $row) {
-            $entity = $this->entityFactory->create(
-                $entityClass,
-                $tableAlias,
-                $tableMap,
-            );
-
+            $entity = $this->entityFactory->create($entityClass, $tableAlias, $tableMap);
             foreach ($row as $key => $value) {
                 $entity->__set($key, $value);
             }
-
             $entity->completeHydration();
             $entity->track();
             $entities[] = $entity;
         }
-
         return $entities;
     }
 
     private function groupRowsByPrimaryKey(array $rows, string $primaryKeyField): array
     {
         $grouped = [];
-
         foreach ($rows as $row) {
             $id = $row[$primaryKeyField] ?? null;
             if ($id === null) {
                 continue;
             }
-
             if (!isset($grouped[$id])) {
                 $grouped[$id] = [];
             }
             $grouped[$id][] = $row;
         }
-
         return $grouped;
     }
 
@@ -121,7 +137,40 @@ class CartesianHydrator
                 return $prefixed;
             }
         }
-
         return $fieldName;
+    }
+
+    private function getPrefixFromKey(string $key): string
+    {
+        return explode('_', $key, 2)[0];
+    }
+
+    private function findPrefixedPrimaryKey(array $rowKeys, string $prefix): ?string
+    {
+        foreach ($rowKeys as $key) {
+            if (str_starts_with($key, $prefix . '_') && str_ends_with($key, '_id') && !str_ends_with($key, 'public_id')) {
+                return $key;
+            }
+        }
+        return null;
+    }
+
+    private function segmentRowByPrefix(array $row, string $rootPrefix): array
+    {
+        $segmented = [];
+
+        foreach ($row as $key => $value) {
+            $prefix = $this->getPrefixFromKey($key);
+
+            if (!isset($segmented[$prefix])) {
+                $segmented[$prefix] = [
+                    'is_root' => ($prefix === $rootPrefix),
+                    'data' => [],
+                ];
+            }
+            $segmented[$prefix]['data'][$key] = $value;
+        }
+
+        return $segmented;
     }
 }

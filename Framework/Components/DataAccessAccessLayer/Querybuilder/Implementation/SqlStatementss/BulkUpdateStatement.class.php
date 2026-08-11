@@ -38,7 +38,6 @@ class BulkUpdateStatement extends AbstractStatement
         $parts = [$table . ' AS ' . $alias];
         $this->state->tables[$table] = $table;
         $this->state->isUpdate = true;
-        $this->state->statementContext = self::TYPE;
 
         $parts[] = parent::build();
 
@@ -58,24 +57,39 @@ class BulkUpdateStatement extends AbstractStatement
 
     private function buildFromGroup(): void
     {
-        $fromGroup = new FromGroup(StatementType::BULK_UPDATE);
-        $data = fn () => $this->map['bulkData'] ?? [];
-        $from = new FromClause(
-            table: $this->table,
-            data: $data,
+        $builder = new FromGroupBuilder(
             em: $this->em,
+            context: self::TYPE,
+            map: $this->map,
+            table: $this->table,
             method: $this->method,
-            type: BulkUpdateType::SELECT_UNION_ALL,
+            bulkType: $this->bulkType,
+            data: fn () => $this->map['bulkData'] ?? null,
+            joinMap: $this->joinMap,
+            onMap: $this->onMap,
         );
-        $from->setMethod(SqlClause::FROM->value);
-        $fromGroup->add($from);
-
-        foreach ($this->joinMap as $joinKey => $joinConfig) {
-            $joinClause = $this->createJoinClause($joinKey, $joinConfig);
-            $fromGroup->add($joinClause);
-        }
-
+        $fromGroup = $builder->getFromGroup();
         $this->add($fromGroup);
+        $this->joinTable = $builder->getJoinTable();
+
+        // $fromGroup = new FromGroup(self::TYPE);
+        // $data = fn () => $this->map['bulkData'] ?? [];
+        // $from = new FromClause(
+        //     table: $this->table,
+        //     data: $data,
+        //     em: $this->em,
+        //     method: $this->method,
+        //     type: $this->bulkType,
+        // );
+        // $from->setMethod(SqlClause::FROM->value);
+        // $fromGroup->add($from);
+
+        // foreach ($this->joinMap as $joinKey => $joinConfig) {
+        //     $joinClause = $this->createJoinClause($joinKey, $joinConfig);
+        //     $fromGroup->add($joinClause);
+        // }
+
+        // $this->add($fromGroup);
     }
 
     private function createJoinClause(string $joinKey, array $joinConfig): JoinClause
@@ -89,14 +103,16 @@ class BulkUpdateStatement extends AbstractStatement
         $tableName = is_string($joinConfig['table']) ? $joinConfig['table'] : $joinKey;
 
         $join = new JoinClause(
-            $joinConfig['customAlias'],
-            $joinConfig['table'],
-            $joinConfig['withAlias'],
-            $joinConfig['query'] ?? $joinConfig['closure'] ?? null,
-            $this->em,
-            $this->method,
+            customAlias: $joinConfig['customAlias'],
+            table: $joinConfig['table'],
+            withAlias: $joinConfig['withAlias'],
+            selectQuery: $joinConfig['query'] ?? $joinConfig['closure'] ?? null,
+            em: $this->em,
+            method: $this->method,
+            type: $this->bulkType,
         );
         $join->setMethod($joinType->name)->setJoinContext($tableName);
+        $join->setContext(self::TYPE);
         $this->joinTable = $tableName;
 
         if (isset($this->onMap[$tableName])) {
@@ -111,7 +127,7 @@ class BulkUpdateStatement extends AbstractStatement
     {
         $onData = $this->onMap[$tableName];
         $onClause = new ConditionClause(
-            $onData['onConditions'],
+            $onData,
             'on',
             $this->em,
         );
@@ -122,13 +138,15 @@ class BulkUpdateStatement extends AbstractStatement
     private function buildSetClause(): void
     {
         $setClause = new SetClause(
-            $this->map['set']->getData(),
-            false,
-            true,
-            'set',
-            $this->em,
-            $this->joinTable,
+            setData: $this->map['set']->getData(),
+            hasMultiple: false,
+            hasSingle: true,
+            method: 'set',
+            em: $this->em,
+            sourceTable: $this->joinTable,
         );
+        $setClause->setBulkUpdateType($this->bulkType)
+        ->setContext(self::TYPE);
         $this->add($setClause);
     }
 }

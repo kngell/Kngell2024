@@ -1,0 +1,67 @@
+@use "sass:map";
+@use "css/backend/admin/abstracts/variables" as *;
+@use "css/globals/functions/functions" as *;
+
+/// Base icon container mixin (used by icon-with-badge and standalone icons)
+/// @param {Length} $size - Icon container size
+/// @param {Length} $padding - Inner padding (false = no padding)
+/// @param {Color} $icon-color - Icon fill color
+/// @param {Color} $bg - Background color (false = transparent)
+/// @param {Color} $border - Border (false = none)
+/// @param {Length} $radius - Border radius
+@mixin icon-base(
+  $size: 2rem,
+  $padding: false,
+  $icon-color: currentColor,
+  $bg: false,
+  $border: false,
+  $radius: 0,
+  $align-self: false,
+  $flex-shrink: 0
+) {
+  width: $size;
+  height: $size;
+  flex-shrink: $flex-shrink;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  @if $padding != false {
+    padding: $padding;
+  }
+
+  @if $align-self {
+    align-self: stretch;
+  }
+
+  @if $bg != false {
+    background-color: $bg;
+  } @else {
+    background: transparent;
+  }
+
+  @if $border != false {
+    border: $border;
+  } @else {
+    border: none;
+  }
+
+  border-radius: $radius;
+
+  // Universal .icon class styling (your SVG sprites)
+  .icon {
+    width: 100%;
+    height: 100%;
+    color: $icon-color;
+    fill: currentColor;
+    flex-shrink: 0;
+  }
+
+  // If image instead of icon
+  .image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    flex-shrink: 0;
+  }
+}

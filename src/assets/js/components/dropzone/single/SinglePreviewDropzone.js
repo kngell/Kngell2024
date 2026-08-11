@@ -4,14 +4,36 @@ import BrowserLogger from "js/core/utils/BrowserLogger";
 const logger = new BrowserLogger("SinglePreviewDropzone");
 
 export default class SinglePreviewDropzone extends BaseDropzone {
-  constructor(element, files, options = {}) {
-    super(element, options);
+  constructor(element, filesOrOptions, options = {}) {
+    let files = [];
+    let finalOptions = options;
+
+    if (Array.isArray(filesOrOptions)) {
+      files = filesOrOptions;
+    } else if (filesOrOptions && typeof filesOrOptions === "object") {
+      finalOptions = filesOrOptions;
+      files = finalOptions.files || [];
+    }
+
+    super(element, finalOptions);
+
     this.files = files;
 
-    // CRITICAL: Sync files to the new input
-    this.syncFilesToInput(files);
+    // Ensure files is an array
+    if (!Array.isArray(this.files)) {
+      logger.warn("files is not an array, resetting to empty array");
+      this.files = [];
+    }
 
-    logger.debug("SinglePreviewDropzone initialized", { inputName: this.inputName });
+    // Sync files to input if there are any
+    if (this.files.length > 0) {
+      this.syncFilesToInput(this.files);
+    }
+
+    logger.debug("SinglePreviewDropzone initialized", {
+      inputName: this.inputName,
+      fileCount: this.files.length
+    });
 
     this.setupPreviewListeners();
   }

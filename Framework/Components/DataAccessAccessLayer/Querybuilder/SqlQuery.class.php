@@ -5,14 +5,13 @@ declare(strict_types=1);
 abstract class SqlQuery extends SqlComponent
 {
     protected null|SqlClause|SqlCteClause $sqlClause;
-    protected null|ClauseBuilderInterface $clauseBuilder;
-    protected null|FlowValidatorInterface $flowValidator;
     protected null|DataStandardizerInterface $standardizer;
     protected null|ClauseStandardizerFactory $clauseStandardizer;
     protected array $queryFlow = [];
     protected bool $isClosure = false;
     protected null|string|closure $currentTable = null;
     protected array $clauseStandardiserArray = [];
+    protected array $conditionsMap = [];
 
     public function __construct(
         null|SqlClause|SqlCteClause $sqlClause,
@@ -121,8 +120,6 @@ abstract class SqlQuery extends SqlComponent
         }
 
         $registry = new SqlFactoryRegistry($this, $this->em, $this->state);
-        $this->clauseBuilder = $registry->getClauseBuilder($this->sqlStatement);
-        $this->flowValidator = $registry->getFlowValidator($this->sqlStatement);
         $this->standardizer = $registry->getStandardizer($this->sqlStatement);
         $this->clauseStandardizer = new ClauseStandardizerFactory();
     }
@@ -177,6 +174,12 @@ abstract class SqlQuery extends SqlComponent
 
         $key = $method . '|' . $logicalName;
         return [$logicalName, $key];
+    }
+
+    protected function isBulkUpdate(): bool
+    {
+        $userFlow = array_keys($this->queryFlow);
+        return in_array('bulkUpdate', $userFlow);
     }
 
     private function addClauseKeyword(

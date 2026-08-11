@@ -18,6 +18,12 @@ trait ChangeDetectionTrait
 
     protected function getConsolidatedData(array $inputData, EntityManagerInterface $em): array
     {
+        if (is_array($inputData) && count($inputData) === 1) {
+            $inputData = reset($inputData);
+            if ($inputData instanceof Entity) {
+                $inputData = $inputData->toArray();
+            }
+        }
         return array_merge($inputData, $em->getDirtyData());
     }
 

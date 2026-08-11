@@ -11,7 +11,7 @@ class FileProcessorFactory
         $this->initializeFileProcessors();
     }
 
-    public function getFileProcessor(FileUpload $file): ?FileProcessorInterface
+    public function getFileProcessor(?FileUpload $file): ?FileProcessorInterface
     {
         foreach ($this->fileProcessors as $processor) {
             if ($processor->supports($file)) {

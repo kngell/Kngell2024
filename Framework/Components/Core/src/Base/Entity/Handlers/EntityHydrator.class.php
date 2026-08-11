@@ -24,8 +24,11 @@ class EntityHydrator implements EntityHydratorInterface
     public function assign(Entity $entity, array $data): Entity
     {
         foreach ($data as $key => $value) {
+            // dd($data);
             $officialKey = $entity->getRelationshipKeyFromDataKey($key);
-
+            // if ($officialKey === 'footer_menu_link') {
+            //     $stop = true;
+            // }
             if ($officialKey && is_array($value)) {
                 $this->entityFactory->getRelationManager()->hydrateRelatedEntity(
                     $entity,
@@ -62,7 +65,6 @@ class EntityHydrator implements EntityHydratorInterface
                 $normalizedData[$dbFieldName] = $this->normalizer->normalizeFromEntityToDatabase(
                     $currentValue,
                     $property,
-                    $entity,
                 );
             } catch (ReflectionException $e) {
                 // If the property actually doesn't exist, we skip or log
@@ -107,6 +109,7 @@ class EntityHydrator implements EntityHydratorInterface
 
         try {
             $property = $reflection->getProperty($propertyName);
+
             $convertedValue = $this->normalizer->normalizeFromDatabaseToEntity(
                 rawValue: $rawValue,
                 property: $property,
@@ -138,11 +141,15 @@ class EntityHydrator implements EntityHydratorInterface
         return $this->normalizer;
     }
 
-    private function setPropertyValue(Entity $entity, string $propertyName, $value): void
+    private function setPropertyValue(Entity $entity, string $propertyName, mixed $value): void
     {
         $reflection = CustomReflection::getInstance($entity)->getClass();
         try {
             $property = $reflection->getProperty($propertyName);
+            if ($value === null && $property->hasType() && !$property->getType()->allowsNull()) {
+                return;
+            }
+
             $property->setValue($entity, $value);
         } catch (ReflectionException $e) {
             // Error handling for non-existent property

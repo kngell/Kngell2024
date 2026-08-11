@@ -70,7 +70,7 @@ class InsertDataStandardizerOLD extends AbstractDataStandardizer
         if (ArrayUtils::isAssoc($data)) {
             return 'associative';
         }
-        if (ArrayUtils::isKeyValueList($data) && !isset($this->insertMap['columns'])) {
+        if (ArrayUtils::isSequentialKeyValueList($data) && !isset($this->insertMap['columns'])) {
             if ($this->method === 'values' && isset($this->insertMap['insert']) && ArrayUtils::isStringList($this->insertMap['insert'])) {
                 return 'values_list';
             }

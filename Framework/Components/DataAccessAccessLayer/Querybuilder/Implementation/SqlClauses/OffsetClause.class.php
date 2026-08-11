@@ -31,7 +31,7 @@ class OffsetClause extends SqlComponent implements RegularClauseComponentInterfa
     {
         if (!isset($this->offsetRule)) {
             $registry = new SqlFactoryRegistry($this, $this->em, $this->state);
-            $this->offsetRule = $registry->getRule('offset', $this->offsetConfig);
+            $this->offsetRule = $registry->getRule('offset', $this->offsetConfig, $this->customAlias);
         }
     }
 }

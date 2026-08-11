@@ -1,25 +1,28 @@
 import ValidatorRegistry from "js/core/validation/Registry/ValidatorRegistry";
+import BrowserLogger from "js/core/utils/BrowserLogger";
+
+const logger = new BrowserLogger("ValidatorFactory");
 
 export default class ValidatorFactory {
   static createValidator(ruleName, errorParams, display, value, ruleValue, formData = {}) {
-    console.log(`🏭 Factory creating validator for: ${ruleName}`, {
+    logger.debug(`🏭 Factory creating validator for: ${ruleName}`, {
       ruleName,
       errorParams,
       display,
       value,
       ruleValue,
-      formData: Object.keys(formData),
+      formData: Object.keys(formData)
     });
 
     const ValidatorClass = ValidatorRegistry.getValidator(ruleName);
 
     if (!ValidatorClass) {
-      console.warn(`❌ No validator found for rule: ${ruleName}`);
-      console.log("Available validators:", ValidatorRegistry.getAllValidatorNames());
+      logger.warn(`❌ No validator found for rule: ${ruleName}`);
+      logger.debug("Available validators:", ValidatorRegistry.getAllValidatorNames());
       return null;
     }
 
-    console.log(`✅ Found validator class: ${ValidatorClass.name}`);
+    logger.debug(`✅ Found validator class: ${ValidatorClass.name}`);
 
     try {
       // ✅ Add required_checked to the list of context-aware validators
@@ -28,29 +31,29 @@ export default class ValidatorFactory {
         "lte",
         "gte",
         "unique_in_array",
-        "required_checked", // ⬅️ ADD THIS LINE
+        "required_checked" // ⬅️ ADD THIS LINE
       ].includes(ruleName);
 
-      console.log(`Needs context: ${needsContext} for ${ruleName}`);
+      logger.debug(`Needs context: ${needsContext} for ${ruleName}`);
 
       if (needsContext) {
         const validator = new ValidatorClass(errorParams, display, value, ruleValue, formData);
-        console.log(`Created ${ruleName} validator with context:`, validator);
+        logger.debug(`Created ${ruleName} validator with context:`, validator);
         return validator;
       }
 
       const validator = new ValidatorClass(errorParams, display, value, ruleValue);
-      console.log(`Created ${ruleName} validator:`, validator);
+      logger.debug(`Created ${ruleName} validator:`, validator);
       return validator;
     } catch (error) {
-      console.error(`❌ Failed to create validator for ${ruleName}:`, error);
-      console.error("Error details:", {
+      logger.error(`❌ Failed to create validator for ${ruleName}:`, error);
+      logger.error("Error details:", {
         ruleName,
         errorParams,
         display,
         value,
         ruleValue,
-        ValidatorClass,
+        ValidatorClass
       });
       return null;
     }

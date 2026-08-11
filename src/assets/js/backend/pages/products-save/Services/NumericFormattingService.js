@@ -24,7 +24,7 @@ export default class NumericFormattingService {
 
       if (!formContainer) {
         logger.warn(
-          `No suitable container found for numeric formatting in form: ${form.id || "unnamed-form"}`,
+          `No suitable container found for numeric formatting in form: ${form.getAttribute("id") || "unnamed-form"}`
         );
         return null;
       }
@@ -34,7 +34,9 @@ export default class NumericFormattingService {
         .then(({ default: FormNumericManager }) => {
           const numericManager = new FormNumericManager(formContainer);
           this.numericManagers.set(form, numericManager);
-          logger.debug(`Numeric formatting initialized for form: ${form.id || "unnamed-form"}`);
+          logger.debug(
+            `Numeric formatting initialized for form: ${form.getAttribute("id") || "unnamed-form"}`
+          );
         })
         .catch((error) => {
           logger.error(`Failed to load FormNumericManager:`, error);
@@ -129,7 +131,7 @@ export default class NumericFormattingService {
   }
 
   _initializeFallbackFormatting(form) {
-    logger.info("Using fallback numeric formatting for form:", form.id);
+    logger.info("Using fallback numeric formatting for form:", form.getAttribute("id"));
 
     form.querySelectorAll("input[type='number']").forEach((input) => {
       this._bindFallbackEvents(input);

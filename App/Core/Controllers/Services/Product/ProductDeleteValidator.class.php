@@ -16,7 +16,7 @@ class ProductDeleteValidator extends AbstractDeleteValidator
 
     protected function getLabel(): string
     {
-        return 'Product';
+        return DeletionLabel::PRODUCT->value;
     }
 
     protected function findRecord(array $id): ?object

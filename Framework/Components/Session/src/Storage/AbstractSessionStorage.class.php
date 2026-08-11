@@ -50,6 +50,13 @@ abstract class AbstractSessionStorage
         return false;
     }
 
+    public function save(): void
+    {
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+        }
+    }
+
     /**
      * Set the name of the session.
      *
@@ -77,25 +84,23 @@ abstract class AbstractSessionStorage
         return $this->sessionStarted;
     }
 
+    // In AbstractSessionStorage
+
     private function initializeSession(): void
     {
         if (session_status() === PHP_SESSION_ACTIVE) {
             return;
         }
 
-        // Don't auto-start if headers already sent
         if (headers_sent()) {
-            error_log('Headers already sent, cannot start session');
             return;
         }
 
-        // Set session configuration
+        // ✅ Set session configuration BEFORE starting session
         $this->configureSession();
 
-        // Start session
+        // ✅ Now start session
         session_start();
-
-        error_log('Session started: ' . session_id());
     }
 
     private function cookiesParams(): array
@@ -118,10 +123,10 @@ abstract class AbstractSessionStorage
 
     private function configureSession(): void
     {
-        // Set session name
+        // ✅ Set session name first
         session_name($this->sessionEnvironment->getSessionName());
 
-        // Set session save path
+        // ✅ Set session save path BEFORE session_start()
         $savePath = $this->sessionEnvironment->getFullStoragePath();
         if (!is_dir($savePath)) {
             mkdir($savePath, 0755, true);
@@ -130,31 +135,17 @@ abstract class AbstractSessionStorage
             session_save_path($savePath);
         }
 
-        // Set cookie parameters
+        // ✅ Set cookie parameters BEFORE session_start()
         $cookieParams = $this->cookiesParams();
         session_set_cookie_params($cookieParams);
 
-        // Set INI settings
+        // ✅ Set other session INI settings BEFORE session_start()
         foreach ($this->sessionEnvironment->getSessionRuntimeConfigurations() as $option) {
             $sessionKey = str_replace('session.', '', $option);
             $value = $this->sessionEnvironment->getSessionIniValues($sessionKey);
             if ($value !== null) {
-                ini_set($option, (string) $value);
+                $result = ini_set($option, (string) $value);
             }
-        }
-    }
-
-    /**
-     * Basic session security - standard for ecommerce.
-     */
-    private function initializeSessionSecurity(): void
-    {
-        // Only set these once per session
-        if (!isset($_SESSION['_initialized'])) {
-            $_SESSION['_initialized'] = true;
-            $_SESSION['_ip'] = $this->globals->server('REMOTE_ADDR') ?? 'unknown';
-            $_SESSION['_user_agent'] = $this->globals->server('HTTP_USER_AGENT') ?? 'unknown';
-            $_SESSION['_created'] = time();
         }
     }
 }

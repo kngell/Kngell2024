@@ -1,4 +1,3 @@
-// js/components/List/TableRowManager.js
 import BrowserLogger from "js/core/utils/BrowserLogger";
 
 export default class TableRowManager {
@@ -15,6 +14,7 @@ export default class TableRowManager {
       entityDisplayName: null,
       onRowRemoved: null,
       onEmptyStateShow: null,
+      tableElement: null, // ← optional: scope to a specific element
       emptyStateConfig: {
         icon: null,
         title: null,
@@ -45,12 +45,21 @@ export default class TableRowManager {
     }
   }
 
+  /**
+   * Resolve the table element for this manager.
+   * Prefers an explicit element passed in options; falls back to selector lookup.
+   */
+  _getTable() {
+    if (this.options.tableElement && this.options.tableElement.isConnected) {
+      return this.options.tableElement;
+    }
+    return document.querySelector(this.options.tableSelector);
+  }
+
   removeRowFromDOM(itemId) {
     if (!itemId) return false;
 
-    const escapedId = this.escapeCssSelector(itemId);
-    const selector = `${this.options.rowSelector}[${this.options.itemIdAttribute}="${escapedId}"]`;
-    const row = document.querySelector(selector);
+    const row = this.findRow(itemId);
 
     if (row) {
       row.style.transition = "background-color 0.3s ease, opacity 0.3s ease";
@@ -80,30 +89,33 @@ export default class TableRowManager {
   }
 
   escapeCssSelector(str) {
-    return String(str).replace(/([!"#$%&'()*+,./:;<=>?@[\\\]^`{|}~])/g, "\\$1");
+    return String(str).replace(/([!"#$%&'()*+,./:;<=>?@[\\$$^`{|}~])/g, "\\\$1");
   }
 
   countRows() {
-    const table = document.querySelector(this.options.tableSelector);
+    const table = this._getTable();
     if (!table) return 0;
 
     const tbody = table.querySelector(this.options.tbodySelector) || table;
-    const rows = Array.from(tbody.querySelectorAll(this.options.rowSelector)).filter((row) => {
-      return row.hasAttribute(this.options.itemIdAttribute);
-    });
+    const rows = Array.from(tbody.querySelectorAll(this.options.rowSelector)).filter((row) =>
+      row.hasAttribute(this.options.itemIdAttribute)
+    );
 
     return rows.length;
   }
 
   findRow(itemId) {
     if (!itemId) return null;
+    const table = this._getTable();
+    if (!table) return null;
+
     const escapedId = this.escapeCssSelector(itemId);
     const selector = `${this.options.rowSelector}[${this.options.itemIdAttribute}="${escapedId}"]`;
-    return document.querySelector(selector);
+    return table.querySelector(selector);
   }
 
   getTableBody() {
-    const table = document.querySelector(this.options.tableSelector);
+    const table = this._getTable();
     return table ? table.querySelector(this.options.tbodySelector) || table : null;
   }
 
@@ -143,17 +155,20 @@ export default class TableRowManager {
     }
   }
 
+  /**
+   * Remove empty-state rows ONLY from THIS manager's table.
+   * Previously this scanned every matching table on the page.
+   */
   removeEmptyState() {
-    const allTables = document.querySelectorAll(this.options.tableSelector);
-    allTables.forEach((table) => {
-      const tbody = table.querySelector(this.options.tbodySelector) || table;
-      const emptyRows = tbody.querySelectorAll(".empty-state-row");
-      emptyRows.forEach((row) => row.remove());
-    });
+    const table = this._getTable();
+    if (!table) return;
+
+    const tbody = table.querySelector(this.options.tbodySelector) || table;
+    tbody.querySelectorAll(".empty-state-row").forEach((row) => row.remove());
   }
 
   getTableColspan() {
-    const table = document.querySelector(this.options.tableSelector);
+    const table = this._getTable();
     if (!table) return 8;
 
     const headerRow = table.querySelector("thead tr");

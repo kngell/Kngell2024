@@ -9,23 +9,26 @@ class DataQueryRuleFactory extends AbstractRulesFactory implements RuleFactoryIn
         return $statement === SqlStatement::SELECT;
     }
 
-    public function create(string $method, mixed $data): QueryRulesInterface
+    public function create(string $method, mixed $data, ?string $customAlias): QueryRulesInterface
     {
         $methodKey = strtolower($method);
+        if (SqlBuilderMethodRegistry::isValidMethod($methodKey) && SqlBuilderMethodRegistry::isOnMethod($methodKey)) {
+            return $this->createOnRules($method, $data, $customAlias);
+        }
 
         // First, check if it's an ON method using the registry
-        if ($this->isOnMethod($methodKey)) {
-            return $this->createOnRules($method, $data);
-        }
+        // if ($this->isOnMethod($methodKey)) {
+        //     return $this->createOnRules($method, $data);
+        // }
 
         // Use the registry to get clause context
         if (SqlBuilderMethodRegistry::isValidMethod($methodKey)) {
             $clause = SqlBuilderMethodRegistry::getClauseContext($methodKey);
-            return $this->createFromClause($clause, $method, $data);
+            return $this->createFromClause($clause, $method, $data, $customAlias);
         }
 
         // Fallback for methods not in registry
-        return $this->createFromMethodName($method, $data);
+        return $this->createFromMethodName($method, $data, $customAlias);
     }
 
     protected function initialize(QueryRulesInterface $rule): QueryRulesInterface
@@ -43,6 +46,7 @@ class DataQueryRuleFactory extends AbstractRulesFactory implements RuleFactoryIn
     {
         // Check registry first
         if (SqlBuilderMethodRegistry::isValidMethod($method)) {
+            // $this->component->getContext()->isOnmethod();
             $clause = SqlBuilderMethodRegistry::getClauseContext($method);
             $link = SqlBuilderMethodRegistry::getLogicalLink($method);
 
@@ -57,14 +61,10 @@ class DataQueryRuleFactory extends AbstractRulesFactory implements RuleFactoryIn
                in_array($method, ['on', 'andon', 'oron', 'onclause']);
     }
 
-    private function createOnRules(string $method, mixed $data): QueryRulesInterface
+    private function createOnRules(string $method, mixed $data, ?string $customAlias = null): QueryRulesInterface
     {
-        $context = $this->state->statementContext;
-
         return match(true) {
-            // Bulk update scenarios - use bulk row factory
-            in_array($method, ['FROM', 'INNER']) && ($context === StatementType::BULK_UPDATE_MARIADB ||
-             $context === StatementType::BULK_UPDATE) =>
+            in_array($method, ['FROM', 'INNER']) && ($this->component->getBulkUpdateType() !== null) =>
                  $this->createBulkRowStrategy($method, $data),
 
             // Regular ON clauses
@@ -74,34 +74,22 @@ class DataQueryRuleFactory extends AbstractRulesFactory implements RuleFactoryIn
                 $method,
                 $this->state,
                 new ConditionNormalizer(),
+                $customAlias,
             ))
         };
     }
 
     private function createBulkRowStrategy(string $method, mixed $data): QueryRulesInterface
     {
-        $strategyType = $this->getStrategyTypeForContext();
-
         $bulkRow = $this->bulkRowFactory->create(
-            $this->em,
-            $method,
-            $this->state,
-            $data,
-            $strategyType,
+            em: $this->em,
+            method: $method,
+            state: $this->state,
+            data: $data,
+            strategy: $this->component->getBulkUpdateType(),
         );
 
         return $this->initialize($bulkRow);
-    }
-
-    private function getStrategyTypeForContext(): ?string
-    {
-        $context = $this->state->statementContext;
-
-        if ($context === StatementType::BULK_UPDATE) {
-            return 'unionAll';
-        }
-
-        return null;
     }
 
     private function createGroupByRules(string $method, mixed $data): QueryRulesInterface
@@ -117,7 +105,7 @@ class DataQueryRuleFactory extends AbstractRulesFactory implements RuleFactoryIn
     /**
      * Create rule based on SQL clause.
      */
-    private function createFromClause(SqlClause $clause, string $method, mixed $data): QueryRulesInterface
+    private function createFromClause(SqlClause $clause, string $method, mixed $data, ?string $customAlias = null): QueryRulesInterface
     {
         return match($clause) {
             SqlClause::WHERE,
@@ -127,6 +115,7 @@ class DataQueryRuleFactory extends AbstractRulesFactory implements RuleFactoryIn
                 $method,
                 $this->state,
                 new ConditionNormalizer(),
+                $customAlias,
             )),
 
             SqlClause::LIMIT => $this->initialize(new LimitRule(
@@ -134,6 +123,7 @@ class DataQueryRuleFactory extends AbstractRulesFactory implements RuleFactoryIn
                 $this->em,
                 $method,
                 $this->state,
+                $customAlias,
             )),
 
             SqlClause::OFFSET => $this->initialize(new OffsetRule(
@@ -141,6 +131,7 @@ class DataQueryRuleFactory extends AbstractRulesFactory implements RuleFactoryIn
                 $this->em,
                 $method,
                 $this->state,
+                $customAlias,
             )),
 
             SqlClause::ORDER_BY => $this->initialize(new OrderByRule(
@@ -148,6 +139,7 @@ class DataQueryRuleFactory extends AbstractRulesFactory implements RuleFactoryIn
                 $this->em,
                 $method,
                 $this->state,
+                $customAlias,
             )),
 
             SqlClause::GROUP_BY => $this->initialize(new GroupByRule(
@@ -155,6 +147,7 @@ class DataQueryRuleFactory extends AbstractRulesFactory implements RuleFactoryIn
                 $this->em,
                 $method,
                 $this->state,
+                $customAlias,
             )),
 
             // ON methods map to SqlClause::FROM but use OnRules
@@ -176,18 +169,11 @@ class DataQueryRuleFactory extends AbstractRulesFactory implements RuleFactoryIn
     private function handleFromClause(string $method, mixed $data): QueryRulesInterface
     {
         $methodKey = strtolower($method);
-        // $context = $this->state->statementContext;
-
-        // Check if this is a bulk update context
-        // if ($context === StatementType::BULK_UPDATE || $context === StatementType::BULK_UPDATE_MARIADB) {
-        //     return $this->createBulkRowStrategy($method, $data);
-        // }
-
         // Check if this is an ON method
         if (SqlBuilderMethodRegistry::isValidMethod($methodKey)) {
             $link = SqlBuilderMethodRegistry::getLogicalLink($methodKey);
 
-            if ($link === SqlConditionLink::ON) {
+            if ($link === SqlConditionLink::ON || SqlBuilderMethodRegistry::isFromMethod($methodKey) || SqlMethodCategory::isFromMethod($methodKey)) {
                 return $this->createOnRules($method, $data);
             }
         }
@@ -215,17 +201,18 @@ class DataQueryRuleFactory extends AbstractRulesFactory implements RuleFactoryIn
     //     );
     // }
 
-    private function createFromMethodName(string $method, mixed $data): QueryRulesInterface
+    private function createFromMethodName(string $method, mixed $data, ?string $customAlias = null): QueryRulesInterface
     {
         $methodKey = strtolower($method);
 
-        if (str_contains($methodKey, 'where')) {
+        if (str_contains($methodKey, 'where') || str_contains($methodKey, 'value')) {
             return $this->initialize(new WhereRule(
                 $data,
                 $this->em,
                 $method,
                 $this->state,
                 new ConditionNormalizer(),
+                $customAlias,
             ));
         }
 
@@ -236,6 +223,7 @@ class DataQueryRuleFactory extends AbstractRulesFactory implements RuleFactoryIn
                 $method,
                 $this->state,
                 new ConditionNormalizer(),
+                $customAlias,
             ));
         }
 
@@ -252,6 +240,7 @@ class DataQueryRuleFactory extends AbstractRulesFactory implements RuleFactoryIn
                 $this->em,
                 $method,
                 $this->state,
+                $customAlias,
             ));
         }
 
@@ -261,6 +250,7 @@ class DataQueryRuleFactory extends AbstractRulesFactory implements RuleFactoryIn
                 $this->em,
                 $method,
                 $this->state,
+                $customAlias,
             ));
         }
 

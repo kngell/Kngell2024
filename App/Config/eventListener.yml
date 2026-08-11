@@ -26,7 +26,11 @@ product.deleted:
     priority: 50
   - callback: CleanupProductPaginatedCacheListener
     priority: 50
-
+category.deleted:
+  - callback: CleanupCategoryImageCacheListener
+    priority: 50
+  - callback: CleanupCategoryPaginatedCacheListener
+    priority: 50
   # - callback: ProductBackupListener
   #   priority: 0
   # - callback: ProductVariationsCleanupListener
@@ -57,6 +61,11 @@ product.deleted:
   #   priority: 13
   # - callback: ProductDeletionNotificationListener
   #   priority: 14
+category.saved:
+  - callback: CleanupCategoryImageCacheListener
+    priority: 50
+  - callback: CleanupCategoryPaginatedCacheListener
+    priority: 50
 
 user.registered:
   - callback: WelcomeEmailListener
@@ -151,9 +160,9 @@ data_deletion.requested:
     priority: 1
 hero.saved:
   - callback: CleanupHeroImageCacheListener
-    priority: 0
+    priority: 50
   - callback: CleanupHeroPaginatedCacheListener
-    priority: 1
+    priority: 50
   # - callback: InvalidateHeroCdnCacheListener     # CDN edge cache
   #   priority: 2
   # - callback: UpdateHeroSearchIndexListener       # Search index
@@ -162,9 +171,46 @@ hero.saved:
   #   priority: 4
 hero.deleted:
   - callback: CleanupHeroImageCacheListener
-    priority: 0
+    priority: 50
   - callback: CleanupHeroPaginatedCacheListener
-    priority: 1
-SmallBanner.saved:
-  - callback: CleanupSmallBannerImageListener
-    priority: 1
+    priority: 50
+smallbanner.saved:
+  - callback: CleanupSmallBannerImageCacheListener
+    priority: 50
+  - callback: CleanupSmallBannerPaginatedCacheListener
+    priority: 50
+smallbanner.delete:
+  - callback: CleanupSmallBannerImageCacheListener
+    priority: 50
+  - callback: CleanupSmallBannerPaginatedCacheListener
+    priority: 50
+contentblock.saved:
+  - callback: CleanupContentBlockImageCacheListener
+    priority: 50
+  - callback: CleanupContentBlockPaginatedCacheListener
+    priority: 50
+contentblock.deleted:
+  - callback: CleanupContentBlockImageCacheListener
+    priority: 50
+  - callback: CleanupContentBlockPaginatedCacheListener
+    priority: 50
+footermenucolumn.saved:
+  - callback: CleanupFooterMenuPaginatedCacheListener
+    priority: 50
+footermenucolumn.deleted:
+  - callback: CleanupFooterMenuPaginatedCacheListener
+    priority: 50
+# About
+footerabout.saved:
+  - callback: CleanupFooterAboutPaginatedCacheListener
+    priority: 50
+footerabout.deleted:
+  - callback: CleanupFooterAboutPaginatedCacheListener
+    priority: 50
+# Socials
+footersocial.saved:
+  - callback: CleanupFooterSocialPaginatedCacheListener
+    priority: 50
+footersocial.deleted:
+  - callback: CleanupFooterSocialPaginatedCacheListener
+    priority: 50

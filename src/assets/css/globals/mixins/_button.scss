@@ -1,0 +1,271 @@
+@use "sass:map";
+@use "sass:color";
+@use "css/globals/functions/functions" as *;
+@use "css/globals/mixins/responsive" as *;
+
+// ============================================
+// BASE BUTTON MIXIN
+// ============================================
+
+@mixin button-base($gap: 0.8rem) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: $gap;
+  border: 1px solid transparent;
+  cursor: pointer;
+  text-decoration: none;
+  line-height: 1.2;
+  font-family: inherit;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+  position: relative;
+  white-space: nowrap;
+  box-sizing: border-box;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--focus-color, #0066cc);
+    outline-offset: 2px;
+  }
+
+  &[type="button"],
+  &[type="submit"],
+  &[type="reset"] {
+    -webkit-appearance: none;
+    appearance: none;
+  }
+}
+
+// ============================================
+// BUTTON VARIANT MIXIN
+// ============================================
+
+@mixin button-variant($variant, $variants-map) {
+  $bg: map-deep-get-list($variants-map, ($variant, background), transparent);
+  $color: map-deep-get-list($variants-map, ($variant, color), currentColor);
+  $border: map-deep-get-list($variants-map, ($variant, border), none);
+  $radius: map-deep-get-list($variants-map, ($variant, radius), 0.6rem);
+  $shadow: map-deep-get-list($variants-map, ($variant, shadow), none);
+  $hover-bg: map-deep-get-list($variants-map, ($variant, hover-background), $bg);
+  $hover-color: map-deep-get-list($variants-map, ($variant, hover-color), $color);
+  $active-bg: map-deep-get-list($variants-map, ($variant, active-bg-color), $bg);
+  $active-color: map-deep-get-list($variants-map, ($variant, active-color), $color);
+
+  background-color: $bg;
+  color: $color;
+  border: $border;
+  border-radius: $radius;
+  box-shadow: $shadow;
+
+  &:hover:not(:disabled) {
+    background-color: $hover-bg;
+    color: $hover-color;
+  }
+
+  &:active:not(:disabled) {
+    background-color: $active-bg;
+    color: $active-color;
+    transform: translateY(1px);
+  }
+}
+
+// ============================================
+// BUTTON LABEL MIXIN
+// ============================================
+
+@mixin button-label($variant, $variants-map) {
+  $typography: map-deep-get-list($variants-map, ($variant, typography), null);
+
+  @if $typography != null {
+    @if map-has-key($typography, font-family) {
+      font-family: map-get($typography, font-family);
+    }
+    @if map-has-key($typography, font-weight) {
+      font-weight: map-get($typography, font-weight);
+    }
+    @if map-has-key($typography, font-size) {
+      font-size: map-get($typography, font-size);
+    }
+    @if map-has-key($typography, line-height) {
+      line-height: map-get($typography, line-height);
+    }
+    @if map-has-key($typography, letter-spacing) {
+      letter-spacing: map-get($typography, letter-spacing);
+    }
+    color: inherit;
+  }
+}
+
+// ============================================
+// BUTTON SIZE MIXIN
+// ============================================
+
+@mixin button-size($size, $sizes-map) {
+  $padding-y: map-deep-get-list($sizes-map, ($size, padding-y), 1rem);
+  $padding-x: map-deep-get-list($sizes-map, ($size, padding-x), 2rem);
+  $icon-size: map-deep-get-list($sizes-map, ($size, icon-size), 1.6rem);
+
+  padding: #{$padding-y} #{$padding-x};
+
+  @if $icon-size != null {
+    --btn-icon-size: #{$icon-size};
+  }
+}
+
+// ============================================
+// BUTTON ICON MIXIN
+// ============================================
+
+@mixin button-icon {
+  width: var(--btn-icon-size, 1.6rem);
+  height: var(--btn-icon-size, 1.6rem);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  .icon {
+    width: 100%;
+    height: 100%;
+    color: currentColor;
+    fill: currentColor;
+  }
+}
+
+// ============================================
+// ICON ONLY MIXINS
+// ============================================
+
+@mixin button-icon-only($size: md, $sizes-map: null) {
+  $padding-y: 0.8rem;
+
+  @if $sizes-map != null {
+    $padding-y: map-deep-get-list($sizes-map, ($size, padding-y), 0.8rem);
+  }
+
+  padding: $padding-y;
+  width: calc(#{$padding-y * 2} + var(--btn-icon-size, 1.6rem));
+  height: calc(#{$padding-y * 2} + var(--btn-icon-size, 1.6rem));
+  min-width: unset;
+  min-height: unset;
+  border-radius: 50%;
+  justify-content: center;
+  align-items: center;
+
+  .btn__label {
+    display: none;
+  }
+
+  .btn__icon {
+    margin: 0;
+  }
+}
+
+@mixin button-icon-only-square($size: md, $sizes-map: null) {
+  $padding-y: 0.8rem;
+
+  @if $sizes-map != null {
+    $padding-y: map-deep-get-list($sizes-map, ($size, padding-y), 0.8rem);
+  }
+
+  padding: $padding-y;
+  width: calc(#{$padding-y * 2} + var(--btn-icon-size, 1.6rem));
+  height: calc(#{$padding-y * 2} + var(--btn-icon-size, 1.6rem));
+  min-width: unset;
+  min-height: unset;
+  border-radius: 0.6rem;
+  justify-content: center;
+  align-items: center;
+
+  .btn__label {
+    display: none;
+  }
+
+  .btn__icon {
+    margin: 0;
+  }
+}
+
+// ============================================
+// BUTTON WITH ARROW
+// ============================================
+
+@mixin button-with-arrow($arrow-color: currentColor, $arrow-size: 1.8rem, $gap: 0.8rem) {
+  gap: $gap;
+
+  &::after {
+    content: "";
+    display: inline-block;
+    width: $arrow-size;
+    height: $arrow-size;
+    flex-shrink: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M9 18L15 12L9 6' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    color: $arrow-color;
+    transition: transform 0.2s ease;
+  }
+
+  &:hover::after {
+    transform: translateX(4px);
+  }
+}
+
+// ============================================
+// LOADING & MODIFIER MIXINS
+// ============================================
+
+@mixin button-with-loading {
+  .spinner {
+    display: inline-block;
+    width: 1.6rem;
+    height: 1.6rem;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 0.6s linear infinite;
+    flex-shrink: 0;
+    visibility: hidden;
+    position: absolute;
+  }
+
+  &.loading {
+    opacity: 0.7;
+    pointer-events: none;
+
+    .btn__label,
+    .btn__icon {
+      visibility: hidden;
+    }
+
+    .spinner {
+      visibility: visible;
+    }
+  }
+}
+
+@mixin button-full-width {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+@mixin button-responsive($breakpoint: "md") {
+  @include respond-below($breakpoint) {
+    padding: 0.8rem 1.4rem;
+    font-size: 1.4rem;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

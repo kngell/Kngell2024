@@ -9,8 +9,9 @@ class LimitRule extends AbstractRules implements QueryRulesInterface
         EntityManagerInterface $em,
         ?string $method,
         QueryState $state,
+        ?string $customAlias = null,
     ) {
-        parent::__construct($em, $method, $state);
+        parent::__construct($em, $method, $customAlias, $state);
     }
 
     public function getRule(array $limitMap): string

@@ -28,6 +28,7 @@ class App extends AbstractApp
         } else {
             $this->createCliProperties();
         }
+        ContainerRegistry::setContainer($this);
         return $this;
     }
 
@@ -40,6 +41,7 @@ class App extends AbstractApp
         $response = $this->rooter->handle($this->request, $this, $url, $params);
         $response->prepare($this->request);
         $response->send();
+        // exit;
     }
 
     public function runError(string $url, array $params = []): void

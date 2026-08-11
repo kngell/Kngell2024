@@ -1,7 +1,7 @@
 @use "sass:map";
 @use "sass:string";
 @use "css/backend/admin/abstracts/variables" as *;
-@use "css/backend/admin/abstracts/functions" as *;
+@use "css/globals/functions/functions" as *;
 
 @mixin search-component(
   $background: map-deep-get($background-color, neutral, primary),

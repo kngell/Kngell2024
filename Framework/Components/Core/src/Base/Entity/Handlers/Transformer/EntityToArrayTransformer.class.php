@@ -12,7 +12,7 @@ class EntityToArrayTransformer implements EntityToArrayTransformerInterface
     ) {
         $entityTraverser = new EntityTraverser($typePresenterFactory);
         $arrayFlattener = new ArrayFlattener();
-        $fieldMapper = new FieldMapper($typePresenterFactory);
+        $fieldMapper = new EntityFieldMapper($typePresenterFactory);
         $relationshipExtractor = new RelationshipExtractor();
 
         $this->strategies = [
@@ -25,8 +25,6 @@ class EntityToArrayTransformer implements EntityToArrayTransformerInterface
             ),
             new DatabaseArrayTransformer(
                 new SimpleArrayTransformer($normalizer),
-                $normalizer,
-                $relationshipExtractor,
             ),
         ];
     }

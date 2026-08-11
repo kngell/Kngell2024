@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 abstract class AbstractDeleteValidator
 {
-    public function validate(array $id): DeletionValidatorResult
+    public function validate(array $id, ?string $blockType = null): DeletionValidatorResult
     {
         $result = new DeletionValidatorResult();
 
         if (empty($id)) {
             $result->addError($this->getLabel() . ' ID is required.');
-
             return $result;
         }
 
@@ -46,9 +45,9 @@ abstract class AbstractDeleteValidator
 
     abstract protected function findRecord(array $id): ?object;
 
-    abstract protected function resolveDisplayName(Entity $record): string;
+    abstract protected function resolveDisplayName(Entity $record): ?string;
 
-    protected function resolveDisplayImage(Entity $record): ?string
+    protected function resolveDisplayImage(Entity $record): null|string|array
     {
         return null;
     }
